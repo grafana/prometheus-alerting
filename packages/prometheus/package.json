@@ -1,0 +1,22 @@
+{
+  "name": "@grafana/prometheus-alerting",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "",
+    "lint": "oxlint --type-aware"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.9.0"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}
