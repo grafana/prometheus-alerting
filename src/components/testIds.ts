@@ -19,4 +19,13 @@ export const testIds = {
   templates: {
     container: 'data-testid prom-templates',
   },
+  silences: {
+    container: 'data-testid prom-silences',
+  },
+  timeIntervals: {
+    container: 'data-testid prom-time-intervals',
+  },
+  inhibitRules: {
+    container: 'data-testid prom-inhibit-rules',
+  },
 };

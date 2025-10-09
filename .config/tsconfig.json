@@ -11,13 +11,16 @@
     "rootDir": "../src",
     "baseUrl": "../src",
     "typeRoots": ["../node_modules/@types"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "module": "esnext",
+    "moduleResolution": "bundler"
   },
   "ts-node": {
     "compilerOptions": {
       "module": "commonjs",
       "target": "es5",
-      "esModuleInterop": true
+      "esModuleInterop": true,
+      "moduleResolution": "node"
     },
     "transpileOnly": true
   },

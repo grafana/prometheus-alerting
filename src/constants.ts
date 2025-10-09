@@ -8,4 +8,7 @@ export enum ROUTES {
   Routes = 'routes',
   Receivers = 'receivers',
   Templates = 'templates',
+  Silences = 'silences',
+  TimeIntervals = 'time-intervals',
+  InhibitRules = 'inhibit-rules',
 }

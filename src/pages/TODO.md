@@ -1,2 +1,2 @@
-* Silences
-* Time Interval(s)
+- Silences
+- Time Interval(s)

@@ -55,6 +55,27 @@
     },
     {
       "type": "page",
+      "name": "Silences",
+      "path": "/a/%PLUGIN_ID%/silences",
+      "addToNav": true,
+      "defaultNav": false
+    },
+    {
+      "type": "page",
+      "name": "Time Intervals",
+      "path": "/a/%PLUGIN_ID%/time-intervals",
+      "addToNav": true,
+      "defaultNav": false
+    },
+    {
+      "type": "page",
+      "name": "Inhibit Rules",
+      "path": "/a/%PLUGIN_ID%/inhibit-rules",
+      "addToNav": true,
+      "defaultNav": false
+    },
+    {
+      "type": "page",
       "icon": "cog",
       "name": "Configuration",
       "path": "/plugins/%PLUGIN_ID%",
@@ -65,5 +86,6 @@
   "dependencies": {
     "grafanaDependency": ">=12.2.0",
     "plugins": []
-  }
+  },
+  "languages": ["en-US"]
 }

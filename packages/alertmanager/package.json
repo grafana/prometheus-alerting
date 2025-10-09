@@ -1,0 +1,24 @@
+{
+  "name": "@grafana/external-alertmanager",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "false;"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.9.0",
+    "@std/yaml": "npm:@jsr/std__yaml@^1.0.10"
+  },
+  "exports": {
+    ".": "./src/common/index.ts",
+    "./vanilla": "./src/vanilla/index.ts",
+    "./mimir": "./src/mimir/index.ts"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}
