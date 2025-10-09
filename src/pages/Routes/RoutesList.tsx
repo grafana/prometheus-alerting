@@ -64,7 +64,7 @@ function RouteCard({ route, level = 0 }: { route: RouteConfig; level?: number })
             {route.matchers && route.matchers.length > 0 && (
               <div className={matchersContainerStyle}>
                 {route.matchers.map((matcher, index) => (
-                  <AlertLabel key={index} labelKey={matcher} colorBy="key" size="sm" />
+                  <AlertLabel key={index} value={matcher} colorBy="value" size="sm" />
                 ))}
               </div>
             )}
