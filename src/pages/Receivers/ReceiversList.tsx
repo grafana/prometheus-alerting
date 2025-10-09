@@ -2,7 +2,7 @@ import React from 'react';
 import { testIds } from '../../components/testIds';
 import { PluginPage } from '@grafana/runtime';
 import { InteractiveTable } from '@grafana/ui';
-import type { Receiver } from '@grafana/prometheus-alerting';
+import { type Receiver } from '@grafana/prometheus-alerting';
 
 const mockReceivers: Receiver[] = [
   { name: 'slack-notifications' },

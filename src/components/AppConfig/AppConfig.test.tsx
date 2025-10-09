@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { PluginType } from '@grafana/data';
 import AppConfig, { AppConfigProps } from './AppConfig';
-import { testIds } from 'components/testIds';
+import { testIds } from '../testIds';
 
 describe('Components/AppConfig', () => {
   let props: AppConfigProps;
