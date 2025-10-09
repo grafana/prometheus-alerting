@@ -3,27 +3,13 @@ import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
 import { PluginPage } from '@grafana/runtime';
-import { Alert, Card } from '@grafana/ui';
+import { Alert, InteractiveTable } from '@grafana/ui';
 import { useTimeIntervals } from '../../hooks/useTimeIntervals';
-import { css } from '@emotion/css';
 import { Trans, t } from '@grafana/i18n';
+import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error } = useTimeIntervals();
-
-  const cardStyle = css`
-    margin-bottom: 10px;
-  `;
-
-  const listStyle = css`
-    list-style: none;
-    padding-left: 0;
-    margin: 8px 0;
-  `;
-
-  const listItemStyle = css`
-    padding: 4px 0;
-  `;
 
   const formatTimeRange = (times?: Array<{ start_time: string; end_time: string }>) => {
     if (!times || times.length === 0) {
@@ -38,6 +24,53 @@ function TimeIntervalsPage() {
     }
     return items.join(', ');
   };
+
+  const formatTimeIntervalDetails = (interval: TimeInterval) => {
+    if (!interval.time_intervals || interval.time_intervals.length === 0) {
+      return t('time-intervals.no-intervals-defined', 'No time intervals defined');
+    }
+
+    return interval.time_intervals
+      .map((ti, index) => {
+        const parts: string[] = [];
+
+        parts.push(`${t('time-intervals.times-label', 'Times')}: ${formatTimeRange(ti.times)}`);
+
+        if (ti.weekdays && ti.weekdays.length > 0) {
+          parts.push(`${t('time-intervals.weekdays-label', 'Weekdays')}: ${formatList(ti.weekdays)}`);
+        }
+        if (ti.days_of_month && ti.days_of_month.length > 0) {
+          parts.push(`${t('time-intervals.days-of-month-label', 'Days of Month')}: ${formatList(ti.days_of_month)}`);
+        }
+        if (ti.months && ti.months.length > 0) {
+          parts.push(`${t('time-intervals.months-label', 'Months')}: ${formatList(ti.months)}`);
+        }
+        if (ti.years && ti.years.length > 0) {
+          parts.push(`${t('time-intervals.years-label', 'Years')}: ${formatList(ti.years)}`);
+        }
+        if (ti.location) {
+          parts.push(`${t('time-intervals.location-label', 'Location')}: ${ti.location}`);
+        }
+
+        return parts.join(' | ');
+      })
+      .join('\n');
+  };
+
+  const columns = [
+    {
+      id: 'name',
+      header: t('time-intervals.column.name', 'Name'),
+      cell: ({ row: { original } }: { row: { original: TimeInterval } }) => original.name,
+    },
+    {
+      id: 'details',
+      header: t('time-intervals.column.details', 'Details'),
+      cell: ({ row: { original } }: { row: { original: TimeInterval } }) => (
+        <div style={{ whiteSpace: 'pre-line' }}>{formatTimeIntervalDetails(original)}</div>
+      ),
+    },
+  ];
 
   return (
     <PluginPage>
@@ -56,75 +89,7 @@ function TimeIntervalsPage() {
           </Alert>
         )}
         {!isLoading && timeIntervals.length > 0 && (
-          <div>
-            {timeIntervals.map((interval, index) => (
-              <div key={index} className={cardStyle}>
-                <Card>
-                  <Card.Heading>{interval.name}</Card.Heading>
-                  <Card.Meta>
-                    {interval.time_intervals && interval.time_intervals.length > 0 ? (
-                      <ul className={listStyle}>
-                        {interval.time_intervals.map((ti, tiIndex) => (
-                          <li key={tiIndex} className={listItemStyle}>
-                            <div>
-                              <strong>
-                                <Trans i18nKey="time-intervals.times-label">Times:</Trans>
-                              </strong>{' '}
-                              {formatTimeRange(ti.times)}
-                            </div>
-                            {ti.weekdays && ti.weekdays.length > 0 && (
-                              <div>
-                                <strong>
-                                  <Trans i18nKey="time-intervals.weekdays-label">Weekdays:</Trans>
-                                </strong>{' '}
-                                {formatList(ti.weekdays)}
-                              </div>
-                            )}
-                            {ti.days_of_month && ti.days_of_month.length > 0 && (
-                              <div>
-                                <strong>
-                                  <Trans i18nKey="time-intervals.days-of-month-label">Days of Month:</Trans>
-                                </strong>{' '}
-                                {formatList(ti.days_of_month)}
-                              </div>
-                            )}
-                            {ti.months && ti.months.length > 0 && (
-                              <div>
-                                <strong>
-                                  <Trans i18nKey="time-intervals.months-label">Months:</Trans>
-                                </strong>{' '}
-                                {formatList(ti.months)}
-                              </div>
-                            )}
-                            {ti.years && ti.years.length > 0 && (
-                              <div>
-                                <strong>
-                                  <Trans i18nKey="time-intervals.years-label">Years:</Trans>
-                                </strong>{' '}
-                                {formatList(ti.years)}
-                              </div>
-                            )}
-                            {ti.location && (
-                              <div>
-                                <strong>
-                                  <Trans i18nKey="time-intervals.location-label">Location:</Trans>
-                                </strong>{' '}
-                                {ti.location}
-                              </div>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div>
-                        <Trans i18nKey="time-intervals.no-intervals-defined">No time intervals defined</Trans>
-                      </div>
-                    )}
-                  </Card.Meta>
-                </Card>
-              </div>
-            ))}
-          </div>
+          <InteractiveTable columns={columns} data={timeIntervals} getRowId={(interval) => interval.name} />
         )}
         {!isLoading && timeIntervals.length === 0 && !error && (
           <Alert title={t('time-intervals.no-time-intervals-title', 'No time intervals found')} severity="info">
