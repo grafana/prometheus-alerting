@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { AppRootProps } from '@grafana/data';
-import { ROUTES } from '../../constants';
-import { DataSourceProvider } from '../../contexts/DataSourceContext';
+import { ROUTES, STORAGE_KEYS } from '../../constants';
 import { StoreProvider } from '../StoreProvider/StoreProvider';
+import { useAvailableAlertmanagers } from '../../hooks/useAvailableAlertmanager';
 
 const Landing = React.lazy(() => import('../../pages/Landing'));
 const Rules = React.lazy(() => import('../../pages/Rules/RulesList'));
@@ -15,30 +15,44 @@ const TimeIntervals = React.lazy(() => import('../../pages/TimeIntervals/TimeInt
 const InhibitRules = React.lazy(() => import('../../pages/InhibitRules/InhibitRulesList'));
 
 function App(_props: AppRootProps) {
-  // TODO: Get this from query params or plugin configuration
-  // For now, using a default value. You can update this to read from:
-  // - URL query parameters
-  // - Plugin meta configuration
-  // - User selection from a dropdown
-  const dataSourceUID = 'gdev-alertmanager';
+  const alertmanagers = useAvailableAlertmanagers();
+
+  const dataSourceUID = useMemo(() => {
+    // Try to get the stored UID from sessionStorage
+    const storedUID = sessionStorage.getItem(STORAGE_KEYS.SELECTED_ALERTMANAGER_UID);
+
+    // If a UID is stored and it exists in the available alertmanagers, use it
+    if (storedUID && alertmanagers.some((am) => am.uid === storedUID)) {
+      return storedUID;
+    }
+
+    // Otherwise, use the first available alertmanager or fallback to default
+    const firstAlertmanager = alertmanagers[0];
+    if (firstAlertmanager) {
+      // Store it in sessionStorage for next time
+      sessionStorage.setItem(STORAGE_KEYS.SELECTED_ALERTMANAGER_UID, firstAlertmanager.uid);
+      return firstAlertmanager.uid;
+    }
+
+    // Fallback to default if no alertmanagers are configured
+    return 'gdev-alertmanager';
+  }, [alertmanagers]);
 
   return (
-    <DataSourceProvider dataSourceUID={dataSourceUID}>
-      <StoreProvider>
-        <Routes>
-          <Route path={ROUTES.Routes} element={<RouteTree />} />
-          <Route path={ROUTES.Rules} element={<Rules />} />
-          <Route path={`${ROUTES.Receivers}/:id?`} element={<Receivers />} />
-          <Route path={ROUTES.Templates} element={<Templates />} />
-          <Route path={ROUTES.Silences} element={<Silences />} />
-          <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
-          <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
+    <StoreProvider initialDataSourceUID={dataSourceUID}>
+      <Routes>
+        <Route path={ROUTES.Routes} element={<RouteTree />} />
+        <Route path={ROUTES.Rules} element={<Rules />} />
+        <Route path={`${ROUTES.Receivers}/:id?`} element={<Receivers />} />
+        <Route path={ROUTES.Templates} element={<Templates />} />
+        <Route path={ROUTES.Silences} element={<Silences />} />
+        <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
+        <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
 
-          {/* Default page */}
-          <Route path="*" element={<Landing />} />
-        </Routes>
-      </StoreProvider>
-    </DataSourceProvider>
+        {/* Default page */}
+        <Route path="*" element={<Landing />} />
+      </Routes>
+    </StoreProvider>
   );
 }
 
