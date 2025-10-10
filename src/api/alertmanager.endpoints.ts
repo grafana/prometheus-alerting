@@ -3,20 +3,26 @@ import { parse as parseYaml } from '@std/yaml';
 import {
   GetStatusApiResponse,
   GetStatusApiArg,
+  GetStatusApiResponseSchema,
   GetSilencesApiResponse,
   GetSilencesApiArg,
+  GetSilencesApiResponseSchema,
   PostSilencesApiResponse,
   PostSilencesApiArg,
+  PostSilencesApiResponseSchema,
   GetSilenceApiResponse,
   GetSilenceApiArg,
+  GetSilenceApiResponseSchema,
   DeleteSilenceApiResponse,
   DeleteSilenceApiArg,
   GetAlertsApiResponse,
   GetAlertsApiArg,
+  GetAlertsApiResponseSchema,
   PostAlertsApiResponse,
   PostAlertsApiArg,
   GetAlertGroupsApiResponse,
   GetAlertGroupsApiArg,
+  GetAlertGroupsApiResponseSchema,
 } from '@grafana/external-alertmanager/vanilla';
 import { RootState } from 'src/store/store';
 
@@ -38,15 +44,19 @@ export const alertmanagerApi = createApi({
   endpoints: (build) => ({
     getStatus: build.query<GetStatusApiResponse, GetStatusApiArg>({
       query: () => ({ url: `/status` }),
-      transformResponse: (response: GetStatusApiResponse): GetStatusApiResponse => {
+      transformResponse: (response): GetStatusApiResponse => {
+        // Parse and validate the response with Zod
+        const validatedResponse = GetStatusApiResponseSchema.parse(response);
+
         // Parse the YAML configuration
-        // @TODO use Zod to validate YAML
-        const parsed = parseYaml(response.config.original) as NonNullable<GetStatusApiResponse['config']['parsed']>;
+        const parsed = parseYaml(validatedResponse.config.original) as NonNullable<
+          GetStatusApiResponse['config']['parsed']
+        >;
 
         return {
-          ...response,
+          ...validatedResponse,
           config: {
-            ...response.config,
+            ...validatedResponse.config,
             parsed,
           },
         };
@@ -59,6 +69,9 @@ export const alertmanagerApi = createApi({
           filter: queryArg.filter,
         },
       }),
+      transformResponse: (response: unknown): GetSilencesApiResponse => {
+        return GetSilencesApiResponseSchema.parse(response);
+      },
     }),
     postSilences: build.mutation<PostSilencesApiResponse, PostSilencesApiArg>({
       query: (queryArg) => ({
@@ -66,9 +79,15 @@ export const alertmanagerApi = createApi({
         method: 'POST',
         body: queryArg.postableSilence,
       }),
+      transformResponse: (response: unknown): PostSilencesApiResponse => {
+        return PostSilencesApiResponseSchema.parse(response);
+      },
     }),
     getSilence: build.query<GetSilenceApiResponse, GetSilenceApiArg>({
       query: (queryArg) => ({ url: `/silence/${queryArg.silenceId}` }),
+      transformResponse: (response: unknown): GetSilenceApiResponse => {
+        return GetSilenceApiResponseSchema.parse(response);
+      },
     }),
     deleteSilence: build.mutation<DeleteSilenceApiResponse, DeleteSilenceApiArg>({
       query: (queryArg) => ({
@@ -88,6 +107,9 @@ export const alertmanagerApi = createApi({
           receiver: queryArg.receiver,
         },
       }),
+      transformResponse: (response: unknown): GetAlertsApiResponse => {
+        return GetAlertsApiResponseSchema.parse(response);
+      },
     }),
     postAlerts: build.mutation<PostAlertsApiResponse, PostAlertsApiArg>({
       query: (queryArg) => ({
@@ -108,6 +130,9 @@ export const alertmanagerApi = createApi({
           receiver: queryArg.receiver,
         },
       }),
+      transformResponse: (response: unknown): GetAlertGroupsApiResponse => {
+        return GetAlertGroupsApiResponseSchema.parse(response);
+      },
     }),
   }),
 });

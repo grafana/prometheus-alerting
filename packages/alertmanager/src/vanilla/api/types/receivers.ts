@@ -3,153 +3,167 @@
  * Based on: https://github.com/prometheus/alertmanager/blob/main/config/config.go
  */
 
-// Base receiver type
-export type BaseReceiver = {
-  name: string;
-};
+import { z } from 'zod';
 
-// Individual receiver configuration types
+// Zod schemas for individual receiver configuration types
 
-export type EmailConfig = {
-  to?: string;
-  from?: string;
-  smarthost?: string;
-  auth_username?: string;
-  auth_password?: string;
-  auth_identity?: string;
-  headers?: Record<string, string>;
-  html?: string;
-  text?: string;
-  require_tls?: boolean;
-};
+export const EmailConfigSchema = z.object({
+  to: z.string().optional(),
+  from: z.string().optional(),
+  smarthost: z.string().optional(),
+  auth_username: z.string().optional(),
+  auth_password: z.string().optional(),
+  auth_identity: z.string().optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  html: z.string().optional(),
+  text: z.string().optional(),
+  require_tls: z.boolean().optional(),
+});
 
-export type SlackConfig = {
-  api_url?: string;
-  channel?: string;
-  username?: string;
-  color?: string;
-  title?: string;
-  title_link?: string;
-  pretext?: string;
-  text?: string;
-  footer?: string;
-  icon_emoji?: string;
-  icon_url?: string;
-  image_url?: string;
-  thumb_url?: string;
-};
+export const SlackConfigSchema = z.object({
+  api_url: z.string().optional(),
+  channel: z.string().optional(),
+  username: z.string().optional(),
+  color: z.string().optional(),
+  title: z.string().optional(),
+  title_link: z.string().optional(),
+  pretext: z.string().optional(),
+  text: z.string().optional(),
+  footer: z.string().optional(),
+  icon_emoji: z.string().optional(),
+  icon_url: z.string().optional(),
+  image_url: z.string().optional(),
+  thumb_url: z.string().optional(),
+});
 
-export type PagerdutyConfig = {
-  routing_key?: string;
-  service_key?: string;
-  url?: string;
-  client?: string;
-  client_url?: string;
-  description?: string;
-  severity?: string;
-  details?: Record<string, string>;
-};
+export const PagerdutyConfigSchema = z.object({
+  routing_key: z.string().optional(),
+  service_key: z.string().optional(),
+  url: z.string().optional(),
+  client: z.string().optional(),
+  client_url: z.string().optional(),
+  description: z.string().optional(),
+  severity: z.string().optional(),
+  details: z.record(z.string(), z.string()).optional(),
+});
 
-export type WebhookConfig = {
-  url?: string;
-  max_alerts?: number;
-};
+export const WebhookConfigSchema = z.object({
+  url: z.string().optional(),
+  max_alerts: z.number().optional(),
+});
 
-export type OpsGenieConfig = {
-  api_key?: string;
-  api_url?: string;
-  message?: string;
-  description?: string;
-  source?: string;
-  details?: Record<string, string>;
-  tags?: string;
-  priority?: string;
-};
+export const OpsGenieConfigSchema = z.object({
+  api_key: z.string().optional(),
+  api_url: z.string().optional(),
+  message: z.string().optional(),
+  description: z.string().optional(),
+  source: z.string().optional(),
+  details: z.record(z.string(), z.string()).optional(),
+  tags: z.string().optional(),
+  priority: z.string().optional(),
+});
 
-export type WechatConfig = {
-  api_url?: string;
-  corp_id?: string;
-  agent_id?: string;
-  api_secret?: string;
-  to_user?: string;
-  to_party?: string;
-  to_tag?: string;
-  message?: string;
-};
+export const WechatConfigSchema = z.object({
+  api_url: z.string().optional(),
+  corp_id: z.string().optional(),
+  agent_id: z.string().optional(),
+  api_secret: z.string().optional(),
+  to_user: z.string().optional(),
+  to_party: z.string().optional(),
+  to_tag: z.string().optional(),
+  message: z.string().optional(),
+});
 
-export type PushoverConfig = {
-  user_key?: string;
-  token?: string;
-  title?: string;
-  message?: string;
-  url?: string;
-  priority?: string;
-  retry?: string;
-  expire?: string;
-};
+export const PushoverConfigSchema = z.object({
+  user_key: z.string().optional(),
+  token: z.string().optional(),
+  title: z.string().optional(),
+  message: z.string().optional(),
+  url: z.string().optional(),
+  priority: z.string().optional(),
+  retry: z.string().optional(),
+  expire: z.string().optional(),
+});
 
-export type VictorOpsConfig = {
-  api_key?: string;
-  api_url?: string;
-  routing_key?: string;
-  message_type?: string;
-  entity_display_name?: string;
-  state_message?: string;
-  monitoring_tool?: string;
-};
+export const VictorOpsConfigSchema = z.object({
+  api_key: z.string().optional(),
+  api_url: z.string().optional(),
+  routing_key: z.string().optional(),
+  message_type: z.string().optional(),
+  entity_display_name: z.string().optional(),
+  state_message: z.string().optional(),
+  monitoring_tool: z.string().optional(),
+});
 
-export type SNSConfig = {
-  topic_arn?: string;
-  phone_number?: string;
-  target_arn?: string;
-  subject?: string;
-  message?: string;
-  attributes?: Record<string, string>;
-};
+export const SNSConfigSchema = z.object({
+  topic_arn: z.string().optional(),
+  phone_number: z.string().optional(),
+  target_arn: z.string().optional(),
+  subject: z.string().optional(),
+  message: z.string().optional(),
+  attributes: z.record(z.string(), z.string()).optional(),
+});
 
-export type TelegramConfig = {
-  api_url?: string;
-  bot_token?: string;
-  chat_id?: number;
-  message?: string;
-  disable_notifications?: boolean;
-  parse_mode?: string;
-};
+export const TelegramConfigSchema = z.object({
+  api_url: z.string().optional(),
+  bot_token: z.string().optional(),
+  chat_id: z.number().optional(),
+  message: z.string().optional(),
+  disable_notifications: z.boolean().optional(),
+  parse_mode: z.string().optional(),
+});
 
-export type DiscordConfig = {
-  webhook_url?: string;
-  title?: string;
-  message?: string;
-};
+export const DiscordConfigSchema = z.object({
+  webhook_url: z.string().optional(),
+  title: z.string().optional(),
+  message: z.string().optional(),
+});
 
-export type WebexConfig = {
-  api_url?: string;
-  room_id?: string;
-  message?: string;
-};
+export const WebexConfigSchema = z.object({
+  api_url: z.string().optional(),
+  room_id: z.string().optional(),
+  message: z.string().optional(),
+});
 
-export type MSTeamsConfig = {
-  webhook_url?: string;
-  title?: string;
-  text?: string;
-};
+export const MSTeamsConfigSchema = z.object({
+  webhook_url: z.string().optional(),
+  title: z.string().optional(),
+  text: z.string().optional(),
+});
 
-// Receiver with typed configurations (discriminated union)
-export type Receiver = BaseReceiver & {
-  email_configs?: EmailConfig[];
-  slack_configs?: SlackConfig[];
-  pagerduty_configs?: PagerdutyConfig[];
-  webhook_configs?: WebhookConfig[];
-  opsgenie_configs?: OpsGenieConfig[];
-  wechat_configs?: WechatConfig[];
-  pushover_configs?: PushoverConfig[];
-  victorops_configs?: VictorOpsConfig[];
-  sns_configs?: SNSConfig[];
-  telegram_configs?: TelegramConfig[];
-  discord_configs?: DiscordConfig[];
-  webex_configs?: WebexConfig[];
-  msteams_configs?: MSTeamsConfig[];
-};
+// Receiver schema
+export const ReceiverSchema = z.object({
+  name: z.string(),
+  email_configs: z.array(EmailConfigSchema).optional(),
+  slack_configs: z.array(SlackConfigSchema).optional(),
+  pagerduty_configs: z.array(PagerdutyConfigSchema).optional(),
+  webhook_configs: z.array(WebhookConfigSchema).optional(),
+  opsgenie_configs: z.array(OpsGenieConfigSchema).optional(),
+  wechat_configs: z.array(WechatConfigSchema).optional(),
+  pushover_configs: z.array(PushoverConfigSchema).optional(),
+  victorops_configs: z.array(VictorOpsConfigSchema).optional(),
+  sns_configs: z.array(SNSConfigSchema).optional(),
+  telegram_configs: z.array(TelegramConfigSchema).optional(),
+  discord_configs: z.array(DiscordConfigSchema).optional(),
+  webex_configs: z.array(WebexConfigSchema).optional(),
+  msteams_configs: z.array(MSTeamsConfigSchema).optional(),
+});
+
+// Export inferred types
+export type EmailConfig = z.infer<typeof EmailConfigSchema>;
+export type SlackConfig = z.infer<typeof SlackConfigSchema>;
+export type PagerdutyConfig = z.infer<typeof PagerdutyConfigSchema>;
+export type WebhookConfig = z.infer<typeof WebhookConfigSchema>;
+export type OpsGenieConfig = z.infer<typeof OpsGenieConfigSchema>;
+export type WechatConfig = z.infer<typeof WechatConfigSchema>;
+export type PushoverConfig = z.infer<typeof PushoverConfigSchema>;
+export type VictorOpsConfig = z.infer<typeof VictorOpsConfigSchema>;
+export type SNSConfig = z.infer<typeof SNSConfigSchema>;
+export type TelegramConfig = z.infer<typeof TelegramConfigSchema>;
+export type DiscordConfig = z.infer<typeof DiscordConfigSchema>;
+export type WebexConfig = z.infer<typeof WebexConfigSchema>;
+export type MSTeamsConfig = z.infer<typeof MSTeamsConfigSchema>;
+export type Receiver = z.infer<typeof ReceiverSchema>;
 
 // Type guard functions for receiver discrimination
 
