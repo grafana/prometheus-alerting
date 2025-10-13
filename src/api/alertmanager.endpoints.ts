@@ -32,7 +32,7 @@ export const alertmanagerApi = createApi({
   baseQuery: async (args, api, extraOptions) => {
     // Read the current data source UID from Redux state
     const state = api.getState() as RootState;
-    const dataSourceUID = state.dataSource?.selectedUID;
+    const dataSourceUID = state.dataSource.selectedUID;
 
     // Create a base query with the current UID
     const baseQuery = fetchBaseQuery({
