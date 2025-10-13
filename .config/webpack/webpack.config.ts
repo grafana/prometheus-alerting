@@ -82,6 +82,7 @@ const config = async (env: Env): Promise<Configuration> => {
         {
           exclude: /(node_modules)/,
           test: /\.[tj]sx?$/,
+          type: 'javascript/auto',
           use: {
             loader: 'swc-loader',
             options: {
@@ -89,6 +90,11 @@ const config = async (env: Env): Promise<Configuration> => {
                 baseUrl: path.resolve(process.cwd(), SOURCE_DIR),
                 target: 'es2015',
                 loose: false,
+                transform: {
+                  react: {
+                    runtime: 'automatic',
+                  },
+                },
                 parser: {
                   syntax: 'typescript',
                   tsx: true,
