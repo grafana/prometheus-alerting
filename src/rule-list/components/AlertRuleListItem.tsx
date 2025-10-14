@@ -220,9 +220,16 @@ export function UnknownRuleListItem({ ruleName }: UnknownRuleListItemProps) {
 function RuleLabels({ labels }: { labels: Record<string, string> }) {
   const styles = useStyles2(getRuleLabelsStyles);
 
-  return <AlertLabels labels={labels} size="sm" />;
   return (
-    <Tooltip content={<div className={styles.tooltip}></div>} placement="right" interactive>
+    <Tooltip
+      content={
+        <div className={styles.tooltip}>
+          <AlertLabels labels={labels} size="sm" />
+        </div>
+      }
+      placement="right"
+      interactive
+    >
       <div>
         <Text variant="bodySmall" color="primary">
           {pluralize('label', labelsSize(labels), true)}
