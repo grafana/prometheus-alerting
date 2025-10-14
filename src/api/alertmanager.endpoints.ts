@@ -1,9 +1,9 @@
+import { create } from "mutative"
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { parse as parseYaml } from '@std/yaml';
 import {
   GetStatusApiResponse,
   GetStatusApiArg,
-  GetStatusApiResponseSchema,
   GetSilencesApiResponse,
   GetSilencesApiArg,
   GetSilencesApiResponseSchema,
@@ -23,8 +23,11 @@ import {
   GetAlertGroupsApiResponse,
   GetAlertGroupsApiArg,
   GetAlertGroupsApiResponseSchema,
+  AlertmanagerStatusSchema,
 } from '@grafana/external-alertmanager/vanilla';
 import { RootState } from 'src/store/store';
+import z from 'zod';
+import { ParsedAlertmanagerConfigSchema, TransformedAlertmanagerStatusApiResponse, TransformedAlertmanagerStatusApiResponseSchema } from './types';
 
 // Default API instance for backward compatibility
 export const alertmanagerApi = createApi({
@@ -42,25 +45,19 @@ export const alertmanagerApi = createApi({
     return baseQuery(args, api, extraOptions);
   },
   endpoints: (build) => ({
-    getStatus: build.query<GetStatusApiResponse, GetStatusApiArg>({
+    getStatus: build.query<TransformedAlertmanagerStatusApiResponse, GetStatusApiArg>({
       query: () => ({ url: `/status` }),
-      transformResponse: (response): GetStatusApiResponse => {
-        // Parse and validate the response with Zod
-        const validatedResponse = GetStatusApiResponseSchema.parse(response);
+      transformResponse: (response: GetStatusApiResponse) => {
+        // Parse the YAML configuration from `response.config.original`
+        const parsed = parseYaml(response.config.original) as z.infer<typeof ParsedAlertmanagerConfigSchema>;
 
-        // Parse the YAML configuration
-        const parsed = parseYaml(validatedResponse.config.original) as NonNullable<
-          GetStatusApiResponse['config']['parsed']
-        >;
-
-        return {
-          ...validatedResponse,
-          config: {
-            ...validatedResponse.config,
-            parsed,
-          },
-        };
+        // add the parsed config to `response.config.parsed`
+        return create<TransformedAlertmanagerStatusApiResponse>(response, draft => {
+          draft.config.parsed = parsed;
+        });
       },
+      rawResponseSchema: AlertmanagerStatusSchema,
+      responseSchema: TransformedAlertmanagerStatusApiResponseSchema
     }),
     getSilences: build.query<GetSilencesApiResponse, GetSilencesApiArg>({
       query: (queryArg) => ({
@@ -69,9 +66,7 @@ export const alertmanagerApi = createApi({
           filter: queryArg.filter,
         },
       }),
-      transformResponse: (response: unknown): GetSilencesApiResponse => {
-        return GetSilencesApiResponseSchema.parse(response);
-      },
+      responseSchema: GetSilencesApiResponseSchema,
     }),
     postSilences: build.mutation<PostSilencesApiResponse, PostSilencesApiArg>({
       query: (queryArg) => ({
@@ -79,15 +74,11 @@ export const alertmanagerApi = createApi({
         method: 'POST',
         body: queryArg.postableSilence,
       }),
-      transformResponse: (response: unknown): PostSilencesApiResponse => {
-        return PostSilencesApiResponseSchema.parse(response);
-      },
+      responseSchema: PostSilencesApiResponseSchema,
     }),
     getSilence: build.query<GetSilenceApiResponse, GetSilenceApiArg>({
       query: (queryArg) => ({ url: `/silence/${queryArg.silenceId}` }),
-      transformResponse: (response: unknown): GetSilenceApiResponse => {
-        return GetSilenceApiResponseSchema.parse(response);
-      },
+      responseSchema: GetSilenceApiResponseSchema,
     }),
     deleteSilence: build.mutation<DeleteSilenceApiResponse, DeleteSilenceApiArg>({
       query: (queryArg) => ({
@@ -107,9 +98,7 @@ export const alertmanagerApi = createApi({
           receiver: queryArg.receiver,
         },
       }),
-      transformResponse: (response: unknown): GetAlertsApiResponse => {
-        return GetAlertsApiResponseSchema.parse(response);
-      },
+      responseSchema: GetAlertsApiResponseSchema,
     }),
     postAlerts: build.mutation<PostAlertsApiResponse, PostAlertsApiArg>({
       query: (queryArg) => ({
@@ -130,9 +119,7 @@ export const alertmanagerApi = createApi({
           receiver: queryArg.receiver,
         },
       }),
-      transformResponse: (response: unknown): GetAlertGroupsApiResponse => {
-        return GetAlertGroupsApiResponseSchema.parse(response);
-      },
+      responseSchema: GetAlertGroupsApiResponseSchema,
     }),
   }),
 });

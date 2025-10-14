@@ -58,27 +58,6 @@ export const InhibitRuleSchema = z.object({
 
 export const AlertmanagerConfigSchema = z.object({
   original: z.string(),
-  parsed: z
-    .object({
-      receivers: z.array(ReceiverSchema).optional(),
-      route: z
-        .object({
-          receiver: z.string().optional(),
-          group_by: z.array(z.string()).optional(),
-          continue: z.boolean().optional(),
-          routes: z.array(z.any()).optional(),
-          group_wait: z.string().optional(),
-          group_interval: z.string().optional(),
-          repeat_interval: z.string().optional(),
-          matchers: z.array(z.string()).optional(),
-        })
-        .optional(),
-      templates: z.array(z.string()).optional(),
-      time_intervals: z.array(TimeIntervalSchema).optional(),
-      inhibit_rules: z.array(InhibitRuleSchema).optional(),
-    })
-    .catchall(z.any())
-    .optional(),
 });
 
 export const AlertmanagerStatusSchema = z.object({
