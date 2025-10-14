@@ -3,44 +3,23 @@ import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
 import { PluginPage } from '@grafana/runtime';
-import { Alert, InteractiveTable } from '@grafana/ui';
+import { Alert, InteractiveTable, Stack } from '@grafana/ui';
 import { useInhibitRules } from '../../hooks/useInhibitRules';
 import { Trans, t } from '@grafana/i18n';
 import type { InhibitRule } from '@grafana/external-alertmanager/vanilla';
-import { css } from '@emotion/css';
+import { AlertLabel } from '@grafana/alerting';
 
 const MatchersCell = ({ matchers }: { matchers?: string[] }) => {
-  const matchersContainerStyle = css`
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  `;
-
-  const matcherBadgeStyle = css`
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 8px;
-    background-color: rgba(110, 159, 255, 0.15);
-    border: 1px solid rgba(110, 159, 255, 0.3);
-    border-radius: 4px;
-    font-size: 12px;
-    font-family: monospace;
-    color: #6e9fff;
-    white-space: nowrap;
-  `;
-
   if (!matchers || matchers.length === 0) {
     return <>{t('inhibit-rules.no-matchers', 'None')}</>;
   }
 
   return (
-    <div className={matchersContainerStyle}>
+    <Stack direction="row">
       {matchers.map((matcher, index) => (
-        <span key={index} className={matcherBadgeStyle}>
-          {matcher}
-        </span>
+        <AlertLabel key={matcher} value={matcher} colorBy="value" />
       ))}
-    </div>
+    </Stack>
   );
 };
 
