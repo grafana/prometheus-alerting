@@ -52,6 +52,8 @@ export const prometheusApi = createApi({
   }),
 });
 
+export const { useGetGroupsQuery, useLazyGetGroupsQuery } = prometheusApi;
+
 function normalizeRuleGroup(group: PromRuleGroupDTO): PromRuleGroupDTO {
   return produce(group, (draft) => {
     draft.rules.forEach((rule) => {

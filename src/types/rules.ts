@@ -1,0 +1,75 @@
+import { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vanilla';
+
+export type { PromRuleGroupDTO, PromRuleDTO };
+
+// Import StateIcon types from the internal path since they're not exported from unstable
+export type Health = 'nodata' | 'error';
+export type State = 'normal' | 'firing' | 'pending' | 'unknown' | 'recovering';
+
+export type RulesSourceApplication = 'prometheus' | 'mimir' | 'cortex' | 'loki' | 'grafana';
+
+export interface DataSourceRulesSourceIdentifier {
+  uid: string;
+  name: string;
+  ruleSourceType: 'datasource';
+}
+
+export interface DataSourceNamespaceIdentifier {
+  name: string;
+}
+
+export interface DataSourceRuleGroupIdentifier {
+  rulesSource: DataSourceRulesSourceIdentifier;
+  namespace: DataSourceNamespaceIdentifier;
+  groupName: string;
+  groupOrigin: 'datasource';
+}
+
+// Re-export PromRuleGroupDTO as RuleGroup for convenience
+export type RuleGroup = PromRuleGroupDTO;
+
+export type Rule = PromRuleDTO;
+
+// Normalize Prometheus state strings to StateIcon state types
+export function normalizeState(state?: string): State {
+  if (!state) {
+    return 'unknown';
+  }
+
+  const lowerState = state.toLowerCase();
+
+  switch (lowerState) {
+    case 'inactive':
+      return 'normal'; // Prometheus 'inactive' maps to 'normal' in StateIcon
+    case 'pending':
+      return 'pending';
+    case 'firing':
+      return 'firing';
+    case 'normal':
+      return 'normal';
+    case 'recovering':
+      return 'recovering';
+    default:
+      return 'unknown';
+  }
+}
+
+// Normalize health values
+export function normalizeHealth(health?: string): Health | undefined {
+  if (!health || health === 'ok') {
+    return undefined;
+  }
+
+  const lowerHealth = health.toLowerCase();
+
+  switch (lowerHealth) {
+    case 'error':
+    case 'err':
+      return 'error';
+    case 'nodata':
+    case 'no_data':
+      return 'nodata';
+    default:
+      return undefined;
+  }
+}
