@@ -237,6 +237,12 @@ const config = async (env: Env): Promise<Configuration> => {
       // handle resolving "rootDir" paths
       modules: [path.resolve(process.cwd(), 'src'), 'node_modules'],
       unsafeCache: true,
+      alias: {
+        // Force all @grafana/i18n imports to resolve to a single instance
+        // This prevents @grafana/alerting from bundling its own duplicate copy
+        // which would have a separate uninitialized tFunc variable
+        '@grafana/i18n': path.resolve(process.cwd(), 'node_modules/@grafana/i18n'),
+      },
     },
   };
 
