@@ -1,0 +1,83 @@
+{
+  "inhibit-rules": {
+    "column": {
+      "equal": "Equal",
+      "source-matchers": "Source Matchers",
+      "target-matchers": "Target Matchers"
+    },
+    "error-loading-message": "Failed to fetch inhibit rules",
+    "error-loading-title": "Error loading inhibit rules",
+    "no-matchers": "None",
+    "no-rules-message": "No inhibit rules are configured in the Alertmanager.",
+    "no-rules-title": "No inhibit rules found"
+  },
+  "receivers": {
+    "column": {
+      "integrations": "Integrations",
+      "name": "Name",
+      "types": "Types"
+    },
+    "error-loading-message": "Failed to fetch receivers",
+    "error-loading-title": "Error loading receivers",
+    "no-receivers-message": "No receivers are configured in the Alertmanager.",
+    "no-receivers-title": "No receivers found",
+    "none": "None"
+  },
+  "routes": {
+    "continue-label": "Continue:",
+    "error-loading-message": "Failed to fetch routes",
+    "error-loading-title": "Error loading routes",
+    "group-by-label": "Group by:",
+    "group-interval-label": "Group interval:",
+    "group-wait-label": "Group wait:",
+    "no": "No",
+    "no-routes-message": "No routing configuration is available in the Alertmanager.",
+    "no-routes-title": "No routes found",
+    "receiver-label": "Receiver: {{receiver}}",
+    "repeat-interval-label": "Repeat interval:",
+    "route-label": "Route",
+    "yes": "Yes"
+  },
+  "silences": {
+    "column": {
+      "comment": "Comment",
+      "created-by": "Created By",
+      "ends-at": "Ends At",
+      "matchers": "Matchers",
+      "starts-at": "Starts At",
+      "status": "Status"
+    },
+    "error-loading-message": "Failed to fetch silences",
+    "error-loading-title": "Error loading silences",
+    "no-silences-message": "No silences are currently configured in the Alertmanager.",
+    "no-silences-title": "No silences found"
+  },
+  "templates": {
+    "column": {
+      "path": "Template Path"
+    },
+    "error-loading-message": "Failed to fetch templates",
+    "error-loading-title": "Error loading templates",
+    "no-templates-message": "No templates are configured in the Alertmanager.",
+    "no-templates-title": "No templates found"
+  },
+  "time-intervals": {
+    "all": "All",
+    "all-day": "All day",
+    "column": {
+      "details": "Details",
+      "name": "Name"
+    },
+    "days-of-month-label": "Days of Month",
+    "error-loading-message": "Failed to fetch time intervals",
+    "error-loading-title": "Error loading time intervals",
+    "location-label": "Location",
+    "months-label": "Months",
+    "no-intervals-defined": "No time intervals defined",
+    "no-time-intervals-message": "No time intervals are configured in the Alertmanager.",
+    "no-time-intervals-title": "No time intervals found",
+    "times-label": "Times",
+    "weekdays-label": "Weekdays",
+    "years-label": "Years"
+  }
+}
