@@ -86,7 +86,7 @@ function SilencesPage() {
   return (
     <AlertmanagerPage subTitle={t('pages.silences.subtitle', 'Stop notifications from one or more alerting rules')}>
       <div data-testid={testIds.silences.container}>
-        <Stack direction="column" gap={2} alignItems="flex-end">
+        <Stack direction="column" gap={2}>
           <div>
             <LinkButton icon="plus" href={prefixRoute(ROUTES.CreateSilence)}>
               {t('silences.create-button', 'Create Silence')}
