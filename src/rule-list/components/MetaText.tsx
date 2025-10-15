@@ -48,4 +48,3 @@ const getStyles = () => ({
 });
 
 export { MetaText };
-

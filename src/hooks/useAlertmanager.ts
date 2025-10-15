@@ -23,7 +23,7 @@ export function useAlertmanager(): AlertmanagerDataSource {
     const settings = availableAlertmanagers.find((am) => am.uid === selectedUID);
 
     if (!settings) {
-      throw new Error(`no such Alertmanager: ${selectedUID}`)
+      throw new Error(`no such Alertmanager: ${selectedUID}`);
     }
 
     return {

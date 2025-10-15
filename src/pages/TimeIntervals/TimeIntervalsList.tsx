@@ -93,7 +93,10 @@ function TimeIntervalsPage() {
         )}
         {!isLoading && timeIntervals.length === 0 && !error && (
           <EmptyState
-            message={t('time-intervals.no-time-intervals-message', 'No time intervals are configured in the Alertmanager.')}
+            message={t(
+              'time-intervals.no-time-intervals-message',
+              'No time intervals are configured in the Alertmanager.'
+            )}
             variant="call-to-action"
           />
         )}

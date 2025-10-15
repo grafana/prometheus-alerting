@@ -11,10 +11,7 @@ export const createStore = (initialDataSourceUID: string) => {
       [prometheusApi.reducerPath]: prometheusApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(
-        alertmanagerApi.middleware,
-        prometheusApi.middleware,
-      ),
+      getDefaultMiddleware().concat(alertmanagerApi.middleware, prometheusApi.middleware),
     preloadedState: {
       dataSource: {
         selectedUID: initialDataSourceUID,

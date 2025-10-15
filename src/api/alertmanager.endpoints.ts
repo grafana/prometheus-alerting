@@ -16,7 +16,14 @@ import {
   PostSilencesApiArg,
   PostSilencesApiResponseSchema,
 } from '@grafana/external-alertmanager/vanilla';
-import { TransformedAlertmanagerStatusApiResponse, TransformedAlertmanagerStatusApiResponseSchema, TransformedAlertmanagerStatusApiResponseTransform, WithDataSourceUID, hasDataSourceUID, hasImplementation } from './types';
+import {
+  TransformedAlertmanagerStatusApiResponse,
+  TransformedAlertmanagerStatusApiResponseSchema,
+  TransformedAlertmanagerStatusApiResponseTransform,
+  WithDataSourceUID,
+  hasDataSourceUID,
+  hasImplementation,
+} from './types';
 
 // Dynamic baseQuery that reads dataSourceUID and implementation from query args
 const dynamicBaseQuery: ReturnType<typeof fetchBaseQuery> = async (args, api, extraOptions) => {
@@ -25,9 +32,10 @@ const dynamicBaseQuery: ReturnType<typeof fetchBaseQuery> = async (args, api, ex
   const implementation = hasImplementation(args) ? args.implementation : 'prometheus';
 
   // Determine base URL based on implementation
-  const baseUrl = implementation === 'mimir'
-    ? `/api/datasources/proxy/uid/${dataSourceUID}/alertmanager/api`
-    : `/api/datasources/proxy/uid/${dataSourceUID}/api`;
+  const baseUrl =
+    implementation === 'mimir'
+      ? `/api/datasources/proxy/uid/${dataSourceUID}/alertmanager/api`
+      : `/api/datasources/proxy/uid/${dataSourceUID}/api`;
 
   // Create and execute base query with the dynamic UID and base URL
   return fetchBaseQuery({
@@ -49,7 +57,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       query: ({ dataSourceUID, implementation }) => ({
         url: `/v2/status`,
         dataSourceUID,
-        implementation
+        implementation,
       }),
       transformResponse: (response: AlertmanagerStatus): TransformedAlertmanagerStatusApiResponse => {
         // Use Zod codec to parse YAML and validate the entire transformed response
@@ -65,7 +73,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
           filter,
         },
         dataSourceUID,
-        implementation
+        implementation,
       }),
       responseSchema: GetSilencesApiResponseSchema,
     }),
@@ -93,7 +101,15 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       }),
     }),
     getAlerts: build.query({
-      query: ({ dataSourceUID, active, silenced, inhibited, unprocessed, filter, receiver }: WithDataSourceUID<GetAlertsApiArg>) => ({
+      query: ({
+        dataSourceUID,
+        active,
+        silenced,
+        inhibited,
+        unprocessed,
+        filter,
+        receiver,
+      }: WithDataSourceUID<GetAlertsApiArg>) => ({
         url: `/v2/alerts`,
         params: {
           active,
@@ -116,7 +132,15 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       }),
     }),
     getAlertGroups: build.query({
-      query: ({ dataSourceUID, active, silenced, inhibited, muted, filter, receiver }: WithDataSourceUID<GetAlertGroupsApiArg>) => ({
+      query: ({
+        dataSourceUID,
+        active,
+        silenced,
+        inhibited,
+        muted,
+        filter,
+        receiver,
+      }: WithDataSourceUID<GetAlertGroupsApiArg>) => ({
         url: `/v2/alerts/groups`,
         params: {
           active,
@@ -130,5 +154,5 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       }),
       responseSchema: GetAlertGroupsApiResponseSchema,
     }),
-  })
+  }),
 });

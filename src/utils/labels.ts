@@ -11,4 +11,3 @@ export function labelsSize(labels?: Record<string, string>) {
 export function isPrivateLabelKey(labelKey: string) {
   return labelKey.startsWith('__');
 }
-

@@ -1,5 +1,5 @@
-import z from "zod";
-import { InhibitRuleSchema, ReceiverSchema, TimeIntervalSchema } from "./common";
+import z from 'zod';
+import { InhibitRuleSchema, ReceiverSchema, TimeIntervalSchema } from './common';
 
 /**
  * This is the Alertmanager configuration definition after we've parsed the YAML config from the "config.source" property

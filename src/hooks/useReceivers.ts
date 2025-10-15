@@ -24,11 +24,8 @@ export function useReceivers() {
 
   // memoize the trigger function so we avoid an infinite loop
   const triggerFn = useCallback(() => {
-    trigger({ dataSourceUID, implementation })
+    trigger({ dataSourceUID, implementation });
   }, [dataSourceUID, implementation, trigger]);
 
-  return [
-    triggerFn,
-    result,
-  ] as const;
+  return [triggerFn, result] as const;
 }

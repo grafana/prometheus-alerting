@@ -1,6 +1,10 @@
-import { AlertmanagerConfigSchema, AlertmanagerStatusSchema, ParsedAlertmanagerConfigSchema } from "@grafana/external-alertmanager/vanilla";
+import {
+  AlertmanagerConfigSchema,
+  AlertmanagerStatusSchema,
+  ParsedAlertmanagerConfigSchema,
+} from '@grafana/external-alertmanager/vanilla';
 import { parse as parseYaml } from '@std/yaml';
-import z from "zod";
+import z from 'zod';
 
 // Schema for validating the transformed response (with parsed config)
 export const TransformedAlertmanagerStatusApiResponseSchema = AlertmanagerStatusSchema.extend({
@@ -11,22 +15,22 @@ export const TransformedAlertmanagerStatusApiResponseSchema = AlertmanagerStatus
 export type TransformedAlertmanagerStatusApiResponse = z.output<typeof TransformedAlertmanagerStatusApiResponseSchema>;
 
 // Schema that transforms AlertmanagerStatus by parsing the YAML config
-export const TransformedAlertmanagerStatusApiResponseTransform = AlertmanagerStatusSchema
-.transform((data) => {
-  // Parse the YAML configuration from `data.config.original`
-  const parsedYamlConfig = parseYaml(data.config.original);
+export const TransformedAlertmanagerStatusApiResponseTransform =
+  AlertmanagerStatusSchema.transform<TransformedAlertmanagerStatusApiResponse>((data) => {
+    // Parse the YAML configuration from `data.config.original`
+    const parsedYamlConfig = parseYaml(data.config.original);
 
-  // Validate the parsed YAML against the expected schema
-  const parsed = ParsedAlertmanagerConfigSchema.parse(parsedYamlConfig);
+    // Validate the parsed YAML against the expected schema
+    const parsed = ParsedAlertmanagerConfigSchema.parse(parsedYamlConfig);
 
-  return {
-    ...data,
-    config: {
-      ...data.config,
-      parsed
-    }
-  }
-});
+    return {
+      ...data,
+      config: {
+        ...data.config,
+        parsed,
+      },
+    };
+  });
 
 // Type to include dataSourceUID and implementation in API arguments
 export type WithDataSourceUID<T = void> = T extends void

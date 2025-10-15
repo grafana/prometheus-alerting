@@ -86,7 +86,10 @@ function SilencesPage() {
           <InteractiveTable columns={columns} data={silences} getRowId={(silence) => silence.id} />
         )}
         {!isLoading && (!silences || silences.length === 0) && !error && (
-          <EmptyState message={t('silences.no-silences-message', 'No silences are currently configured in the Alertmanager.')} variant={'call-to-action'} />
+          <EmptyState
+            message={t('silences.no-silences-message', 'No silences are currently configured in the Alertmanager.')}
+            variant={'call-to-action'}
+          />
         )}
       </div>
     </AlertmanagerPage>

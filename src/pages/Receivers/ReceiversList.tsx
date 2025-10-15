@@ -15,7 +15,7 @@ function ReceiversPage() {
   const [triggerFetch, { receivers = [], isLoading, error }] = useReceivers();
 
   useEffect(() => {
-    triggerFetch()
+    triggerFetch();
   }, [triggerFetch]);
 
   const columns = [
@@ -42,9 +42,7 @@ function ReceiversPage() {
   return (
     <AlertmanagerPage>
       <div data-testid={testIds.receivers.container}>
-        {isLoading && (
-          <Skeleton height={24} count={5} />
-        )}
+        {isLoading && <Skeleton height={24} count={5} />}
         {error && (
           <Alert title={t('receivers.error-loading-title', 'Error loading receivers')} severity="error">
             {'error' in error ? error.error : t('receivers.error-loading-message', 'Failed to fetch receivers')}
