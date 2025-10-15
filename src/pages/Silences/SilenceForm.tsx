@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Field, Input, Combobox, type ComboboxOption, TextArea, Stack } from '@grafana/ui';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 import { alertmanagerApi } from '../../api/alertmanager.endpoints';
@@ -22,9 +24,11 @@ function SilenceForm() {
     { label: t('silences.create.operator-equal', '= (Equal)'), value: 'equal' },
     { label: t('silences.create.operator-not-equal', '!= (Not Equal)'), value: 'notEqual' },
     { label: t('silences.create.operator-regex', '=~ (Regex Match)'), value: 'regex' },
+    { label: t('silences.create.operator-regex-not-equal', '!~ (Regex Not Match)'), value: 'regexNotEqual' },
   ];
+
   const { uid: dataSourceUID } = useAlertmanager();
-  const [postSilence, { isLoading, error: mutationError }] = (alertmanagerApi as any).endpoints.postSilences.useMutation();
+  const [postSilence, { isLoading, error: mutationError }] = alertmanagerApi.endpoints.postSilences.useMutation();
 
   // Get current time and 1 hour from now as defaults
   const now = new Date();
@@ -39,100 +43,51 @@ function SilenceForm() {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  const [formData, setFormData] = useState<SilenceFormData>({
-    matchers: [{ name: '', value: '', isRegex: false, isEqual: true }],
-    startsAt: formatDateTimeLocal(now),
-    endsAt: formatDateTimeLocal(oneHourLater),
-    createdBy: '',
-    comment: '',
+  const {
+    control,
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<SilenceFormData>({
+    resolver: zodResolver(SilenceFormSchema),
+    defaultValues: {
+      matchers: [{ name: '', value: '', isRegex: false, isEqual: true }],
+      startsAt: formatDateTimeLocal(now),
+      endsAt: formatDateTimeLocal(oneHourLater),
+      createdBy: '',
+      comment: '',
+    },
   });
 
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'matchers',
+  });
 
-  const handleMatcherChange = (index: number, field: keyof MatcherFormData, value: string | boolean) => {
-    const newMatchers = [...formData.matchers];
-    newMatchers[index] = { ...newMatchers[index], [field]: value };
-    setFormData({ ...formData, matchers: newMatchers });
-
-    // Clear validation error for this field
-    setValidationErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors[`matchers.${index}.${field}`];
-      return newErrors;
-    });
-  };
-
-  const handleOperatorChange = (index: number, option: ComboboxOption) => {
-    const operatorValue = option.value;
-    const newMatchers = [...formData.matchers];
-    if (operatorValue === 'equal') {
-      newMatchers[index] = { ...newMatchers[index], isRegex: false, isEqual: true };
-    } else if (operatorValue === 'notEqual') {
-      newMatchers[index] = { ...newMatchers[index], isRegex: false, isEqual: false };
-    } else if (operatorValue === 'regex') {
-      newMatchers[index] = { ...newMatchers[index], isRegex: true, isEqual: true };
-    }
-    setFormData({ ...formData, matchers: newMatchers });
-  };
+  const matchers = watch('matchers');
 
   const getOperatorOption = (matcher: MatcherFormData): ComboboxOption => {
+    if (matcher.isRegex && matcher.isEqual === false) {
+      return operatorOptions[3]; // !~ (Regex Not Match)
+    }
     if (matcher.isRegex) {
-      return operatorOptions[2];
+      return operatorOptions[2]; // =~ (Regex Match)
     }
     if (matcher.isEqual === false) {
-      return operatorOptions[1];
+      return operatorOptions[1]; // != (Not Equal)
     }
-    return operatorOptions[0];
+    return operatorOptions[0]; // = (Equal)
   };
 
-  const addMatcher = () => {
-    setFormData({
-      ...formData,
-      matchers: [...formData.matchers, { name: '', value: '', isRegex: false, isEqual: true }],
-    });
-  };
-
-  const removeMatcher = (index: number) => {
-    const newMatchers = formData.matchers.filter((_, i) => i !== index);
-    setFormData({ ...formData, matchers: newMatchers });
-  };
-
-  const handleFieldChange = (field: keyof SilenceFormData, value: string) => {
-    setFormData({ ...formData, [field]: value });
-
-    // Clear validation error for this field
-    setValidationErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors[field];
-      return newErrors;
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationErrors({});
-
-    // Validate form data with Zod
-    const result = SilenceFormSchema.safeParse(formData);
-
-    if (!result.success) {
-      // Convert Zod errors to a more user-friendly format
-      const errors: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        const path = issue.path.join('.');
-        errors[path] = issue.message;
-      });
-      setValidationErrors(errors);
-      return;
-    }
-
+  const onSubmit = async (data: SilenceFormData) => {
     // Convert datetime-local format to ISO 8601
     const postableData: PostableSilence = {
-      matchers: result.data.matchers,
-      startsAt: new Date(result.data.startsAt).toISOString(),
-      endsAt: new Date(result.data.endsAt).toISOString(),
-      createdBy: result.data.createdBy,
-      comment: result.data.comment,
+      matchers: data.matchers,
+      startsAt: new Date(data.startsAt).toISOString(),
+      endsAt: new Date(data.endsAt).toISOString(),
+      createdBy: data.createdBy,
+      comment: data.comment,
     };
 
     try {
@@ -149,6 +104,10 @@ function SilenceForm() {
     locationService.push(prefixRoute(ROUTES.Silences));
   };
 
+  const addMatcher = () => {
+    append({ name: '', value: '', isRegex: false, isEqual: true });
+  };
+
   return (
     <AlertmanagerPage>
       <div style={{ maxWidth: '800px' }}>
@@ -160,25 +119,24 @@ function SilenceForm() {
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div style={{ marginBottom: '24px' }}>
             <h3>{t('silences.create.matchers-title', 'Matchers')}</h3>
             <p style={{ color: '#999', fontSize: '14px', marginBottom: '16px' }}>
               {t('silences.create.matchers-description', 'Define label matchers to determine which alerts this silence will affect')}
             </p>
 
-            {formData.matchers.map((matcher, index) => (
-              <Stack key={index} direction="row" gap={1} alignItems="flex-start" wrap={false}>
+            {fields.map((field, index) => (
+              <Stack key={field.id} direction="row" gap={1} alignItems="flex-start" wrap={false}>
                 <Field
                   label={index === 0 ? t('silences.create.label-name', 'Label Name') : undefined}
-                  invalid={!!validationErrors[`matchers.${index}.name`]}
-                  error={validationErrors[`matchers.${index}.name`]}
+                  invalid={!!errors.matchers?.[index]?.name}
+                  error={errors.matchers?.[index]?.name?.message}
                   style={{ flex: 1, minWidth: '150px' }}
                 >
                   <Input
+                    {...register(`matchers.${index}.name`)}
                     placeholder={t('silences.create.label-name-placeholder', 'e.g., alertname')}
-                    value={matcher.name}
-                    onChange={(e) => handleMatcherChange(index, 'name', e.currentTarget.value)}
                   />
                 </Field>
 
@@ -186,23 +144,53 @@ function SilenceForm() {
                   label={index === 0 ? t('silences.create.operator', 'Operator') : undefined}
                   style={{ width: '180px' }}
                 >
-                  <Combobox
-                    options={operatorOptions}
-                    value={getOperatorOption(matcher)}
-                    onChange={(option) => handleOperatorChange(index, option)}
+                  <Controller
+                    name={`matchers.${index}.isRegex`}
+                    control={control}
+                    render={({ field: { onChange } }) => (
+                      <Controller
+                        name={`matchers.${index}.isEqual`}
+                        control={control}
+                        render={({ field: { onChange: onEqualChange } }) => (
+                          <Combobox
+                            options={operatorOptions}
+                            value={getOperatorOption(matchers[index])}
+                            onChange={(option) => {
+                              const operatorValue = option.value;
+                              if (operatorValue === 'equal') {
+                                onChange(false);
+                                onEqualChange(true);
+                              } else if (operatorValue === 'notEqual') {
+                                onChange(false);
+                                onEqualChange(false);
+                              } else if (operatorValue === 'regex') {
+                                onChange(true);
+                                onEqualChange(true);
+                              } else if (operatorValue === 'regexNotEqual') {
+                                onChange(true);
+                                onEqualChange(false);
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    )}
                   />
                 </Field>
 
                 <Field
                   label={index === 0 ? t('silences.create.label-value', 'Label Value') : undefined}
-                  invalid={!!validationErrors[`matchers.${index}.value`]}
-                  error={validationErrors[`matchers.${index}.value`]}
+                  invalid={!!errors.matchers?.[index]?.value}
+                  error={errors.matchers?.[index]?.value?.message}
                   style={{ flex: 1, minWidth: '150px' }}
                 >
                   <Input
-                    placeholder={matcher.isRegex ? t('silences.create.label-value-placeholder-regex', 'e.g., .*warning.*') : t('silences.create.label-value-placeholder', 'e.g., HighMemoryUsage')}
-                    value={matcher.value}
-                    onChange={(e) => handleMatcherChange(index, 'value', e.currentTarget.value)}
+                    {...register(`matchers.${index}.value`)}
+                    placeholder={
+                      matchers[index]?.isRegex
+                        ? t('silences.create.label-value-placeholder-regex', 'e.g., .*warning.*')
+                        : t('silences.create.label-value-placeholder', 'e.g., HighMemoryUsage')
+                    }
                   />
                 </Field>
 
@@ -211,8 +199,8 @@ function SilenceForm() {
                     variant="secondary"
                     icon="trash-alt"
                     aria-label={t('silences.create.remove-matcher', 'Remove matcher')}
-                    onClick={() => removeMatcher(index)}
-                    disabled={formData.matchers.length === 1}
+                    onClick={() => remove(index)}
+                    disabled={fields.length === 1}
                     type="button"
                   />
                 </div>
@@ -229,9 +217,9 @@ function SilenceForm() {
               {t('silences.create.add-matcher', 'Add Matcher')}
             </Button>
 
-            {validationErrors['matchers'] && (
+            {errors.matchers && typeof errors.matchers.message === 'string' && (
               <div style={{ color: '#e02f44', fontSize: '12px', marginTop: '8px' }}>
-                {validationErrors['matchers']}
+                {errors.matchers.message}
               </div>
             )}
           </div>
@@ -239,52 +227,42 @@ function SilenceForm() {
           <Field
             label={t('silences.create.starts-at', 'Start Time')}
             description={t('silences.create.starts-at-description', 'When the silence should begin')}
-            invalid={!!validationErrors['startsAt']}
-            error={validationErrors['startsAt']}
+            invalid={!!errors.startsAt}
+            error={errors.startsAt?.message}
           >
-            <Input
-              type="datetime-local"
-              value={formData.startsAt}
-              onChange={(e) => handleFieldChange('startsAt', e.currentTarget.value)}
-            />
+            <Input {...register('startsAt')} type="datetime-local" />
           </Field>
 
           <Field
             label={t('silences.create.ends-at', 'End Time')}
             description={t('silences.create.ends-at-description', 'When the silence should expire')}
-            invalid={!!validationErrors['endsAt']}
-            error={validationErrors['endsAt']}
+            invalid={!!errors.endsAt}
+            error={errors.endsAt?.message}
           >
-            <Input
-              type="datetime-local"
-              value={formData.endsAt}
-              onChange={(e) => handleFieldChange('endsAt', e.currentTarget.value)}
-            />
+            <Input {...register('endsAt')} type="datetime-local" />
           </Field>
 
           <Field
             label={t('silences.create.created-by', 'Created By')}
             description={t('silences.create.created-by-description', 'Your name or identifier')}
-            invalid={!!validationErrors['createdBy']}
-            error={validationErrors['createdBy']}
+            invalid={!!errors.createdBy}
+            error={errors.createdBy?.message}
           >
             <Input
+              {...register('createdBy')}
               placeholder={t('silences.create.created-by-placeholder', 'e.g., john.doe@example.com')}
-              value={formData.createdBy}
-              onChange={(e) => handleFieldChange('createdBy', e.currentTarget.value)}
             />
           </Field>
 
           <Field
             label={t('silences.create.comment', 'Comment')}
             description={t('silences.create.comment-description', 'Reason for creating this silence')}
-            invalid={!!validationErrors['comment']}
-            error={validationErrors['comment']}
+            invalid={!!errors.comment}
+            error={errors.comment?.message}
           >
             <TextArea
+              {...register('comment')}
               placeholder={t('silences.create.comment-placeholder', 'e.g., Planned maintenance window')}
-              value={formData.comment}
-              onChange={(e) => handleFieldChange('comment', e.currentTarget.value)}
               rows={3}
             />
           </Field>

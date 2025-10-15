@@ -14,7 +14,14 @@ export const getStatusBadge = (state: 'expired' | 'active' | 'pending') => {
 
 export const formatMatchers = (silence: GettableSilence) => {
   return silence.matchers.map((m) => {
-    const operator = m.isRegex ? '=~' : m.isEqual === false ? '!=' : '=';
+    let operator = '=';
+    if (m.isRegex && m.isEqual === false) {
+      operator = '!~';
+    } else if (m.isRegex) {
+      operator = '=~';
+    } else if (m.isEqual === false) {
+      operator = '!=';
+    }
     return `${m.name}${operator}"${m.value}"`;
   });
 };
