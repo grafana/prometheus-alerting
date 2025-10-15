@@ -2,10 +2,10 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { PluginPage } from '@grafana/runtime';
 import { Alert, InteractiveTable } from '@grafana/ui';
 import { useTemplates } from '../../hooks/useTemplates';
 import { Trans, t } from '@grafana/i18n';
+import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 
 interface TemplateRow {
   path: string;
@@ -28,7 +28,7 @@ function TemplatesPage() {
   ];
 
   return (
-    <PluginPage>
+    <AlertmanagerPage>
       <div data-testid={testIds.templates.container}>
         {isLoading && (
           <div>
@@ -50,7 +50,7 @@ function TemplatesPage() {
           </Alert>
         )}
       </div>
-    </PluginPage>
+    </AlertmanagerPage>
   );
 }
 

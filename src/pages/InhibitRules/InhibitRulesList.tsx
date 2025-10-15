@@ -2,12 +2,12 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { PluginPage } from '@grafana/runtime';
 import { Alert, InteractiveTable, Stack } from '@grafana/ui';
 import { useInhibitRules } from '../../hooks/useInhibitRules';
 import { Trans, t } from '@grafana/i18n';
 import type { InhibitRule } from '@grafana/external-alertmanager/vanilla';
 import { AlertLabel } from '@grafana/alerting';
+import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 
 const MatchersCell = ({ matchers }: { matchers?: string[] }) => {
   if (!matchers || matchers.length === 0) {
@@ -50,7 +50,7 @@ function InhibitRulesPage() {
   ];
 
   return (
-    <PluginPage>
+    <AlertmanagerPage>
       <div data-testid={testIds.inhibitRules.container}>
         {isLoading && (
           <div>
@@ -74,7 +74,7 @@ function InhibitRulesPage() {
           </Alert>
         )}
       </div>
-    </PluginPage>
+    </AlertmanagerPage>
   );
 }
 

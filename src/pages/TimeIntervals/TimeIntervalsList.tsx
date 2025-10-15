@@ -2,11 +2,11 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { PluginPage } from '@grafana/runtime';
 import { Alert, InteractiveTable } from '@grafana/ui';
 import { useTimeIntervals } from '../../hooks/useTimeIntervals';
 import { Trans, t } from '@grafana/i18n';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
+import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error } = useTimeIntervals();
@@ -73,7 +73,7 @@ function TimeIntervalsPage() {
   ];
 
   return (
-    <PluginPage>
+    <AlertmanagerPage>
       <div data-testid={testIds.timeIntervals.container}>
         {isLoading && (
           <div>
@@ -99,7 +99,7 @@ function TimeIntervalsPage() {
           </Alert>
         )}
       </div>
-    </PluginPage>
+    </AlertmanagerPage>
   );
 }
 

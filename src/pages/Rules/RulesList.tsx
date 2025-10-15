@@ -1,17 +1,16 @@
 import React from 'react';
 
-import { PluginPage } from '@grafana/runtime';
-
 import { testIds } from '../../components/testIds';
 import { GroupedView } from '../../rule-list/GroupedView';
+import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 
 function RulesPage() {
   return (
-    <PluginPage>
+    <AlertmanagerPage>
       <div data-testid={testIds.rules.container}>
         <GroupedView />
       </div>
-    </PluginPage>
+    </AlertmanagerPage>
   );
 }
 

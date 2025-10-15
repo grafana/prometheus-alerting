@@ -2,9 +2,9 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { PluginPage } from '@grafana/runtime';
 import { Alert, Card } from '@grafana/ui';
 import { useRoutes } from '../../hooks/useRoutes';
+import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 import { css } from '@emotion/css';
 import { Trans, t } from '@grafana/i18n';
 import { AlertLabel } from '@grafana/alerting';
@@ -128,7 +128,7 @@ function RoutesPage() {
   const { route, isLoading, error } = useRoutes();
 
   return (
-    <PluginPage>
+    <AlertmanagerPage>
       <div data-testid={testIds.routes.container}>
         {isLoading && (
           <div>
@@ -152,7 +152,7 @@ function RoutesPage() {
           </Alert>
         )}
       </div>
-    </PluginPage>
+    </AlertmanagerPage>
   );
 }
 
