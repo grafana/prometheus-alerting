@@ -1,9 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { parse as parseYaml } from '@std/yaml';
 import {
   GetStatusApiArg,
   AlertmanagerStatusSchema,
-  ParsedAlertmanagerConfigSchema,
   AlertmanagerStatus,
   DeleteSilenceApiArg,
   GetAlertGroupsApiArg,
@@ -54,18 +52,8 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         implementation
       }),
       transformResponse: (response: AlertmanagerStatus): TransformedAlertmanagerStatusApiResponse => {
-        // Parse the YAML configuration from `response.config.original`
-        const parsedYamlConfig = parseYaml(response.config.original);
-        const parsed = ParsedAlertmanagerConfigSchema.parse(parsedYamlConfig);
-
-        // add the parsed config to `response.config.parsed`
-        return {
-          ...response,
-          config: {
-            ...response.config,
-            parsed,
-          },
-        };
+        // Use Zod codec to parse YAML and validate the entire transformed response
+        return TransformedAlertmanagerStatusApiResponseSchema.parse(response);
       },
       rawResponseSchema: AlertmanagerStatusSchema,
       responseSchema: TransformedAlertmanagerStatusApiResponseSchema
