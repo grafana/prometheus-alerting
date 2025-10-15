@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Field, Input, Combobox, type ComboboxOption, TextArea, Stack } from '@grafana/ui';
+import { Alert, Button, Field, Input, Combobox, type ComboboxOption, TextArea, Stack, Text } from '@grafana/ui';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 import { alertmanagerApi } from '../../api/alertmanager.endpoints';
 import { useAlertmanager } from '../../hooks/useAlertmanager';
@@ -111,171 +111,181 @@ function SilenceForm() {
   return (
     <AlertmanagerPage>
       <div style={{ maxWidth: '800px' }}>
-        <h2>{t('silences.create.title', 'Create Silence')}</h2>
-
-        {mutationError && (
-          <Alert title={t('silences.create.error-title', 'Error creating silence')} severity="error">
-            {mutationError instanceof Error ? mutationError.message : t('silences.create.error-message', 'Failed to create silence')}
-          </Alert>
-        )}
-
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div style={{ marginBottom: '24px' }}>
-            <h3>{t('silences.create.matchers-title', 'Matchers')}</h3>
-            <p style={{ color: '#999', fontSize: '14px', marginBottom: '16px' }}>
-              {t('silences.create.matchers-description', 'Define label matchers to determine which alerts this silence will affect')}
-            </p>
-
-            {fields.map((field, index) => (
-              <Stack key={field.id} direction="row" gap={1} alignItems="flex-start" wrap={false}>
-                <Field
-                  label={index === 0 ? t('silences.create.label-name', 'Label Name') : undefined}
-                  invalid={!!errors.matchers?.[index]?.name}
-                  error={errors.matchers?.[index]?.name?.message}
-                  style={{ flex: 1, minWidth: '150px' }}
-                >
-                  <Input
-                    {...register(`matchers.${index}.name`)}
-                    placeholder={t('silences.create.label-name-placeholder', 'e.g., alertname')}
-                  />
-                </Field>
-
-                <Field
-                  label={index === 0 ? t('silences.create.operator', 'Operator') : undefined}
-                  style={{ width: '180px' }}
-                >
-                  <Controller
-                    name={`matchers.${index}.isRegex`}
-                    control={control}
-                    render={({ field: { onChange } }) => (
-                      <Controller
-                        name={`matchers.${index}.isEqual`}
-                        control={control}
-                        render={({ field: { onChange: onEqualChange } }) => (
-                          <Combobox
-                            options={operatorOptions}
-                            value={getOperatorOption(matchers[index])}
-                            onChange={(option) => {
-                              const operatorValue = option.value;
-                              if (operatorValue === 'equal') {
-                                onChange(false);
-                                onEqualChange(true);
-                              } else if (operatorValue === 'notEqual') {
-                                onChange(false);
-                                onEqualChange(false);
-                              } else if (operatorValue === 'regex') {
-                                onChange(true);
-                                onEqualChange(true);
-                              } else if (operatorValue === 'regexNotEqual') {
-                                onChange(true);
-                                onEqualChange(false);
-                              }
-                            }}
-                          />
-                        )}
-                      />
-                    )}
-                  />
-                </Field>
-
-                <Field
-                  label={index === 0 ? t('silences.create.label-value', 'Label Value') : undefined}
-                  invalid={!!errors.matchers?.[index]?.value}
-                  error={errors.matchers?.[index]?.value?.message}
-                  style={{ flex: 1, minWidth: '150px' }}
-                >
-                  <Input
-                    {...register(`matchers.${index}.value`)}
-                    placeholder={
-                      matchers[index]?.isRegex
-                        ? t('silences.create.label-value-placeholder-regex', 'e.g., .*warning.*')
-                        : t('silences.create.label-value-placeholder', 'e.g., HighMemoryUsage')
-                    }
-                  />
-                </Field>
-
-                <div style={{ paddingTop: index === 0 ? '32px' : '0' }}>
-                  <Button
-                    variant="secondary"
-                    icon="trash-alt"
-                    aria-label={t('silences.create.remove-matcher', 'Remove matcher')}
-                    onClick={() => remove(index)}
-                    disabled={fields.length === 1}
-                    type="button"
-                  />
-                </div>
-              </Stack>
-            ))}
-
-            <Button
-              variant="secondary"
-              icon="plus"
-              onClick={addMatcher}
-              type="button"
-              style={{ marginTop: '8px' }}
-            >
-              {t('silences.create.add-matcher', 'Add Matcher')}
-            </Button>
-
-            {errors.matchers && typeof errors.matchers.message === 'string' && (
-              <div style={{ color: '#e02f44', fontSize: '12px', marginTop: '8px' }}>
-                {errors.matchers.message}
-              </div>
-            )}
-          </div>
-
-          <Field
-            label={t('silences.create.starts-at', 'Start Time')}
-            description={t('silences.create.starts-at-description', 'When the silence should begin')}
-            invalid={!!errors.startsAt}
-            error={errors.startsAt?.message}
-          >
-            <Input {...register('startsAt')} type="datetime-local" />
-          </Field>
-
-          <Field
-            label={t('silences.create.ends-at', 'End Time')}
-            description={t('silences.create.ends-at-description', 'When the silence should expire')}
-            invalid={!!errors.endsAt}
-            error={errors.endsAt?.message}
-          >
-            <Input {...register('endsAt')} type="datetime-local" />
-          </Field>
-
-          <Field
-            label={t('silences.create.created-by', 'Created By')}
-            description={t('silences.create.created-by-description', 'Your name or identifier')}
-            invalid={!!errors.createdBy}
-            error={errors.createdBy?.message}
-          >
-            <Input
-              {...register('createdBy')}
-              placeholder={t('silences.create.created-by-placeholder', 'e.g., john.doe@example.com')}
-            />
-          </Field>
-
-          <Field
-            label={t('silences.create.comment', 'Comment')}
-            description={t('silences.create.comment-description', 'Reason for creating this silence')}
-            invalid={!!errors.comment}
-            error={errors.comment?.message}
-          >
-            <TextArea
-              {...register('comment')}
-              placeholder={t('silences.create.comment-placeholder', 'e.g., Planned maintenance window')}
-              rows={3}
-            />
-          </Field>
-
-          <Stack gap={2}>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? t('silences.create.creating', 'Creating...') : t('silences.create.submit', 'Create Silence')}
-            </Button>
-            <Button variant="secondary" onClick={handleCancel} type="button" disabled={isLoading}>
-              {t('silences.create.cancel', 'Cancel')}
-            </Button>
+        <Stack direction="column" gap={2}>
+          <Stack direction="column" gap={0}>
+            <Text variant="h3">{t('silences.create.matchers-title', 'Matchers')}</Text>
+            <Text color="secondary">
+              {t(
+                'silences.create.matchers-description',
+                'Define label matchers to determine which alerts this silence will affect'
+              )}
+            </Text>
           </Stack>
-        </form>
+
+          {/* form error */}
+          {mutationError && (
+            <Alert title={t('silences.create.error-title', 'Error creating silence')} severity="error">
+              {mutationError instanceof Error
+                ? mutationError.message
+                : t('silences.create.error-message', 'Failed to create silence')}
+            </Alert>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Stack direction="column" gap={2}>
+              <Stack direction="column" alignItems="flex-start" gap={0}>
+                <Stack direction="column" gap={0}>
+                  {fields.map((field, index) => (
+                    <Stack key={field.id} direction="row" gap={1} alignItems="flex-start" wrap={false}>
+                      <Field
+                        label={index === 0 ? t('silences.create.label-name', 'Label Name') : undefined}
+                        invalid={!!errors.matchers?.[index]?.name}
+                        error={errors.matchers?.[index]?.name?.message}
+                        style={{ flex: 1, minWidth: '150px' }}
+                      >
+                        <Input
+                          {...register(`matchers.${index}.name`)}
+                          placeholder={t('silences.create.label-name-placeholder', 'e.g., alertname')}
+                        />
+                      </Field>
+
+                      <Field
+                        label={index === 0 ? t('silences.create.operator', 'Operator') : undefined}
+                        style={{ width: '180px' }}
+                      >
+                        <Controller
+                          name={`matchers.${index}.isRegex`}
+                          control={control}
+                          render={({ field: { onChange } }) => (
+                            <Controller
+                              name={`matchers.${index}.isEqual`}
+                              control={control}
+                              render={({ field: { onChange: onEqualChange } }) => (
+                                <Combobox
+                                  options={operatorOptions}
+                                  value={getOperatorOption(matchers[index])}
+                                  onChange={(option) => {
+                                    const operatorValue = option.value;
+                                    if (operatorValue === 'equal') {
+                                      onChange(false);
+                                      onEqualChange(true);
+                                    } else if (operatorValue === 'notEqual') {
+                                      onChange(false);
+                                      onEqualChange(false);
+                                    } else if (operatorValue === 'regex') {
+                                      onChange(true);
+                                      onEqualChange(true);
+                                    } else if (operatorValue === 'regexNotEqual') {
+                                      onChange(true);
+                                      onEqualChange(false);
+                                    }
+                                  }}
+                                />
+                              )}
+                            />
+                          )}
+                        />
+                      </Field>
+
+                      <Field
+                        label={index === 0 ? t('silences.create.label-value', 'Label Value') : undefined}
+                        invalid={!!errors.matchers?.[index]?.value}
+                        error={errors.matchers?.[index]?.value?.message}
+                        style={{ flex: 1, minWidth: '150px' }}
+                      >
+                        <Input
+                          {...register(`matchers.${index}.value`)}
+                          placeholder={
+                            matchers[index]?.isRegex
+                              ? t('silences.create.label-value-placeholder-regex', 'e.g., .*warning.*')
+                              : t('silences.create.label-value-placeholder', 'e.g., HighMemoryUsage')
+                          }
+                        />
+                      </Field>
+
+                      <div style={{ paddingTop: index === 0 ? '20px' : '0' }}>
+                        <Button
+                          variant="secondary"
+                          icon="trash-alt"
+                          aria-label={t('silences.create.remove-matcher', 'Remove matcher')}
+                          onClick={() => remove(index)}
+                          disabled={fields.length === 1}
+                          type="button"
+                        />
+                      </div>
+                    </Stack>
+                  ))}
+                </Stack>
+
+                <Button variant="secondary" icon="plus" onClick={addMatcher} type="button">
+                  {t('silences.create.add-matcher', 'Add Matcher')}
+                </Button>
+              </Stack>
+
+              {errors.matchers && typeof errors.matchers.message === 'string' && (
+                <div style={{ color: '#e02f44', fontSize: '12px' }}>{errors.matchers.message}</div>
+              )}
+
+              <Field
+                noMargin
+                label={t('silences.create.starts-at', 'Start Time')}
+                description={t('silences.create.starts-at-description', 'When the silence should begin')}
+                invalid={!!errors.startsAt}
+                error={errors.startsAt?.message}
+              >
+                <Input {...register('startsAt')} type="datetime-local" />
+              </Field>
+
+              <Field
+                noMargin
+                label={t('silences.create.ends-at', 'End Time')}
+                description={t('silences.create.ends-at-description', 'When the silence should expire')}
+                invalid={!!errors.endsAt}
+                error={errors.endsAt?.message}
+              >
+                <Input {...register('endsAt')} type="datetime-local" />
+              </Field>
+
+              <Field
+                noMargin
+                label={t('silences.create.created-by', 'Created By')}
+                description={t('silences.create.created-by-description', 'Your name or identifier')}
+                invalid={!!errors.createdBy}
+                error={errors.createdBy?.message}
+              >
+                <Input
+                  {...register('createdBy')}
+                  placeholder={t('silences.create.created-by-placeholder', 'e.g., john.doe@example.com')}
+                />
+              </Field>
+
+              <Field
+                noMargin
+                label={t('silences.create.comment', 'Comment')}
+                description={t('silences.create.comment-description', 'Reason for creating this silence')}
+                invalid={!!errors.comment}
+                error={errors.comment?.message}
+              >
+                <TextArea
+                  {...register('comment')}
+                  placeholder={t('silences.create.comment-placeholder', 'e.g., Planned maintenance window')}
+                  rows={3}
+                />
+              </Field>
+
+              <Stack gap={2}>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading
+                    ? t('silences.create.creating', 'Creating...')
+                    : t('silences.create.submit', 'Create Silence')}
+                </Button>
+                <Button variant="secondary" onClick={handleCancel} type="button" disabled={isLoading}>
+                  {t('silences.create.cancel', 'Cancel')}
+                </Button>
+              </Stack>
+            </Stack>
+          </form>
+        </Stack>
       </div>
     </AlertmanagerPage>
   );

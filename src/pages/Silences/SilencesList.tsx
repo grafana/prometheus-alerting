@@ -72,7 +72,7 @@ function SilencesPage() {
         <Button
           variant="destructive"
           size="sm"
-          fill='outline'
+          fill="outline"
           onClick={() => setSilenceToExpire(original)}
           icon="trash-alt"
           disabled={original.status.state === 'expired'}
@@ -94,35 +94,35 @@ function SilencesPage() {
           </div>
 
           {isLoading && (
-          <div>
-            <Skeleton height={50} style={{ marginBottom: '10px' }} />
-            <Skeleton height={40} count={5} style={{ marginBottom: '5px' }} />
-          </div>
-        )}
-        {error && (
-          <Alert title={t('silences.error-loading-title', 'Error loading silences')} severity="error">
-            {error instanceof Error ? error.message : t('silences.error-loading-message', 'Failed to fetch silences')}
-          </Alert>
-        )}
-        {!isLoading && silences && silences.length > 0 && !error && (
-          <InteractiveTable
-            columns={columns}
-            data={silences}
-            getRowId={(silence) => silence.id}
-            renderExpandedRow={(silence) => (
-              <div style={{ padding: '12px 16px', backgroundColor: 'rgba(204, 204, 220, 0.07)' }}>
-                <strong>{t('silences.comment-label', 'Comment:')}</strong>
-                <div style={{ marginTop: '8px' }}>{silence.comment}</div>
-              </div>
-            )}
-          />
-        )}
-        {!isLoading && (!silences || silences.length === 0) && !error && (
-          <EmptyState
-            message={t('silences.no-silences-message', 'No silences are currently configured in the Alertmanager.')}
-            variant={'call-to-action'}
-          />
-        )}
+            <div>
+              <Skeleton height={50} style={{ marginBottom: '10px' }} />
+              <Skeleton height={40} count={5} style={{ marginBottom: '5px' }} />
+            </div>
+          )}
+          {error && (
+            <Alert title={t('silences.error-loading-title', 'Error loading silences')} severity="error">
+              {error instanceof Error ? error.message : t('silences.error-loading-message', 'Failed to fetch silences')}
+            </Alert>
+          )}
+          {!isLoading && silences && silences.length > 0 && !error && (
+            <InteractiveTable
+              columns={columns}
+              data={silences}
+              getRowId={(silence) => silence.id}
+              renderExpandedRow={(silence) => (
+                <div style={{ padding: '12px 16px', backgroundColor: 'rgba(204, 204, 220, 0.07)' }}>
+                  <strong>{t('silences.comment-label', 'Comment:')}</strong>
+                  <div style={{ marginTop: '8px' }}>{silence.comment}</div>
+                </div>
+              )}
+            />
+          )}
+          {!isLoading && (!silences || silences.length === 0) && !error && (
+            <EmptyState
+              message={t('silences.no-silences-message', 'No silences are currently configured in the Alertmanager.')}
+              variant={'call-to-action'}
+            />
+          )}
         </Stack>
       </div>
 
