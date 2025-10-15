@@ -78,11 +78,11 @@
       "operator-equal": "= (Equal)",
       "operator-not-equal": "!= (Not Equal)",
       "operator-regex": "=~ (Regex Match)",
+      "operator-regex-not-equal": "!~ (Regex Not Match)",
       "remove-matcher": "Remove matcher",
       "starts-at": "Start Time",
       "starts-at-description": "When the silence should begin",
-      "submit": "Create Silence",
-      "title": "Create Silence"
+      "submit": "Create Silence"
     },
     "create-button": "Create Silence",
     "error-loading-message": "Failed to fetch silences",
