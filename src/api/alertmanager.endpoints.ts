@@ -4,16 +4,23 @@ import {
   AlertmanagerStatusSchema,
   AlertmanagerStatus,
   DeleteSilenceApiArg,
+  DeleteSilenceApiResponse,
   GetAlertGroupsApiArg,
+  GetAlertGroupsApiResponse,
   GetAlertGroupsApiResponseSchema,
   GetAlertsApiArg,
+  GetAlertsApiResponse,
   GetAlertsApiResponseSchema,
   GetSilenceApiArg,
+  GetSilenceApiResponse,
   GetSilenceApiResponseSchema,
   GetSilencesApiArg,
+  GetSilencesApiResponse,
   GetSilencesApiResponseSchema,
   PostAlertsApiArg,
+  PostAlertsApiResponse,
   PostSilencesApiArg,
+  PostSilencesApiResponse,
   PostSilencesApiResponseSchema,
 } from '@grafana/external-alertmanager/vanilla';
 import {
@@ -67,8 +74,8 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       rawResponseSchema: AlertmanagerStatusSchema,
       responseSchema: TransformedAlertmanagerStatusApiResponseSchema,
     }),
-    getSilences: build.query({
-      query: ({ dataSourceUID, filter, implementation }: WithDataSourceInformation<GetSilencesApiArg>) => ({
+    getSilences: build.query<GetSilencesApiResponse, WithDataSourceInformation<GetSilencesApiArg>>({
+      query: ({ dataSourceUID, filter, implementation }) => ({
         url: `/v2/silences`,
         params: {
           filter,
@@ -79,42 +86,46 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       providesTags: ['Silences'],
       responseSchema: GetSilencesApiResponseSchema,
     }),
-    postSilences: build.mutation({
-      query: ({ dataSourceUID, postableSilence }: WithDataSourceInformation<PostSilencesApiArg>) => ({
+    postSilences: build.mutation<PostSilencesApiResponse, WithDataSourceInformation<PostSilencesApiArg>>({
+      query: ({ dataSourceUID, implementation, postableSilence }) => ({
         url: `/v2/silences`,
         method: 'POST',
         body: postableSilence,
         dataSourceUID,
+        implementation,
       }),
       invalidatesTags: ['Silences'],
       responseSchema: PostSilencesApiResponseSchema,
     }),
-    getSilence: build.query({
-      query: ({ dataSourceUID, silenceId }: WithDataSourceInformation<GetSilenceApiArg>) => ({
+    getSilence: build.query<GetSilenceApiResponse, WithDataSourceInformation<GetSilenceApiArg>>({
+      query: ({ dataSourceUID, implementation, silenceId }) => ({
         url: `/v2/silence/${silenceId}`,
         dataSourceUID,
+        implementation,
       }),
       providesTags: ['Silences'],
       responseSchema: GetSilenceApiResponseSchema,
     }),
-    deleteSilence: build.mutation({
-      query: ({ dataSourceUID, silenceId }: WithDataSourceInformation<DeleteSilenceApiArg>) => ({
+    deleteSilence: build.mutation<DeleteSilenceApiResponse, WithDataSourceInformation<DeleteSilenceApiArg>>({
+      query: ({ dataSourceUID, implementation, silenceId }) => ({
         url: `/v2/silence/${silenceId}`,
         method: 'DELETE',
         dataSourceUID,
+        implementation,
       }),
       invalidatesTags: ['Silences'],
     }),
-    getAlerts: build.query({
+    getAlerts: build.query<GetAlertsApiResponse, WithDataSourceInformation<GetAlertsApiArg>>({
       query: ({
         dataSourceUID,
+        implementation,
         active,
         silenced,
         inhibited,
         unprocessed,
         filter,
         receiver,
-      }: WithDataSourceInformation<GetAlertsApiArg>) => ({
+      }) => ({
         url: `/v2/alerts`,
         params: {
           active,
@@ -125,29 +136,32 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
           receiver,
         },
         dataSourceUID,
+        implementation,
       }),
       providesTags: ['Alerts'],
       responseSchema: GetAlertsApiResponseSchema,
     }),
-    postAlerts: build.mutation({
-      query: ({ dataSourceUID, postableAlerts }: WithDataSourceInformation<PostAlertsApiArg>) => ({
+    postAlerts: build.mutation<PostAlertsApiResponse, WithDataSourceInformation<PostAlertsApiArg>>({
+      query: ({ dataSourceUID, implementation, postableAlerts }) => ({
         url: `/v2/alerts`,
         method: 'POST',
         body: postableAlerts,
         dataSourceUID,
+        implementation,
       }),
       invalidatesTags: ['Alerts', 'AlertGroups'],
     }),
-    getAlertGroups: build.query({
+    getAlertGroups: build.query<GetAlertGroupsApiResponse, WithDataSourceInformation<GetAlertGroupsApiArg>>({
       query: ({
         dataSourceUID,
+        implementation,
         active,
         silenced,
         inhibited,
         muted,
         filter,
         receiver,
-      }: WithDataSourceInformation<GetAlertGroupsApiArg>) => ({
+      }) => ({
         url: `/v2/alerts/groups`,
         params: {
           active,
@@ -158,6 +172,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
           receiver,
         },
         dataSourceUID,
+        implementation,
       }),
       providesTags: ['AlertGroups'],
       responseSchema: GetAlertGroupsApiResponseSchema,

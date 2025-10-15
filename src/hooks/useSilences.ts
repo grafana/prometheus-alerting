@@ -1,18 +1,58 @@
 import { alertmanagerApi } from '../api/alertmanager.endpoints';
 import { useAlertmanager } from './useAlertmanager';
+import type { PostableSilence } from '@grafana/external-alertmanager/vanilla';
 
 /**
  * Hook to fetch and manage silences from the Alertmanager silences endpoint.
  * Silences are used to mute alerts for a specific time period based on matchers.
- *
- * This hook can be extended in the future to support:
- * - Creating new silences
- * - Editing existing silences
- * - Deleting/expiring silences
  */
 export function useSilences(filter?: string[]) {
   const { uid: dataSourceUID, settings } = useAlertmanager();
   const implementation = settings.jsonData?.implementation ?? 'prometheus';
 
-  return (alertmanagerApi as any).endpoints.getSilences.useQuery({ dataSourceUID, filter, implementation });
+  return alertmanagerApi.endpoints.getSilences.useQuery({ dataSourceUID, filter, implementation });
+}
+
+/**
+ * Hook to fetch a single silence by ID
+ */
+export function useSilence(silenceId: string) {
+  const { uid: dataSourceUID, settings } = useAlertmanager();
+  const implementation = settings.jsonData?.implementation ?? 'prometheus';
+
+  return alertmanagerApi.endpoints.getSilence.useQuery({ dataSourceUID, implementation, silenceId });
+}
+
+/**
+ * Hook to create a new silence.
+ * Returns a mutation function and mutation state.
+ */
+export function useCreateSilence() {
+  const { uid: dataSourceUID, settings } = useAlertmanager();
+  const implementation = settings.jsonData?.implementation ?? 'prometheus';
+
+  const [postSilence, mutationState] = alertmanagerApi.endpoints.postSilences.useMutation();
+
+  const createSilence = async (postableSilence: PostableSilence) => {
+    return postSilence({ dataSourceUID, implementation, postableSilence }).unwrap();
+  };
+
+  return [createSilence, mutationState] as const;
+}
+
+/**
+ * Hook to delete/expire a silence by ID.
+ * Returns a mutation function and mutation state.
+ */
+export function useDeleteSilence() {
+  const { uid: dataSourceUID, settings } = useAlertmanager();
+  const implementation = settings.jsonData?.implementation ?? 'prometheus';
+
+  const [deleteSilence, mutationState] = alertmanagerApi.endpoints.deleteSilence.useMutation();
+
+  const expireSilence = async (silenceId: string) => {
+    return deleteSilence({ dataSourceUID, implementation, silenceId }).unwrap();
+  };
+
+  return [expireSilence, mutationState] as const;
 }

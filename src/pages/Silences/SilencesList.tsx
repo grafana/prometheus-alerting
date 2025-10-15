@@ -4,9 +4,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
 import { Alert, InteractiveTable, EmptyState, LinkButton, Stack, Button, ConfirmModal, Text } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
-import { useSilences } from '../../hooks/useSilences';
-import { alertmanagerApi } from '../../api/alertmanager.endpoints';
-import { useAlertmanager } from '../../hooks/useAlertmanager';
+import { useSilences, useDeleteSilence } from '../../hooks/useSilences';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
@@ -16,8 +14,7 @@ import { getStatusBadge, formatMatchers, formatDateTime } from './silences.utils
 
 function SilencesPage() {
   const { data: silences, isLoading, error } = useSilences();
-  const { uid: dataSourceUID } = useAlertmanager();
-  const [deleteSilence] = alertmanagerApi.endpoints.deleteSilence.useMutation();
+  const [expireSilence] = useDeleteSilence();
   const [silenceToExpire, setSilenceToExpire] = useState<GettableSilence | null>(null);
 
   const handleExpireSilence = async () => {
@@ -26,7 +23,7 @@ function SilencesPage() {
     }
 
     try {
-      await deleteSilence({ dataSourceUID, silenceId: silenceToExpire.id }).unwrap();
+      await expireSilence(silenceToExpire.id);
       setSilenceToExpire(null);
     } catch (err) {
       console.error('Failed to expire silence:', err);

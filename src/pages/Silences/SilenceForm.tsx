@@ -13,8 +13,7 @@ import {
   RadioButtonGroup,
 } from '@grafana/ui';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
-import { alertmanagerApi } from '../../api/alertmanager.endpoints';
-import { useAlertmanager } from '../../hooks/useAlertmanager';
+import { useCreateSilence } from '../../hooks/useSilences';
 import { SilenceFormSchema, type SilenceFormData } from './silenceFormSchema';
 import type { PostableSilence } from '@grafana/external-alertmanager/vanilla';
 import { ROUTES } from '../../constants';
@@ -38,8 +37,7 @@ function SilenceForm() {
     { label: t('silences.create.operator-regex-not-equal', '!~ (Regex Not Match)'), value: 'regexNotEqual' },
   ];
 
-  const { uid: dataSourceUID } = useAlertmanager();
-  const [postSilence, { isLoading, error: mutationError }] = alertmanagerApi.endpoints.postSilences.useMutation();
+  const [createSilence, { isLoading, error: mutationError }] = useCreateSilence();
 
   // Get current time and 1 hour from now as defaults
   const now = new Date();
@@ -121,7 +119,7 @@ function SilenceForm() {
     };
 
     try {
-      await postSilence({ dataSourceUID, postableSilence: postableData }).unwrap();
+      await createSilence(postableData);
       // Navigate back to silences list on success
       locationService.push(prefixRoute(ROUTES.Silences));
     } catch (err) {
