@@ -1,8 +1,6 @@
-import { create } from "mutative"
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { parse as parseYaml } from '@std/yaml';
 import {
-  GetStatusApiResponse,
   GetStatusApiArg,
   GetSilencesApiResponse,
   GetSilencesApiArg,
@@ -25,6 +23,7 @@ import {
   GetAlertGroupsApiResponseSchema,
   AlertmanagerStatusSchema,
   ParsedAlertmanagerConfig,
+  AlertmanagerStatus,
 } from '@grafana/external-alertmanager/vanilla';
 import { RootState } from 'src/store/store';
 import { TransformedAlertmanagerStatusApiResponse, TransformedAlertmanagerStatusApiResponseSchema } from './types';
@@ -47,14 +46,18 @@ export const alertmanagerApi = createApi({
   endpoints: (build) => ({
     getStatus: build.query<TransformedAlertmanagerStatusApiResponse, GetStatusApiArg>({
       query: () => ({ url: `/status` }),
-      transformResponse: (response: GetStatusApiResponse) => {
+      transformResponse: (response: AlertmanagerStatus): TransformedAlertmanagerStatusApiResponse => {
         // Parse the YAML configuration from `response.config.original`
         const parsed = parseYaml(response.config.original) as ParsedAlertmanagerConfig;
 
         // add the parsed config to `response.config.parsed`
-        return create<TransformedAlertmanagerStatusApiResponse>(response, draft => {
-          draft.config.parsed = parsed;
-        });
+        return {
+          ...response,
+          config: {
+            ...response.config,
+            parsed,
+          },
+        };
       },
       rawResponseSchema: AlertmanagerStatusSchema,
       responseSchema: TransformedAlertmanagerStatusApiResponseSchema

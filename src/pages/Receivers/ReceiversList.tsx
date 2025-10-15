@@ -7,6 +7,7 @@ import { type Receiver, getReceiverTypes } from '@grafana/external-alertmanager/
 
 import { useReceivers } from '../../hooks/useReceivers';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
+import { getTotalReceiverConfigs } from './receiversUtils';
 
 import { Trans, t } from '@grafana/i18n';
 
@@ -16,50 +17,6 @@ function ReceiversPage() {
   useEffect(() => {
     triggerFetch()
   }, [triggerFetch]);
-
-  const getTotalConfigs = (receiver: Receiver): number => {
-    let total = 0;
-    if (receiver.email_configs) {
-      total += receiver.email_configs.length;
-    }
-    if (receiver.slack_configs) {
-      total += receiver.slack_configs.length;
-    }
-    if (receiver.pagerduty_configs) {
-      total += receiver.pagerduty_configs.length;
-    }
-    if (receiver.webhook_configs) {
-      total += receiver.webhook_configs.length;
-    }
-    if (receiver.opsgenie_configs) {
-      total += receiver.opsgenie_configs.length;
-    }
-    if (receiver.wechat_configs) {
-      total += receiver.wechat_configs.length;
-    }
-    if (receiver.pushover_configs) {
-      total += receiver.pushover_configs.length;
-    }
-    if (receiver.victorops_configs) {
-      total += receiver.victorops_configs.length;
-    }
-    if (receiver.sns_configs) {
-      total += receiver.sns_configs.length;
-    }
-    if (receiver.telegram_configs) {
-      total += receiver.telegram_configs.length;
-    }
-    if (receiver.discord_configs) {
-      total += receiver.discord_configs.length;
-    }
-    if (receiver.webex_configs) {
-      total += receiver.webex_configs.length;
-    }
-    if (receiver.msteams_configs) {
-      total += receiver.msteams_configs.length;
-    }
-    return total;
-  };
 
   const columns = [
     {
@@ -78,7 +35,7 @@ function ReceiversPage() {
     {
       id: 'integrations',
       header: t('receivers.column.integrations', 'Integrations'),
-      cell: ({ row: { original } }: { row: { original: Receiver } }) => getTotalConfigs(original),
+      cell: ({ row: { original } }: { row: { original: Receiver } }) => getTotalReceiverConfigs(original),
     },
   ];
 
