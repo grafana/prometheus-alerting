@@ -8,10 +8,11 @@ export const TransformedAlertmanagerStatusApiResponseSchema = AlertmanagerStatus
     parsed: ParsedAlertmanagerConfigSchema,
   }),
 });
+export type TransformedAlertmanagerStatusApiResponse = z.output<typeof TransformedAlertmanagerStatusApiResponseSchema>;
 
 // Schema that transforms AlertmanagerStatus by parsing the YAML config
 export const TransformedAlertmanagerStatusApiResponseTransform = AlertmanagerStatusSchema
-.transform((data): TransformedAlertmanagerStatusApiResponse => {
+.transform((data) => {
   // Parse the YAML configuration from `data.config.original`
   const parsedYamlConfig = parseYaml(data.config.original);
 
@@ -26,8 +27,6 @@ export const TransformedAlertmanagerStatusApiResponseTransform = AlertmanagerSta
     }
   }
 });
-
-export type TransformedAlertmanagerStatusApiResponse = z.output<typeof TransformedAlertmanagerStatusApiResponseSchema>;
 
 // Type to include dataSourceUID and implementation in API arguments
 export type WithDataSourceUID<T = void> = T extends void
