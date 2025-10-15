@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isValidPrometheusDuration } from '../../utils/time.utils';
+import { isValidPrometheusDuration } from '../../../utils/time.utils';
 
 // Form schema for creating a new silence
 export const SilenceFormSchema = z

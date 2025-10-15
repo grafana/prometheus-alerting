@@ -12,13 +12,13 @@ import {
   Stack,
   RadioButtonGroup,
 } from '@grafana/ui';
-import { AlertmanagerPage } from '../../components/AlertmanagerPage';
-import { useCreateSilence } from '../../hooks/useSilences';
-import { SilenceFormSchema, type SilenceFormData } from './silenceFormSchema';
+import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { useCreateSilence } from '../hooks/useSilences';
+import { SilenceFormSchema, type SilenceFormData } from '../utils/silenceFormSchema';
 import type { PostableSilence } from '@grafana/external-alertmanager/vanilla';
-import { ROUTES } from '../../constants';
-import { prefixRoute } from '../../utils/utils.routing';
-import { parsePrometheusDuration } from '../../utils/time.utils';
+import { ROUTES } from '../../../constants';
+import { prefixRoute } from '../../../utils/utils.routing';
+import { parsePrometheusDuration } from '../../../utils/time.utils';
 import { t } from '@grafana/i18n';
 import { locationService } from '@grafana/runtime';
 

@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import { testIds } from '../../components/testIds';
+import { testIds } from '../../../components/testIds';
 import { InteractiveTable, Alert, EmptyState } from '@grafana/ui';
 import { type Receiver, getReceiverTypes } from '@grafana/external-alertmanager/vanilla';
 
-import { useReceivers } from '../../hooks/useReceivers';
-import { AlertmanagerPage } from '../../components/AlertmanagerPage';
-import { getTotalReceiverConfigs } from './receiversUtils';
+import { useReceivers } from '../hooks/useReceivers';
+import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { getTotalReceiverConfigs } from '../utils/receiversUtils';
 
 import { t } from '@grafana/i18n';
 

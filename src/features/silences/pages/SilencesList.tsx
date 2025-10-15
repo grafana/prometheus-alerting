@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import { testIds } from '../../components/testIds';
+import { testIds } from '../../../components/testIds';
 import { Alert, InteractiveTable, EmptyState, LinkButton, Stack, Button, Text } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
-import { useSilences, useDeleteSilence } from '../../hooks/useSilences';
+import { useSilences, useDeleteSilence } from '../hooks/useSilences';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
-import { AlertmanagerPage } from '../../components/AlertmanagerPage';
-import { ROUTES } from '../../constants';
-import { prefixRoute } from '../../utils/utils.routing';
-import { getStatusBadge, formatMatchers, formatDateTime } from './silences.utils';
+import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { ROUTES } from '../../../constants';
+import { prefixRoute } from '../../../utils/utils.routing';
+import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
 import { ExpireSilenceModal } from './ExpireSilenceModal';
 
 function SilencesPage() {

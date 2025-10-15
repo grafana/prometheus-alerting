@@ -1,12 +1,12 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import { testIds } from '../../components/testIds';
+import { testIds } from '../../../components/testIds';
 import { Alert, InteractiveTable, EmptyState } from '@grafana/ui';
-import { useTimeIntervals } from '../../hooks/useTimeIntervals';
+import { useTimeIntervals } from '../hooks/useTimeIntervals';
 import { t } from '@grafana/i18n';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
-import { AlertmanagerPage } from '../../components/AlertmanagerPage';
+import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error } = useTimeIntervals();

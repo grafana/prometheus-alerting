@@ -1,5 +1,5 @@
-import { alertmanagerApi } from '../api/alertmanager.endpoints';
-import { useAlertmanager } from './useAlertmanager';
+import { alertmanagerApi } from '../../../api/alertmanager.endpoints';
+import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import type { PostableSilence } from '@grafana/external-alertmanager/vanilla';
 
 /**

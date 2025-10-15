@@ -3,7 +3,7 @@ import { ConfirmModal, Stack } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
-import { formatMatchers } from './silences.utils';
+import { formatMatchers } from '../utils/silences.utils';
 
 interface ExpireSilenceModalProps {
   silence: GettableSilence | null;

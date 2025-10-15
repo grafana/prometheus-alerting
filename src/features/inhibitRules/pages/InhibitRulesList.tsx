@@ -1,13 +1,13 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import { testIds } from '../../components/testIds';
+import { testIds } from '../../../components/testIds';
 import { Alert, InteractiveTable, Stack, EmptyState } from '@grafana/ui';
-import { useInhibitRules } from '../../hooks/useInhibitRules';
+import { useInhibitRules } from '../hooks/useInhibitRules';
 import { t } from '@grafana/i18n';
 import type { InhibitRule } from '@grafana/external-alertmanager/vanilla';
 import { AlertLabel } from '@grafana/alerting';
-import { AlertmanagerPage } from '../../components/AlertmanagerPage';
+import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 
 const MatchersCell = ({ matchers }: { matchers?: string[] }) => {
   if (!matchers || matchers.length === 0) {

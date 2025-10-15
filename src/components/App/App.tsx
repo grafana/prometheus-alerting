@@ -7,14 +7,14 @@ import { StoreProvider } from '../StoreProvider/StoreProvider';
 import { createStore } from '../../store/store';
 
 const Landing = React.lazy(() => import('../../pages/Landing'));
-const Rules = React.lazy(() => import('../../pages/Rules/RulesList'));
-const RouteTree = React.lazy(() => import('../../pages/Routes/RoutesList'));
-const Receivers = React.lazy(() => import('../../pages/Receivers/ReceiversList'));
-const Templates = React.lazy(() => import('../../pages/Templates/TemplatesList'));
-const Silences = React.lazy(() => import('../../pages/Silences/SilencesList'));
-const SilenceForm = React.lazy(() => import('../../pages/Silences/SilenceForm'));
-const TimeIntervals = React.lazy(() => import('../../pages/TimeIntervals/TimeIntervalsList'));
-const InhibitRules = React.lazy(() => import('../../pages/InhibitRules/InhibitRulesList'));
+const Rules = React.lazy(() => import('../../features/rules/pages/RulesList'));
+const RouteTree = React.lazy(() => import('../../features/routes/pages/RoutesList'));
+const Receivers = React.lazy(() => import('../../features/receivers/pages/ReceiversList'));
+const Templates = React.lazy(() => import('../../features/templates/pages/TemplatesList'));
+const Silences = React.lazy(() => import('../../features/silences/pages/SilencesList'));
+const SilenceForm = React.lazy(() => import('../../features/silences/pages/SilenceForm'));
+const TimeIntervals = React.lazy(() => import('../../features/timeIntervals/pages/TimeIntervalsList'));
+const InhibitRules = React.lazy(() => import('../../features/inhibitRules/pages/InhibitRulesList'));
 
 // Get initial data source UID from sessionStorage or default to first available
 function getInitialDataSourceUID(): string {

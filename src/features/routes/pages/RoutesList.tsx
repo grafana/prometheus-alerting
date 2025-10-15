@@ -1,10 +1,10 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import { testIds } from '../../components/testIds';
+import { testIds } from '../../../components/testIds';
 import { Alert, Card, EmptyState } from '@grafana/ui';
-import { useRoutes } from '../../hooks/useRoutes';
-import { AlertmanagerPage } from '../../components/AlertmanagerPage';
+import { useRoutes } from '../hooks/useRoutes';
+import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { css } from '@emotion/css';
 import { Trans, t } from '@grafana/i18n';
 import { AlertLabel } from '@grafana/alerting';

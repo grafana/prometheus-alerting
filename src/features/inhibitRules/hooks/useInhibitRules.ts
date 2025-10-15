@@ -1,5 +1,5 @@
-import { alertmanagerApi } from '../api/alertmanager.endpoints';
-import { useAlertmanager } from './useAlertmanager';
+import { alertmanagerApi } from '../../../api/alertmanager.endpoints';
+import { useAlertmanager } from '../../../hooks/useAlertmanager';
 
 /**
  * Hook to fetch and manage inhibit rules from the Alertmanager status endpoint.

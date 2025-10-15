@@ -1,6 +1,6 @@
-import { alertmanagerApi } from '../api/alertmanager.endpoints';
+import { alertmanagerApi } from '../../../api/alertmanager.endpoints';
 import { useCallback } from 'react';
-import { useAlertmanager } from './useAlertmanager';
+import { useAlertmanager } from '../../../hooks/useAlertmanager';
 
 /**
  * Hook to fetch and manage receivers from the Alertmanager status endpoint.
