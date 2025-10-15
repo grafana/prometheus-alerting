@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Field, Input, Combobox, type ComboboxOption, TextArea, Stack, Text } from '@grafana/ui';
+import { Alert, Button, Field, Input, Combobox, type ComboboxOption, TextArea, Stack, RadioButtonGroup } from '@grafana/ui';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 import { alertmanagerApi } from '../../api/alertmanager.endpoints';
 import { useAlertmanager } from '../../hooks/useAlertmanager';
@@ -9,6 +9,7 @@ import { SilenceFormSchema, type SilenceFormData } from './silenceFormSchema';
 import type { PostableSilence } from '@grafana/external-alertmanager/vanilla';
 import { ROUTES } from '../../constants';
 import { prefixRoute } from '../../utils/utils.routing';
+import { parsePrometheusDuration } from '../../utils/time.utils';
 import { t } from '@grafana/i18n';
 import { locationService } from '@grafana/runtime';
 
@@ -53,6 +54,8 @@ function SilenceForm() {
     resolver: zodResolver(SilenceFormSchema),
     defaultValues: {
       matchers: [{ name: '', value: '', isRegex: false, isEqual: true }],
+      timeMode: 'relative',
+      duration: '2h',
       startsAt: formatDateTimeLocal(now),
       endsAt: formatDateTimeLocal(oneHourLater),
       createdBy: '',
@@ -66,6 +69,7 @@ function SilenceForm() {
   });
 
   const matchers = watch('matchers');
+  const timeMode = watch('timeMode');
 
   const getOperatorOption = (matcher: MatcherFormData): ComboboxOption => {
     if (matcher.isRegex && matcher.isEqual === false) {
@@ -81,11 +85,27 @@ function SilenceForm() {
   };
 
   const onSubmit = async (data: SilenceFormData) => {
-    // Convert datetime-local format to ISO 8601
+    let startsAt: string;
+    let endsAt: string;
+
+    if (data.timeMode === 'relative') {
+      // Calculate absolute times from relative duration
+      const startDate = new Date();
+      const durationMs = parsePrometheusDuration(data.duration!);
+      const endDate = new Date(startDate.getTime() + durationMs);
+
+      startsAt = startDate.toISOString();
+      endsAt = endDate.toISOString();
+    } else {
+      // Use absolute times
+      startsAt = new Date(data.startsAt!).toISOString();
+      endsAt = new Date(data.endsAt!).toISOString();
+    }
+
     const postableData: PostableSilence = {
       matchers: data.matchers,
-      startsAt: new Date(data.startsAt).toISOString(),
-      endsAt: new Date(data.endsAt).toISOString(),
+      startsAt,
+      endsAt,
       createdBy: data.createdBy,
       comment: data.comment,
     };
@@ -112,15 +132,13 @@ function SilenceForm() {
     <AlertmanagerPage>
       <div style={{ maxWidth: '800px' }}>
         <Stack direction="column" gap={2}>
-          <Stack direction="column" gap={0}>
-            <Text variant="h3">{t('silences.create.matchers-title', 'Matchers')}</Text>
-            <Text color="secondary">
-              {t(
-                'silences.create.matchers-description',
-                'Define label matchers to determine which alerts this silence will affect'
-              )}
-            </Text>
-          </Stack>
+          <h3>{t('silences.create.matchers-title', 'Matchers')}</h3>
+          <p style={{ color: '#999', fontSize: '14px' }}>
+            {t(
+              'silences.create.matchers-description',
+              'Define label matchers to determine which alerts this silence will affect'
+            )}
+          </p>
 
           {/* form error */}
           {mutationError && (
@@ -226,25 +244,62 @@ function SilenceForm() {
                 <div style={{ color: '#e02f44', fontSize: '12px' }}>{errors.matchers.message}</div>
               )}
 
-              <Field
-                noMargin
-                label={t('silences.create.starts-at', 'Start Time')}
-                description={t('silences.create.starts-at-description', 'When the silence should begin')}
-                invalid={!!errors.startsAt}
-                error={errors.startsAt?.message}
-              >
-                <Input {...register('startsAt')} type="datetime-local" />
+              <Field noMargin label={t('silences.create.time-mode', 'Time Mode')}>
+                <Controller
+                  name="timeMode"
+                  control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <RadioButtonGroup
+                      options={[
+                        { label: t('silences.create.time-mode-relative', 'Relative'), value: 'relative' },
+                        { label: t('silences.create.time-mode-absolute', 'Absolute'), value: 'absolute' },
+                      ]}
+                      value={value}
+                      onChange={onChange}
+                    />
+                  )}
+                />
               </Field>
 
-              <Field
-                noMargin
-                label={t('silences.create.ends-at', 'End Time')}
-                description={t('silences.create.ends-at-description', 'When the silence should expire')}
-                invalid={!!errors.endsAt}
-                error={errors.endsAt?.message}
-              >
-                <Input {...register('endsAt')} type="datetime-local" />
-              </Field>
+              {timeMode === 'relative' ? (
+                <Field
+                  noMargin
+                  label={t('silences.create.duration', 'Duration')}
+                  description={t(
+                    'silences.create.duration-description',
+                    'How long the silence should last (e.g., 2h, 1d, 30m)'
+                  )}
+                  invalid={!!errors.duration}
+                  error={errors.duration?.message}
+                >
+                  <Input
+                    {...register('duration')}
+                    placeholder={t('silences.create.duration-placeholder', 'e.g., 2h, 1d, 30m, 1w')}
+                  />
+                </Field>
+              ) : (
+                <>
+                  <Field
+                    noMargin
+                    label={t('silences.create.starts-at', 'Start Time')}
+                    description={t('silences.create.starts-at-description', 'When the silence should begin')}
+                    invalid={!!errors.startsAt}
+                    error={errors.startsAt?.message}
+                  >
+                    <Input {...register('startsAt')} type="datetime-local" />
+                  </Field>
+
+                  <Field
+                    noMargin
+                    label={t('silences.create.ends-at', 'End Time')}
+                    description={t('silences.create.ends-at-description', 'When the silence should expire')}
+                    invalid={!!errors.endsAt}
+                    error={errors.endsAt?.message}
+                  >
+                    <Input {...register('endsAt')} type="datetime-local" />
+                  </Field>
+                </>
+              )}
 
               <Field
                 noMargin
