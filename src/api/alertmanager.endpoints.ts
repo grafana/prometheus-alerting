@@ -16,7 +16,7 @@ import {
   PostSilencesApiArg,
   PostSilencesApiResponseSchema,
 } from '@grafana/external-alertmanager/vanilla';
-import { TransformedAlertmanagerStatusApiResponse, TransformedAlertmanagerStatusApiResponseSchema, WithDataSourceUID, hasDataSourceUID, hasImplementation } from './types';
+import { TransformedAlertmanagerStatusApiResponse, TransformedAlertmanagerStatusApiResponseSchema, TransformedAlertmanagerStatusApiResponseTransform, WithDataSourceUID, hasDataSourceUID, hasImplementation } from './types';
 
 // Dynamic baseQuery that reads dataSourceUID and implementation from query args
 const dynamicBaseQuery: ReturnType<typeof fetchBaseQuery> = async (args, api, extraOptions) => {
@@ -53,10 +53,10 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       }),
       transformResponse: (response: AlertmanagerStatus): TransformedAlertmanagerStatusApiResponse => {
         // Use Zod codec to parse YAML and validate the entire transformed response
-        return TransformedAlertmanagerStatusApiResponseSchema.parse(response);
+        return TransformedAlertmanagerStatusApiResponseTransform.parse(response);
       },
       rawResponseSchema: AlertmanagerStatusSchema,
-      responseSchema: TransformedAlertmanagerStatusApiResponseSchema
+      responseSchema: TransformedAlertmanagerStatusApiResponseSchema,
     }),
     getSilences: build.query({
       query: ({ dataSourceUID, filter, implementation }: WithDataSourceUID<GetSilencesApiArg>) => ({

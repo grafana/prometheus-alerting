@@ -1,24 +1,30 @@
 import { AlertmanagerConfigSchema, AlertmanagerStatusSchema, ParsedAlertmanagerConfigSchema } from "@grafana/external-alertmanager/vanilla";
 import { parse as parseYaml } from '@std/yaml';
-import { produce } from 'immer';
 import z from "zod";
 
-// Schema that transforms AlertmanagerStatus by parsing the YAML config
+// Schema for validating the transformed response (with parsed config)
 export const TransformedAlertmanagerStatusApiResponseSchema = AlertmanagerStatusSchema.extend({
   config: AlertmanagerConfigSchema.extend({
     parsed: ParsedAlertmanagerConfigSchema,
   }),
-}).transform((data) => {
+});
+
+// Schema that transforms AlertmanagerStatus by parsing the YAML config
+export const TransformedAlertmanagerStatusApiResponseTransform = AlertmanagerStatusSchema
+.transform((data): TransformedAlertmanagerStatusApiResponse => {
   // Parse the YAML configuration from `data.config.original`
   const parsedYamlConfig = parseYaml(data.config.original);
 
   // Validate the parsed YAML against the expected schema
   const parsed = ParsedAlertmanagerConfigSchema.parse(parsedYamlConfig);
 
-  // Use Immer to immutably add the parsed config
-  return produce(data, (draft) => {
-    draft.config.parsed = parsed;
-  });
+  return {
+    ...data,
+    config: {
+      ...data.config,
+      parsed
+    }
+  }
 });
 
 export type TransformedAlertmanagerStatusApiResponse = z.output<typeof TransformedAlertmanagerStatusApiResponseSchema>;
