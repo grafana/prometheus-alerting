@@ -2,15 +2,15 @@ import React from 'react';
 
 import { testIds } from '../../components/testIds';
 import { GroupedView } from '../../rule-list/GroupedView';
-import { AlertmanagerPage } from '../../components/AlertmanagerPage';
+import { PluginPage } from '@grafana/runtime';
 
 function RulesPage() {
   return (
-    <AlertmanagerPage>
+    <PluginPage>
       <div data-testid={testIds.rules.container}>
         <GroupedView />
       </div>
-    </AlertmanagerPage>
+    </PluginPage>
   );
 }
 
