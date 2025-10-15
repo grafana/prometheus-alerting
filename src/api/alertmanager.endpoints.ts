@@ -23,7 +23,7 @@ import {
   WithDataSourceInformation,
   hasDataSourceUID,
   hasImplementation,
-} from './types';
+} from './alertmanager.types';
 
 // Dynamic baseQuery that reads dataSourceUID and implementation from query args
 const dynamicBaseQuery: ReturnType<typeof fetchBaseQuery> = async (args, api, extraOptions) => {
