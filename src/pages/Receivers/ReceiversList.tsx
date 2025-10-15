@@ -1,11 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
 import { PluginPage } from '@grafana/runtime';
 import { InteractiveTable, Alert, Combobox, type ComboboxOption } from '@grafana/ui';
 import { type Receiver, getReceiverTypes } from '@grafana/external-alertmanager/vanilla';
-import { useListReceivers } from '../../hooks/useReceivers';
+
+import { useReceivers } from '../../hooks/useReceivers';
+
 import { Trans, t } from '@grafana/i18n';
 import { useAvailableAlertmanagers } from '../../hooks/useAvailableAlertmanager';
 import { convertDataSourcesToComboboxOptions } from '../../utils/utils.alertmanager';
@@ -14,11 +16,18 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { selectDataSourceUID, setDataSourceUID } from '../../store/datasourceSlice';
 
 function ReceiversPage() {
-  const { receivers, isLoading, error } = useListReceivers();
   const dispatch = useAppDispatch();
   const dataSourceUID = useAppSelector(selectDataSourceUID);
+
   const alertmanagers = useAvailableAlertmanagers();
   const alertmanagerOptions = convertDataSourcesToComboboxOptions(alertmanagers);
+
+  const [triggerFetch, { receivers = [], isLoading, error }] = useReceivers();
+  console.log(error)
+
+  useEffect(() => {
+    triggerFetch()
+  }, [triggerFetch]);
 
   const selectedOption = useMemo(() => {
     return alertmanagerOptions.find((opt) => opt.value === dataSourceUID);
@@ -100,14 +109,11 @@ function ReceiversPage() {
     >
       <div data-testid={testIds.receivers.container}>
         {isLoading && (
-          <div>
-            <Skeleton height={50} style={{ marginBottom: '10px' }} />
-            <Skeleton height={40} count={5} style={{ marginBottom: '5px' }} />
-          </div>
+          <Skeleton height={24} count={5} />
         )}
         {error && (
           <Alert title={t('receivers.error-loading-title', 'Error loading receivers')} severity="error">
-            {error instanceof Error ? error.message : t('receivers.error-loading-message', 'Failed to fetch receivers')}
+            {'error' in error ? error.error : t('receivers.error-loading-message', 'Failed to fetch receivers')}
           </Alert>
         )}
         {!isLoading && receivers.length > 0 && (

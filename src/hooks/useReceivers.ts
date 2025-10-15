@@ -1,21 +1,37 @@
-import { useAlertmanagerApi } from './useAlertmanagerApi';
+import { useAlertmanager } from './useAlertmanager';
+import { useListReceivers as useListPrometheusReceivers } from './prometheus/useReceivers';
+import { useListReceivers as useListMimirReceivers } from './mimir/useReceivers';
 
 /**
- * Hook to fetch and manage receivers from the Alertmanager status endpoint.
- * The status endpoint contains the full Alertmanager config which includes receivers.
+ * Hook to fetch receivers from Alertmanager.
+ * Automatically selects the appropriate implementation (Prometheus or Mimir)
+ * based on the current alertmanager data source settings.
  *
- * This hook can be extended in the future to support:
- * - Creating new receivers
- * - Editing existing receivers
- * - Deleting receivers
+ * For Prometheus implementation (settings.jsonData.implementation === 'prometheus'):
+ * - Fetches from the status endpoint which contains the full config
+ *
+ * For Mimir implementation:
+ * - Fetches from the configuration endpoint
+ *
+ * @returns A tuple containing:
+ * - triggerFetch: Function to trigger the fetch
+ * - result: Object containing receivers array, isLoading, error, and other query state
  */
-export function useListReceivers() {
-  const api = useAlertmanagerApi();
+export function useReceivers() {
+  const currentAlertmanager = useAlertmanager();
 
-  return api.endpoints.getStatus.useQuery(undefined, {
-    selectFromResult: (result) => ({
-      ...result,
-      receivers: result.data?.config.parsed?.receivers ?? [],
-    }),
-  });
+  // Always call both hooks to comply with Rules of Hooks
+  const prometheusHook = useListPrometheusReceivers();
+  const mimirHook = useListMimirReceivers();
+
+  // Determine which implementation to use
+  const implementation = currentAlertmanager?.settings.jsonData?.implementation;
+
+  // Return the appropriate hook result based on implementation
+  if (implementation === 'mimir') {
+    return mimirHook;
+  }
+
+  // Default to Prometheus for 'prometheus' or undefined implementation
+  return prometheusHook;
 }

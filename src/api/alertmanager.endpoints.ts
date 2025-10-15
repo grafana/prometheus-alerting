@@ -26,12 +26,11 @@ import {
   AlertmanagerStatusSchema,
 } from '@grafana/external-alertmanager/vanilla';
 import { RootState } from 'src/store/store';
-import z from 'zod';
-import { ParsedAlertmanagerConfigSchema, TransformedAlertmanagerStatusApiResponse, TransformedAlertmanagerStatusApiResponseSchema } from './types';
+import { ParsedAlertmanagerConfig, TransformedAlertmanagerStatusApiResponse, TransformedAlertmanagerStatusApiResponseSchema } from './types';
 
 // Default API instance for backward compatibility
 export const alertmanagerApi = createApi({
-  reducerPath: 'alertmanagerApi',
+  reducerPath: 'vanillaAlertmanagerApi',
   baseQuery: async (args, api, extraOptions) => {
     // Read the current data source UID from Redux state
     const state = api.getState() as RootState;
@@ -49,7 +48,7 @@ export const alertmanagerApi = createApi({
       query: () => ({ url: `/status` }),
       transformResponse: (response: GetStatusApiResponse) => {
         // Parse the YAML configuration from `response.config.original`
-        const parsed = parseYaml(response.config.original) as z.infer<typeof ParsedAlertmanagerConfigSchema>;
+        const parsed = parseYaml(response.config.original) as ParsedAlertmanagerConfig;
 
         // add the parsed config to `response.config.parsed`
         return create<TransformedAlertmanagerStatusApiResponse>(response, draft => {

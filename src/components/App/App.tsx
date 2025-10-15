@@ -15,19 +15,19 @@ const TimeIntervals = React.lazy(() => import('../../pages/TimeIntervals/TimeInt
 const InhibitRules = React.lazy(() => import('../../pages/InhibitRules/InhibitRulesList'));
 
 function App(_props: AppRootProps) {
-  const alertmanagers = useAvailableAlertmanagers();
+  const availableAlertmanagers = useAvailableAlertmanagers();
 
   const dataSourceUID = useMemo(() => {
     // Try to get the stored UID from sessionStorage
     const storedUID = sessionStorage.getItem(STORAGE_KEYS.SELECTED_ALERTMANAGER_UID);
 
     // If a UID is stored and it exists in the available alertmanagers, use it
-    if (storedUID && alertmanagers.some((am) => am.uid === storedUID)) {
+    if (storedUID && availableAlertmanagers.some((am) => am.uid === storedUID)) {
       return storedUID;
     }
 
     // Otherwise, use the first available alertmanager or fallback to default
-    const firstAlertmanager = alertmanagers[0];
+    const firstAlertmanager = availableAlertmanagers[0];
     if (firstAlertmanager) {
       // Store it in sessionStorage for next time
       sessionStorage.setItem(STORAGE_KEYS.SELECTED_ALERTMANAGER_UID, firstAlertmanager.uid);
@@ -36,7 +36,7 @@ function App(_props: AppRootProps) {
 
     // Fallback to default if no alertmanagers are configured
     return 'gdev-alertmanager';
-  }, [alertmanagers]);
+  }, [availableAlertmanagers]);
 
   return (
     <StoreProvider initialDataSourceUID={dataSourceUID}>

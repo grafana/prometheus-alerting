@@ -1,31 +1,5 @@
-import { AlertmanagerConfigSchema, AlertmanagerStatusSchema, InhibitRuleSchema, ReceiverSchema, TimeIntervalSchema } from "@grafana/external-alertmanager/vanilla";
+import { AlertmanagerConfigSchema, AlertmanagerStatusSchema, ParsedAlertmanagerConfigSchema } from "@grafana/external-alertmanager/vanilla";
 import z from "zod";
-
-/**
- * This is the Alertmanager configuration definition after we've parsed the YAML config from the "config.source" property
- */
-export const ParsedAlertmanagerConfigSchema = z
-  .object({
-    receivers: z.array(ReceiverSchema).optional(),
-    route: z
-      .object({
-        receiver: z.string().optional(),
-        group_by: z.array(z.string()).optional(),
-        continue: z.boolean().optional(),
-        routes: z.array(z.any()).optional(),
-        group_wait: z.string().optional(),
-        group_interval: z.string().optional(),
-        repeat_interval: z.string().optional(),
-        matchers: z.array(z.string()).optional(),
-      })
-      .optional(),
-    templates: z.array(z.string()).optional(),
-    time_intervals: z.array(TimeIntervalSchema).optional(),
-    inhibit_rules: z.array(InhibitRuleSchema).optional(),
-  })
-  .catchall(z.any())
-  .optional();
-
 
 export const TransformedAlertmanagerStatusApiResponseSchema = AlertmanagerStatusSchema.extend({
   config: AlertmanagerConfigSchema.extend({
