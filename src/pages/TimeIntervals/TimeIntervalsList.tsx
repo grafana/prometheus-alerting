@@ -88,7 +88,7 @@ function TimeIntervalsPage() {
               : t('time-intervals.error-loading-message', 'Failed to fetch time intervals')}
           </Alert>
         )}
-        {!isLoading && timeIntervals.length > 0 && (
+        {!isLoading && timeIntervals.length > 0 && !error && (
           <InteractiveTable columns={columns} data={timeIntervals} getRowId={(interval) => interval.name} />
         )}
         {!isLoading && timeIntervals.length === 0 && !error && (
