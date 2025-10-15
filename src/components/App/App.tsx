@@ -12,6 +12,7 @@ const RouteTree = React.lazy(() => import('../../pages/Routes/RoutesList'));
 const Receivers = React.lazy(() => import('../../pages/Receivers/ReceiversList'));
 const Templates = React.lazy(() => import('../../pages/Templates/TemplatesList'));
 const Silences = React.lazy(() => import('../../pages/Silences/SilencesList'));
+const SilenceForm = React.lazy(() => import('../../pages/Silences/SilenceForm'));
 const TimeIntervals = React.lazy(() => import('../../pages/TimeIntervals/TimeIntervalsList'));
 const InhibitRules = React.lazy(() => import('../../pages/InhibitRules/InhibitRulesList'));
 
@@ -50,6 +51,7 @@ function App(_props: AppRootProps) {
         <Route path={ROUTES.Rules} element={<Rules />} />
         <Route path={`${ROUTES.Receivers}/:id?`} element={<Receivers />} />
         <Route path={ROUTES.Templates} element={<Templates />} />
+        <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
         <Route path={ROUTES.Silences} element={<Silences />} />
         <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
         <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />

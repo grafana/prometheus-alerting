@@ -1,15 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { ComponentProps, useMemo } from 'react';
 import { PluginPage } from '@grafana/runtime';
-import { Combobox, type ComboboxOption } from '@grafana/ui';
+import { Combobox, InlineField, type ComboboxOption } from '@grafana/ui';
 import { useAvailableAlertmanagers } from '../hooks/useAvailableAlertmanager';
 import { convertDataSourcesToComboboxOptions } from '../utils/utils.alertmanager';
 import { STORAGE_KEYS } from '../constants';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { selectDataSourceUID, setDataSourceUID } from '../store/datasourceSlice';
-
-interface AlertmanagerPageProps {
-  children: React.ReactNode;
-}
+import { t } from '@grafana/i18n';
 
 /**
  * Wrapper component for Alertmanager pages that provides:
@@ -24,7 +21,7 @@ interface AlertmanagerPageProps {
  * </AlertmanagerPage>
  * ```
  */
-export function AlertmanagerPage({ children }: AlertmanagerPageProps) {
+export function AlertmanagerPage({ children, ...props }: ComponentProps<typeof PluginPage>) {
   const dispatch = useAppDispatch();
   const dataSourceUID = useAppSelector(selectDataSourceUID);
 
@@ -42,7 +39,12 @@ export function AlertmanagerPage({ children }: AlertmanagerPageProps) {
 
   return (
     <PluginPage
-      actions={<Combobox options={alertmanagerOptions} value={selectedOption} onChange={handleAlertmanagerChange} />}
+      actions={
+        <InlineField label={t('pages.alertmanager-picker.label', 'Choose Alertmanager')}>
+          <Combobox options={alertmanagerOptions} value={selectedOption} onChange={handleAlertmanagerChange} />
+        </InlineField>
+      }
+      {...props}
     >
       {children}
     </PluginPage>

@@ -47,6 +47,7 @@ const dynamicBaseQuery: ReturnType<typeof fetchBaseQuery> = async (args, api, ex
 const baseAlertmanagerApi = createApi({
   reducerPath: 'alertmanagerApi',
   baseQuery: dynamicBaseQuery,
+  tagTypes: ['Silences', 'Alerts', 'AlertGroups'],
   endpoints: () => ({}),
 });
 
@@ -75,6 +76,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         dataSourceUID,
         implementation,
       }),
+      providesTags: ['Silences'],
       responseSchema: GetSilencesApiResponseSchema,
     }),
     postSilences: build.mutation({
@@ -84,6 +86,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         body: postableSilence,
         dataSourceUID,
       }),
+      invalidatesTags: ['Silences'],
       responseSchema: PostSilencesApiResponseSchema,
     }),
     getSilence: build.query({
@@ -91,6 +94,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         url: `/v2/silence/${silenceId}`,
         dataSourceUID,
       }),
+      providesTags: ['Silences'],
       responseSchema: GetSilenceApiResponseSchema,
     }),
     deleteSilence: build.mutation({
@@ -99,6 +103,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         method: 'DELETE',
         dataSourceUID,
       }),
+      invalidatesTags: ['Silences'],
     }),
     getAlerts: build.query({
       query: ({
@@ -121,6 +126,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         },
         dataSourceUID,
       }),
+      providesTags: ['Alerts'],
       responseSchema: GetAlertsApiResponseSchema,
     }),
     postAlerts: build.mutation({
@@ -130,6 +136,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         body: postableAlerts,
         dataSourceUID,
       }),
+      invalidatesTags: ['Alerts', 'AlertGroups'],
     }),
     getAlertGroups: build.query({
       query: ({
@@ -152,6 +159,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         },
         dataSourceUID,
       }),
+      providesTags: ['AlertGroups'],
       responseSchema: GetAlertGroupsApiResponseSchema,
     }),
   }),

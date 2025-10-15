@@ -1,38 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { Alert, InteractiveTable, Badge, EmptyState } from '@grafana/ui';
+import { Alert, InteractiveTable, EmptyState, LinkButton, Stack, Button, ConfirmModal } from '@grafana/ui';
+import { AlertLabel } from '@grafana/alerting';
 import { useSilences } from '../../hooks/useSilences';
+import { alertmanagerApi } from '../../api/alertmanager.endpoints';
+import { useAlertmanager } from '../../hooks/useAlertmanager';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
+import { ROUTES } from '../../constants';
+import { prefixRoute } from '../../utils/utils.routing';
+import { getStatusBadge, formatMatchers, formatDateTime } from './silences.utils';
 
 function SilencesPage() {
   const { data: silences, isLoading, error } = useSilences();
+  const { uid: dataSourceUID } = useAlertmanager();
+  const [deleteSilence] = (alertmanagerApi as any).endpoints.deleteSilence.useMutation();
+  const [silenceToExpire, setSilenceToExpire] = useState<GettableSilence | null>(null);
 
-  const getStatusBadge = (state: 'expired' | 'active' | 'pending') => {
-    const colorMap = {
-      active: 'green',
-      pending: 'blue',
-      expired: 'red',
-    } as const;
+  const handleExpireSilence = async () => {
+    if (!silenceToExpire) {
+      return;
+    }
 
-    return <Badge text={state} color={colorMap[state]} />;
-  };
-
-  const formatMatchers = (silence: GettableSilence) => {
-    return silence.matchers
-      .map((m) => {
-        const operator = m.isRegex ? '=~' : m.isEqual === false ? '!=' : '=';
-        return `${m.name}${operator}"${m.value}"`;
-      })
-      .join(', ');
-  };
-
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString();
+    try {
+      await deleteSilence({ dataSourceUID, silenceId: silenceToExpire.id }).unwrap();
+      setSilenceToExpire(null);
+    } catch (err) {
+      console.error('Failed to expire silence:', err);
+    }
   };
 
   const columns = [
@@ -44,7 +42,13 @@ function SilencesPage() {
     {
       id: 'matchers',
       header: t('silences.column.matchers', 'Matchers'),
-      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => formatMatchers(original),
+      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => (
+        <Stack direction="row" gap={0.5}>
+          {formatMatchers(original).map((matcher, index) => (
+            <AlertLabel key={index} value={matcher} colorBy="value" size="sm" />
+          ))}
+        </Stack>
+      ),
     },
     {
       id: 'startsAt',
@@ -62,16 +66,34 @@ function SilencesPage() {
       cell: ({ row: { original } }: { row: { original: GettableSilence } }) => original.createdBy,
     },
     {
-      id: 'comment',
-      header: t('silences.column.comment', 'Comment'),
-      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => original.comment,
+      id: 'actions',
+      header: t('silences.column.actions', 'Actions'),
+      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => (
+        <Button
+          variant="destructive"
+          size="sm"
+          fill='outline'
+          onClick={() => setSilenceToExpire(original)}
+          icon="trash-alt"
+          disabled={original.status.state === 'expired'}
+        >
+          {t('silences.expire-button', 'Expire')}
+        </Button>
+      ),
     },
   ];
 
   return (
-    <AlertmanagerPage>
+    <AlertmanagerPage subTitle={t('pages.silences.subtitle', 'Stop notifications from one or more alerting rules')}>
       <div data-testid={testIds.silences.container}>
-        {isLoading && (
+        <Stack direction="column" gap={2} alignItems="flex-end">
+          <div>
+            <LinkButton icon="plus" href={prefixRoute(ROUTES.CreateSilence)}>
+              {t('silences.create-button', 'Create Silence')}
+            </LinkButton>
+          </div>
+
+          {isLoading && (
           <div>
             <Skeleton height={50} style={{ marginBottom: '10px' }} />
             <Skeleton height={40} count={5} style={{ marginBottom: '5px' }} />
@@ -83,7 +105,17 @@ function SilencesPage() {
           </Alert>
         )}
         {!isLoading && silences && silences.length > 0 && !error && (
-          <InteractiveTable columns={columns} data={silences} getRowId={(silence) => silence.id} />
+          <InteractiveTable
+            columns={columns}
+            data={silences}
+            getRowId={(silence) => silence.id}
+            renderExpandedRow={(silence) => (
+              <div style={{ padding: '12px 16px', backgroundColor: 'rgba(204, 204, 220, 0.07)' }}>
+                <strong>{t('silences.comment-label', 'Comment:')}</strong>
+                <div style={{ marginTop: '8px' }}>{silence.comment}</div>
+              </div>
+            )}
+          />
         )}
         {!isLoading && (!silences || silences.length === 0) && !error && (
           <EmptyState
@@ -91,7 +123,35 @@ function SilencesPage() {
             variant={'call-to-action'}
           />
         )}
+        </Stack>
       </div>
+
+      {silenceToExpire && (
+        <ConfirmModal
+          isOpen={true}
+          title={t('silences.expire-modal.title', 'Expire Silence')}
+          body={
+            <div>
+              <p>{t('silences.expire-modal.body', 'Are you sure you want to expire this silence?')}</p>
+              <div style={{ marginTop: '12px' }}>
+                <strong>{t('silences.expire-modal.comment-label', 'Comment:')}</strong> {silenceToExpire.comment}
+              </div>
+              <div style={{ marginTop: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <strong>{t('silences.expire-modal.matchers-label', 'Matchers:')}</strong>
+                {formatMatchers(silenceToExpire).map((matcher, index) => (
+                  <AlertLabel key={index} value={matcher} colorBy="value" size="sm" />
+                ))}
+              </div>
+            </div>
+          }
+          confirmText={t('silences.expire-modal.confirm', 'Expire')}
+          dismissText={t('silences.expire-modal.cancel', 'Cancel')}
+          icon="exclamation-triangle"
+          onConfirm={handleExpireSilence}
+          onDismiss={() => setSilenceToExpire(null)}
+          confirmButtonVariant="destructive"
+        />
+      )}
     </AlertmanagerPage>
   );
 }

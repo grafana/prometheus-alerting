@@ -10,6 +10,14 @@
     "no-matchers": "None",
     "no-rules-message": "No inhibit rules are configured in the Alertmanager."
   },
+  "pages": {
+    "alertmanager-picker": {
+      "label": "Choose Alertmanager"
+    },
+    "silences": {
+      "subtitle": "Stop notifications from one or more alerting rules"
+    }
+  },
   "receivers": {
     "column": {
       "integrations": "Integrations",
@@ -37,15 +45,57 @@
   },
   "silences": {
     "column": {
-      "comment": "Comment",
+      "actions": "Actions",
       "created-by": "Created By",
       "ends-at": "Ends At",
       "matchers": "Matchers",
       "starts-at": "Starts At",
       "status": "Status"
     },
+    "comment-label": "Comment:",
+    "create": {
+      "add-matcher": "Add Matcher",
+      "cancel": "Cancel",
+      "comment": "Comment",
+      "comment-description": "Reason for creating this silence",
+      "comment-placeholder": "e.g., Planned maintenance window",
+      "created-by": "Created By",
+      "created-by-description": "Your name or identifier",
+      "created-by-placeholder": "e.g., john.doe@example.com",
+      "creating": "Creating...",
+      "ends-at": "End Time",
+      "ends-at-description": "When the silence should expire",
+      "error-message": "Failed to create silence",
+      "error-title": "Error creating silence",
+      "label-name": "Label Name",
+      "label-name-placeholder": "e.g., alertname",
+      "label-value": "Label Value",
+      "label-value-placeholder": "e.g., HighMemoryUsage",
+      "label-value-placeholder-regex": "e.g., .*warning.*",
+      "matchers-description": "Define label matchers to determine which alerts this silence will affect",
+      "matchers-title": "Matchers",
+      "operator": "Operator",
+      "operator-equal": "= (Equal)",
+      "operator-not-equal": "!= (Not Equal)",
+      "operator-regex": "=~ (Regex Match)",
+      "remove-matcher": "Remove matcher",
+      "starts-at": "Start Time",
+      "starts-at-description": "When the silence should begin",
+      "submit": "Create Silence",
+      "title": "Create Silence"
+    },
+    "create-button": "Create Silence",
     "error-loading-message": "Failed to fetch silences",
     "error-loading-title": "Error loading silences",
+    "expire-button": "Expire",
+    "expire-modal": {
+      "body": "Are you sure you want to expire this silence?",
+      "cancel": "Cancel",
+      "comment-label": "Comment:",
+      "confirm": "Expire",
+      "matchers-label": "Matchers:",
+      "title": "Expire Silence"
+    },
     "no-silences-message": "No silences are currently configured in the Alertmanager."
   },
   "templates": {

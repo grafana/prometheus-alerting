@@ -2,12 +2,12 @@ import React from 'react';
 import { testIds } from '../components/testIds';
 import { PluginPage } from '@grafana/runtime';
 
-function PageOne() {
+function Landing() {
   return (
     <PluginPage>
-      <div data-testid={testIds.landing.container}>landing page for Prometheus alerting plugin</div>
+      <div data-testid={testIds.landing.container}></div>
     </PluginPage>
   );
 }
 
-export default PageOne;
+export default Landing;

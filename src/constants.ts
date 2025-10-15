@@ -13,6 +13,7 @@ export enum ROUTES {
   Receivers = 'receivers',
   Templates = 'templates',
   Silences = 'silences',
+  CreateSilence = 'silences/new',
   TimeIntervals = 'time-intervals',
   InhibitRules = 'inhibit-rules',
 }
