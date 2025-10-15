@@ -8,6 +8,7 @@ import { type Receiver, getReceiverTypes } from '@grafana/external-alertmanager/
 import { useReceivers } from '../hooks/useReceivers';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { getTotalReceiverConfigs } from '../utils/receiversUtils';
+import { DEFAULT_PAGE_SIZE } from '../../../constants';
 
 import { t } from '@grafana/i18n';
 
@@ -49,7 +50,12 @@ function ReceiversPage() {
           </Alert>
         )}
         {!isLoading && receivers.length > 0 && !error && (
-          <InteractiveTable columns={columns} data={receivers} getRowId={(receiver) => receiver.name} />
+          <InteractiveTable
+            columns={columns}
+            data={receivers}
+            getRowId={(receiver) => receiver.name}
+            pageSize={DEFAULT_PAGE_SIZE}
+          />
         )}
         {!isLoading && receivers.length === 0 && !error && (
           <EmptyState

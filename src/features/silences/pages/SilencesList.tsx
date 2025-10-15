@@ -8,7 +8,7 @@ import { useSilences, useDeleteSilence } from '../hooks/useSilences';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
-import { ROUTES } from '../../../constants';
+import { ROUTES, DEFAULT_PAGE_SIZE } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
 import { ExpireSilenceModal } from './ExpireSilenceModal';
@@ -107,6 +107,7 @@ function SilencesPage() {
               columns={columns}
               data={silences}
               getRowId={(silence) => silence.id}
+              pageSize={DEFAULT_PAGE_SIZE}
               renderExpandedRow={(silence) => (
                 <Stack direction="column">
                   <Text color="primary">{t('silences.comment-label', 'Comment:')}</Text>

@@ -5,6 +5,7 @@ import { testIds } from '../../../components/testIds';
 import { Alert, InteractiveTable, EmptyState } from '@grafana/ui';
 import { useTimeIntervals } from '../hooks/useTimeIntervals';
 import { t } from '@grafana/i18n';
+import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 
@@ -89,7 +90,12 @@ function TimeIntervalsPage() {
           </Alert>
         )}
         {!isLoading && timeIntervals.length > 0 && !error && (
-          <InteractiveTable columns={columns} data={timeIntervals} getRowId={(interval) => interval.name} />
+          <InteractiveTable
+            columns={columns}
+            data={timeIntervals}
+            getRowId={(interval) => interval.name}
+            pageSize={DEFAULT_PAGE_SIZE}
+          />
         )}
         {!isLoading && timeIntervals.length === 0 && !error && (
           <EmptyState

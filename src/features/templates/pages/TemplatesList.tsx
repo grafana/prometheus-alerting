@@ -5,6 +5,7 @@ import { testIds } from '../../../components/testIds';
 import { Alert, InteractiveTable, EmptyState } from '@grafana/ui';
 import { useTemplates } from '../hooks/useTemplates';
 import { t } from '@grafana/i18n';
+import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 
 interface TemplateRow {
@@ -42,7 +43,12 @@ function TemplatesPage() {
           </Alert>
         )}
         {!isLoading && templates.length > 0 && !error && (
-          <InteractiveTable columns={columns} data={templateRows} getRowId={(row) => row.path} />
+          <InteractiveTable
+            columns={columns}
+            data={templateRows}
+            getRowId={(row) => row.path}
+            pageSize={DEFAULT_PAGE_SIZE}
+          />
         )}
         {!isLoading && templates.length === 0 && !error && (
           <EmptyState

@@ -116,16 +116,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       invalidatesTags: ['Silences'],
     }),
     getAlerts: build.query<GetAlertsApiResponse, WithDataSourceInformation<GetAlertsApiArg>>({
-      query: ({
-        dataSourceUID,
-        implementation,
-        active,
-        silenced,
-        inhibited,
-        unprocessed,
-        filter,
-        receiver,
-      }) => ({
+      query: ({ dataSourceUID, implementation, active, silenced, inhibited, unprocessed, filter, receiver }) => ({
         url: `/v2/alerts`,
         params: {
           active,
@@ -152,16 +143,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       invalidatesTags: ['Alerts', 'AlertGroups'],
     }),
     getAlertGroups: build.query<GetAlertGroupsApiResponse, WithDataSourceInformation<GetAlertGroupsApiArg>>({
-      query: ({
-        dataSourceUID,
-        implementation,
-        active,
-        silenced,
-        inhibited,
-        muted,
-        filter,
-        receiver,
-      }) => ({
+      query: ({ dataSourceUID, implementation, active, silenced, inhibited, muted, filter, receiver }) => ({
         url: `/v2/alerts/groups`,
         params: {
           active,

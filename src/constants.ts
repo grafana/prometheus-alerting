@@ -6,6 +6,8 @@ export const STORAGE_KEYS = {
   SELECTED_ALERTMANAGER_UID: 'grafana.alertmanager.selectedDataSourceUID',
 } as const;
 
+export const DEFAULT_PAGE_SIZE = 40;
+
 export enum ROUTES {
   Landing = 'landing',
   Rules = 'rules',

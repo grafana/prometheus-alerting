@@ -86,10 +86,7 @@ const AppConfig = ({ plugin }: AppConfigProps) => {
           />
         </Field>
 
-        <Field
-          label={t('app-config.api-url.label', 'API Url')}
-          description={t('app-config.api-url.description', '')}
-        >
+        <Field label={t('app-config.api-url.label', 'API Url')} description={t('app-config.api-url.description', '')}>
           <Input
             width={60}
             name="apiUrl"

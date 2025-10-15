@@ -5,6 +5,7 @@ import { testIds } from '../../../components/testIds';
 import { Alert, InteractiveTable, Stack, EmptyState } from '@grafana/ui';
 import { useInhibitRules } from '../hooks/useInhibitRules';
 import { t } from '@grafana/i18n';
+import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import type { InhibitRule } from '@grafana/external-alertmanager/vanilla';
 import { AlertLabel } from '@grafana/alerting';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
@@ -66,7 +67,12 @@ function InhibitRulesPage() {
           </Alert>
         )}
         {!isLoading && inhibitRules.length > 0 && !error && (
-          <InteractiveTable columns={columns} data={inhibitRules} getRowId={(rule, index) => `inhibit-rule-${index}`} />
+          <InteractiveTable
+            columns={columns}
+            data={inhibitRules}
+            getRowId={(rule, index) => `inhibit-rule-${index}`}
+            pageSize={DEFAULT_PAGE_SIZE}
+          />
         )}
         {!isLoading && inhibitRules.length === 0 && !error && (
           <EmptyState
