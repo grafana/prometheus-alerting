@@ -1,9 +1,8 @@
 import React, { ChangeEvent, useState } from 'react';
 import { lastValueFrom } from 'rxjs';
-import { css } from '@emotion/css';
-import { AppPluginMeta, GrafanaTheme2, PluginConfigPageProps, PluginMeta } from '@grafana/data';
+import { AppPluginMeta, PluginConfigPageProps, PluginMeta } from '@grafana/data';
 import { getBackendSrv } from '@grafana/runtime';
-import { Button, Field, FieldSet, Input, SecretInput, useStyles2 } from '@grafana/ui';
+import { Button, Field, FieldSet, Input, SecretInput } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { testIds } from '../testIds';
 
