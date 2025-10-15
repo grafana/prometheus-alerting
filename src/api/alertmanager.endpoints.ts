@@ -24,9 +24,10 @@ import {
   GetAlertGroupsApiArg,
   GetAlertGroupsApiResponseSchema,
   AlertmanagerStatusSchema,
+  ParsedAlertmanagerConfig,
 } from '@grafana/external-alertmanager/vanilla';
 import { RootState } from 'src/store/store';
-import { ParsedAlertmanagerConfig, TransformedAlertmanagerStatusApiResponse, TransformedAlertmanagerStatusApiResponseSchema } from './types';
+import { TransformedAlertmanagerStatusApiResponse, TransformedAlertmanagerStatusApiResponseSchema } from './types';
 
 // Default API instance for backward compatibility
 export const alertmanagerApi = createApi({
