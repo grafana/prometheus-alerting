@@ -23,7 +23,6 @@ function ReceiversPage() {
   const alertmanagerOptions = convertDataSourcesToComboboxOptions(alertmanagers);
 
   const [triggerFetch, { receivers = [], isLoading, error }] = useReceivers();
-  console.log(error)
 
   useEffect(() => {
     triggerFetch()

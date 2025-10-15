@@ -1,4 +1,4 @@
-import { useAlertmanagerApi } from './useAlertmanagerApi';
+import { alertmanagerApi } from "../api/alertmanager.endpoints";
 
 /**
  * Hook to fetch and manage routes from the Alertmanager status endpoint.
@@ -10,9 +10,7 @@ import { useAlertmanagerApi } from './useAlertmanagerApi';
  * - Deleting routes
  */
 export function useRoutes() {
-  const api = useAlertmanagerApi();
-
-  return api.endpoints.getStatus.useQuery(undefined, {
+  return alertmanagerApi.endpoints.getStatus.useQuery(undefined, {
     selectFromResult: (result) => ({
       ...result,
       route: result.data?.config.parsed?.route,

@@ -1,4 +1,4 @@
-import { useAlertmanagerApi } from './useAlertmanagerApi';
+import { alertmanagerApi } from "../api/alertmanager.endpoints";
 
 /**
  * Hook to fetch and manage silences from the Alertmanager silences endpoint.
@@ -10,7 +10,5 @@ import { useAlertmanagerApi } from './useAlertmanagerApi';
  * - Deleting/expiring silences
  */
 export function useSilences(filter?: string[]) {
-  const api = useAlertmanagerApi();
-
-  return api.endpoints.getSilences.useQuery({ filter });
+  return alertmanagerApi.endpoints.getSilences.useQuery({ filter });
 }

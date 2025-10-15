@@ -1,4 +1,4 @@
-import { useAlertmanagerApi } from './useAlertmanagerApi';
+import { alertmanagerApi } from "../api/alertmanager.endpoints";
 
 /**
  * Hook to fetch and manage time intervals from the Alertmanager status endpoint.
@@ -13,9 +13,7 @@ import { useAlertmanagerApi } from './useAlertmanagerApi';
  * - Deleting time intervals
  */
 export function useTimeIntervals() {
-  const api = useAlertmanagerApi();
-
-  return api.endpoints.getStatus.useQuery(undefined, {
+  return alertmanagerApi.endpoints.getStatus.useQuery(undefined, {
     selectFromResult: (result) => ({
       ...result,
       timeIntervals: result.data?.config.parsed?.time_intervals ?? [],

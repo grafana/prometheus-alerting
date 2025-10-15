@@ -1,4 +1,4 @@
-import { useAlertmanagerApi } from './useAlertmanagerApi';
+import { alertmanagerApi } from "../api/alertmanager.endpoints";
 
 /**
  * Hook to fetch and manage templates from the Alertmanager status endpoint.
@@ -10,9 +10,7 @@ import { useAlertmanagerApi } from './useAlertmanagerApi';
  * - Deleting templates
  */
 export function useTemplates() {
-  const api = useAlertmanagerApi();
-
-  return api.endpoints.getStatus.useQuery(undefined, {
+  return alertmanagerApi.endpoints.getStatus.useQuery(undefined, {
     selectFromResult: (result) => ({
       ...result,
       templates: result.data?.config.parsed?.templates ?? [],
