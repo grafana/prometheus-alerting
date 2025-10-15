@@ -18,3 +18,8 @@ export type WithDataSourceUID<T = void> = T extends void
 export function hasDataSourceUID(args: unknown): args is { dataSourceUID: string } {
   return typeof args === 'object' && args !== null && 'dataSourceUID' in args;
 }
+
+// Type guard to check if args has implementation field
+export function hasImplementation(args: unknown): args is { implementation: 'prometheus' | 'mimir' | 'cortex' } {
+  return typeof args === 'object' && args !== null && 'implementation' in args;
+}

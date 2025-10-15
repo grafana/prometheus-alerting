@@ -18,13 +18,13 @@ import {
   PostSilencesApiArg,
   PostSilencesApiResponseSchema,
 } from '@grafana/external-alertmanager/vanilla';
-import { TransformedAlertmanagerStatusApiResponse, TransformedAlertmanagerStatusApiResponseSchema, WithDataSourceUID, hasDataSourceUID } from './types';
+import { TransformedAlertmanagerStatusApiResponse, TransformedAlertmanagerStatusApiResponseSchema, WithDataSourceUID, hasDataSourceUID, hasImplementation } from './types';
 
 // Dynamic baseQuery that reads dataSourceUID and implementation from query args
 const dynamicBaseQuery: ReturnType<typeof fetchBaseQuery> = async (args, api, extraOptions) => {
   // Extract dataSourceUID and implementation from the query args
   const dataSourceUID = hasDataSourceUID(args) ? args.dataSourceUID : undefined;
-  const implementation = (args as any)?.implementation || 'prometheus';
+  const implementation = hasImplementation(args) ? args.implementation : 'prometheus';
 
   // Determine base URL based on implementation
   const baseUrl = implementation === 'mimir'
