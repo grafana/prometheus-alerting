@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { Alert, InteractiveTable, EmptyState, LinkButton, Stack, Button, ConfirmModal, Text } from '@grafana/ui';
+import { Alert, InteractiveTable, EmptyState, LinkButton, Stack, Button, Text } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { useSilences, useDeleteSilence } from '../../hooks/useSilences';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
@@ -11,6 +11,7 @@ import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 import { ROUTES } from '../../constants';
 import { prefixRoute } from '../../utils/utils.routing';
 import { getStatusBadge, formatMatchers, formatDateTime } from './silences.utils';
+import { ExpireSilenceModal } from './ExpireSilenceModal';
 
 function SilencesPage() {
   const { data: silences, isLoading, error } = useSilences();
@@ -125,32 +126,11 @@ function SilencesPage() {
         </Stack>
       </div>
 
-      {silenceToExpire && (
-        <ConfirmModal
-          isOpen={true}
-          title={t('silences.expire-modal.title', 'Expire Silence')}
-          body={
-            <div>
-              <p>{t('silences.expire-modal.body', 'Are you sure you want to expire this silence?')}</p>
-              <div style={{ marginTop: '12px' }}>
-                <strong>{t('silences.expire-modal.comment-label', 'Comment:')}</strong> {silenceToExpire.comment}
-              </div>
-              <div style={{ marginTop: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                <strong>{t('silences.expire-modal.matchers-label', 'Matchers:')}</strong>
-                {formatMatchers(silenceToExpire).map((matcher, index) => (
-                  <AlertLabel key={index} value={matcher} colorBy="value" size="sm" />
-                ))}
-              </div>
-            </div>
-          }
-          confirmText={t('silences.expire-modal.confirm', 'Expire')}
-          dismissText={t('silences.expire-modal.cancel', 'Cancel')}
-          icon="exclamation-triangle"
-          onConfirm={handleExpireSilence}
-          onDismiss={() => setSilenceToExpire(null)}
-          confirmButtonVariant="destructive"
-        />
-      )}
+      <ExpireSilenceModal
+        silence={silenceToExpire}
+        onConfirm={handleExpireSilence}
+        onDismiss={() => setSilenceToExpire(null)}
+      />
     </AlertmanagerPage>
   );
 }

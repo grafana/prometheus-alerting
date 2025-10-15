@@ -1,4 +1,20 @@
 {
+  "app-config": {
+    "api-key": {
+      "description": "A secret key for authenticating to our custom API",
+      "label": "API Key",
+      "placeholder": "Your secret API key"
+    },
+    "api-settings": {
+      "title": "API Settings"
+    },
+    "api-url": {
+      "description": "",
+      "label": "API Url",
+      "placeholder": "E.g.: http://mywebsite.com/api/v1"
+    },
+    "submit-button": "Save API settings"
+  },
   "inhibit-rules": {
     "column": {
       "equal": "Equal",

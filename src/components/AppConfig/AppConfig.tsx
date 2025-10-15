@@ -4,6 +4,7 @@ import { css } from '@emotion/css';
 import { AppPluginMeta, GrafanaTheme2, PluginConfigPageProps, PluginMeta } from '@grafana/data';
 import { getBackendSrv } from '@grafana/runtime';
 import { Button, Field, FieldSet, Input, SecretInput, useStyles2 } from '@grafana/ui';
+import { t } from '@grafana/i18n';
 import { testIds } from '../testIds';
 
 type AppPluginSettings = {
@@ -22,7 +23,6 @@ type State = {
 export interface AppConfigProps extends PluginConfigPageProps<AppPluginMeta<AppPluginSettings>> {}
 
 const AppConfig = ({ plugin }: AppConfigProps) => {
-  const s = useStyles2(getStyles);
   const { enabled, pinned, jsonData, secureJsonFields } = plugin.meta;
   const [state, setState] = useState<State>({
     apiUrl: jsonData?.apiUrl || '',
@@ -69,8 +69,11 @@ const AppConfig = ({ plugin }: AppConfigProps) => {
 
   return (
     <form onSubmit={onSubmit}>
-      <FieldSet label="API Settings">
-        <Field label="API Key" description="A secret key for authenticating to our custom API">
+      <FieldSet label={t('app-config.api-settings.title', 'API Settings')}>
+        <Field
+          label={t('app-config.api-key.label', 'API Key')}
+          description={t('app-config.api-key.description', 'A secret key for authenticating to our custom API')}
+        >
           <SecretInput
             width={60}
             id="config-api-key"
@@ -78,44 +81,36 @@ const AppConfig = ({ plugin }: AppConfigProps) => {
             name="apiKey"
             value={state.apiKey}
             isConfigured={state.isApiKeySet}
-            placeholder={'Your secret API key'}
+            placeholder={t('app-config.api-key.placeholder', 'Your secret API key')}
             onChange={onChange}
             onReset={onResetApiKey}
           />
         </Field>
 
-        <Field label="API Url" description="" className={s.marginTop}>
+        <Field
+          label={t('app-config.api-url.label', 'API Url')}
+          description={t('app-config.api-url.description', '')}
+        >
           <Input
             width={60}
             name="apiUrl"
             id="config-api-url"
             data-testid={testIds.appConfig.apiUrl}
             value={state.apiUrl}
-            placeholder={`E.g.: http://mywebsite.com/api/v1`}
+            placeholder={t('app-config.api-url.placeholder', 'E.g.: http://mywebsite.com/api/v1')}
             onChange={onChange}
           />
         </Field>
 
-        <div className={s.marginTop}>
-          <Button type="submit" data-testid={testIds.appConfig.submit} disabled={isSubmitDisabled}>
-            Save API settings
-          </Button>
-        </div>
+        <Button type="submit" data-testid={testIds.appConfig.submit} disabled={isSubmitDisabled}>
+          {t('app-config.submit-button', 'Save API settings')}
+        </Button>
       </FieldSet>
     </form>
   );
 };
 
 export default AppConfig;
-
-const getStyles = (theme: GrafanaTheme2) => ({
-  colorWeak: css`
-    color: ${theme.colors.text.secondary};
-  `,
-  marginTop: css`
-    margin-top: ${theme.spacing(3)};
-  `,
-});
 
 const updatePluginAndReload = async (pluginId: string, data: Partial<PluginMeta<AppPluginSettings>>) => {
   try {
