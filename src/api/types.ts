@@ -33,7 +33,7 @@ export const TransformedAlertmanagerStatusApiResponseTransform =
   });
 
 // Type to include dataSourceUID and implementation in API arguments
-export type WithDataSourceUID<T = void> = T extends void
+export type WithDataSourceInformation<T = void> = T extends void
   ? { dataSourceUID: string; implementation?: 'prometheus' | 'mimir' | 'cortex' }
   : T & { dataSourceUID: string; implementation?: 'prometheus' | 'mimir' | 'cortex' };
 

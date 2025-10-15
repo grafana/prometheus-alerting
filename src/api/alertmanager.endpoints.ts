@@ -20,7 +20,7 @@ import {
   TransformedAlertmanagerStatusApiResponse,
   TransformedAlertmanagerStatusApiResponseSchema,
   TransformedAlertmanagerStatusApiResponseTransform,
-  WithDataSourceUID,
+  WithDataSourceInformation,
   hasDataSourceUID,
   hasImplementation,
 } from './types';
@@ -45,7 +45,7 @@ const dynamicBaseQuery: ReturnType<typeof fetchBaseQuery> = async (args, api, ex
 
 // Base API for Prometheus/vanilla Alertmanager
 const baseAlertmanagerApi = createApi({
-  reducerPath: 'alertmanagetApi',
+  reducerPath: 'alertmanagerApi',
   baseQuery: dynamicBaseQuery,
   endpoints: () => ({}),
 });
@@ -53,7 +53,7 @@ const baseAlertmanagerApi = createApi({
 // Inject Prometheus-specific endpoints (getStatus)
 export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
   endpoints: (build) => ({
-    getStatus: build.query<TransformedAlertmanagerStatusApiResponse, WithDataSourceUID<GetStatusApiArg>>({
+    getStatus: build.query<TransformedAlertmanagerStatusApiResponse, WithDataSourceInformation<GetStatusApiArg>>({
       query: ({ dataSourceUID, implementation }) => ({
         url: `/v2/status`,
         dataSourceUID,
@@ -67,7 +67,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       responseSchema: TransformedAlertmanagerStatusApiResponseSchema,
     }),
     getSilences: build.query({
-      query: ({ dataSourceUID, filter, implementation }: WithDataSourceUID<GetSilencesApiArg>) => ({
+      query: ({ dataSourceUID, filter, implementation }: WithDataSourceInformation<GetSilencesApiArg>) => ({
         url: `/v2/silences`,
         params: {
           filter,
@@ -78,7 +78,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       responseSchema: GetSilencesApiResponseSchema,
     }),
     postSilences: build.mutation({
-      query: ({ dataSourceUID, postableSilence }: WithDataSourceUID<PostSilencesApiArg>) => ({
+      query: ({ dataSourceUID, postableSilence }: WithDataSourceInformation<PostSilencesApiArg>) => ({
         url: `/v2/silences`,
         method: 'POST',
         body: postableSilence,
@@ -87,14 +87,14 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       responseSchema: PostSilencesApiResponseSchema,
     }),
     getSilence: build.query({
-      query: ({ dataSourceUID, silenceId }: WithDataSourceUID<GetSilenceApiArg>) => ({
+      query: ({ dataSourceUID, silenceId }: WithDataSourceInformation<GetSilenceApiArg>) => ({
         url: `/v2/silence/${silenceId}`,
         dataSourceUID,
       }),
       responseSchema: GetSilenceApiResponseSchema,
     }),
     deleteSilence: build.mutation({
-      query: ({ dataSourceUID, silenceId }: WithDataSourceUID<DeleteSilenceApiArg>) => ({
+      query: ({ dataSourceUID, silenceId }: WithDataSourceInformation<DeleteSilenceApiArg>) => ({
         url: `/v2/silence/${silenceId}`,
         method: 'DELETE',
         dataSourceUID,
@@ -109,7 +109,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         unprocessed,
         filter,
         receiver,
-      }: WithDataSourceUID<GetAlertsApiArg>) => ({
+      }: WithDataSourceInformation<GetAlertsApiArg>) => ({
         url: `/v2/alerts`,
         params: {
           active,
@@ -124,7 +124,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       responseSchema: GetAlertsApiResponseSchema,
     }),
     postAlerts: build.mutation({
-      query: ({ dataSourceUID, postableAlerts }: WithDataSourceUID<PostAlertsApiArg>) => ({
+      query: ({ dataSourceUID, postableAlerts }: WithDataSourceInformation<PostAlertsApiArg>) => ({
         url: `/v2/alerts`,
         method: 'POST',
         body: postableAlerts,
@@ -140,7 +140,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         muted,
         filter,
         receiver,
-      }: WithDataSourceUID<GetAlertGroupsApiArg>) => ({
+      }: WithDataSourceInformation<GetAlertGroupsApiArg>) => ({
         url: `/v2/alerts/groups`,
         params: {
           active,
