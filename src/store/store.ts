@@ -1,21 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
 import dataSourceReducer from './datasourceSlice';
-import { alertmanagerApi as vanillaAlertmanagerAPI } from '../api/alertmanager.endpoints';
-import { alertmanagerApi as mimirAlertmanagerAPI } from '../api/mimir.endpoints';
+import { alertmanagerApi } from '../api/alertmanager.endpoints';
 import { prometheusApi } from '../api/prometheus.endpoints';
 
 export const createStore = (initialDataSourceUID: string) => {
   return configureStore({
     reducer: {
       dataSource: dataSourceReducer,
-      [vanillaAlertmanagerAPI.reducerPath]: vanillaAlertmanagerAPI.reducer,
-      [mimirAlertmanagerAPI.reducerPath]: mimirAlertmanagerAPI.reducer,
+      [alertmanagerApi.reducerPath]: alertmanagerApi.reducer,
       [prometheusApi.reducerPath]: prometheusApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(
-        vanillaAlertmanagerAPI.middleware,
-        mimirAlertmanagerAPI.middleware,
+        alertmanagerApi.middleware,
         prometheusApi.middleware,
       ),
     preloadedState: {

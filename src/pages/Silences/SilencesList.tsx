@@ -2,10 +2,10 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { Alert, InteractiveTable, Badge } from '@grafana/ui';
+import { Alert, InteractiveTable, Badge, EmptyState } from '@grafana/ui';
 import { useSilences } from '../../hooks/useSilences';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
-import { Trans, t } from '@grafana/i18n';
+import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 
 function SilencesPage() {
@@ -86,11 +86,7 @@ function SilencesPage() {
           <InteractiveTable columns={columns} data={silences} getRowId={(silence) => silence.id} />
         )}
         {!isLoading && (!silences || silences.length === 0) && !error && (
-          <Alert title={t('silences.no-silences-title', 'No silences found')} severity="info">
-            <Trans i18nKey="silences.no-silences-message">
-              No silences are currently configured in the Alertmanager.
-            </Trans>
-          </Alert>
+          <EmptyState message={t('silences.no-silences-message', 'No silences are currently configured in the Alertmanager.')} variant={'call-to-action'} />
         )}
       </div>
     </AlertmanagerPage>

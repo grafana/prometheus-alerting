@@ -15,7 +15,7 @@ export interface AlertmanagerDataSource {
  *
  * @returns The currently selected Alertmanager data source with UID and settings, or undefined if not found
  */
-export function useAlertmanager(): AlertmanagerDataSource | undefined {
+export function useAlertmanager(): AlertmanagerDataSource {
   const selectedUID = useAppSelector(selectDataSourceUID);
   const availableAlertmanagers = useAvailableAlertmanagers();
 
@@ -23,7 +23,7 @@ export function useAlertmanager(): AlertmanagerDataSource | undefined {
     const settings = availableAlertmanagers.find((am) => am.uid === selectedUID);
 
     if (!settings) {
-      return undefined;
+      throw new Error(`no such Alertmanager: ${selectedUID}`)
     }
 
     return {
