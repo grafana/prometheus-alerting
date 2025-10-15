@@ -1,28 +1,29 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { parse as parseYaml } from '@std/yaml';
 import { GettableUserConfigurationSchema, ParsedUserConfiguration, ParsedUserConfigurationSchema } from '@grafana/external-alertmanager/mimir';
-import { ParsedAlertmanagerConfig } from '@grafana/external-alertmanager/vanilla';
-import { RootState } from 'src/store/store';
+import { ParsedAlertmanagerConfigSchema } from '@grafana/external-alertmanager/vanilla';
 import z from 'zod';
+import { hasDataSourceUID, WithDataSourceUID } from './types';
+
+// Dynamic baseQuery that reads dataSourceUID from query args
+const dynamicBaseQuery: ReturnType<typeof fetchBaseQuery> = async (args, api, extraOptions) => {
+  // Extract dataSourceUID from the query args
+  const dataSourceUID = hasDataSourceUID(args) ? args.dataSourceUID : '';
+
+  // Create and execute base query with the dynamic UID
+  return fetchBaseQuery({
+    baseUrl: `/api/datasources/proxy/uid/${dataSourceUID}/api`,
+  })(args, api, extraOptions);
+};
 
 // Default API instance for backward compatibility
 export const alertmanagerApi = createApi({
   reducerPath: 'mimirAlertmanagerApi',
-  baseQuery: async (args, api, extraOptions) => {
-    // Read the current data source UID from Redux state
-    const state = api.getState() as RootState;
-    const dataSourceUID = state.dataSource.selectedUID;
-
-    // Create a base query with the current UID
-    const baseQuery = fetchBaseQuery({
-      baseUrl: `/api/datasources/proxy/uid/${dataSourceUID}/api`,
-    });
-
-    return baseQuery(args, api, extraOptions);
-  },
+  baseQuery: dynamicBaseQuery,
   endpoints: (build) => ({
-    getConfiguration: build.query<ParsedUserConfiguration, void>({
-      query: () => ({
+    getConfiguration: build.query<ParsedUserConfiguration, WithDataSourceUID>({
+      query: ({ dataSourceUID }) => ({
+        dataSourceUID,
         url: '/v1/alerts',
         headers: {
           accept: 'application/yaml' // not required since it's hard-code to always return YAML but we're being nice guys
@@ -39,25 +40,29 @@ export const alertmanagerApi = createApi({
         error: z.prettifyError(error),
         data: error.issues,
       }),
-      transformResponse: (response: string) => {
+      transformResponse: (response: string): ParsedUserConfiguration => {
         const parsedResponse = parseYaml(response);
         const parsedSchemaResponse = GettableUserConfigurationSchema.parse(parsedResponse);
 
+        const alertmanagerConfigParsed = parseYaml(parsedSchemaResponse.alertmanager_config);
+        const alertmanagerConfig = ParsedAlertmanagerConfigSchema.parse(alertmanagerConfigParsed);
+
         return {
-          ...parsedSchemaResponse,
-          alertmanager_config: parseYaml(parsedSchemaResponse.alertmanager_config) as ParsedAlertmanagerConfig
-        } as ParsedUserConfiguration;
+          template_files: parsedSchemaResponse.template_files,
+          alertmanager_config: alertmanagerConfig
+        };
       },
       // before we transform it, it returns a YAML string
       rawResponseSchema: z.string(),
       // now check if the parsed YAML matches our configuration definition
       responseSchema: ParsedUserConfigurationSchema
     }),
-    postConfiguration: build.mutation<unknown, unknown>({
-      query: (config) => ({
+    postConfiguration: build.mutation<unknown, WithDataSourceUID<{ config: unknown }>>({
+      query: ({ dataSourceUID, config }) => ({
         method: 'POST',
         url: `/v1/alerts`,
         data: config,
+        dataSourceUID,
       }),
     }),
   }),

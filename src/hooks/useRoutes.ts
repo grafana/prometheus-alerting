@@ -1,4 +1,6 @@
 import { alertmanagerApi } from "../api/alertmanager.endpoints";
+import { useAppSelector } from "../store/hooks";
+import { selectDataSourceUID } from "../store/datasourceSlice";
 
 /**
  * Hook to fetch and manage routes from the Alertmanager status endpoint.
@@ -10,7 +12,9 @@ import { alertmanagerApi } from "../api/alertmanager.endpoints";
  * - Deleting routes
  */
 export function useRoutes() {
-  return alertmanagerApi.endpoints.getStatus.useQuery(undefined, {
+  const dataSourceUID = useAppSelector(selectDataSourceUID);
+
+  return alertmanagerApi.endpoints.getStatus.useQuery({ dataSourceUID }, {
     selectFromResult: (result) => ({
       ...result,
       route: result.data?.config.parsed?.route,

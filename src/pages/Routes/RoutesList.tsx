@@ -141,7 +141,7 @@ function RoutesPage() {
             {error instanceof Error ? error.message : t('routes.error-loading-message', 'Failed to fetch routes')}
           </Alert>
         )}
-        {!isLoading && route && (
+        {!isLoading && route && !error && (
           <div>
             <RouteCard route={route} />
           </div>

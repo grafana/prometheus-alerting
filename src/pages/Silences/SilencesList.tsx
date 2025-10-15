@@ -82,7 +82,7 @@ function SilencesPage() {
             {error instanceof Error ? error.message : t('silences.error-loading-message', 'Failed to fetch silences')}
           </Alert>
         )}
-        {!isLoading && silences && silences.length > 0 && (
+        {!isLoading && silences && silences.length > 0 && !error && (
           <InteractiveTable columns={columns} data={silences} getRowId={(silence) => silence.id} />
         )}
         {!isLoading && (!silences || silences.length === 0) && !error && (

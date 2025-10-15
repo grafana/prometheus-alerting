@@ -50,7 +50,7 @@ function ReceiversPage() {
             {'error' in error ? error.error : t('receivers.error-loading-message', 'Failed to fetch receivers')}
           </Alert>
         )}
-        {!isLoading && receivers.length > 0 && (
+        {!isLoading && receivers.length > 0 && !error && (
           <InteractiveTable columns={columns} data={receivers} getRowId={(receiver) => receiver.name} />
         )}
         {!isLoading && receivers.length === 0 && !error && (

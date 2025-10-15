@@ -65,7 +65,7 @@ function InhibitRulesPage() {
               : t('inhibit-rules.error-loading-message', 'Failed to fetch inhibit rules')}
           </Alert>
         )}
-        {!isLoading && inhibitRules.length > 0 && (
+        {!isLoading && inhibitRules.length > 0 && !error && (
           <InteractiveTable columns={columns} data={inhibitRules} getRowId={(rule, index) => `inhibit-rule-${index}`} />
         )}
         {!isLoading && inhibitRules.length === 0 && !error && (

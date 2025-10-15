@@ -1,4 +1,7 @@
 import { alertmanagerApi } from "../../api/alertmanager.endpoints"
+import { useAppSelector } from "../../store/hooks";
+import { selectDataSourceUID } from "../../store/datasourceSlice";
+import { useCallback } from "react";
 
 /**
  * Hook to fetch and manage receivers from the Alertmanager status endpoint.
@@ -10,10 +13,21 @@ import { alertmanagerApi } from "../../api/alertmanager.endpoints"
  * - Deleting receivers
  */
 export function useListReceivers() {
-  return alertmanagerApi.endpoints.getStatus.useLazyQuery({
+  const dataSourceUID = useAppSelector(selectDataSourceUID);
+  const [trigger, result] = alertmanagerApi.endpoints.getStatus.useLazyQuery({
     selectFromResult: (result) => ({
       ...result,
       receivers: result.data?.config.parsed?.receivers ?? [],
     }),
   });
+
+  // memoize the trigger function so we avoid an infinite loop
+  const triggerFn = useCallback(() => {
+    trigger({ dataSourceUID })
+  }, [dataSourceUID, trigger]);
+
+  return [
+    triggerFn,
+    result,
+  ] as const;
 }

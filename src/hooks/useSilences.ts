@@ -1,4 +1,6 @@
 import { alertmanagerApi } from "../api/alertmanager.endpoints";
+import { useAppSelector } from "../store/hooks";
+import { selectDataSourceUID } from "../store/datasourceSlice";
 
 /**
  * Hook to fetch and manage silences from the Alertmanager silences endpoint.
@@ -10,5 +12,7 @@ import { alertmanagerApi } from "../api/alertmanager.endpoints";
  * - Deleting/expiring silences
  */
 export function useSilences(filter?: string[]) {
-  return alertmanagerApi.endpoints.getSilences.useQuery({ filter });
+  const dataSourceUID = useAppSelector(selectDataSourceUID);
+
+  return alertmanagerApi.endpoints.getSilences.useQuery({ dataSourceUID, filter });
 }

@@ -41,7 +41,7 @@ function TemplatesPage() {
             {error instanceof Error ? error.message : t('templates.error-loading-message', 'Failed to fetch templates')}
           </Alert>
         )}
-        {!isLoading && templates.length > 0 && (
+        {!isLoading && templates.length > 0 && !error && (
           <InteractiveTable columns={columns} data={templateRows} getRowId={(row) => row.path} />
         )}
         {!isLoading && templates.length === 0 && !error && (
