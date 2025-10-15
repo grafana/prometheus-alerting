@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { Alert, InteractiveTable, EmptyState, LinkButton, Stack, Button, ConfirmModal } from '@grafana/ui';
+import { Alert, InteractiveTable, EmptyState, LinkButton, Stack, Button, ConfirmModal, Text } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { useSilences } from '../../hooks/useSilences';
 import { alertmanagerApi } from '../../api/alertmanager.endpoints';
@@ -17,7 +17,7 @@ import { getStatusBadge, formatMatchers, formatDateTime } from './silences.utils
 function SilencesPage() {
   const { data: silences, isLoading, error } = useSilences();
   const { uid: dataSourceUID } = useAlertmanager();
-  const [deleteSilence] = (alertmanagerApi as any).endpoints.deleteSilence.useMutation();
+  const [deleteSilence] = alertmanagerApi.endpoints.deleteSilence.useMutation();
   const [silenceToExpire, setSilenceToExpire] = useState<GettableSilence | null>(null);
 
   const handleExpireSilence = async () => {
@@ -110,10 +110,12 @@ function SilencesPage() {
               data={silences}
               getRowId={(silence) => silence.id}
               renderExpandedRow={(silence) => (
-                <div style={{ padding: '12px 16px', backgroundColor: 'rgba(204, 204, 220, 0.07)' }}>
-                  <strong>{t('silences.comment-label', 'Comment:')}</strong>
-                  <div style={{ marginTop: '8px' }}>{silence.comment}</div>
-                </div>
+                <Stack direction="column">
+                  <Text color="primary">{t('silences.comment-label', 'Comment:')}</Text>
+                  <Text color="secondary">
+                    <pre>{silence.comment}</pre>
+                  </Text>
+                </Stack>
               )}
             />
           )}

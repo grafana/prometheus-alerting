@@ -63,6 +63,9 @@
       "created-by-description": "Your name or identifier",
       "created-by-placeholder": "e.g., john.doe@example.com",
       "creating": "Creating...",
+      "duration": "Duration",
+      "duration-description": "How long the silence should last (e.g., 2h, 1d, 30m)",
+      "duration-placeholder": "e.g., 2h, 1d, 30m, 1w",
       "ends-at": "End Time",
       "ends-at-description": "When the silence should expire",
       "error-message": "Failed to create silence",
@@ -82,7 +85,10 @@
       "remove-matcher": "Remove matcher",
       "starts-at": "Start Time",
       "starts-at-description": "When the silence should begin",
-      "submit": "Create Silence"
+      "submit": "Create Silence",
+      "time-mode": "Time Mode",
+      "time-mode-absolute": "Absolute",
+      "time-mode-relative": "Relative"
     },
     "create-button": "Create Silence",
     "error-loading-message": "Failed to fetch silences",

@@ -1,7 +1,17 @@
 import React from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Field, Input, Combobox, type ComboboxOption, TextArea, Stack, RadioButtonGroup } from '@grafana/ui';
+import {
+  Alert,
+  Button,
+  Field,
+  Input,
+  Combobox,
+  type ComboboxOption,
+  TextArea,
+  Stack,
+  RadioButtonGroup,
+} from '@grafana/ui';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 import { alertmanagerApi } from '../../api/alertmanager.endpoints';
 import { useAlertmanager } from '../../hooks/useAlertmanager';

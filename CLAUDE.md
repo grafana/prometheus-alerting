@@ -2,6 +2,11 @@
 
 Verify code with `eslint` and `typescript` type checker.
 
+## TypeScript
+
+- Never use `as` to type cast unless it can't be avoided
+- Never use `any` and prefer `unknown` unless it can't be avoided
+
 ## Internationalization
 
 Make sure to use `t()` and `<Trans />` whenever required to translate buttons, labels and other text. Run `npm run i18n-extract` whenever new translations are added to make sure the translations are up-to-date.
