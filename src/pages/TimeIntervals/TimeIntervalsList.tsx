@@ -2,9 +2,9 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { Alert, InteractiveTable } from '@grafana/ui';
+import { Alert, InteractiveTable, EmptyState } from '@grafana/ui';
 import { useTimeIntervals } from '../../hooks/useTimeIntervals';
-import { Trans, t } from '@grafana/i18n';
+import { t } from '@grafana/i18n';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 
@@ -92,11 +92,10 @@ function TimeIntervalsPage() {
           <InteractiveTable columns={columns} data={timeIntervals} getRowId={(interval) => interval.name} />
         )}
         {!isLoading && timeIntervals.length === 0 && !error && (
-          <Alert title={t('time-intervals.no-time-intervals-title', 'No time intervals found')} severity="info">
-            <Trans i18nKey="time-intervals.no-time-intervals-message">
-              No time intervals are configured in the Alertmanager.
-            </Trans>
-          </Alert>
+          <EmptyState
+            message={t('time-intervals.no-time-intervals-message', 'No time intervals are configured in the Alertmanager.')}
+            variant="call-to-action"
+          />
         )}
       </div>
     </AlertmanagerPage>

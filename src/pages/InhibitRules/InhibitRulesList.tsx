@@ -2,9 +2,9 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { Alert, InteractiveTable, Stack } from '@grafana/ui';
+import { Alert, InteractiveTable, Stack, EmptyState } from '@grafana/ui';
 import { useInhibitRules } from '../../hooks/useInhibitRules';
-import { Trans, t } from '@grafana/i18n';
+import { t } from '@grafana/i18n';
 import type { InhibitRule } from '@grafana/external-alertmanager/vanilla';
 import { AlertLabel } from '@grafana/alerting';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
@@ -69,9 +69,10 @@ function InhibitRulesPage() {
           <InteractiveTable columns={columns} data={inhibitRules} getRowId={(rule, index) => `inhibit-rule-${index}`} />
         )}
         {!isLoading && inhibitRules.length === 0 && !error && (
-          <Alert title={t('inhibit-rules.no-rules-title', 'No inhibit rules found')} severity="info">
-            <Trans i18nKey="inhibit-rules.no-rules-message">No inhibit rules are configured in the Alertmanager.</Trans>
-          </Alert>
+          <EmptyState
+            message={t('inhibit-rules.no-rules-message', 'No inhibit rules are configured in the Alertmanager.')}
+            variant="call-to-action"
+          />
         )}
       </div>
     </AlertmanagerPage>

@@ -2,9 +2,9 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { Alert, InteractiveTable } from '@grafana/ui';
+import { Alert, InteractiveTable, EmptyState } from '@grafana/ui';
 import { useTemplates } from '../../hooks/useTemplates';
-import { Trans, t } from '@grafana/i18n';
+import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 
 interface TemplateRow {
@@ -45,9 +45,10 @@ function TemplatesPage() {
           <InteractiveTable columns={columns} data={templateRows} getRowId={(row) => row.path} />
         )}
         {!isLoading && templates.length === 0 && !error && (
-          <Alert title={t('templates.no-templates-title', 'No templates found')} severity="info">
-            <Trans i18nKey="templates.no-templates-message">No templates are configured in the Alertmanager.</Trans>
-          </Alert>
+          <EmptyState
+            message={t('templates.no-templates-message', 'No templates are configured in the Alertmanager.')}
+            variant="call-to-action"
+          />
         )}
       </div>
     </AlertmanagerPage>

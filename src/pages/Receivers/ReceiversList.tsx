@@ -2,14 +2,14 @@ import React, { useEffect } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { InteractiveTable, Alert } from '@grafana/ui';
+import { InteractiveTable, Alert, EmptyState } from '@grafana/ui';
 import { type Receiver, getReceiverTypes } from '@grafana/external-alertmanager/vanilla';
 
 import { useReceivers } from '../../hooks/useReceivers';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 import { getTotalReceiverConfigs } from './receiversUtils';
 
-import { Trans, t } from '@grafana/i18n';
+import { t } from '@grafana/i18n';
 
 function ReceiversPage() {
   const [triggerFetch, { receivers = [], isLoading, error }] = useReceivers();
@@ -54,9 +54,10 @@ function ReceiversPage() {
           <InteractiveTable columns={columns} data={receivers} getRowId={(receiver) => receiver.name} />
         )}
         {!isLoading && receivers.length === 0 && !error && (
-          <Alert title={t('receivers.no-receivers-title', 'No receivers found')} severity="info">
-            <Trans i18nKey="receivers.no-receivers-message">No receivers are configured in the Alertmanager.</Trans>
-          </Alert>
+          <EmptyState
+            message={t('receivers.no-receivers-message', 'No receivers are configured in the Alertmanager.')}
+            variant="call-to-action"
+          />
         )}
       </div>
     </AlertmanagerPage>

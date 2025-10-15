@@ -2,7 +2,7 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../components/testIds';
-import { Alert, Card } from '@grafana/ui';
+import { Alert, Card, EmptyState } from '@grafana/ui';
 import { useRoutes } from '../../hooks/useRoutes';
 import { AlertmanagerPage } from '../../components/AlertmanagerPage';
 import { css } from '@emotion/css';
@@ -147,9 +147,10 @@ function RoutesPage() {
           </div>
         )}
         {!isLoading && !route && !error && (
-          <Alert title={t('routes.no-routes-title', 'No routes found')} severity="info">
-            <Trans i18nKey="routes.no-routes-message">No routing configuration is available in the Alertmanager.</Trans>
-          </Alert>
+          <EmptyState
+            message={t('routes.no-routes-message', 'No routing configuration is available in the Alertmanager.')}
+            variant="call-to-action"
+          />
         )}
       </div>
     </AlertmanagerPage>
