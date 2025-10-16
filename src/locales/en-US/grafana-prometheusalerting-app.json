@@ -254,6 +254,7 @@
     "group-wait-label": "Group wait:",
     "no": "No",
     "no-routes-message": "No routing configuration is available in the Alertmanager.",
+    "page-subtitle": "Determine how alerts are routed to contact points",
     "receiver-label": "Receiver:",
     "repeat-interval-label": "Repeat interval:",
     "route-label": "Route",

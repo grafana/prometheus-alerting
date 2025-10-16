@@ -26,7 +26,7 @@ interface RouteConfig {
 function RouteCard({ route, level = 0 }: { route: RouteConfig; level?: number }) {
   const cardStyle = css`
     margin-bottom: 8px;
-    padding-left: ${level * 8}px;
+    margin-left: 16px;
   `;
 
   const headerRowStyle = css`
@@ -136,13 +136,12 @@ function RoutesPage() {
   }, [route]);
 
   return (
-    <AlertmanagerPage>
+    <AlertmanagerPage
+      subTitle={t('routes.page-subtitle', 'Determine how alerts are routed to contact points')}
+    >
       <div data-testid={testIds.routes.container}>
         {isLoading && (
-          <div>
-            <Skeleton height={50} style={{ marginBottom: '10px' }} />
-            <Skeleton height={100} count={3} style={{ marginBottom: '5px' }} />
-          </div>
+          <Skeleton height={100} count={3} />
         )}
         {error && (
           <Alert title={t('routes.error-loading-title', 'Error loading routes')} severity="error">
