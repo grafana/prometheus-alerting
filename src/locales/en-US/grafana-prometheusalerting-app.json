@@ -37,13 +37,11 @@
   "receivers": {
     "column": {
       "integrations": "Integrations",
-      "name": "Name",
-      "types": "Types"
+      "name": "Name"
     },
     "error-loading-message": "Failed to fetch receivers",
     "error-loading-title": "Error loading receivers",
-    "no-receivers-message": "No receivers are configured in the Alertmanager.",
-    "none": "None"
+    "no-receivers-message": "No receivers are configured in the Alertmanager."
   },
   "routes": {
     "continue-label": "Continue:",
@@ -113,11 +111,10 @@
     "expire-modal": {
       "body": "Are you sure you want to expire this silence?",
       "cancel": "Cancel",
-      "comment-label": "Comment:",
       "confirm": "Expire",
-      "matchers-label": "Matchers:",
       "title": "Expire Silence"
     },
+    "expiring-button": "Expiring...",
     "no-silences-message": "No silences are currently configured in the Alertmanager."
   },
   "templates": {
