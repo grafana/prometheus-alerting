@@ -5,7 +5,7 @@ import { css } from '@emotion/css';
 import { GrafanaTheme2 } from '@grafana/data';
 import { Button, IconButton, LinkButton, Stack, Text, Toggletip, useStyles2 } from '@grafana/ui';
 
-import { RulesSourceApplication } from '../../types/rules';
+import { RulesSourceApplication } from '../../../../types/rules';
 
 import { DataSourceIcon } from './DataSourceIcon';
 

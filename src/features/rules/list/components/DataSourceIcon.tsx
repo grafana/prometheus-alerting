@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Icon } from '@grafana/ui';
 
-import { RulesSourceApplication } from '../../types/rules';
+import { RulesSourceApplication } from '../../../../types/rules';
 
 interface DataSourceIconProps {
   application?: RulesSourceApplication;

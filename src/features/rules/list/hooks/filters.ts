@@ -1,6 +1,6 @@
-import { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
+import { PromRuleDTO, PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
-import { fuzzyMatches } from '../../utils/fuzzySearch';
+import { fuzzyMatches } from '../../../../utils/fuzzySearch';
 
 interface GroupFilterOptions {
   namespace?: string;
@@ -19,6 +19,24 @@ export function groupFilter(group: PromRuleGroupDTO, filterState: GroupFilterOpt
   }
 
   if (groupName && !fuzzyMatches(name, groupName)) {
+    return false;
+  }
+
+  return true;
+}
+
+interface RuleFilterOptions {
+  ruleName?: string;
+}
+
+/**
+ * @returns True if the rule matches the filter, false otherwise
+ */
+export function ruleFilter(rule: PromRuleDTO, filterState: RuleFilterOptions): boolean {
+  const { name } = rule;
+  const { ruleName } = filterState;
+
+  if (ruleName && !fuzzyMatches(name, ruleName)) {
     return false;
   }
 

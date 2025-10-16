@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Icon, Stack, Text } from '@grafana/ui';
 
-import { formatPrometheusDuration } from '../../utils/time';
+import { formatPrometheusDuration } from '../../../../utils/time';
 
 interface GroupIntervalIndicatorProps {
   seconds: number;

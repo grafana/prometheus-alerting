@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 
 import { Stack } from '@grafana/ui';
 
-import { getExternalRulesSources } from '../utils/datasource';
+import { getExternalRulesSources } from '../../../utils/datasource';
 
 import { DataSourceLoader } from './DataSourceLoader';
 

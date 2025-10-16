@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Icon, Stack, TextLink, Tooltip } from '@grafana/ui';
 
-import { RulesSourceApplication } from '../../types/rules';
+import { RulesSourceApplication } from '../../../../types/rules';
 
 import { DataSourceIcon } from './DataSourceIcon';
 

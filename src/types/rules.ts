@@ -30,6 +30,13 @@ export type RuleGroup = PromRuleGroupDTO;
 
 export type Rule = PromRuleDTO;
 
+// Type for rules with origin information (used in FilterView)
+export interface PromRuleWithOrigin {
+  rule: PromRuleDTO;
+  groupIdentifier: DataSourceRuleGroupIdentifier;
+  origin: 'datasource';
+}
+
 // Normalize Prometheus state strings to StateIcon state types
 export function normalizeState(state?: string): State {
   if (!state) {

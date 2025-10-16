@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Alert, ErrorBoundary, ErrorWithStack, Text } from '@grafana/ui';
 
-import { DataSourceRulesSourceIdentifier } from '../../types/datasources';
+import { DataSourceRulesSourceIdentifier } from '../../../../types/datasources';
 
 import { DataSourceSection } from './DataSourceSection';
 

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { DataSourceRuleGroupIdentifier, Rule, RulesSourceApplication } from '../types/rules';
-import { getRuleName, isAlertingRule, isRecordingRule } from '../utils/rules';
+import { DataSourceRuleGroupIdentifier, Rule, RulesSourceApplication } from '../../../types/rules';
+import { getRuleName, isAlertingRule, isRecordingRule } from '../../../utils/rules';
 
 import {
   AlertRuleListItem,

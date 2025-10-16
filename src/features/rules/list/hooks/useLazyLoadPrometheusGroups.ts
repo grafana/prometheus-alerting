@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
-import { isLoading as isLoadingState, useAsync } from '../../hooks/useAsync';
+import { isLoading as isLoadingState, useAsync } from '../../../../hooks/useAsync';
 
 /**
  * Provides lazy loading for rule groups.

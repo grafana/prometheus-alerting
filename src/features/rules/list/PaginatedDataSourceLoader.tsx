@@ -4,9 +4,9 @@ import { groupBy, isEmpty } from 'lodash';
 
 import { Icon, Stack, Text } from '@grafana/ui';
 
-import { DataSourceRuleGroupIdentifier, DataSourceRulesSourceIdentifier, RuleGroup } from '../types/rules';
-import { getApiGroupPageSize, FRONTED_GROUPED_PAGE_SIZE } from '../utils/paginationLimits';
-import { groups } from '../utils/navigation';
+import { DataSourceRuleGroupIdentifier, DataSourceRulesSourceIdentifier, RuleGroup } from '../../../types/rules';
+import { getApiGroupPageSize, FRONTED_GROUPED_PAGE_SIZE } from '../../../utils/paginationLimits';
+import { groups } from '../../../utils/navigation';
 
 import { DataSourceGroupLoader } from './DataSourceGroupLoader';
 import { DataSourceSection, DataSourceSectionProps } from './components/DataSourceSection';

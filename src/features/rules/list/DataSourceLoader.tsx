@@ -1,7 +1,7 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 
-import { DataSourceRulesSourceIdentifier } from '../types/datasources';
+import { DataSourceRulesSourceIdentifier } from '../../../types/datasources';
 
 import { DataSourceSection } from './components/DataSourceSection';
 import { DataSourceErrorBoundary } from './components/DataSourceErrorBoundary';

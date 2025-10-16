@@ -3,9 +3,9 @@ import Skeleton from 'react-loading-skeleton';
 
 import { Alert } from '@grafana/ui';
 
-import { prometheusApi } from '../api/prometheus.endpoints';
-import { DataSourceRuleGroupIdentifier } from '../types/rules';
-import { hashRule } from '../utils/rule-id';
+import { prometheusApi } from '../../../api/prometheus.endpoints';
+import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
+import { hashRule } from '../../../utils/rule-id';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 
