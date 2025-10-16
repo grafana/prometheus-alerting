@@ -56,6 +56,22 @@ export const InhibitRuleSchema = z.object({
   equal: z.array(z.string()).optional(),
 });
 
+export const RoutesSchema = z.object({
+  receiver: z.string().optional(),
+  group_by: z.array(z.string()).optional(),
+  continue: z.boolean().optional(),
+  routes: z.array(z.any()).optional(),
+  group_wait: z.string().optional(),
+  group_interval: z.string().optional(),
+  repeat_interval: z.string().optional(),
+  match: z.record(z.string(), z.string()).optional(),
+  match_re: z.record(z.string(), z.string()).optional(),
+  matchers: z.array(z.string()).optional(),
+  mute_time_intervals: z.array(z.string()).optional(),
+  active_time_intervals: z.array(z.string()).optional(),
+});
+export type Route = z.infer<typeof RoutesSchema>;
+
 export const AlertmanagerConfigSchema = z.object({
   original: z.string(),
 });
