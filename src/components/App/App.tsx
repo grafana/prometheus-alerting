@@ -15,6 +15,7 @@ const Templates = React.lazy(() => import('../../features/templates/pages/Templa
 const Silences = React.lazy(() => import('../../features/silences/pages/SilencesList'));
 const SilenceForm = React.lazy(() => import('../../features/silences/pages/SilenceForm'));
 const TimeIntervals = React.lazy(() => import('../../features/timeIntervals/pages/TimeIntervalsList'));
+const TimeIntervalDetail = React.lazy(() => import('../../features/timeIntervals/pages/TimeIntervalDetail'));
 const InhibitRules = React.lazy(() => import('../../features/inhibitRules/pages/InhibitRulesList'));
 
 // Get initial data source UID from sessionStorage or default to first available
@@ -55,6 +56,7 @@ function App(_props: AppRootProps) {
         <Route path={ROUTES.Templates} element={<Templates />} />
         <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
         <Route path={ROUTES.Silences} element={<Silences />} />
+        <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
         <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
         <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
 

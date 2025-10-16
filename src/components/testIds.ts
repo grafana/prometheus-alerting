@@ -25,6 +25,7 @@ export const testIds = {
   },
   timeIntervals: {
     container: 'data-testid prom-time-intervals',
+    detail: 'data-testid prom-time-interval-detail',
   },
   inhibitRules: {
     container: 'data-testid prom-inhibit-rules',

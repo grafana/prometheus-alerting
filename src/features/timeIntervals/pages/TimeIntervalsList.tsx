@@ -2,12 +2,13 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../../components/testIds';
-import { Alert, InteractiveTable, EmptyState } from '@grafana/ui';
+import { Alert, InteractiveTable, EmptyState, TextLink } from '@grafana/ui';
 import { useTimeIntervals } from '../hooks/useTimeIntervals';
 import { t } from '@grafana/i18n';
-import { DEFAULT_PAGE_SIZE } from '../../../constants';
+import { DEFAULT_PAGE_SIZE, ROUTES } from '../../../constants';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { prefixRoute } from '../../../utils/utils.routing';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error } = useTimeIntervals();
@@ -62,7 +63,11 @@ function TimeIntervalsPage() {
     {
       id: 'name',
       header: t('time-intervals.column.name', 'Name'),
-      cell: ({ row: { original } }: { row: { original: TimeInterval } }) => original.name,
+      cell: ({ row: { original } }: { row: { original: TimeInterval } }) => (
+        <TextLink href={prefixRoute(`${ROUTES.TimeIntervals}/${encodeURIComponent(original.name)}`)}>
+          {original.name}
+        </TextLink>
+      ),
     },
     {
       id: 'details',

@@ -336,11 +336,23 @@
       "name": "Name"
     },
     "days-of-month-label": "Days of Month",
+    "detail": {
+      "back": "Back to time intervals",
+      "error-title": "Error loading time interval",
+      "interval-label": "Time interval {{number}}",
+      "name": "Name",
+      "name-desc": "Name of the time interval",
+      "not-found-message": "The time interval \"{{name}}\" does not exist.",
+      "not-found-title": "Time interval not found",
+      "subtitle": "Time interval: {{name}}"
+    },
     "error-loading-message": "Failed to fetch time intervals",
     "error-loading-title": "Error loading time intervals",
     "location-label": "Location",
     "months-label": "Months",
+    "no-intervals": "No time intervals",
     "no-intervals-defined": "No time intervals defined",
+    "no-intervals-desc": "This time interval has no time ranges configured.",
     "no-time-intervals-message": "No time intervals are configured in the Alertmanager.",
     "times-label": "Times",
     "weekdays-label": "Weekdays",
