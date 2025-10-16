@@ -36,10 +36,6 @@ function RouteCard({ route, level = 0 }: { route: RouteConfig; level?: number })
     flex-wrap: wrap;
   `;
 
-  const receiverStyle = css`
-    font-weight: 500;
-  `;
-
   const matchersContainerStyle = css`
     flex: 1;
     min-width: 200px;
@@ -53,33 +49,28 @@ function RouteCard({ route, level = 0 }: { route: RouteConfig; level?: number })
       <Card>
         <Card.Heading>
           <div className={headerRowStyle}>
-            <div>
-              <span className={receiverStyle}>
-                {route.receiver ? (
-                  <>
-                    <Trans i18nKey="routes.receiver-label">Receiver:</Trans>{' '}
-                    <TextLink
-                      href={prefixRoute(`${ROUTES.Receivers}/${encodeURIComponent(route.receiver)}`)}
-                      inline={true}
-                    >
-                      {route.receiver}
-                    </TextLink>
-                  </>
-                ) : (
-                  <Trans i18nKey="routes.route-label">Route</Trans>
-                )}
-              </span>
-            </div>
-            {route.matchers && route.matchers.length > 0 && (
+            {route.matchers && route.matchers.length > 0 ? (
               <div className={matchersContainerStyle}>
                 {route.matchers.map((matcher, index) => (
                   <AlertLabel key={index} value={matcher} colorBy="value" size="sm" />
                 ))}
               </div>
+            ) : (
+              <Trans i18nKey="routes.route-label">Route</Trans>
             )}
           </div>
         </Card.Heading>
         <Card.Meta>
+          {route.receiver && (
+            <div>
+              <strong>
+                <Trans i18nKey="routes.receiver-label">Receiver:</Trans>
+              </strong>{' '}
+              <TextLink href={prefixRoute(`${ROUTES.Receivers}/${encodeURIComponent(route.receiver)}`)} inline={true}>
+                {route.receiver}
+              </TextLink>
+            </div>
+          )}
           {route.group_by && route.group_by.length > 0 && (
             <div>
               <strong>
