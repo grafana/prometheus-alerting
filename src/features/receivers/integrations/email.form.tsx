@@ -5,10 +5,9 @@ import { t } from '@grafana/i18n';
 
 interface EmailFormProps {
   config: EmailConfig;
-  readOnly?: boolean;
 }
 
-export function EmailForm({ config, readOnly = false }: EmailFormProps) {
+export function EmailForm({ config }: EmailFormProps) {
   return (
     <Stack direction="column" gap={2}>
       <Field
@@ -16,7 +15,7 @@ export function EmailForm({ config, readOnly = false }: EmailFormProps) {
         label={t('receivers.email.to', 'To')}
         description={t('receivers.email.to-desc', 'Email address to send notifications to')}
       >
-        <Input value={config.to ?? ''} readOnly={readOnly} />
+        <Input value={config.to ?? ''} />
       </Field>
 
       <Field
@@ -24,7 +23,7 @@ export function EmailForm({ config, readOnly = false }: EmailFormProps) {
         label={t('receivers.email.from', 'From')}
         description={t('receivers.email.from-desc', 'Sender email address')}
       >
-        <Input value={config.from ?? ''} readOnly={readOnly} />
+        <Input value={config.from ?? ''} />
       </Field>
 
       <Field
@@ -32,7 +31,7 @@ export function EmailForm({ config, readOnly = false }: EmailFormProps) {
         label={t('receivers.email.smarthost', 'SMTP host')}
         description={t('receivers.email.smarthost-desc', 'SMTP server address')}
       >
-        <Input value={config.smarthost ?? ''} readOnly={readOnly} />
+        <Input value={config.smarthost ?? ''} />
       </Field>
 
       <Field
@@ -40,7 +39,7 @@ export function EmailForm({ config, readOnly = false }: EmailFormProps) {
         label={t('receivers.email.auth-username', 'Username')}
         description={t('receivers.email.auth-username-desc', 'SMTP authentication username')}
       >
-        <Input value={config.auth_username ?? ''} readOnly={readOnly} />
+        <Input value={config.auth_username ?? ''} />
       </Field>
 
       <Field
@@ -48,7 +47,7 @@ export function EmailForm({ config, readOnly = false }: EmailFormProps) {
         label={t('receivers.email.auth-password', 'Password')}
         description={t('receivers.email.auth-password-desc', 'SMTP authentication password')}
       >
-        <Input type="password" value={config.auth_password ?? ''} readOnly={readOnly} />
+        <Input type="password" value={config.auth_password ?? ''} />
       </Field>
 
       <Field
@@ -56,7 +55,7 @@ export function EmailForm({ config, readOnly = false }: EmailFormProps) {
         label={t('receivers.email.auth-identity', 'Identity')}
         description={t('receivers.email.auth-identity-desc', 'SMTP authentication identity')}
       >
-        <Input value={config.auth_identity ?? ''} readOnly={readOnly} />
+        <Input value={config.auth_identity ?? ''} />
       </Field>
 
       <Field
@@ -64,7 +63,7 @@ export function EmailForm({ config, readOnly = false }: EmailFormProps) {
         label={t('receivers.email.html', 'HTML body')}
         description={t('receivers.email.html-desc', 'Email body in HTML format')}
       >
-        <TextArea value={config.html ?? ''} readOnly={readOnly} rows={4} />
+        <TextArea value={config.html ?? ''} rows={4} />
       </Field>
 
       <Field
@@ -72,7 +71,7 @@ export function EmailForm({ config, readOnly = false }: EmailFormProps) {
         label={t('receivers.email.text', 'Text body')}
         description={t('receivers.email.text-desc', 'Email body in plain text format')}
       >
-        <TextArea value={config.text ?? ''} readOnly={readOnly} rows={4} />
+        <TextArea value={config.text ?? ''} rows={4} />
       </Field>
 
       <Field
@@ -80,7 +79,7 @@ export function EmailForm({ config, readOnly = false }: EmailFormProps) {
         label={t('receivers.email.require-tls', 'Require TLS')}
         description={t('receivers.email.require-tls-desc', 'Require TLS for SMTP connection')}
       >
-        <Switch value={config.require_tls ?? false} disabled={readOnly} />
+        <Switch value={config.require_tls ?? false} />
       </Field>
     </Stack>
   );

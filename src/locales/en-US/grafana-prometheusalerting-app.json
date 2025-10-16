@@ -41,8 +41,6 @@
     },
     "detail": {
       "back": "Back to receivers",
-      "back-button": "Back to contact points",
-      "contact-point": "Contact point",
       "name": "Name",
       "name-desc": "Name of the contact point",
       "not-found-message": "The receiver \"{{name}}\" does not exist.",
@@ -80,7 +78,6 @@
     "error-loading-message": "Failed to fetch receivers",
     "error-loading-title": "Error loading receivers",
     "integration": {
-      "title": "{{type}} integration #{{index}}",
       "unknown": "Unknown integration type",
       "unknown-desc": "Integration type \"{{type}}\" is not supported"
     },

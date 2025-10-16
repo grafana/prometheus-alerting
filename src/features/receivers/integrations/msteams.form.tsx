@@ -5,10 +5,9 @@ import { t } from '@grafana/i18n';
 
 interface MSTeamsFormProps {
   config: MSTeamsConfig;
-  readOnly?: boolean;
 }
 
-export function MSTeamsForm({ config, readOnly = false }: MSTeamsFormProps) {
+export function MSTeamsForm({ config }: MSTeamsFormProps) {
   return (
     <Stack direction="column" gap={2}>
       <Field
@@ -16,7 +15,7 @@ export function MSTeamsForm({ config, readOnly = false }: MSTeamsFormProps) {
         label={t('receivers.msteams.webhook-url', 'Webhook URL')}
         description={t('receivers.msteams.webhook-url-desc', 'Microsoft Teams webhook URL')}
       >
-        <Input value={config.webhook_url ?? ''} readOnly={readOnly} />
+        <Input value={config.webhook_url ?? ''} />
       </Field>
 
       <Field
@@ -24,11 +23,11 @@ export function MSTeamsForm({ config, readOnly = false }: MSTeamsFormProps) {
         label={t('receivers.msteams.title', 'Title')}
         description={t('receivers.msteams.title-desc', 'Message title')}
       >
-        <Input value={config.title ?? ''} readOnly={readOnly} />
+        <Input value={config.title ?? ''} />
       </Field>
 
       <Field label={t('receivers.msteams.text', 'Text')} description={t('receivers.msteams.text-desc', 'Message text')}>
-        <TextArea value={config.text ?? ''} readOnly={readOnly} rows={4} />
+        <TextArea value={config.text ?? ''} rows={4} />
       </Field>
     </Stack>
   );

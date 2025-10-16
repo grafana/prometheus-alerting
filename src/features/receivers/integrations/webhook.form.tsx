@@ -5,10 +5,9 @@ import { t } from '@grafana/i18n';
 
 interface WebhookFormProps {
   config: WebhookConfig;
-  readOnly?: boolean;
 }
 
-export function WebhookForm({ config, readOnly = false }: WebhookFormProps) {
+export function WebhookForm({ config }: WebhookFormProps) {
   return (
     <Stack direction="column" gap={2}>
       <Field
@@ -16,7 +15,7 @@ export function WebhookForm({ config, readOnly = false }: WebhookFormProps) {
         label={t('receivers.webhook.url', 'URL')}
         description={t('receivers.webhook.url-desc', 'Webhook endpoint URL')}
       >
-        <Input value={config.url ?? ''} readOnly={readOnly} />
+        <Input value={config.url ?? ''} />
       </Field>
 
       <Field
@@ -24,7 +23,7 @@ export function WebhookForm({ config, readOnly = false }: WebhookFormProps) {
         label={t('receivers.webhook.max-alerts', 'Max alerts')}
         description={t('receivers.webhook.max-alerts-desc', 'Maximum number of alerts to send in a single request')}
       >
-        <Input type="number" value={config.max_alerts ?? ''} readOnly={readOnly} />
+        <Input type="number" value={config.max_alerts ?? ''} />
       </Field>
     </Stack>
   );

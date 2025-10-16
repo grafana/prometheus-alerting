@@ -5,10 +5,9 @@ import { t } from '@grafana/i18n';
 
 interface OpsGenieFormProps {
   config: OpsGenieConfig;
-  readOnly?: boolean;
 }
 
-export function OpsGenieForm({ config, readOnly = false }: OpsGenieFormProps) {
+export function OpsGenieForm({ config }: OpsGenieFormProps) {
   return (
     <Stack direction="column" gap={2}>
       <Field
@@ -16,7 +15,7 @@ export function OpsGenieForm({ config, readOnly = false }: OpsGenieFormProps) {
         label={t('receivers.opsgenie.api-key', 'API key')}
         description={t('receivers.opsgenie.api-key-desc', 'OpsGenie API key')}
       >
-        <Input type="password" value={config.api_key ?? ''} readOnly={readOnly} />
+        <Input type="password" value={config.api_key ?? ''} />
       </Field>
 
       <Field
@@ -24,7 +23,7 @@ export function OpsGenieForm({ config, readOnly = false }: OpsGenieFormProps) {
         label={t('receivers.opsgenie.api-url', 'API URL')}
         description={t('receivers.opsgenie.api-url-desc', 'OpsGenie API endpoint')}
       >
-        <Input value={config.api_url ?? ''} readOnly={readOnly} />
+        <Input value={config.api_url ?? ''} />
       </Field>
 
       <Field
@@ -32,7 +31,7 @@ export function OpsGenieForm({ config, readOnly = false }: OpsGenieFormProps) {
         label={t('receivers.opsgenie.message', 'Message')}
         description={t('receivers.opsgenie.message-desc', 'Alert message')}
       >
-        <Input value={config.message ?? ''} readOnly={readOnly} />
+        <Input value={config.message ?? ''} />
       </Field>
 
       <Field
@@ -40,7 +39,7 @@ export function OpsGenieForm({ config, readOnly = false }: OpsGenieFormProps) {
         label={t('receivers.opsgenie.description', 'Description')}
         description={t('receivers.opsgenie.description-desc', 'Alert description')}
       >
-        <TextArea value={config.description ?? ''} readOnly={readOnly} rows={3} />
+        <TextArea value={config.description ?? ''} rows={3} />
       </Field>
 
       <Field
@@ -48,7 +47,7 @@ export function OpsGenieForm({ config, readOnly = false }: OpsGenieFormProps) {
         label={t('receivers.opsgenie.source', 'Source')}
         description={t('receivers.opsgenie.source-desc', 'Source of the alert')}
       >
-        <Input value={config.source ?? ''} readOnly={readOnly} />
+        <Input value={config.source ?? ''} />
       </Field>
 
       <Field
@@ -56,7 +55,7 @@ export function OpsGenieForm({ config, readOnly = false }: OpsGenieFormProps) {
         label={t('receivers.opsgenie.tags', 'Tags')}
         description={t('receivers.opsgenie.tags-desc', 'Comma-separated list of tags')}
       >
-        <Input value={config.tags ?? ''} readOnly={readOnly} />
+        <Input value={config.tags ?? ''} />
       </Field>
 
       <Field
@@ -64,7 +63,7 @@ export function OpsGenieForm({ config, readOnly = false }: OpsGenieFormProps) {
         label={t('receivers.opsgenie.priority', 'Priority')}
         description={t('receivers.opsgenie.priority-desc', 'Alert priority (P1-P5)')}
       >
-        <Input value={config.priority ?? ''} readOnly={readOnly} />
+        <Input value={config.priority ?? ''} />
       </Field>
     </Stack>
   );

@@ -4,8 +4,8 @@ import { useParams } from 'react-router-dom';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { GrafanaTheme2 } from '@grafana/data';
-import { Trans, t } from '@grafana/i18n';
-import { Alert, LinkButton, Stack, Field, Input, useStyles2, Text, FieldSet } from '@grafana/ui';
+import { t } from '@grafana/i18n';
+import { Alert, LinkButton, Stack, Field, Input, useStyles2, FieldSet, EmptyState } from '@grafana/ui';
 import { testIds } from '../../../components/testIds';
 import { useReceivers } from '../hooks/useReceivers';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
@@ -74,10 +74,8 @@ function IntegrationItem({ type, config }: IntegrationItemProps) {
   };
 
   return (
-    <FieldSet label={type} style={{ marginBottom: 0 }}>
-      <div className={styles.integrationConfigurationWrapper}>
-        {renderIntegrationForm()}
-      </div>
+    <FieldSet label={type} style={{ marginBottom: 0 }} disabled={true}>
+      <div className={styles.integrationConfigurationWrapper}>{renderIntegrationForm()}</div>
     </FieldSet>
   );
 }
@@ -138,15 +136,9 @@ function ReceiverIntegrations({ receiver }: ReceiverIntegrationsProps) {
     );
   }
 
-  return (
-    integrations.map((integration, index) => (
-      <IntegrationItem
-        key={`${integration.type}-${index}`}
-        type={integration.type}
-        config={integration.config}
-      />
-    ))
-  );
+  return integrations.map((integration, index) => (
+    <IntegrationItem key={`${integration.type}-${index}`} type={integration.type} config={integration.config} />
+  ));
 }
 
 function ReceiverDetail() {
@@ -175,14 +167,14 @@ function ReceiverDetail() {
       <div data-testid={testIds.receivers.detail} className={styles.wrapper}>
         {isLoading && <Skeleton height={24} count={10} />}
         {error && (
-          <Alert title={t('receivers.error-loading-title', 'Error loading receivers')} severity="error">
+          <Alert title={t('receivers.detail.not-found-title', 'Receiver not found')} severity="error">
             {'error' in error ? error.error : t('receivers.error-loading-message', 'Failed to fetch receivers')}
           </Alert>
         )}
         {notFound && (
-          <Alert title={t('receivers.detail.not-found-title', 'Receiver not found')} severity="error">
+          <EmptyState variant="not-found" message={t('receivers.error-loading-title', 'Error loading receivers')}>
             {t('receivers.detail.not-found-message', 'The receiver "{{name}}" does not exist.', { name })}
-          </Alert>
+          </EmptyState>
         )}
         {!isLoading && receiver && !error && (
           <Stack direction="column" gap={2}>
@@ -191,16 +183,10 @@ function ReceiverDetail() {
               label={t('receivers.detail.name', 'Name')}
               description={t('receivers.detail.name-desc', 'Name of the contact point')}
             >
-              <Input value={receiver.name} readOnly width={39} />
+              <Input value={receiver.name} disabled width={39} />
             </Field>
 
             <ReceiverIntegrations receiver={receiver} />
-
-            <div>
-              <LinkButton variant="secondary" href={prefixRoute(ROUTES.Receivers)}>
-                <Trans i18nKey="receivers.detail.back-button">Back to contact points</Trans>
-              </LinkButton>
-            </div>
           </Stack>
         )}
       </div>
@@ -216,7 +202,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
     border: `1px solid ${theme.colors.border.weak}`,
     borderRadius: theme.shape.radius.default,
     padding: theme.spacing(2),
-  })
+  }),
 });
 
 export default ReceiverDetail;

@@ -5,10 +5,9 @@ import { t } from '@grafana/i18n';
 
 interface PagerdutyFormProps {
   config: PagerdutyConfig;
-  readOnly?: boolean;
 }
 
-export function PagerdutyForm({ config, readOnly = false }: PagerdutyFormProps) {
+export function PagerdutyForm({ config }: PagerdutyFormProps) {
   return (
     <Stack direction="column" gap={2}>
       <Field
@@ -16,7 +15,7 @@ export function PagerdutyForm({ config, readOnly = false }: PagerdutyFormProps) 
         label={t('receivers.pagerduty.routing-key', 'Routing key')}
         description={t('receivers.pagerduty.routing-key-desc', 'PagerDuty integration key')}
       >
-        <Input value={config.routing_key ?? ''} readOnly={readOnly} />
+        <Input value={config.routing_key ?? ''} />
       </Field>
 
       <Field
@@ -24,7 +23,7 @@ export function PagerdutyForm({ config, readOnly = false }: PagerdutyFormProps) 
         label={t('receivers.pagerduty.service-key', 'Service key')}
         description={t('receivers.pagerduty.service-key-desc', 'PagerDuty service key (deprecated)')}
       >
-        <Input value={config.service_key ?? ''} readOnly={readOnly} />
+        <Input value={config.service_key ?? ''} />
       </Field>
 
       <Field
@@ -32,7 +31,7 @@ export function PagerdutyForm({ config, readOnly = false }: PagerdutyFormProps) 
         label={t('receivers.pagerduty.url', 'URL')}
         description={t('receivers.pagerduty.url-desc', 'PagerDuty API endpoint')}
       >
-        <Input value={config.url ?? ''} readOnly={readOnly} />
+        <Input value={config.url ?? ''} />
       </Field>
 
       <Field
@@ -40,7 +39,7 @@ export function PagerdutyForm({ config, readOnly = false }: PagerdutyFormProps) 
         label={t('receivers.pagerduty.client', 'Client')}
         description={t('receivers.pagerduty.client-desc', 'Client name')}
       >
-        <Input value={config.client ?? ''} readOnly={readOnly} />
+        <Input value={config.client ?? ''} />
       </Field>
 
       <Field
@@ -48,7 +47,7 @@ export function PagerdutyForm({ config, readOnly = false }: PagerdutyFormProps) 
         label={t('receivers.pagerduty.client-url', 'Client URL')}
         description={t('receivers.pagerduty.client-url-desc', 'Client URL')}
       >
-        <Input value={config.client_url ?? ''} readOnly={readOnly} />
+        <Input value={config.client_url ?? ''} />
       </Field>
 
       <Field
@@ -56,7 +55,7 @@ export function PagerdutyForm({ config, readOnly = false }: PagerdutyFormProps) 
         label={t('receivers.pagerduty.description', 'Description')}
         description={t('receivers.pagerduty.description-desc', 'Incident description')}
       >
-        <TextArea value={config.description ?? ''} readOnly={readOnly} rows={3} />
+        <TextArea value={config.description ?? ''} rows={3} />
       </Field>
 
       <Field
@@ -64,7 +63,7 @@ export function PagerdutyForm({ config, readOnly = false }: PagerdutyFormProps) 
         label={t('receivers.pagerduty.severity', 'Severity')}
         description={t('receivers.pagerduty.severity-desc', 'Incident severity level')}
       >
-        <Input value={config.severity ?? ''} readOnly={readOnly} />
+        <Input value={config.severity ?? ''} />
       </Field>
     </Stack>
   );
