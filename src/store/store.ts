@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import dataSourceReducer from './datasourceSlice';
 import { alertmanagerApi } from '../api/alertmanager.endpoints';
+import { featureDiscoveryApi } from '../api/featureDiscovery.endpoints';
 import { prometheusApi } from '../api/prometheus.endpoints';
 
 export const createStore = (initialDataSourceUID: string) => {
@@ -9,9 +10,14 @@ export const createStore = (initialDataSourceUID: string) => {
       dataSource: dataSourceReducer,
       [alertmanagerApi.reducerPath]: alertmanagerApi.reducer,
       [prometheusApi.reducerPath]: prometheusApi.reducer,
+      [featureDiscoveryApi.reducerPath]: featureDiscoveryApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(alertmanagerApi.middleware, prometheusApi.middleware),
+      getDefaultMiddleware().concat(
+        alertmanagerApi.middleware,
+        prometheusApi.middleware,
+        featureDiscoveryApi.middleware
+      ),
     preloadedState: {
       dataSource: {
         selectedUID: initialDataSourceUID,

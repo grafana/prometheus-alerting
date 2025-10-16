@@ -17,9 +17,7 @@ export const DataSourceIcon = ({ application }: DataSourceIconProps) => {
     case 'mimir':
     case 'cortex':
     case 'loki':
-      return <Icon name="gf-prometheus" />;
-    case 'grafana':
     default:
-      return <Icon name="grafana" />;
+      return <Icon name="gf-prometheus" />;
   }
 };

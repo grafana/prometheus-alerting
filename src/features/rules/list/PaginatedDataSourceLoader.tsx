@@ -21,6 +21,7 @@ import { useLazyLoadPrometheusGroups } from './hooks/useLazyLoadPrometheusGroups
 
 interface LoaderProps extends Required<Pick<DataSourceSectionProps, 'application'>> {
   rulesSourceIdentifier: DataSourceRulesSourceIdentifier;
+  rulerApiEnabled: boolean;
   groupFilter?: string;
   namespaceFilter?: string;
 }
@@ -28,6 +29,7 @@ interface LoaderProps extends Required<Pick<DataSourceSectionProps, 'application
 export function PaginatedDataSourceLoader({
   rulesSourceIdentifier,
   application,
+  rulerApiEnabled,
   groupFilter,
   namespaceFilter,
 }: LoaderProps) {
@@ -39,13 +41,20 @@ export function PaginatedDataSourceLoader({
       key={key}
       rulesSourceIdentifier={rulesSourceIdentifier}
       application={application}
+      rulerApiEnabled={rulerApiEnabled}
       groupFilter={groupFilter}
       namespaceFilter={namespaceFilter}
     />
   );
 }
 
-function PaginatedGroupsLoader({ rulesSourceIdentifier, application, groupFilter, namespaceFilter }: LoaderProps) {
+function PaginatedGroupsLoader({
+  rulesSourceIdentifier,
+  application,
+  rulerApiEnabled,
+  groupFilter,
+  namespaceFilter,
+}: LoaderProps) {
   // If there are filters, we don't want to populate the cache to avoid performance issues
   // Filtering may trigger multiple HTTP requests, which would populate the cache with a lot of groups hurting performance
   const hasFilters = Boolean(groupFilter || namespaceFilter);
