@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../../components/testIds';
@@ -11,25 +11,23 @@ import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ROUTES, DEFAULT_PAGE_SIZE } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
-import { ExpireSilenceModal } from './ExpireSilenceModal';
+import { useExpireSilenceModal } from './ExpireSilenceModal';
 
 function SilencesPage() {
-  const { data: silences, isLoading, error } = useSilences();
-  const [expireSilence] = useDeleteSilence();
-  const [silenceToExpire, setSilenceToExpire] = useState<GettableSilence | null>(null);
+  const { data: silences = [], isLoading, error } = useSilences();
+  const [expireSilence, { isLoading: isExpiring }] = useDeleteSilence();
 
-  const handleExpireSilence = async () => {
-    if (!silenceToExpire) {
-      return;
-    }
-
+  const handleExpireSilence = async (silenceId: string) => {
     try {
-      await expireSilence(silenceToExpire.id);
-      setSilenceToExpire(null);
+      await expireSilence(silenceId);
     } catch (err) {
       console.error('Failed to expire silence:', err);
     }
   };
+
+  const [expireSilenceModal, showExpireSilenceModal, , expiringSilenceId] = useExpireSilenceModal(
+    handleExpireSilence,
+  );
 
   const columns = [
     {
@@ -66,18 +64,22 @@ function SilencesPage() {
     {
       id: 'actions',
       header: t('silences.column.actions', 'Actions'),
-      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => (
-        <Button
-          variant="destructive"
-          size="sm"
-          fill="outline"
-          onClick={() => setSilenceToExpire(original)}
-          icon="trash-alt"
-          disabled={original.status.state === 'expired'}
-        >
-          {t('silences.expire-button', 'Expire')}
-        </Button>
-      ),
+      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => {
+        const isExpiringSilence = expiringSilenceId === original.id && isExpiring;
+
+        return (
+          <Button
+            variant="destructive"
+            size="sm"
+            fill="outline"
+            onClick={() => showExpireSilenceModal(original.id)}
+            icon="trash-alt"
+            disabled={original.status.state === 'expired' || isExpiringSilence}
+          >
+            {isExpiringSilence ? t('silences.expiring-button', 'Expiring...') : t('silences.expire-button', 'Expire')}
+          </Button>
+        );
+      },
     },
   ];
 
@@ -102,7 +104,7 @@ function SilencesPage() {
               {error instanceof Error ? error.message : t('silences.error-loading-message', 'Failed to fetch silences')}
             </Alert>
           )}
-          {!isLoading && silences && silences.length > 0 && !error && (
+          {!isLoading && silences.length > 0 && !error && (
             <InteractiveTable
               columns={columns}
               data={silences}
@@ -118,7 +120,7 @@ function SilencesPage() {
               )}
             />
           )}
-          {!isLoading && (!silences || silences.length === 0) && !error && (
+          {!isLoading && silences.length === 0 && !error && (
             <EmptyState
               message={t('silences.no-silences-message', 'No silences are currently configured in the Alertmanager.')}
               variant={'call-to-action'}
@@ -127,11 +129,7 @@ function SilencesPage() {
         </Stack>
       </div>
 
-      <ExpireSilenceModal
-        silence={silenceToExpire}
-        onConfirm={handleExpireSilence}
-        onDismiss={() => setSilenceToExpire(null)}
-      />
+      {expireSilenceModal}
     </AlertmanagerPage>
   );
 }

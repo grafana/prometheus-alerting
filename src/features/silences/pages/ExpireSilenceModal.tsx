@@ -1,45 +1,56 @@
-import React from 'react';
-import { ConfirmModal, Stack } from '@grafana/ui';
-import { AlertLabel } from '@grafana/alerting';
-import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ConfirmModal } from '@grafana/ui';
 import { t } from '@grafana/i18n';
-import { formatMatchers } from '../utils/silences.utils';
 
-interface ExpireSilenceModalProps {
-  silence: GettableSilence | null;
-  onConfirm: () => void;
-  onDismiss: () => void;
-}
+type ExpireSilenceModalHook = [React.JSX.Element, (silenceId: string) => void, () => void, string | undefined];
 
-export function ExpireSilenceModal({ silence, onConfirm, onDismiss }: ExpireSilenceModalProps) {
-  if (!silence) {
-    return null;
-  }
+export const useExpireSilenceModal = (
+  onExpire: (silenceId: string) => void | Promise<void>,
+): ExpireSilenceModalHook => {
+  const [expiringSilenceId, setExpiringSilenceId] = useState<string | undefined>();
 
-  return (
-    <ConfirmModal
-      isOpen={true}
-      title={t('silences.expire-modal.title', 'Expire Silence')}
-      body={
-        <Stack direction="column" gap={1.5}>
-          <p>{t('silences.expire-modal.body', 'Are you sure you want to expire this silence?')}</p>
-          <div>
-            <strong>{t('silences.expire-modal.comment-label', 'Comment:')}</strong> {silence.comment}
-          </div>
-          <Stack direction="row" gap={0.5} wrap="wrap">
-            <strong>{t('silences.expire-modal.matchers-label', 'Matchers:')}</strong>
-            {formatMatchers(silence).map((matcher, index) => (
-              <AlertLabel key={index} value={matcher} colorBy="value" size="sm" />
-            ))}
-          </Stack>
-        </Stack>
-      }
-      confirmText={t('silences.expire-modal.confirm', 'Expire')}
-      dismissText={t('silences.expire-modal.cancel', 'Cancel')}
-      icon="exclamation-triangle"
-      onConfirm={onConfirm}
-      onDismiss={onDismiss}
-      confirmButtonVariant="destructive"
-    />
+  const dismissModal = useCallback(() => {
+    setExpiringSilenceId(undefined);
+  }, []);
+
+  const showModal = useCallback((silenceId: string) => {
+    setExpiringSilenceId(silenceId);
+  }, []);
+
+  const expireSilence = useCallback(async () => {
+    if (!expiringSilenceId) {
+      return;
+    }
+
+    try {
+      await onExpire(expiringSilenceId);
+      dismissModal();
+    } catch (err) {
+      // Keep the modal open on error so user can retry
+      throw err;
+    }
+  }, [onExpire, expiringSilenceId, dismissModal]);
+
+  const modal = useMemo(
+    () => (
+      <ConfirmModal
+        isOpen={Boolean(expiringSilenceId)}
+        title={t('silences.expire-modal.title', 'Expire Silence')}
+        body={
+          expiringSilenceId ? (
+            <p>{t('silences.expire-modal.body', 'Are you sure you want to expire this silence?')}</p>
+          ) : null
+        }
+        confirmText={t('silences.expire-modal.confirm', 'Expire')}
+        dismissText={t('silences.expire-modal.cancel', 'Cancel')}
+        icon="exclamation-triangle"
+        onConfirm={expireSilence}
+        onDismiss={dismissModal}
+        confirmButtonVariant="destructive"
+      />
+    ),
+    [expiringSilenceId, expireSilence, dismissModal]
   );
-}
+
+  return [modal, showModal, dismissModal, expiringSilenceId];
+};
