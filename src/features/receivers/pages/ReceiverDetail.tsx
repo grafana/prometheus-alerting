@@ -39,31 +39,31 @@ function IntegrationItem({ type, config }: IntegrationItemProps) {
   const renderIntegrationForm = () => {
     switch (type) {
       case 'email':
-        return <EmailForm config={config as Parameters<typeof EmailForm>[0]['config']} readOnly />;
+        return <EmailForm config={config as Parameters<typeof EmailForm>[0]['config']} />;
       case 'slack':
-        return <SlackForm config={config as Parameters<typeof SlackForm>[0]['config']} readOnly />;
+        return <SlackForm config={config as Parameters<typeof SlackForm>[0]['config']} />;
       case 'webhook':
-        return <WebhookForm config={config as Parameters<typeof WebhookForm>[0]['config']} readOnly />;
+        return <WebhookForm config={config as Parameters<typeof WebhookForm>[0]['config']} />;
       case 'pagerduty':
-        return <PagerdutyForm config={config as Parameters<typeof PagerdutyForm>[0]['config']} readOnly />;
+        return <PagerdutyForm config={config as Parameters<typeof PagerdutyForm>[0]['config']} />;
       case 'opsgenie':
-        return <OpsGenieForm config={config as Parameters<typeof OpsGenieForm>[0]['config']} readOnly />;
+        return <OpsGenieForm config={config as Parameters<typeof OpsGenieForm>[0]['config']} />;
       case 'discord':
-        return <DiscordForm config={config as Parameters<typeof DiscordForm>[0]['config']} readOnly />;
+        return <DiscordForm config={config as Parameters<typeof DiscordForm>[0]['config']} />;
       case 'telegram':
-        return <TelegramForm config={config as Parameters<typeof TelegramForm>[0]['config']} readOnly />;
+        return <TelegramForm config={config as Parameters<typeof TelegramForm>[0]['config']} />;
       case 'msteams':
-        return <MSTeamsForm config={config as Parameters<typeof MSTeamsForm>[0]['config']} readOnly />;
+        return <MSTeamsForm config={config as Parameters<typeof MSTeamsForm>[0]['config']} />;
       case 'webex':
-        return <WebexForm config={config as Parameters<typeof WebexForm>[0]['config']} readOnly />;
+        return <WebexForm config={config as Parameters<typeof WebexForm>[0]['config']} />;
       case 'pushover':
-        return <PushoverForm config={config as Parameters<typeof PushoverForm>[0]['config']} readOnly />;
+        return <PushoverForm config={config as Parameters<typeof PushoverForm>[0]['config']} />;
       case 'victorops':
-        return <VictorOpsForm config={config as Parameters<typeof VictorOpsForm>[0]['config']} readOnly />;
+        return <VictorOpsForm config={config as Parameters<typeof VictorOpsForm>[0]['config']} />;
       case 'wechat':
-        return <WechatForm config={config as Parameters<typeof WechatForm>[0]['config']} readOnly />;
+        return <WechatForm config={config as Parameters<typeof WechatForm>[0]['config']} />;
       case 'sns':
-        return <SNSForm config={config as Parameters<typeof SNSForm>[0]['config']} readOnly />;
+        return <SNSForm config={config as Parameters<typeof SNSForm>[0]['config']} />;
       default:
         return (
           <Alert title={t('receivers.integration.unknown', 'Unknown integration type')} severity="warning">
