@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../../components/testIds';
@@ -8,6 +8,7 @@ import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { css } from '@emotion/css';
 import { Trans, t } from '@grafana/i18n';
 import { AlertLabel } from '@grafana/alerting';
+import { computeInheritedTree } from '@grafana/alerting/unstable';
 
 interface RouteConfig {
   receiver?: string;
@@ -127,6 +128,14 @@ function RouteCard({ route, level = 0 }: { route: RouteConfig; level?: number })
 function RoutesPage() {
   const { route, isLoading, error } = useRoutes();
 
+  // Compute the inherited tree to show all properties including inherited ones
+  const inheritedRoute = useMemo(() => {
+    if (!route) {
+      return undefined;
+    }
+    return computeInheritedTree(route);
+  }, [route]);
+
   return (
     <AlertmanagerPage>
       <div data-testid={testIds.routes.container}>
@@ -141,9 +150,9 @@ function RoutesPage() {
             {error instanceof Error ? error.message : t('routes.error-loading-message', 'Failed to fetch routes')}
           </Alert>
         )}
-        {!isLoading && route && !error && (
+        {!isLoading && inheritedRoute && !error && (
           <div>
-            <RouteCard route={route} />
+            <RouteCard route={inheritedRoute} />
           </div>
         )}
         {!isLoading && !route && !error && (
