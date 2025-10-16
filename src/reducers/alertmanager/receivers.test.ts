@@ -1,17 +1,16 @@
-import { AlertManagerCortexConfig } from 'app/plugins/datasource/alertmanager/types';
-
+import { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 import { AlertmanagerReceiverBuilder } from '../../mockApi';
 
 import { addReceiverAction, deleteReceiverAction, receiversReducer, updateReceiverAction } from './receivers';
 
 describe('receivers', () => {
-  const initialConfig: AlertManagerCortexConfig = {
+  const initialConfig: ParsedUserConfiguration = {
     alertmanager_config: {},
     template_files: {},
   };
 
   it('should delete a receiver', () => {
-    const config: AlertManagerCortexConfig = {
+    const config: ParsedUserConfiguration = {
       alertmanager_config: {
         receivers: [{ name: 'my receiver' }, { name: 'another receiver' }],
       },
@@ -46,7 +45,7 @@ describe('receivers', () => {
     });
 
     it('should throw if we add a receiver with duplicate name', () => {
-      const config: AlertManagerCortexConfig = {
+      const config: ParsedUserConfiguration = {
         alertmanager_config: {
           receivers: [{ name: 'my receiver' }],
         },
@@ -64,7 +63,7 @@ describe('receivers', () => {
 
   describe('updating receivers', () => {
     it('should throw if updating a receiver that does not exist', () => {
-      const config: AlertManagerCortexConfig = {
+      const config: ParsedUserConfiguration = {
         alertmanager_config: {
           receivers: [{ name: 'my receiver' }],
         },
@@ -80,7 +79,7 @@ describe('receivers', () => {
     });
 
     it('should throw if renaming a receiver to an existing name', () => {
-      const config: AlertManagerCortexConfig = {
+      const config: ParsedUserConfiguration = {
         alertmanager_config: {
           receivers: [{ name: 'receiver 1' }, { name: 'receiver 2' }],
         },
@@ -96,7 +95,7 @@ describe('receivers', () => {
     });
 
     it('should allow renaming a receiver and update routes', () => {
-      const config: AlertManagerCortexConfig = {
+      const config: ParsedUserConfiguration = {
         alertmanager_config: {
           receivers: [{ name: 'receiver 1' }],
           route: {
@@ -119,7 +118,7 @@ describe('receivers', () => {
         .addEmailConfig((build) => build.withTo('address@domain.com'))
         .build();
 
-      const config: AlertManagerCortexConfig = {
+      const config: ParsedUserConfiguration = {
         alertmanager_config: {
           receivers: [existingReceiver],
         },

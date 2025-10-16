@@ -1,7 +1,6 @@
 import { createAction, createReducer } from '@reduxjs/toolkit';
 
 import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
-import type { Route } from '@grafana/external-alertmanager/vanilla';
 
 import {
   addUniqueIdentifierToRoute,
@@ -10,12 +9,13 @@ import {
   mergePartialAmRouteWithRouteTree,
   omitRouteFromRouteTree,
   InsertPosition,
+  RouteWithID,
 } from './utils/routes.utils';
 
-export const updateRouteAction = createAction<{ update: Partial<Route> }>('routes/update');
+export const updateRouteAction = createAction<{ update: Partial<RouteWithID> }>('routes/update');
 export const deleteRouteAction = createAction<{ id: string }>('routes/delete');
 export const addRouteAction = createAction<{
-  partialRoute: Partial<Route>;
+  partialRoute: Partial<RouteWithID>;
   referenceRouteIdentifier: string;
   insertPosition: InsertPosition;
 }>('routes/add');
@@ -72,7 +72,7 @@ export const routesReducer = createReducer(initialState, (builder) => {
         partialRoute,
         rootRouteWithIdentifiers,
         insertPosition,
-        referenceRouteIdentifier,
+        referenceRouteIdentifier
       );
 
       draft.alertmanager_config.route = cleanRouteIDs(updatedPolicyTree);

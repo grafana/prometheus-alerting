@@ -1,14 +1,14 @@
-import { AlertManagerCortexConfig, MuteTimeInterval } from 'app/plugins/datasource/alertmanager/types';
-
+import { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 import {
   addMuteTimingAction,
   deleteMuteTimingAction,
   muteTimingsReducer,
   updateMuteTimingAction,
 } from './timeIntervals';
+import { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 
 describe('mute timings', () => {
-  const initialConfig: AlertManagerCortexConfig = {
+  const initialConfig: ParsedUserConfiguration = {
     alertmanager_config: {
       time_intervals: [mockTimeInterval({ name: 'default time interval' })],
       mute_time_intervals: [mockTimeInterval({ name: 'default legacy time interval' })],
@@ -59,7 +59,7 @@ describe('mute timings', () => {
   });
 });
 
-function mockTimeInterval(overrides: Partial<MuteTimeInterval> = {}): MuteTimeInterval {
+function mockTimeInterval(overrides: Partial<TimeInterval> = {}): TimeInterval {
   return {
     name: 'mock time interval',
     time_intervals: [

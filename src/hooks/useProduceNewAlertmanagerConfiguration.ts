@@ -7,8 +7,7 @@ import { routesReducer } from '../reducers/alertmanager/routes';
 import { notificationTemplatesReducer } from '../reducers/alertmanager/templates';
 import { receiversReducer } from '../reducers/alertmanager/receivers';
 import { useAlertmanager } from './useAlertmanager';
-import { alertmanagerApi } from 'src/api/alertmanager.endpoints';
-// import { alertmanagerApi } from '../api/alertmanager.endpoints';
+import { alertmanagerApi } from 'api/alertmanager.endpoints';
 
 const ERR_NO_ACTIVE_AM = new Error('no active Alertmanager');
 

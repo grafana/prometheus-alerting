@@ -1,17 +1,16 @@
-import { AlertManagerCortexConfig } from 'app/plugins/datasource/alertmanager/types';
-
-import { TemplateFormValues } from '../../components/receivers/TemplateForm';
+import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 
 import {
   addNotificationTemplateAction,
   deleteNotificationTemplateAction,
   notificationTemplatesReducer,
   updateNotificationTemplateAction,
-} from './notificationTemplates';
+} from './templates';
+import { TemplateFormValues } from './utils/templates.utils';
 
 describe('notification templates', () => {
   it('should add a new notification template', () => {
-    const initialConfig: AlertManagerCortexConfig = {
+    const initialConfig: ParsedUserConfiguration = {
       alertmanager_config: {},
       template_files: {},
     };
@@ -26,7 +25,7 @@ describe('notification templates', () => {
 
   it('should not add a new notification template if the name already exists', () => {
     const name = 'existing';
-    const initialConfig: AlertManagerCortexConfig = {
+    const initialConfig: ParsedUserConfiguration = {
       alertmanager_config: { templates: [name] },
       template_files: {
         [name]: 'foo',
@@ -43,7 +42,7 @@ describe('notification templates', () => {
 
   it('should update a notification template without renaming', () => {
     const name = 'update-me';
-    const initialConfig: AlertManagerCortexConfig = {
+    const initialConfig: ParsedUserConfiguration = {
       alertmanager_config: {
         templates: [name],
       },
@@ -58,7 +57,7 @@ describe('notification templates', () => {
 
   it('should not update if target does not exist', () => {
     const name = 'update-me';
-    const initialConfig: AlertManagerCortexConfig = {
+    const initialConfig: ParsedUserConfiguration = {
       alertmanager_config: {},
       template_files: {},
     };
@@ -70,7 +69,7 @@ describe('notification templates', () => {
   it('should not update if renaming and new template name exist', () => {
     const name = 'rename-me';
     const name2 = 'rename-me-2';
-    const initialConfig: AlertManagerCortexConfig = {
+    const initialConfig: ParsedUserConfiguration = {
       alertmanager_config: {
         templates: [name, name2],
       },
@@ -86,7 +85,7 @@ describe('notification templates', () => {
 
   it('should allow renaming a notification template', () => {
     const name = 'rename-me';
-    const initialConfig: AlertManagerCortexConfig = {
+    const initialConfig: ParsedUserConfiguration = {
       alertmanager_config: {
         templates: [name],
       },
@@ -104,7 +103,7 @@ describe('notification templates', () => {
 
   it('should remove a notification template', () => {
     const name = 'delete-me';
-    const initialConfig: AlertManagerCortexConfig = {
+    const initialConfig: ParsedUserConfiguration = {
       alertmanager_config: {
         templates: [name],
       },

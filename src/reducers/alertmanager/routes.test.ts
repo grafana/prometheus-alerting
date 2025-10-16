@@ -1,37 +1,34 @@
 import { produce } from 'immer';
 
-import { AlertManagerCortexConfig, MatcherOperator, Route } from 'app/plugins/datasource/alertmanager/types';
-
-import { FormAmRoute } from '../../types/amroutes';
-import { addUniqueIdentifierToRoute } from '../../utils/amroutes';
-
-import { addRouteAction, deleteRouteAction, routesReducer, updateRouteAction } from './notificationPolicyRoutes';
+import { addRouteAction, deleteRouteAction, routesReducer, updateRouteAction } from './routes';
+import { addUniqueIdentifierToRoute, RouteWithID } from './utils/routes.utils';
+import { Route } from '@grafana/external-alertmanager/vanilla';
+import { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 
 describe('routes', () => {
   const defaultRoute: Route = {
     receiver: 'ROOT',
     group_by: ['grafana_folder'],
-    object_matchers: [],
 
     routes: [
       {
         receiver: 'A',
 
-        object_matchers: [['team', MatcherOperator.equal, 'operations']],
+        matchers: ['team=operations'],
         routes: [
           {
             receiver: 'B1',
-            object_matchers: [['region', MatcherOperator.equal, 'europe']],
+            matchers: ['region=europe'],
           },
           {
             receiver: 'B2',
-            object_matchers: [['region', MatcherOperator.equal, 'nasa']],
+            matchers: ['region=nasa'],
           },
         ],
       },
       {
         receiver: 'C',
-        object_matchers: [['foo', MatcherOperator.equal, 'bar']],
+        matchers: ['foo=bar'],
       },
     ],
     group_wait: '10s',
@@ -41,7 +38,7 @@ describe('routes', () => {
   const ROOT_identifier = rootRouteWithIdentifiers.id;
   const A_identifier = rootRouteWithIdentifiers.routes![0].id;
 
-  const initialConfig: AlertManagerCortexConfig = {
+  const initialConfig: ParsedUserConfiguration = {
     alertmanager_config: {
       time_intervals: [],
       mute_time_intervals: [],
@@ -53,12 +50,11 @@ describe('routes', () => {
     const routeWithID = addUniqueIdentifierToRoute({
       receiver: 'E',
     });
-    const newFormRoute: Partial<FormAmRoute> = {
+    const newFormRoute: Partial<RouteWithID> = {
       receiver: 'E',
       id: routeWithID.id,
     };
     const action = addRouteAction({
-      alertmanager: 'alertmanager',
       partialRoute: newFormRoute,
       referenceRouteIdentifier: ROOT_identifier,
       insertPosition: 'child',
@@ -83,12 +79,11 @@ describe('routes', () => {
     const routeWithID = addUniqueIdentifierToRoute({
       receiver: 'E',
     });
-    const newFormRoute: Partial<FormAmRoute> = {
+    const newFormRoute: Partial<RouteWithID> = {
       receiver: 'E',
       id: routeWithID.id,
     };
     const action = addRouteAction({
-      alertmanager: 'alertmanager',
       partialRoute: newFormRoute,
       referenceRouteIdentifier: A_identifier,
       insertPosition: 'child',
@@ -104,12 +99,11 @@ describe('routes', () => {
   });
 
   it('Should update an existing route A with receiver B', () => {
-    const newRoute: Partial<FormAmRoute> = {
+    const newRoute: Partial<RouteWithID> = {
       receiver: 'B',
       id: A_identifier,
     };
     const action = updateRouteAction({
-      alertmanager: 'alertmanager',
       update: newRoute,
     });
 
@@ -117,12 +111,11 @@ describe('routes', () => {
   });
 
   it('Should not update route if config has been updated by another user', () => {
-    const newRoute: Partial<FormAmRoute> = {
+    const newRoute: Partial<RouteWithID> = {
       receiver: 'B',
       id: A_identifier,
     };
     const action = updateRouteAction({
-      alertmanager: 'alertmanager',
       update: newRoute,
     });
     const modifiedConfig = produce(initialConfig, (draft) => {
