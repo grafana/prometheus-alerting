@@ -5,7 +5,7 @@ import { t } from '@grafana/i18n';
 type ExpireSilenceModalHook = [React.JSX.Element, (silenceId: string) => void, () => void, string | undefined];
 
 export const useExpireSilenceModal = (
-  onExpire: (silenceId: string) => void | Promise<void>,
+  onExpire: (silenceId: string) => void | Promise<void>
 ): ExpireSilenceModalHook => {
   const [expiringSilenceId, setExpiringSilenceId] = useState<string | undefined>();
 

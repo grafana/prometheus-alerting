@@ -1,12 +1,14 @@
+import { css } from '@emotion/css';
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { GrafanaTheme2 } from '@grafana/data';
+import { Trans, t } from '@grafana/i18n';
+import { Alert, LinkButton, Stack, Field, Input, useStyles2, Text, FieldSet } from '@grafana/ui';
 import { testIds } from '../../../components/testIds';
-import { Alert, LinkButton, Card, Stack, Field, Input } from '@grafana/ui';
 import { useReceivers } from '../hooks/useReceivers';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
-import { t } from '@grafana/i18n';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { ROUTES } from '../../../constants';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
@@ -26,14 +28,15 @@ import {
   SNSForm,
 } from '../integrations';
 
-interface IntegrationCardProps {
+interface IntegrationItemProps {
   type: string;
   config: unknown;
-  index: number;
 }
 
-function IntegrationCard({ type, config, index }: IntegrationCardProps) {
-  const renderForm = () => {
+function IntegrationItem({ type, config }: IntegrationItemProps) {
+  const styles = useStyles2(getStyles);
+
+  const renderIntegrationForm = () => {
     switch (type) {
       case 'email':
         return <EmailForm config={config as Parameters<typeof EmailForm>[0]['config']} readOnly />;
@@ -71,15 +74,11 @@ function IntegrationCard({ type, config, index }: IntegrationCardProps) {
   };
 
   return (
-    <Card>
-      <Card.Heading>
-        {t('receivers.integration.title', '{{type}} integration #{{index}}', {
-          type: type.charAt(0).toUpperCase() + type.slice(1),
-          index: index + 1,
-        })}
-      </Card.Heading>
-      <Card.Meta>{renderForm()}</Card.Meta>
-    </Card>
+    <FieldSet label={type} style={{ marginBottom: 0 }}>
+      <div className={styles.integrationConfigurationWrapper}>
+        {renderIntegrationForm()}
+      </div>
+    </FieldSet>
   );
 }
 
@@ -140,22 +139,20 @@ function ReceiverIntegrations({ receiver }: ReceiverIntegrationsProps) {
   }
 
   return (
-    <Stack direction="column" gap={3}>
-      {integrations.map((integration, index) => (
-        <IntegrationCard
-          key={`${integration.type}-${index}`}
-          type={integration.type}
-          config={integration.config}
-          index={index}
-        />
-      ))}
-    </Stack>
+    integrations.map((integration, index) => (
+      <IntegrationItem
+        key={`${integration.type}-${index}`}
+        type={integration.type}
+        config={integration.config}
+      />
+    ))
   );
 }
 
 function ReceiverDetail() {
   const { name } = useParams<{ name: string }>();
   const [triggerFetch, { receivers = [], isLoading, error }] = useReceivers();
+  const styles = useStyles2(getStyles);
 
   useEffect(() => {
     triggerFetch();
@@ -175,7 +172,7 @@ function ReceiverDetail() {
         </LinkButton>
       }
     >
-      <div data-testid={testIds.receivers.detail}>
+      <div data-testid={testIds.receivers.detail} className={styles.wrapper}>
         {isLoading && <Skeleton height={24} count={10} />}
         {error && (
           <Alert title={t('receivers.error-loading-title', 'Error loading receivers')} severity="error">
@@ -188,25 +185,38 @@ function ReceiverDetail() {
           </Alert>
         )}
         {!isLoading && receiver && !error && (
-          <Stack direction="column" gap={3}>
-            <Card>
-              <Card.Heading>{t('receivers.detail.general', 'General')}</Card.Heading>
-              <Card.Meta>
-                <Field
-                  label={t('receivers.detail.name', 'Receiver name')}
-                  description={t('receivers.detail.name-desc', 'Name of the receiver')}
-                >
-                  <Input value={receiver.name} readOnly />
-                </Field>
-              </Card.Meta>
-            </Card>
+          <Stack direction="column" gap={2}>
+            <Field
+              noMargin
+              label={t('receivers.detail.name', 'Name')}
+              description={t('receivers.detail.name-desc', 'Name of the contact point')}
+            >
+              <Input value={receiver.name} readOnly width={39} />
+            </Field>
 
             <ReceiverIntegrations receiver={receiver} />
+
+            <div>
+              <LinkButton variant="secondary" href={prefixRoute(ROUTES.Receivers)}>
+                <Trans i18nKey="receivers.detail.back-button">Back to contact points</Trans>
+              </LinkButton>
+            </div>
           </Stack>
         )}
       </div>
     </AlertmanagerPage>
   );
 }
+
+const getStyles = (theme: GrafanaTheme2) => ({
+  wrapper: css({
+    maxWidth: `${theme.breakpoints.values.xl}px`,
+  }),
+  integrationConfigurationWrapper: css({
+    border: `1px solid ${theme.colors.border.weak}`,
+    borderRadius: theme.shape.radius.default,
+    padding: theme.spacing(2),
+  })
+});
 
 export default ReceiverDetail;

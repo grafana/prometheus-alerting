@@ -25,9 +25,7 @@ function SilencesPage() {
     }
   };
 
-  const [expireSilenceModal, showExpireSilenceModal, , expiringSilenceId] = useExpireSilenceModal(
-    handleExpireSilence,
-  );
+  const [expireSilenceModal, showExpireSilenceModal, , expiringSilenceId] = useExpireSilenceModal(handleExpireSilence);
 
   const columns = [
     {
