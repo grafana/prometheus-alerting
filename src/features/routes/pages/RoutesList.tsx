@@ -2,13 +2,15 @@ import React, { useMemo } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../../components/testIds';
-import { Alert, Card, EmptyState } from '@grafana/ui';
+import { Alert, Card, EmptyState, TextLink } from '@grafana/ui';
 import { useRoutes } from '../hooks/useRoutes';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { css } from '@emotion/css';
 import { Trans, t } from '@grafana/i18n';
 import { AlertLabel } from '@grafana/alerting';
 import { computeInheritedTree } from '@grafana/alerting/unstable';
+import { ROUTES } from '../../../constants';
+import { prefixRoute } from '../../../utils/utils.routing';
 
 interface RouteConfig {
   receiver?: string;
@@ -54,9 +56,15 @@ function RouteCard({ route, level = 0 }: { route: RouteConfig; level?: number })
             <div>
               <span className={receiverStyle}>
                 {route.receiver ? (
-                  <Trans i18nKey="routes.receiver-label" values={{ receiver: route.receiver }}>
-                    Receiver: {{ receiver: route.receiver }}
-                  </Trans>
+                  <>
+                    <Trans i18nKey="routes.receiver-label">Receiver:</Trans>{' '}
+                    <TextLink
+                      href={prefixRoute(`${ROUTES.Receivers}/${encodeURIComponent(route.receiver)}`)}
+                      inline={true}
+                    >
+                      {route.receiver}
+                    </TextLink>
+                  </>
                 ) : (
                   <Trans i18nKey="routes.route-label">Route</Trans>
                 )}

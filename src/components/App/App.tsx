@@ -10,6 +10,7 @@ const Landing = React.lazy(() => import('../../pages/Landing'));
 const Rules = React.lazy(() => import('../../features/rules/pages/RulesList'));
 const RouteTree = React.lazy(() => import('../../features/routes/pages/RoutesList'));
 const Receivers = React.lazy(() => import('../../features/receivers/pages/ReceiversList'));
+const ReceiverDetail = React.lazy(() => import('../../features/receivers/pages/ReceiverDetail'));
 const Templates = React.lazy(() => import('../../features/templates/pages/TemplatesList'));
 const Silences = React.lazy(() => import('../../features/silences/pages/SilencesList'));
 const SilenceForm = React.lazy(() => import('../../features/silences/pages/SilenceForm'));
@@ -49,7 +50,8 @@ function App(_props: AppRootProps) {
       <Routes>
         <Route path={ROUTES.Routes} element={<RouteTree />} />
         <Route path={ROUTES.Rules} element={<Rules />} />
-        <Route path={`${ROUTES.Receivers}/:id?`} element={<Receivers />} />
+        <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
+        <Route path={ROUTES.Receivers} element={<Receivers />} />
         <Route path={ROUTES.Templates} element={<Templates />} />
         <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
         <Route path={ROUTES.Silences} element={<Silences />} />

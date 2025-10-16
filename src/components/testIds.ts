@@ -15,6 +15,7 @@ export const testIds = {
   },
   receivers: {
     container: 'data-testid prom-receivers',
+    detail: 'data-testid prom-receiver-detail',
   },
   templates: {
     container: 'data-testid prom-templates',

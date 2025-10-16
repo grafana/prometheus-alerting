@@ -39,6 +39,12 @@
       "integrations": "Integrations",
       "name": "Name"
     },
+    "detail": {
+      "back": "Back to receivers",
+      "not-found-message": "The receiver \"{{name}}\" does not exist.",
+      "not-found-title": "Receiver not found",
+      "subtitle": "Receiver: {{name}}"
+    },
     "error-loading-message": "Failed to fetch receivers",
     "error-loading-title": "Error loading receivers",
     "no-receivers-message": "No receivers are configured in the Alertmanager."
@@ -52,7 +58,7 @@
     "group-wait-label": "Group wait:",
     "no": "No",
     "no-routes-message": "No routing configuration is available in the Alertmanager.",
-    "receiver-label": "Receiver: {{receiver}}",
+    "receiver-label": "Receiver:",
     "repeat-interval-label": "Repeat interval:",
     "route-label": "Route",
     "yes": "Yes"
