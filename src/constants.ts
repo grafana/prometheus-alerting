@@ -11,6 +11,9 @@ export const DEFAULT_PAGE_SIZE = 40;
 export enum ROUTES {
   Landing = 'landing',
   Rules = 'rules',
+  RuleView = 'rules/:hash',
+  RuleEdit = 'rules/:hash/edit',
+  RuleNew = 'rules/new',
   Routes = 'routes',
   Receivers = 'receivers',
   Templates = 'templates',

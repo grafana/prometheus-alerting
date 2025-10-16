@@ -2,6 +2,8 @@ import React from 'react';
 
 import { DataSourceRuleGroupIdentifier, Rule, RulesSourceApplication } from '../../../types/rules';
 import { getRuleName, isAlertingRule, isRecordingRule } from '../../../utils/rules';
+import { fromRuleAndGroup, fromRulerRuleAndGroup, RulerRuleDTO } from '../../../utils/rule-id';
+import { rules as rulesNav } from '../../../utils/navigation';
 
 import {
   AlertRuleListItem,
@@ -14,6 +16,7 @@ export interface DataSourceRuleListItemProps {
   rule: Rule;
   groupIdentifier: DataSourceRuleGroupIdentifier;
   application?: RulesSourceApplication;
+  rulerApiEnabled?: boolean;
   actions?: React.ReactNode;
   showLocation?: boolean;
 }
@@ -22,6 +25,7 @@ export function DataSourceRuleListItem({
   rule,
   groupIdentifier,
   application,
+  rulerApiEnabled = false,
   actions,
   showLocation = true,
 }: DataSourceRuleListItemProps) {
@@ -29,6 +33,15 @@ export function DataSourceRuleListItem({
 
   const ruleName = getRuleName(rule);
   const labels = rule.labels;
+
+  // Create rule identifier based on Ruler API support
+  // If Ruler API is enabled, use Cloud Rule Identifier (cri) for editable rules
+  // Otherwise use Prometheus Rule Identifier (pri) for read-only rules
+  const ruleIdentifier = rulerApiEnabled
+    ? fromRulerRuleAndGroup(rule as unknown as RulerRuleDTO, groupIdentifier)
+    : fromRuleAndGroup(rule, groupIdentifier);
+
+  const ruleDetailsHref = rulesNav.detailsPageLink(ruleIdentifier);
 
   const commonProps: RuleListItemCommonProps = {
     name: ruleName,
@@ -40,6 +53,8 @@ export function DataSourceRuleListItem({
     error: rule.lastError,
     labels,
     showLocation,
+    actions,
+    href: ruleDetailsHref,
   };
 
   if (isAlertingRule(rule)) {

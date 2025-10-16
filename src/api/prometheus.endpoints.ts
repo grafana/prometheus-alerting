@@ -24,9 +24,16 @@ interface PromRulesOptions {
   groupNextToken?: string;
 }
 
+interface DeleteRuleOptions {
+  dataSourceUid: string;
+  namespace: string;
+  groupName: string;
+}
+
 export const prometheusApi = createApi({
   reducerPath: 'prometheusApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/' }),
+  tagTypes: ['Rules'],
   endpoints: (build) => ({
     getGroups: build.query<PromRulesResponse, PromRulesOptions>({
       query: ({ ruleSource, namespace, groupName, ruleName, groupLimit, excludeAlerts, groupNextToken }) => {
@@ -48,11 +55,21 @@ export const prometheusApi = createApi({
       transformResponse: (response: PromRulesResponse) => {
         return { ...response, data: { ...response.data, groups: response.data.groups.map(normalizeRuleGroup) } };
       },
+      providesTags: ['Rules'],
+    }),
+    deleteRuleGroup: build.mutation<void, DeleteRuleOptions>({
+      query: ({ dataSourceUid, namespace, groupName }) => ({
+        url: `api/ruler/${dataSourceUid}/api/v1/rules/${encodeURIComponent(namespace)}/${encodeURIComponent(
+          groupName
+        )}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Rules'],
     }),
   }),
 });
 
-export const { useGetGroupsQuery, useLazyGetGroupsQuery } = prometheusApi;
+export const { useGetGroupsQuery, useLazyGetGroupsQuery, useDeleteRuleGroupMutation } = prometheusApi;
 
 function normalizeRuleGroup(group: PromRuleGroupDTO): PromRuleGroupDTO {
   return produce(group, (draft) => {

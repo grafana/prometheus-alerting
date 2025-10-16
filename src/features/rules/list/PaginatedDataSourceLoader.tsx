@@ -116,6 +116,8 @@ function PaginatedGroupsLoader({
                 group={group}
                 rulesSourceIdentifier={rulesSourceIdentifier}
                 namespaceName={namespace}
+                application={application}
+                rulerApiEnabled={rulerApiEnabled}
               />
             ))}
           </ListSection>
@@ -132,13 +134,20 @@ function PaginatedGroupsLoader({
   );
 }
 
-interface RuleGroupListItemProps {
+interface RuleGroupListItemProps extends Required<Pick<DataSourceSectionProps, 'application'>> {
   group: RuleGroup;
   rulesSourceIdentifier: DataSourceRulesSourceIdentifier;
   namespaceName: string;
+  rulerApiEnabled: boolean;
 }
 
-function RuleGroupListItem({ rulesSourceIdentifier, group, namespaceName }: RuleGroupListItemProps) {
+function RuleGroupListItem({
+  rulesSourceIdentifier,
+  group,
+  namespaceName,
+  application,
+  rulerApiEnabled,
+}: RuleGroupListItemProps) {
   const groupIdentifier: DataSourceRuleGroupIdentifier = useMemo(
     () => ({
       rulesSource: rulesSourceIdentifier,
@@ -157,7 +166,12 @@ function RuleGroupListItem({ rulesSourceIdentifier, group, namespaceName }: Rule
       isOpen={false}
       metaRight={<GroupIntervalIndicator seconds={group.interval} />}
     >
-      <DataSourceGroupLoader groupIdentifier={groupIdentifier} expectedRulesCount={group.rules.length} />
+      <DataSourceGroupLoader
+        groupIdentifier={groupIdentifier}
+        expectedRulesCount={group.rules.length}
+        application={application}
+        rulerApiEnabled={rulerApiEnabled}
+      />
     </ListGroup>
   );
 }

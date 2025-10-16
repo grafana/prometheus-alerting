@@ -8,6 +8,8 @@ import { createStore } from '../../store/store';
 
 const Landing = React.lazy(() => import('../../pages/Landing'));
 const Rules = React.lazy(() => import('../../features/rules/pages/RulesList'));
+const RuleDetails = React.lazy(() => import('../../features/rules/pages/RuleDetails'));
+const RuleEditor = React.lazy(() => import('../../features/rules/pages/RuleEditor'));
 const RouteTree = React.lazy(() => import('../../features/routes/pages/RoutesList'));
 const Receivers = React.lazy(() => import('../../features/receivers/pages/ReceiversList'));
 const Templates = React.lazy(() => import('../../features/templates/pages/TemplatesList'));
@@ -49,6 +51,9 @@ function App(_props: AppRootProps) {
       <Routes>
         <Route path={ROUTES.Routes} element={<RouteTree />} />
         <Route path={ROUTES.Rules} element={<Rules />} />
+        <Route path={ROUTES.RuleView} element={<RuleDetails />} />
+        <Route path={ROUTES.RuleEdit} element={<RuleEditor />} />
+        <Route path={ROUTES.RuleNew} element={<RuleEditor />} />
         <Route path={`${ROUTES.Receivers}/:id?`} element={<Receivers />} />
         <Route path={ROUTES.Templates} element={<Templates />} />
         <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
