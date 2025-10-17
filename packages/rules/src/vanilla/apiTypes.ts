@@ -49,3 +49,28 @@ export interface PromRuleGroupDTO {
   evaluationTime?: number; // these 2 are not in older prometheus payloads
   lastEvaluation?: string;
 }
+
+// Ruler rule DTOs (from Ruler API /api/v1/rules/*)
+interface RulerRuleBaseDTO {
+  expr: string;
+  labels?: Labels;
+}
+
+export interface RulerRecordingRuleDTO extends RulerRuleBaseDTO {
+  record: string;
+}
+
+export interface RulerAlertingRuleDTO extends RulerRuleBaseDTO {
+  alert: string;
+  for?: string;
+  annotations?: Annotations;
+  keep_firing_for?: string;
+}
+
+export type RulerRuleDTO = RulerAlertingRuleDTO | RulerRecordingRuleDTO;
+
+export interface RulerRuleGroupDTO {
+  name: string;
+  interval?: string;
+  rules: RulerRuleDTO[];
+}

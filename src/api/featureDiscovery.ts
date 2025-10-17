@@ -1,4 +1,4 @@
-import { getBackendSrv } from '@grafana/runtime';
+import { getBackendSrv, getDataSourceSrv } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 
 import { DataSourceFeatures, PromBuildInfoResponse } from '../types/rules';
@@ -8,7 +8,16 @@ const RULER_NOT_SUPPORTED_MSG = 'ruler API is not enabled';
 /**
  * Main feature discovery function that determines what capabilities a data source has
  */
-export async function discoverDataSourceFeatures(uid: string, type: string): Promise<DataSourceFeatures> {
+export async function discoverDataSourceFeatures(uid: string): Promise<DataSourceFeatures> {
+  const dataSourceSrv = getDataSourceSrv();
+  const dsSettings = dataSourceSrv.getInstanceSettings(uid);
+
+  if (!dsSettings) {
+    throw new Error(`Data source with uid "${uid}" not found`);
+  }
+
+  const type = dsSettings.type;
+
   // Skip buildinfo for Loki as it doesn't provide useful feature information
   const buildInfo = type === 'loki' ? undefined : await fetchBuildInfo(uid);
 

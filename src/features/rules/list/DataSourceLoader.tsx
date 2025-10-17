@@ -1,8 +1,6 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 
-import { getDataSourceSrv } from '@grafana/runtime';
-
 import { useDiscoverFeaturesQuery } from '../../../api/featureDiscovery.endpoints';
 import { DataSourceRulesSourceIdentifier } from '../../../types/datasources';
 
@@ -19,13 +17,8 @@ interface DataSourceLoaderProps {
 export function DataSourceLoader({ rulesSourceIdentifier, groupFilter, namespaceFilter }: DataSourceLoaderProps) {
   const { uid, name } = rulesSourceIdentifier;
 
-  // Get data source type from Grafana
-  const dataSourceSrv = getDataSourceSrv();
-  const dsSettings = dataSourceSrv.getInstanceSettings(uid);
-  const type = dsSettings?.type ?? 'prometheus';
-
   // Run feature discovery
-  const { data: features, isLoading, error } = useDiscoverFeaturesQuery({ uid, type });
+  const { data: features, isLoading, error } = useDiscoverFeaturesQuery({ uid });
 
   if (isLoading) {
     return <DataSourceSection loader={<Skeleton width={250} height={16} />} uid={uid} name={name} />;

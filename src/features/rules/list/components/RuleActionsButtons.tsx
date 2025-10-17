@@ -3,21 +3,17 @@ import React from 'react';
 import { Trans } from '@grafana/i18n';
 import { LinkButton, Stack } from '@grafana/ui';
 
-import { PromRuleDTO } from '@grafana/external-rules/vanilla';
+import { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
 
 import { DataSourceRuleGroupIdentifier } from '../../../../types/rules';
-import {
-  DataSourceRuleIdentifier,
-  fromRuleAndGroup,
-  fromRulerRuleAndGroup,
-  RulerRuleDTO,
-} from '../../../../utils/rule-id';
+import { DataSourceRuleIdentifier, fromRuleAndGroup, fromRulerRuleAndGroup } from '../../../../utils/rule-id';
 import { rules as rulesNav } from '../../../../utils/navigation';
 
 import { RuleActionsMenu } from './RuleActionsMenu';
 
 interface Props {
-  rule: PromRuleDTO;
+  rule?: RulerRuleDTO; // The editable rule from Ruler API (undefined if Ruler API not supported)
+  promRule: PromRuleDTO; // The read-only rule from Prometheus API
   groupIdentifier: DataSourceRuleGroupIdentifier;
   rulerApiEnabled: boolean;
   onDelete: (identifier: DataSourceRuleIdentifier) => void;
@@ -27,21 +23,20 @@ interface Props {
 
 export function RuleActionsButtons({
   rule,
+  promRule,
   groupIdentifier,
   rulerApiEnabled,
   onDelete,
   onDuplicate,
   compact = false,
 }: Props) {
-  // Use Cloud Rule Identifier (cri) if Ruler API is enabled, otherwise Prometheus Rule Identifier (pri)
-  const identifier = rulerApiEnabled
-    ? fromRulerRuleAndGroup(rule as unknown as RulerRuleDTO, groupIdentifier)
-    : fromRuleAndGroup(rule, groupIdentifier);
+  // Use Cloud Rule Identifier (cri) if we have a ruler rule, otherwise Prometheus Rule Identifier (pri)
+  const identifier = rule ? fromRulerRuleAndGroup(rule, groupIdentifier) : fromRuleAndGroup(promRule, groupIdentifier);
 
   const buttonSize = compact ? 'sm' : 'md';
 
-  // If ruler API is enabled, show Edit button + More menu
-  if (rulerApiEnabled) {
+  // If ruler API is enabled and we have a ruler rule, show Edit button + More menu
+  if (rulerApiEnabled && rule) {
     const editUrl = rulesNav.editPageLink(identifier);
 
     return (
@@ -51,6 +46,7 @@ export function RuleActionsButtons({
         </LinkButton>
         <RuleActionsMenu
           rule={rule}
+          promRule={promRule}
           groupIdentifier={groupIdentifier}
           rulerApiEnabled={rulerApiEnabled}
           onDelete={onDelete}
@@ -66,6 +62,7 @@ export function RuleActionsButtons({
   return (
     <RuleActionsMenu
       rule={rule}
+      promRule={promRule}
       groupIdentifier={groupIdentifier}
       rulerApiEnabled={rulerApiEnabled}
       onDelete={onDelete}

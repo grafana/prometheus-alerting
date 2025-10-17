@@ -8,10 +8,10 @@ export const featureDiscoveryApi = createApi({
   reducerPath: 'featureDiscoveryApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/' }),
   endpoints: (build) => ({
-    discoverFeatures: build.query<DataSourceFeatures, { uid: string; type: string }>({
-      queryFn: async ({ uid, type }) => {
+    discoverFeatures: build.query<DataSourceFeatures, { uid: string }>({
+      queryFn: async ({ uid }) => {
         try {
-          const features = await discoverDataSourceFeatures(uid, type);
+          const features = await discoverDataSourceFeatures(uid);
           return { data: features };
         } catch (error) {
           return {

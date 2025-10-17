@@ -3,22 +3,18 @@ import React, { ComponentProps } from 'react';
 import { t } from '@grafana/i18n';
 import { Button, Dropdown, Menu } from '@grafana/ui';
 
-import { PromRuleDTO } from '@grafana/external-rules/vanilla';
+import { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
 
 import { DataSourceRuleGroupIdentifier } from '../../../../types/rules';
 import { copyToClipboard } from '../../../../utils/clipboard';
-import {
-  DataSourceRuleIdentifier,
-  fromRuleAndGroup,
-  fromRulerRuleAndGroup,
-  RulerRuleDTO,
-} from '../../../../utils/rule-id';
+import { DataSourceRuleIdentifier, fromRuleAndGroup, fromRulerRuleAndGroup } from '../../../../utils/rule-id';
 import { rules as rulesNav } from '../../../../utils/navigation';
 
 import MoreButton from './MoreButton';
 
 interface Props {
-  rule: PromRuleDTO;
+  rule?: RulerRuleDTO; // The editable rule from Ruler API (undefined if Ruler API not supported)
+  promRule: PromRuleDTO; // The read-only rule from Prometheus API
   groupIdentifier: DataSourceRuleGroupIdentifier;
   rulerApiEnabled: boolean;
   onDelete: (identifier: DataSourceRuleIdentifier) => void;
@@ -29,6 +25,7 @@ interface Props {
 
 export function RuleActionsMenu({
   rule,
+  promRule,
   groupIdentifier,
   rulerApiEnabled,
   onDelete,
@@ -36,10 +33,8 @@ export function RuleActionsMenu({
   buttonSize = 'md',
   fill = 'text',
 }: Props) {
-  // Use Cloud Rule Identifier (cri) if Ruler API is enabled, otherwise Prometheus Rule Identifier (pri)
-  const identifier = rulerApiEnabled
-    ? fromRulerRuleAndGroup(rule as unknown as RulerRuleDTO, groupIdentifier)
-    : fromRuleAndGroup(rule, groupIdentifier);
+  // Use Cloud Rule Identifier (cri) if we have a ruler rule, otherwise Prometheus Rule Identifier (pri)
+  const identifier = rule ? fromRulerRuleAndGroup(rule, groupIdentifier) : fromRuleAndGroup(promRule, groupIdentifier);
 
   const handleCopyLink = () => {
     const shareUrl = rulesNav.shareLink(identifier);
@@ -56,11 +51,13 @@ export function RuleActionsMenu({
 
   const menuItems = (
     <>
-      {rulerApiEnabled && (
+      {/* Only show duplicate if we have a ruler rule */}
+      {rulerApiEnabled && rule && (
         <Menu.Item label={t('alerting.rule-actions.duplicate', 'Duplicate')} icon="copy" onClick={handleDuplicate} />
       )}
       <Menu.Item label={t('alerting.rule-actions.copy-link', 'Copy link')} icon="share-alt" onClick={handleCopyLink} />
-      {rulerApiEnabled && (
+      {/* Only show delete if we have a ruler rule */}
+      {rulerApiEnabled && rule && (
         <>
           <Menu.Divider />
           <Menu.Item

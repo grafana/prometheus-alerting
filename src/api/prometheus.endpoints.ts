@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-import { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
+import { PromRuleGroupDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
 import { produce } from 'immer';
 
@@ -25,6 +25,12 @@ interface PromRulesOptions {
 }
 
 interface DeleteRuleOptions {
+  dataSourceUid: string;
+  namespace: string;
+  groupName: string;
+}
+
+interface GetRulerRuleGroupOptions {
   dataSourceUid: string;
   namespace: string;
   groupName: string;
@@ -57,6 +63,26 @@ export const prometheusApi = createApi({
       },
       providesTags: ['Rules'],
     }),
+    getRulerRuleGroup: build.query<RulerRuleGroupDTO | null, GetRulerRuleGroupOptions>({
+      query: ({ dataSourceUid, namespace, groupName }) => ({
+        url: `api/ruler/${dataSourceUid}/api/v1/rules/${encodeURIComponent(namespace)}/${encodeURIComponent(
+          groupName
+        )}`,
+        params: {
+          subtype: 'mimir',
+        },
+      }),
+      transformErrorResponse: (response) => {
+        // Return null for 404 errors (group not found) instead of throwing
+        if (response.status === 404) {
+          return null;
+        }
+        return response;
+      },
+      providesTags: (_result, _error, { dataSourceUid, namespace, groupName }) => [
+        { type: 'Rules' as const, id: `${dataSourceUid}/${namespace}/${groupName}` },
+      ],
+    }),
     deleteRuleGroup: build.mutation<void, DeleteRuleOptions>({
       query: ({ dataSourceUid, namespace, groupName }) => ({
         url: `api/ruler/${dataSourceUid}/api/v1/rules/${encodeURIComponent(namespace)}/${encodeURIComponent(
@@ -69,7 +95,8 @@ export const prometheusApi = createApi({
   }),
 });
 
-export const { useGetGroupsQuery, useLazyGetGroupsQuery, useDeleteRuleGroupMutation } = prometheusApi;
+export const { useGetGroupsQuery, useLazyGetGroupsQuery, useGetRulerRuleGroupQuery, useDeleteRuleGroupMutation } =
+  prometheusApi;
 
 function normalizeRuleGroup(group: PromRuleGroupDTO): PromRuleGroupDTO {
   return produce(group, (draft) => {

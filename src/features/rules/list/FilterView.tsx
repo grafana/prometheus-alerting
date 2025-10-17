@@ -10,7 +10,7 @@ import { isLoading, useAsync } from '../../../hooks/useAsync';
 import { PromRuleWithOrigin } from '../../../types/rules';
 import { hashRule } from '../../../utils/rule-id';
 
-import { DataSourceRuleListItem } from './DataSourceRuleListItem';
+import { DataSourceRuleLoader } from './DataSourceRuleLoader';
 import { FilterProgressState, FilterStatus } from './components/FilterStatus';
 import { SkeletonListItem } from './components/ListItem';
 import { LoadMoreHelper } from './components/LoadMoreHelper';
@@ -145,15 +145,7 @@ function FilterViewResults({ filterState }: FilterViewProps) {
         {rules.map((ruleWithOrigin) => {
           const { key, rule, groupIdentifier } = ruleWithOrigin;
 
-          return (
-            <DataSourceRuleListItem
-              key={key}
-              rule={rule}
-              groupIdentifier={groupIdentifier}
-              application={'prometheus'} // Simplified for now
-              showLocation={true}
-            />
-          );
+          return <DataSourceRuleLoader key={key} rule={rule} groupIdentifier={groupIdentifier} />;
         })}
         {loading && (
           <>

@@ -1,20 +1,7 @@
-import { PromRuleDTO } from '@grafana/external-rules/vanilla';
+import { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
 
 import { DataSourceRuleGroupIdentifier } from '../types/rules';
 import { getRuleName, isAlertingRule, isRecordingRule } from './rules';
-
-/**
- * Minimal Ruler rule type for hashing purposes
- * Ruler rules from /api/v1/ruler/* endpoints have a different structure than Prometheus rules
- */
-export interface RulerRuleDTO {
-  alert?: string; // For alerting rules
-  record?: string; // For recording rules
-  expr: string; // Query expression (note: different field name from PromRuleDTO.query)
-  labels?: Record<string, string>;
-  annotations?: Record<string, string>;
-  for?: string; // Duration for alerting rules
-}
 
 /**
  * Prometheus Rule Identifier - for rules read from /api/v1/rules endpoint
@@ -122,8 +109,7 @@ export function fromRulerRuleAndGroup(
   rule: RulerRuleDTO,
   groupIdentifier: DataSourceRuleGroupIdentifier
 ): CloudRuleIdentifier {
-  // Ruler rules use 'alert' or 'record' fields instead of 'name'
-  const ruleName = rule.alert || rule.record || 'unknown';
+  const ruleName = getRuleName(rule);
   const rulerRuleHash = hashRulerRule(rule);
 
   return {
@@ -308,4 +294,46 @@ export function hashRulerRule(rule: RulerRuleDTO): string {
   }
 
   return simpleHash(JSON.stringify(fingerprint)).toString();
+}
+
+/**
+ * Generate a fingerprint for a Prometheus rule for matching purposes.
+ * Returns an array of values that uniquely identify a rule.
+ *
+ * @param rule - The Prometheus rule
+ * @param includeQuery - Whether to include the query in the fingerprint
+ * @returns An array representing the rule's fingerprint
+ */
+export function getPromRuleFingerprint(rule: PromRuleDTO, includeQuery: boolean): unknown[] {
+  const queryHash = includeQuery ? hashQuery(rule.query || '') : '';
+  const labelsHash = hashLabelsOrAnnotations(rule.labels);
+
+  if (rule.type === 'recording') {
+    return [rule.name, 'recording', queryHash, labelsHash];
+  }
+  if (rule.type === 'alerting') {
+    return [rule.name, 'alerting', queryHash, hashLabelsOrAnnotations(rule.annotations), labelsHash];
+  }
+  throw new Error('Only recording and alerting rules can be fingerprinted');
+}
+
+/**
+ * Generate a fingerprint for a Ruler rule for matching purposes.
+ * Returns an array of values that uniquely identify a rule.
+ *
+ * @param rule - The Ruler rule
+ * @param includeQuery - Whether to include the query in the fingerprint
+ * @returns An array representing the rule's fingerprint
+ */
+export function getRulerRuleFingerprint(rule: RulerRuleDTO, includeQuery: boolean): unknown[] {
+  const queryHash = includeQuery ? hashQuery(rule.expr || '') : '';
+  const labelsHash = hashLabelsOrAnnotations(rule.labels);
+
+  if ('record' in rule && rule.record) {
+    return [rule.record, 'recording', queryHash, labelsHash];
+  }
+  if ('alert' in rule && rule.alert) {
+    return [rule.alert, 'alerting', queryHash, hashLabelsOrAnnotations(rule.annotations), labelsHash];
+  }
+  throw new Error('Only recording and alerting ruler rules can be fingerprinted');
 }

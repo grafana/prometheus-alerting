@@ -8,9 +8,6 @@ import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../
 import { hashRule } from '../../../utils/rule-id';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
-import { RuleActionsButtons } from './components/RuleActionsButtons';
-import { useDeleteRuleModal } from './components/DeleteRuleModal';
-import { DataSourceRuleIdentifier } from '../../../utils/rule-id';
 
 const { useGetGroupsQuery } = prometheusApi;
 
@@ -34,8 +31,6 @@ export function DataSourceGroupLoader({
   const { namespace, groupName } = groupIdentifier;
   const namespaceName = namespace.name;
 
-  const [deleteModal, showDeleteModal] = useDeleteRuleModal();
-
   const {
     data: promResponse,
     isLoading,
@@ -45,11 +40,6 @@ export function DataSourceGroupLoader({
     namespace: namespaceName,
     groupName: groupName,
   });
-
-  const handleDuplicate = (identifier: DataSourceRuleIdentifier) => {
-    // TODO: Implement duplicate functionality (navigate to rule editor with pre-filled data)
-    console.log('Duplicate rule:', identifier);
-  };
 
   if (isLoading) {
     return (
@@ -82,19 +72,8 @@ export function DataSourceGroupLoader({
             application={application}
             rulerApiEnabled={rulerApiEnabled}
             showLocation={false}
-            actions={
-              <RuleActionsButtons
-                rule={rule}
-                groupIdentifier={groupIdentifier}
-                rulerApiEnabled={rulerApiEnabled}
-                onDelete={showDeleteModal}
-                onDuplicate={handleDuplicate}
-                compact
-              />
-            }
           />
         ))}
-        {deleteModal}
       </>
     );
   }
