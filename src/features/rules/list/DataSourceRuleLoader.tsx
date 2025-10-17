@@ -3,7 +3,7 @@ import React, { memo, useMemo } from 'react';
 import { skipToken } from '@reduxjs/toolkit/query';
 
 import { useDiscoverFeaturesQuery } from '../../../api/featureDiscovery.endpoints';
-import { useGetRulerRuleGroupQuery } from '../../../api/prometheus.endpoints';
+import { useGetRulerRuleGroupQuery } from '../../../api/ruler.endpoints';
 import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
 import { DataSourceRuleIdentifier } from '../../../utils/rule-id';
 import { getMatchingRulerRule } from '../../../utils/ruleMatching';
@@ -100,9 +100,9 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
     <>
       <DataSourceRuleListItem
         rule={rule}
+        rulerRule={rulerRule}
         groupIdentifier={groupIdentifier}
         application={dsFeatures?.application}
-        rulerApiEnabled={rulerApiEnabled}
         actions={actions}
         showLocation={true}
       />

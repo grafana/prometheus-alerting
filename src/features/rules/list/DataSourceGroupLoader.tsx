@@ -1,11 +1,16 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 
+import { skipToken } from '@reduxjs/toolkit/query';
+
 import { Alert } from '@grafana/ui';
 
+import { useDiscoverFeaturesQuery } from '../../../api/featureDiscovery.endpoints';
 import { prometheusApi } from '../../../api/prometheus.endpoints';
+import { useGetRulerRuleGroupQuery } from '../../../api/ruler.endpoints';
 import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../types/rules';
 import { hashRule } from '../../../utils/rule-id';
+import { getMatchingRulerRule } from '../../../utils/ruleMatching';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 
@@ -19,8 +24,10 @@ export interface DataSourceGroupLoaderProps {
 }
 
 /**
- * Loads an evaluation group from Prometheus endpoint.
+ * Loads an evaluation group from Prometheus endpoint and optionally from Ruler endpoint.
  * Displays a loading skeleton while the data is being fetched.
+ * When ruler API is enabled, fetches both Prometheus and Ruler data at the group level
+ * and matches them together for efficiency.
  */
 export function DataSourceGroupLoader({
   groupIdentifier,
@@ -31,15 +38,40 @@ export function DataSourceGroupLoader({
   const { namespace, groupName } = groupIdentifier;
   const namespaceName = namespace.name;
 
+  // Fetch Prometheus rules
   const {
     data: promResponse,
-    isLoading,
-    isError,
+    isLoading: isPromLoading,
+    isError: isPromError,
   } = useGetGroupsQuery({
     ruleSource: { uid: groupIdentifier.rulesSource.uid },
     namespace: namespaceName,
     groupName: groupName,
   });
+
+  // Fetch feature discovery to determine if ruler API is available
+  const { data: dsFeatures, isLoading: isFeaturesLoading } = useDiscoverFeaturesQuery({
+    uid: groupIdentifier.rulesSource.uid,
+  });
+
+  const shouldFetchRuler = rulerApiEnabled && (dsFeatures?.rulerApiEnabled ?? false);
+
+  // Fetch ruler rules if ruler API is enabled
+  const {
+    data: rulerRuleGroup,
+    isLoading: isRulerLoading,
+    isError: isRulerError,
+  } = useGetRulerRuleGroupQuery(
+    shouldFetchRuler
+      ? {
+          dataSourceUid: groupIdentifier.rulesSource.uid,
+          namespace: namespaceName,
+          groupName,
+        }
+      : skipToken
+  );
+
+  const isLoading = isPromLoading || isFeaturesLoading || (shouldFetchRuler && isRulerLoading);
 
   if (isLoading) {
     return (
@@ -53,7 +85,7 @@ export function DataSourceGroupLoader({
     );
   }
 
-  if (isError) {
+  if (isPromError || (shouldFetchRuler && isRulerError)) {
     return <Alert title={`Failed to load rules from group ${groupName} in ${namespaceName}`} severity="error" />;
   }
 
@@ -64,16 +96,22 @@ export function DataSourceGroupLoader({
   if (promGroup) {
     return (
       <>
-        {promGroup.rules.map((rule) => (
-          <DataSourceRuleListItem
-            key={hashRule(rule)}
-            rule={rule}
-            groupIdentifier={groupIdentifier}
-            application={application}
-            rulerApiEnabled={rulerApiEnabled}
-            showLocation={false}
-          />
-        ))}
+        {promGroup.rules.map((rule) => {
+          // Match the prometheus rule with its corresponding ruler rule if available
+          const rulerRule =
+            rulerRuleGroup && shouldFetchRuler ? getMatchingRulerRule(rulerRuleGroup.rules, rule) : undefined;
+
+          return (
+            <DataSourceRuleListItem
+              key={hashRule(rule)}
+              rule={rule}
+              rulerRule={rulerRule}
+              groupIdentifier={groupIdentifier}
+              application={application}
+              showLocation={false}
+            />
+          );
+        })}
       </>
     );
   }

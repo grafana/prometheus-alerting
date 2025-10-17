@@ -16,18 +16,18 @@ import {
 
 export interface DataSourceRuleListItemProps {
   rule: Rule;
+  rulerRule?: RulerRuleDTO;
   groupIdentifier: DataSourceRuleGroupIdentifier;
   application?: RulesSourceApplication;
-  rulerApiEnabled?: boolean;
   actions?: React.ReactNode;
   showLocation?: boolean;
 }
 
 export function DataSourceRuleListItem({
   rule,
+  rulerRule,
   groupIdentifier,
   application,
-  rulerApiEnabled = false,
   actions,
   showLocation = true,
 }: DataSourceRuleListItemProps) {
@@ -36,11 +36,11 @@ export function DataSourceRuleListItem({
   const ruleName = getRuleName(rule);
   const labels = rule.labels;
 
-  // Create rule identifier based on Ruler API support
-  // If Ruler API is enabled, use Cloud Rule Identifier (cri) for editable rules
+  // Create rule identifier based on whether we have ruler rule data
+  // If ruler rule is available, use Cloud Rule Identifier (cri) for editable rules
   // Otherwise use Prometheus Rule Identifier (pri) for read-only rules
-  const ruleIdentifier = rulerApiEnabled
-    ? fromRulerRuleAndGroup(rule as unknown as RulerRuleDTO, groupIdentifier)
+  const ruleIdentifier = rulerRule
+    ? fromRulerRuleAndGroup(rulerRule, groupIdentifier)
     : fromRuleAndGroup(rule, groupIdentifier);
 
   const ruleDetailsHref = rulesNav.detailsPageLink(ruleIdentifier);

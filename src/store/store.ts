@@ -3,6 +3,7 @@ import dataSourceReducer from './datasourceSlice';
 import { alertmanagerApi } from '../api/alertmanager.endpoints';
 import { featureDiscoveryApi } from '../api/featureDiscovery.endpoints';
 import { prometheusApi } from '../api/prometheus.endpoints';
+import { rulerApi } from '../api/ruler.endpoints';
 
 export const createStore = (initialDataSourceUID: string) => {
   return configureStore({
@@ -11,12 +12,14 @@ export const createStore = (initialDataSourceUID: string) => {
       [alertmanagerApi.reducerPath]: alertmanagerApi.reducer,
       [prometheusApi.reducerPath]: prometheusApi.reducer,
       [featureDiscoveryApi.reducerPath]: featureDiscoveryApi.reducer,
+      [rulerApi.reducerPath]: rulerApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(
         alertmanagerApi.middleware,
         prometheusApi.middleware,
-        featureDiscoveryApi.middleware
+        featureDiscoveryApi.middleware,
+        rulerApi.middleware
       ),
     preloadedState: {
       dataSource: {
