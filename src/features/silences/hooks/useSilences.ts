@@ -50,8 +50,8 @@ export function useDeleteSilence() {
 
   const [deleteSilence, mutationState] = alertmanagerApi.endpoints.deleteSilence.useMutation();
 
-  const expireSilence = async (silenceId: string) => {
-    return deleteSilence({ dataSourceUID, implementation, silenceId }).unwrap();
+  const expireSilence = (silenceId: string) => {
+    return deleteSilence({ dataSourceUID, implementation, silenceId });
   };
 
   return [expireSilence, mutationState] as const;

@@ -15,6 +15,7 @@ export const testIds = {
   },
   receivers: {
     container: 'data-testid prom-receivers',
+    detail: 'data-testid prom-receiver-detail',
   },
   templates: {
     container: 'data-testid prom-templates',
@@ -24,6 +25,7 @@ export const testIds = {
   },
   timeIntervals: {
     container: 'data-testid prom-time-intervals',
+    detail: 'data-testid prom-time-interval-detail',
   },
   inhibitRules: {
     container: 'data-testid prom-inhibit-rules',

@@ -226,18 +226,44 @@ export function hasMSTeamsConfigs(receiver: Receiver): receiver is Receiver & { 
 // Helper function to get all configured receiver types for a receiver
 export function getReceiverTypes(receiver: Receiver): string[] {
   const types: string[] = [];
-  if (hasEmailConfigs(receiver)) types.push('email');
-  if (hasSlackConfigs(receiver)) types.push('slack');
-  if (hasPagerdutyConfigs(receiver)) types.push('pagerduty');
-  if (hasWebhookConfigs(receiver)) types.push('webhook');
-  if (hasOpsGenieConfigs(receiver)) types.push('opsgenie');
-  if (hasWechatConfigs(receiver)) types.push('wechat');
-  if (hasPushoverConfigs(receiver)) types.push('pushover');
-  if (hasVictorOpsConfigs(receiver)) types.push('victorops');
-  if (hasSNSConfigs(receiver)) types.push('sns');
-  if (hasTelegramConfigs(receiver)) types.push('telegram');
-  if (hasDiscordConfigs(receiver)) types.push('discord');
-  if (hasWebexConfigs(receiver)) types.push('webex');
-  if (hasMSTeamsConfigs(receiver)) types.push('msteams');
+  if (hasEmailConfigs(receiver)) {
+    types.push('email');
+  }
+  if (hasSlackConfigs(receiver)) {
+    types.push('slack');
+  }
+  if (hasPagerdutyConfigs(receiver)) {
+    types.push('pagerduty');
+  }
+  if (hasWebhookConfigs(receiver)) {
+    types.push('webhook');
+  }
+  if (hasOpsGenieConfigs(receiver)) {
+    types.push('opsgenie');
+  }
+  if (hasWechatConfigs(receiver)) {
+    types.push('wechat');
+  }
+  if (hasPushoverConfigs(receiver)) {
+    types.push('pushover');
+  }
+  if (hasVictorOpsConfigs(receiver)) {
+    types.push('victorops');
+  }
+  if (hasSNSConfigs(receiver)) {
+    types.push('sns');
+  }
+  if (hasTelegramConfigs(receiver)) {
+    types.push('telegram');
+  }
+  if (hasDiscordConfigs(receiver)) {
+    types.push('discord');
+  }
+  if (hasWebexConfigs(receiver)) {
+    types.push('webex');
+  }
+  if (hasMSTeamsConfigs(receiver)) {
+    types.push('msteams');
+  }
   return types;
 }

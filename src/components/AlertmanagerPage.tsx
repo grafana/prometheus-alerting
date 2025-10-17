@@ -37,12 +37,16 @@ export function AlertmanagerPage({ children, ...props }: ComponentProps<typeof P
     dispatch(setDataSourceUID(option.value));
   };
 
+  const showAlertmanagerPicker = alertmanagerOptions.length > 1;
+
   return (
     <PluginPage
       actions={
-        <InlineField label={t('pages.alertmanager-picker.label', 'Choose Alertmanager')}>
-          <Combobox options={alertmanagerOptions} value={selectedOption} onChange={handleAlertmanagerChange} />
-        </InlineField>
+        showAlertmanagerPicker ? (
+          <InlineField label={t('pages.alertmanager-picker.label', 'Choose Alertmanager')}>
+            <Combobox options={alertmanagerOptions} value={selectedOption} onChange={handleAlertmanagerChange} />
+          </InlineField>
+        ) : undefined
       }
       {...props}
     >

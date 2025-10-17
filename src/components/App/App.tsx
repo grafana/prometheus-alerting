@@ -12,10 +12,12 @@ const RuleDetails = React.lazy(() => import('../../features/rules/pages/RuleDeta
 const RuleEditor = React.lazy(() => import('../../features/rules/pages/RuleEditor'));
 const RouteTree = React.lazy(() => import('../../features/routes/pages/RoutesList'));
 const Receivers = React.lazy(() => import('../../features/receivers/pages/ReceiversList'));
+const ReceiverDetail = React.lazy(() => import('../../features/receivers/pages/ReceiverDetail'));
 const Templates = React.lazy(() => import('../../features/templates/pages/TemplatesList'));
 const Silences = React.lazy(() => import('../../features/silences/pages/SilencesList'));
 const SilenceForm = React.lazy(() => import('../../features/silences/pages/SilenceForm'));
 const TimeIntervals = React.lazy(() => import('../../features/timeIntervals/pages/TimeIntervalsList'));
+const TimeIntervalDetail = React.lazy(() => import('../../features/timeIntervals/pages/TimeIntervalDetail'));
 const InhibitRules = React.lazy(() => import('../../features/inhibitRules/pages/InhibitRulesList'));
 
 // Get initial data source UID from sessionStorage or default to first available
@@ -54,10 +56,12 @@ function App(_props: AppRootProps) {
         <Route path={ROUTES.RuleView} element={<RuleDetails />} />
         <Route path={ROUTES.RuleEdit} element={<RuleEditor />} />
         <Route path={ROUTES.RuleNew} element={<RuleEditor />} />
-        <Route path={`${ROUTES.Receivers}/:id?`} element={<Receivers />} />
+        <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
+        <Route path={ROUTES.Receivers} element={<Receivers />} />
         <Route path={ROUTES.Templates} element={<Templates />} />
         <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
         <Route path={ROUTES.Silences} element={<Silences />} />
+        <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
         <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
         <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
 

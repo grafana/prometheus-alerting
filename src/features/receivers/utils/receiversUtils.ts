@@ -1,56 +1,48 @@
 import { type Receiver } from '@grafana/external-alertmanager/vanilla';
 
 /**
- * Calculates the total number of integration configurations for a receiver.
+ * Generates a human-readable description of a ContactPoint by summarizing its integrations.
+ * If the ContactPoint has no integrations, it returns an empty placeholder text.
  *
- * A receiver can have multiple types of integrations (email, slack, pagerduty, etc.),
- * and each integration type can have multiple configurations.
+ * For integrations, it counts the occurrences of each type and formats them as a comma-separated list.
+ * Multiple integrations of the same type are indicated with a count in parentheses.
  *
- * @param receiver - The receiver object to count configurations for
- * @returns The total number of integration configurations across all types
+ * @param receiver - The Receiver object to describe
+ * @returns A string description of the Receiver's integrations
  */
-export function getTotalReceiverConfigs(receiver: Receiver): number {
-  let total = 0;
+export function getContactPointDescription(receiver: Receiver): string {
+  const integrationCounts: Record<string, number> = {};
 
-  if (receiver.email_configs) {
-    total += receiver.email_configs.length;
-  }
-  if (receiver.slack_configs) {
-    total += receiver.slack_configs.length;
-  }
-  if (receiver.pagerduty_configs) {
-    total += receiver.pagerduty_configs.length;
-  }
-  if (receiver.webhook_configs) {
-    total += receiver.webhook_configs.length;
-  }
-  if (receiver.opsgenie_configs) {
-    total += receiver.opsgenie_configs.length;
-  }
-  if (receiver.wechat_configs) {
-    total += receiver.wechat_configs.length;
-  }
-  if (receiver.pushover_configs) {
-    total += receiver.pushover_configs.length;
-  }
-  if (receiver.victorops_configs) {
-    total += receiver.victorops_configs.length;
-  }
-  if (receiver.sns_configs) {
-    total += receiver.sns_configs.length;
-  }
-  if (receiver.telegram_configs) {
-    total += receiver.telegram_configs.length;
-  }
-  if (receiver.discord_configs) {
-    total += receiver.discord_configs.length;
-  }
-  if (receiver.webex_configs) {
-    total += receiver.webex_configs.length;
-  }
-  if (receiver.msteams_configs) {
-    total += receiver.msteams_configs.length;
+  const countIntegration = (type: string, count: number) => {
+    if (count > 0) {
+      integrationCounts[type] = count;
+    }
+  };
+
+  countIntegration('email', receiver.email_configs?.length ?? 0);
+  countIntegration('slack', receiver.slack_configs?.length ?? 0);
+  countIntegration('pagerduty', receiver.pagerduty_configs?.length ?? 0);
+  countIntegration('webhook', receiver.webhook_configs?.length ?? 0);
+  countIntegration('opsgenie', receiver.opsgenie_configs?.length ?? 0);
+  countIntegration('wechat', receiver.wechat_configs?.length ?? 0);
+  countIntegration('pushover', receiver.pushover_configs?.length ?? 0);
+  countIntegration('victorops', receiver.victorops_configs?.length ?? 0);
+  countIntegration('sns', receiver.sns_configs?.length ?? 0);
+  countIntegration('telegram', receiver.telegram_configs?.length ?? 0);
+  countIntegration('discord', receiver.discord_configs?.length ?? 0);
+  countIntegration('webex', receiver.webex_configs?.length ?? 0);
+  countIntegration('msteams', receiver.msteams_configs?.length ?? 0);
+
+  if (Object.keys(integrationCounts).length === 0) {
+    return '<empty contact point>';
   }
 
-  return total;
+  const description = Object.entries(integrationCounts)
+    .map(([type, count]) => {
+      // either "email" or "email (2)" but not "email (1)"
+      return count > 1 ? `${type} (${count})` : type;
+    })
+    .join(', ');
+
+  return description;
 }

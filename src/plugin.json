@@ -62,7 +62,7 @@
     },
     {
       "type": "page",
-      "name": "Time Intervals",
+      "name": "Time intervals",
       "path": "/a/%PLUGIN_ID%/time-intervals",
       "addToNav": true,
       "defaultNav": false

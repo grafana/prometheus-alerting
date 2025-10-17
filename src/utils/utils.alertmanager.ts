@@ -1,6 +1,6 @@
 import { DataSourceInstanceSettings } from '@grafana/data';
 import { ComboboxOption } from '@grafana/ui';
-import { AlertManagerDataSourceJsonData } from 'src/types/datasources';
+import { AlertManagerDataSourceJsonData } from 'types/datasources';
 
 /**
  * Converts an array of DataSourceInstanceSettings to ComboboxOption array
