@@ -14,12 +14,12 @@ export const featureDiscoveryApi = createApi({
           const features = await discoverDataSourceFeatures(uid);
           return { data: features };
         } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
           return {
             error: {
               status: 'CUSTOM_ERROR',
-              error: error instanceof Error ? error.message : String(error),
-              data: error,
-            },
+              error: errorMessage,
+            } as const,
           };
         }
       },
