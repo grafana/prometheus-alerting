@@ -10,15 +10,17 @@ import { isLoading, useAsync } from '../../../hooks/useAsync';
 import { PromRuleWithOrigin } from '../../../types/rules';
 import { hashRule } from '../../../utils/rule-id';
 
+import { RulesFilter } from '../search/rulesSearchParser';
+
 import { DataSourceRuleLoader } from './DataSourceRuleLoader';
 import { FilterProgressState, FilterStatus } from './components/FilterStatus';
 import { SkeletonListItem } from './components/ListItem';
 import { LoadMoreHelper } from './components/LoadMoreHelper';
-import { SimpleFilterState, useFilteredRulesIteratorProvider } from './hooks/useFilteredRulesIterator';
+import { useFilteredRulesIteratorProvider } from './hooks/useFilteredRulesIterator';
 import { FRONTEND_LIST_PAGE_SIZE, FILTERED_GROUPS_API_PAGE_SIZE } from '../../../utils/paginationLimits';
 
 interface FilterViewProps {
-  filterState: SimpleFilterState;
+  filterState: RulesFilter;
 }
 
 export function FilterView({ filterState }: FilterViewProps) {

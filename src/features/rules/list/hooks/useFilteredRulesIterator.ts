@@ -15,15 +15,10 @@ import {
   PromRuleWithOrigin,
 } from '../../../../types/rules';
 import { getExternalRulesSources } from '../../../../utils/datasource';
+import { RulesFilter } from '../../search/rulesSearchParser';
 
 import { groupFilter, ruleFilter } from './filters';
 import { usePrometheusGroupsGenerator } from './prometheusGroupsGenerator';
-
-export interface SimpleFilterState {
-  namespace?: string;
-  groupName?: string;
-  ruleName?: string;
-}
 
 interface GetIteratorResult {
   iterable: AsyncIterableX<PromRuleWithOrigin>;
@@ -35,19 +30,29 @@ export function useFilteredRulesIteratorProvider() {
   const prometheusGroupsGenerator = usePrometheusGroupsGenerator();
 
   const getFilteredRulesIterable = useCallback(
-    (filterState: SimpleFilterState, groupLimit: number): GetIteratorResult => {
+    (filterState: RulesFilter, groupLimit: number): GetIteratorResult => {
       // This is the abort controller that allows us to stop an AsyncIterable
       const abortController = new AbortController();
 
       // Normalize filter state (remove empty strings)
       const normalizedFilterState = {
+        dataSourceNames: filterState.dataSourceNames || [],
         namespace: filterState.namespace?.trim() || undefined,
         groupName: filterState.groupName?.trim() || undefined,
         ruleName: filterState.ruleName?.trim() || undefined,
+        ruleState: filterState.ruleState?.trim() || undefined,
+        ruleType: filterState.ruleType?.trim() || undefined,
+        labels: filterState.labels || [],
       };
 
+      // Filter data sources if dataSourceNames filter is specified
+      const filteredDataSources =
+        normalizedFilterState.dataSourceNames.length > 0
+          ? allExternalRulesSources.filter((ds) => normalizedFilterState.dataSourceNames.includes(ds.uid))
+          : allExternalRulesSources;
+
       // Create generators for each external data source
-      const dataSourceGenerators: Array<AsyncIterableX<PromRuleWithOrigin>> = allExternalRulesSources.map(
+      const dataSourceGenerators: Array<AsyncIterableX<PromRuleWithOrigin>> = filteredDataSources.map(
         (dataSourceIdentifier) => {
           const promGroupsGenerator: AsyncIterableX<PromRuleWithOrigin> = from(
             prometheusGroupsGenerator(dataSourceIdentifier, groupLimit)

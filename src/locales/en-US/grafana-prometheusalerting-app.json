@@ -41,6 +41,33 @@
         "grouped": "Grouped",
         "list": "List"
       }
+    },
+    "rules": {
+      "state": {
+        "firing": "Firing",
+        "normal": "Normal",
+        "pending": "Pending"
+      },
+      "type": {
+        "alert": "Alert rule",
+        "recording": "Recording rule"
+      }
+    },
+    "rules-filter": {
+      "data-source-label": "Data source",
+      "data-source-placeholder": "Select data sources",
+      "filter-label": "Filter",
+      "filter-options-label": "Filter options",
+      "group-label": "Evaluation group",
+      "group-placeholder": "Select group",
+      "labels-label": "Labels",
+      "labels-placeholder": "Select labels",
+      "namespace-label": "Namespace",
+      "namespace-placeholder": "Select namespace",
+      "rule-name-label": "Rule name",
+      "search-placeholder": "Search by name or enter filter query...",
+      "state-label": "State",
+      "type-label": "Type"
     }
   },
   "app-config": {
@@ -58,6 +85,12 @@
       "placeholder": "E.g.: http://mywebsite.com/api/v1"
     },
     "submit-button": "Save API settings"
+  },
+  "common": {
+    "all": "All",
+    "apply": "Apply",
+    "clear": "Clear",
+    "close": "Close"
   },
   "inhibit-rules": {
     "column": {
