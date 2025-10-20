@@ -5,6 +5,47 @@
 
 import { z } from 'zod';
 
+// HTTP Config schemas (reusable across all receiver types)
+// Based on: https://prometheus.io/docs/alerting/0.22/configuration/#http_config
+
+export const TLSConfigSchema = z.object({
+  ca_file: z.string().optional(),
+  cert_file: z.string().optional(),
+  key_file: z.string().optional(),
+  server_name: z.string().optional(),
+  insecure_skip_verify: z.boolean().optional(),
+});
+
+export const BasicAuthConfigSchema = z.object({
+  username: z.string().optional(),
+  password: z.string().optional(),
+  password_file: z.string().optional(),
+});
+
+export const AuthorizationConfigSchema = z.object({
+  type: z.string().optional(),
+  credentials: z.string().optional(),
+  credentials_file: z.string().optional(),
+});
+
+export const OAuth2ConfigSchema = z.object({
+  client_id: z.string(),
+  client_secret: z.string().optional(),
+  client_secret_file: z.string().optional(),
+  scopes: z.array(z.string()).optional(),
+  token_url: z.string(),
+  endpoint_params: z.record(z.string(), z.string()).optional(),
+});
+
+export const HTTPConfigSchema = z.object({
+  basic_auth: BasicAuthConfigSchema.optional(),
+  authorization: AuthorizationConfigSchema.optional(),
+  oauth2: OAuth2ConfigSchema.optional(),
+  proxy_url: z.string().optional(),
+  follow_redirects: z.boolean().optional(),
+  tls_config: TLSConfigSchema.optional(),
+});
+
 // Zod schemas for individual receiver configuration types
 
 export const EmailConfigSchema = z.object({
@@ -18,6 +59,7 @@ export const EmailConfigSchema = z.object({
   html: z.string().optional(),
   text: z.string().optional(),
   require_tls: z.boolean().optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const SlackConfigSchema = z.object({
@@ -34,6 +76,7 @@ export const SlackConfigSchema = z.object({
   icon_url: z.string().optional(),
   image_url: z.string().optional(),
   thumb_url: z.string().optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const PagerdutyConfigSchema = z.object({
@@ -45,11 +88,13 @@ export const PagerdutyConfigSchema = z.object({
   description: z.string().optional(),
   severity: z.string().optional(),
   details: z.record(z.string(), z.string()).optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const WebhookConfigSchema = z.object({
   url: z.string().optional(),
   max_alerts: z.number().optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const OpsGenieConfigSchema = z.object({
@@ -61,6 +106,7 @@ export const OpsGenieConfigSchema = z.object({
   details: z.record(z.string(), z.string()).optional(),
   tags: z.string().optional(),
   priority: z.string().optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const WechatConfigSchema = z.object({
@@ -72,6 +118,7 @@ export const WechatConfigSchema = z.object({
   to_party: z.string().optional(),
   to_tag: z.string().optional(),
   message: z.string().optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const PushoverConfigSchema = z.object({
@@ -83,6 +130,7 @@ export const PushoverConfigSchema = z.object({
   priority: z.string().optional(),
   retry: z.string().optional(),
   expire: z.string().optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const VictorOpsConfigSchema = z.object({
@@ -93,6 +141,7 @@ export const VictorOpsConfigSchema = z.object({
   entity_display_name: z.string().optional(),
   state_message: z.string().optional(),
   monitoring_tool: z.string().optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const SNSConfigSchema = z.object({
@@ -102,6 +151,7 @@ export const SNSConfigSchema = z.object({
   subject: z.string().optional(),
   message: z.string().optional(),
   attributes: z.record(z.string(), z.string()).optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const TelegramConfigSchema = z.object({
@@ -111,24 +161,28 @@ export const TelegramConfigSchema = z.object({
   message: z.string().optional(),
   disable_notifications: z.boolean().optional(),
   parse_mode: z.string().optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const DiscordConfigSchema = z.object({
   webhook_url: z.string().optional(),
   title: z.string().optional(),
   message: z.string().optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const WebexConfigSchema = z.object({
   api_url: z.string().optional(),
   room_id: z.string().optional(),
   message: z.string().optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 export const MSTeamsConfigSchema = z.object({
   webhook_url: z.string().optional(),
   title: z.string().optional(),
   text: z.string().optional(),
+  http_config: HTTPConfigSchema.optional(),
 });
 
 // Receiver schema
@@ -150,6 +204,11 @@ export const ReceiverSchema = z.object({
 });
 
 // Export inferred types
+export type TLSConfig = z.infer<typeof TLSConfigSchema>;
+export type BasicAuthConfig = z.infer<typeof BasicAuthConfigSchema>;
+export type AuthorizationConfig = z.infer<typeof AuthorizationConfigSchema>;
+export type OAuth2Config = z.infer<typeof OAuth2ConfigSchema>;
+export type HTTPConfig = z.infer<typeof HTTPConfigSchema>;
 export type EmailConfig = z.infer<typeof EmailConfigSchema>;
 export type SlackConfig = z.infer<typeof SlackConfigSchema>;
 export type PagerdutyConfig = z.infer<typeof PagerdutyConfigSchema>;
