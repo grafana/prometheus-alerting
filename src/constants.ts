@@ -20,8 +20,8 @@ export enum ROUTES {
   Silences = 'silences',
   CreateSilence = 'silences/new',
   TimeIntervals = 'time-intervals',
+  CreateTimeInterval = 'time-intervals/new',
   InhibitRules = 'inhibit-rules',
 }
 
-export const ERROR_NEWER_CONFIGURATION = 'alerting.notifications.conflict' as const;
 export const ERROR_ROUTES_MATCHER_CONFLICT = 'alerting.notifications.routes.conflictingMatchers' as const;

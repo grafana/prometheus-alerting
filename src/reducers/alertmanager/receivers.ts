@@ -1,9 +1,8 @@
 import { createAction, createReducer } from '@reduxjs/toolkit';
 import { remove } from 'lodash';
 
-import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
-import type { Receiver } from '@grafana/external-alertmanager/vanilla';
-import { renameReceiverInRoute } from './utils/routes.utils';
+import { type ParsedUserConfiguration, renameReceiverInRoute } from '@grafana/external-alertmanager/mimir';
+import { type Receiver } from '@grafana/external-alertmanager/vanilla';
 
 export const addReceiverAction = createAction<Receiver>('receiver/add');
 export const updateReceiverAction = createAction<{ name: string; receiver: Receiver }>('receiver/update');

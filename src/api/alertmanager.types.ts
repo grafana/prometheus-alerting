@@ -4,6 +4,7 @@ import {
   ParsedAlertmanagerConfigSchema,
 } from '@grafana/external-alertmanager/vanilla';
 import { parse as parseYaml } from '@std/yaml';
+import { AlertmanagerImplementation } from 'types/datasources';
 import z from 'zod';
 
 // Schema for validating the transformed response (with parsed config)
@@ -34,15 +35,5 @@ export const TransformedAlertmanagerStatusApiResponseTransform =
 
 // Type to include dataSourceUID and implementation in API arguments
 export type WithDataSourceInformation<T = void> = T extends void
-  ? { dataSourceUID: string; implementation: 'prometheus' | 'mimir' | 'cortex' }
-  : T & { dataSourceUID: string; implementation: 'prometheus' | 'mimir' | 'cortex' };
-
-// Type guard to check if args is an object with dataSourceUID
-export function hasDataSourceUID(args: unknown): args is { dataSourceUID: string } {
-  return typeof args === 'object' && args !== null && 'dataSourceUID' in args;
-}
-
-// Type guard to check if args has implementation field
-export function hasImplementation(args: unknown): args is { implementation: 'prometheus' | 'mimir' | 'cortex' } {
-  return typeof args === 'object' && args !== null && 'implementation' in args;
-}
+  ? { dataSourceUID: string }
+  : T & { dataSourceUID: string };
