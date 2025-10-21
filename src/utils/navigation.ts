@@ -1,5 +1,5 @@
 import { PLUGIN_BASE_URL } from '../constants';
-import { DataSourceRuleIdentifier, stringifyIdentifier } from './rule-id';
+import { DataSourceRuleIdentifier, stringifyIdentifier } from '@grafana/external-rules/identifiers';
 
 /**
  * Navigation utilities for rule-related pages

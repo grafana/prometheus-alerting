@@ -1,4 +1,4 @@
-import { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
+import type { PromRuleDTO, RulerRuleDTO } from '../vanilla/api';
 
 /**
  * Type guard to check if a rule is an alerting rule

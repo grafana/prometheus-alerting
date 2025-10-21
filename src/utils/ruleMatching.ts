@@ -1,7 +1,6 @@
 import { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
-
-import { getRuleName } from './rules';
-import { getPromRuleFingerprint, getRulerRuleFingerprint } from './rule-id';
+import { getRuleName } from '@grafana/external-rules/utils';
+import { getPromRuleFingerprint, getRulerRuleFingerprint } from '@grafana/external-rules/hashing';
 
 /**
  * Matches a Prometheus rule with its corresponding Ruler rule definition in a rule group.

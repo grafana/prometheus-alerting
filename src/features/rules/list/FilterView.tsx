@@ -8,7 +8,7 @@ import { EmptyState, Stack } from '@grafana/ui';
 
 import { isLoading, useAsync } from '../../../hooks/useAsync';
 import { PromRuleWithOrigin } from '../../../types/rules';
-import { hashRule } from '../../../utils/rule-id';
+import { hashRule } from '@grafana/external-rules/hashing';
 
 import { RulesFilter } from '../search/rulesSearchParser';
 

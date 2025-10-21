@@ -14,6 +14,10 @@
     "zod": "^4.1.12"
   },
   "exports": {
+    ".": "./src/index.ts",
+    "./identifiers": "./src/identifiers/index.ts",
+    "./hashing": "./src/hashing/index.ts",
+    "./utils": "./src/utils/index.ts",
     "./vanilla": "./src/vanilla/index.ts"
   },
   "devDependencies": {

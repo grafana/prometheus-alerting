@@ -5,7 +5,7 @@ import { skipToken } from '@reduxjs/toolkit/query';
 import { useDiscoverFeaturesQuery } from '../../../api/featureDiscovery.endpoints';
 import { useGetRulerRuleGroupQuery } from '../../../api/ruler.endpoints';
 import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
-import { DataSourceRuleIdentifier } from '../../../utils/rule-id';
+import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { getMatchingRulerRule } from '../../../utils/ruleMatching';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';

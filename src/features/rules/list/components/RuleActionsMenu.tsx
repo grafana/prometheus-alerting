@@ -4,10 +4,11 @@ import { t } from '@grafana/i18n';
 import { Button, Dropdown, Menu } from '@grafana/ui';
 
 import { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
+import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 
 import { DataSourceRuleGroupIdentifier } from '../../../../types/rules';
 import { copyToClipboard } from '../../../../utils/clipboard';
-import { DataSourceRuleIdentifier, fromRuleAndGroup, fromRulerRuleAndGroup } from '../../../../utils/rule-id';
+import { fromRuleAndGroup, fromRulerRuleAndGroup } from '../../../../utils/rule-id';
 import { rules as rulesNav } from '../../../../utils/navigation';
 
 import MoreButton from './MoreButton';

@@ -9,7 +9,7 @@ import { useDiscoverFeaturesQuery } from '../../../api/featureDiscovery.endpoint
 import { prometheusApi } from '../../../api/prometheus.endpoints';
 import { useGetRulerRuleGroupQuery } from '../../../api/ruler.endpoints';
 import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../types/rules';
-import { hashRule } from '../../../utils/rule-id';
+import { hashRule } from '@grafana/external-rules/hashing';
 import { getMatchingRulerRule } from '../../../utils/ruleMatching';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';

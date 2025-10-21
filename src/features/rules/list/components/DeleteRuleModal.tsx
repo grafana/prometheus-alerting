@@ -6,7 +6,7 @@ import { getAppEvents } from '@grafana/runtime';
 import { Button, Modal } from '@grafana/ui';
 
 import { useDeleteRuleGroupMutation } from '../../../../api/ruler.endpoints';
-import { DataSourceRuleIdentifier } from '../../../../utils/rule-id';
+import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 
 interface DeleteRuleModalProps {
   identifier: DataSourceRuleIdentifier;
