@@ -2,8 +2,8 @@ import { alertmanagerApi } from '../../../api/alertmanager.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 
 /**
- * Hook to fetch and manage routes from the Alertmanager status endpoint.
- * The status endpoint contains the full Alertmanager config which includes the routing tree.
+ * Hook to fetch and manage routes from the Alertmanager configuration.
+ * Uses the getConfiguration endpoint which returns ParsedUserConfiguration.
  *
  * This hook can be extended in the future to support:
  * - Creating new routes
@@ -11,15 +11,14 @@ import { useAlertmanager } from '../../../hooks/useAlertmanager';
  * - Deleting routes
  */
 export function useRoutes() {
-  const { uid: dataSourceUID, settings } = useAlertmanager();
-  const implementation = settings.jsonData?.implementation ?? 'prometheus';
+  const { uid: dataSourceUID } = useAlertmanager();
 
-  return alertmanagerApi.endpoints.getStatus.useQuery(
-    { dataSourceUID, implementation },
+  return alertmanagerApi.endpoints.getConfiguration.useQuery(
+    { dataSourceUID },
     {
       selectFromResult: (result) => ({
         ...result,
-        route: result.data?.config.parsed?.route,
+        route: result.data?.alertmanager_config?.route,
       }),
     }
   );

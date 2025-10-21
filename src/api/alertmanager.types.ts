@@ -4,7 +4,6 @@ import {
   ParsedAlertmanagerConfigSchema,
 } from '@grafana/external-alertmanager/vanilla';
 import { parse as parseYaml } from '@std/yaml';
-import { AlertmanagerImplementation } from 'types/datasources';
 import z from 'zod';
 
 // Schema for validating the transformed response (with parsed config)

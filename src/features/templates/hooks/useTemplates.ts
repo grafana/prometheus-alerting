@@ -2,8 +2,8 @@ import { alertmanagerApi } from '../../../api/alertmanager.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 
 /**
- * Hook to fetch and manage templates from the Alertmanager status endpoint.
- * The status endpoint contains the full Alertmanager config which includes templates.
+ * Hook to fetch and manage templates from the Alertmanager configuration.
+ * Uses the getConfiguration endpoint which returns ParsedUserConfiguration.
  *
  * This hook can be extended in the future to support:
  * - Creating new templates
@@ -11,15 +11,14 @@ import { useAlertmanager } from '../../../hooks/useAlertmanager';
  * - Deleting templates
  */
 export function useTemplates() {
-  const { uid: dataSourceUID, settings } = useAlertmanager();
-  const implementation = settings.jsonData?.implementation ?? 'prometheus';
+  const { uid: dataSourceUID } = useAlertmanager();
 
-  return alertmanagerApi.endpoints.getStatus.useQuery(
-    { dataSourceUID, implementation },
+  return alertmanagerApi.endpoints.getConfiguration.useQuery(
+    { dataSourceUID },
     {
       selectFromResult: (result) => ({
         ...result,
-        templates: result.data?.config.parsed?.templates ?? [],
+        templates: result.data?.alertmanager_config?.templates ?? [],
       }),
     }
   );

@@ -132,6 +132,7 @@ function TimeIntervalsPage() {
         )}
         {error && (
           <Alert title={t('time-intervals.error-loading-title', 'Error loading time intervals')} severity="error">
+            {JSON.stringify(error, null, 2)}
             {error instanceof Error
               ? error.message
               : t('time-intervals.error-loading-message', 'Failed to fetch time intervals')}

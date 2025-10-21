@@ -7,7 +7,6 @@ import { routesReducer } from '../reducers/alertmanager/routes';
 import { notificationTemplatesReducer } from '../reducers/alertmanager/templates';
 import { receiversReducer } from '../reducers/alertmanager/receivers';
 import { useAlertmanager } from './useAlertmanager';
-import { alertmanagerApi } from 'api/alertmanager.endpoints';
 import { mimirAlertmanagerApi } from 'api/mimir.endpoints';
 
 const ERR_NO_ACTIVE_AM = new Error('no active Alertmanager');
@@ -40,9 +39,10 @@ const configurationReducer = reduceReducers(
 export function useProduceNewAlertmanagerConfiguration() {
   const { uid: dataSourceUID } = useAlertmanager();
 
-  const [fetchAlertmanagerConfiguration, fetchAlertmanagerState] = alertmanagerApi.endpoints.getStatus.useLazyQuery();
+  const [fetchAlertmanagerConfiguration, fetchAlertmanagerState] =
+    mimirAlertmanagerApi.endpoints.getUserConfiguration.useLazyQuery();
   const [updateAlertManagerConfiguration, updateAlertmanagerState] =
-    mimirAlertmanagerApi.endpoints.updateAlertmanagerConfig.useMutation();
+    mimirAlertmanagerApi.endpoints.updateUserConfiguration.useMutation();
 
   const newConfigurationState = mergeRequestStates(fetchAlertmanagerState, updateAlertmanagerState);
 
@@ -59,18 +59,12 @@ export function useProduceNewAlertmanagerConfiguration() {
    * └────────────────────────────┘  └───────────────┘  └───────────────────┘
    */
   const produceNewAlertmanagerConfiguration = async (action: Action) => {
-    // Fetch the current configuration
-    const statusResult = await fetchAlertmanagerConfiguration({ dataSourceUID }).unwrap();
+    // Fetch the current configuration (already in ParsedUserConfiguration format)
+    const currentConfig = await fetchAlertmanagerConfiguration({ dataSourceUID }).unwrap();
 
-    if (!statusResult) {
+    if (!currentConfig) {
       throw new Error('Failed to fetch current Alertmanager configuration');
     }
-
-    // Transform the status response into ParsedUserConfiguration format
-    const currentConfig: ParsedUserConfiguration = {
-      alertmanager_config: statusResult.config.parsed,
-      template_files: {}, // Templates are in config.parsed.templates as string[], not as files
-    };
 
     // Apply the reducer to produce the new configuration
     const newConfig = configurationReducer(currentConfig, action);
