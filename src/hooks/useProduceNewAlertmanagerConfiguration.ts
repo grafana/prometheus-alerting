@@ -11,6 +11,8 @@ import { mimirAlertmanagerApi } from 'api/mimir.endpoints';
 
 const ERR_NO_ACTIVE_AM = new Error('no active Alertmanager');
 
+const { getUserConfiguration, updateUserConfiguration } = mimirAlertmanagerApi.endpoints;
+
 export const initialAlertmanagerConfiguration: ParsedUserConfiguration = {
   alertmanager_config: {
     receivers: [],
@@ -39,10 +41,8 @@ const configurationReducer = reduceReducers(
 export function useProduceNewAlertmanagerConfiguration() {
   const { uid: dataSourceUID } = useAlertmanager();
 
-  const [fetchAlertmanagerConfiguration, fetchAlertmanagerState] =
-    mimirAlertmanagerApi.endpoints.getUserConfiguration.useLazyQuery();
-  const [updateAlertManagerConfiguration, updateAlertmanagerState] =
-    mimirAlertmanagerApi.endpoints.updateUserConfiguration.useMutation();
+  const [fetchAlertmanagerConfiguration, fetchAlertmanagerState] = getUserConfiguration.useLazyQuery();
+  const [updateAlertManagerConfiguration, updateAlertmanagerState] = updateUserConfiguration.useMutation();
 
   const newConfigurationState = mergeRequestStates(fetchAlertmanagerState, updateAlertmanagerState);
 
