@@ -80,7 +80,7 @@ function TimeIntervalForm() {
       <div style={{ maxWidth: '600px' }}>
         <h2>{t('time-intervals.form.page-title', 'Create Time Interval')}</h2>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Stack direction="column" gap={3}>
+          <Stack direction="column" gap={2}>
             {mutationError ? (
               <Alert title={t('time-intervals.form.error-title', 'Error creating time interval')} severity="error">
                 {mutationError instanceof Error
@@ -98,6 +98,7 @@ function TimeIntervalForm() {
             )}
 
             <Field
+              noMargin
               label={t('time-intervals.form.name-label', 'Name')}
               description={t('time-intervals.form.name-description', 'A unique name for this time interval')}
               invalid={!!errors.name}
@@ -111,6 +112,7 @@ function TimeIntervalForm() {
             </Field>
 
             <Field
+              noMargin
               label={t('time-intervals.form.start-time-label', 'Start Time')}
               description={t('time-intervals.form.start-time-description', 'Start time in HH:MM format')}
               invalid={!!errors.startTime}
@@ -124,6 +126,7 @@ function TimeIntervalForm() {
             </Field>
 
             <Field
+              noMargin
               label={t('time-intervals.form.end-time-label', 'End Time')}
               description={t('time-intervals.form.end-time-description', 'End time in HH:MM format')}
               invalid={!!errors.endTime}
@@ -134,6 +137,7 @@ function TimeIntervalForm() {
             </Field>
 
             <Field
+              noMargin
               label={t('time-intervals.form.weekdays-label', 'Weekdays')}
               description={t(
                 'time-intervals.form.weekdays-description',
@@ -149,6 +153,7 @@ function TimeIntervalForm() {
             </Field>
 
             <Field
+              noMargin
               label={t('time-intervals.form.days-of-month-label', 'Days of Month')}
               description={t(
                 'time-intervals.form.days-of-month-description',
@@ -164,6 +169,7 @@ function TimeIntervalForm() {
             </Field>
 
             <Field
+              noMargin
               label={t('time-intervals.form.months-label', 'Months')}
               description={t(
                 'time-intervals.form.months-description',
@@ -179,6 +185,7 @@ function TimeIntervalForm() {
             </Field>
 
             <Field
+              noMargin
               label={t('time-intervals.form.years-label', 'Years')}
               description={t('time-intervals.form.years-description', 'Comma-separated list (e.g., 2024, 2025)')}
               invalid={!!errors.years}
@@ -188,6 +195,7 @@ function TimeIntervalForm() {
             </Field>
 
             <Field
+              noMargin
               label={t('time-intervals.form.location-label', 'Location/Timezone')}
               description={t('time-intervals.form.location-description', 'IANA timezone (e.g., UTC, America/New_York)')}
               invalid={!!errors.location}
