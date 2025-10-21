@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
-import { DataSourceInstanceSettings } from '@grafana/data';
 import { useAppSelector } from '../store/hooks';
 import { selectDataSourceUID } from '../store/datasourceSlice';
 import { useAvailableAlertmanagers } from './useAvailableAlertmanager';
-import { AlertManagerDataSourceJsonData } from '../types/datasources';
+import { AlertmanagerDataSourceSettings } from 'types/datasources';
 
-export interface AlertmanagerDataSource {
+export interface AlertmanagerHookResult {
   uid: string;
-  settings: DataSourceInstanceSettings<AlertManagerDataSourceJsonData>;
+  settings: AlertmanagerDataSourceSettings;
+  hasConfigurationAPI: boolean;
 }
 
 /**
@@ -15,22 +15,23 @@ export interface AlertmanagerDataSource {
  *
  * @returns The currently selected Alertmanager data source with UID and settings, or undefined if not found
  */
-export function useAlertmanager(): AlertmanagerDataSource {
+export function useAlertmanager(): AlertmanagerHookResult {
   const selectedUID = useAppSelector(selectDataSourceUID);
   const availableAlertmanagers = useAvailableAlertmanagers();
 
-  const alertmanager = useMemo(() => {
+  const settings = useMemo(() => {
     const settings = availableAlertmanagers.find((am) => am.uid === selectedUID);
 
     if (!settings) {
       throw new Error(`no such Alertmanager: ${selectedUID}`);
     }
 
-    return {
-      uid: selectedUID,
-      settings,
-    };
+    return settings;
   }, [selectedUID, availableAlertmanagers]);
 
-  return alertmanager;
+  return {
+    uid: selectedUID,
+    settings,
+    hasConfigurationAPI: settings.jsonData.implementation !== 'prometheus',
+  };
 }

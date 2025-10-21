@@ -1,6 +1,5 @@
-import { DataSourceInstanceSettings } from '@grafana/data';
 import { ComboboxOption } from '@grafana/ui';
-import { AlertManagerDataSourceJsonData } from 'types/datasources';
+import { AlertmanagerDataSourceSettings } from 'types/datasources';
 
 /**
  * Converts an array of DataSourceInstanceSettings to ComboboxOption array
@@ -10,7 +9,7 @@ import { AlertManagerDataSourceJsonData } from 'types/datasources';
  * @returns Array of ComboboxOptions with value set to UID, label set to name, and description set to implementation
  */
 export function convertDataSourcesToComboboxOptions(
-  dataSources: Array<DataSourceInstanceSettings<AlertManagerDataSourceJsonData>>
+  dataSources: AlertmanagerDataSourceSettings[]
 ): Array<ComboboxOption<string>> {
   return dataSources.map((ds) => ({
     value: ds.uid,
