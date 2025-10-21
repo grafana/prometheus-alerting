@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { parse, stringify } from '@std/yaml';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 
 import { ParsedAlertmanagerConfigSchema } from '../../../vanilla';
 
@@ -21,7 +21,7 @@ export type ParsedUserConfiguration = z.infer<typeof ParsedUserConfigurationSche
  */
 const UserConfigurationSchemaCodec = z.codec(UserConfigurationSchema, ParsedUserConfigurationSchema, {
   decode: (userConfiguration) => {
-    const decodedConfiguration = parse(userConfiguration.alertmanager_config);
+    const decodedConfiguration = parseYaml(userConfiguration.alertmanager_config);
 
     return {
       ...userConfiguration,
@@ -30,7 +30,7 @@ const UserConfigurationSchemaCodec = z.codec(UserConfigurationSchema, ParsedUser
   },
   encode: (userConfiguration) => ({
     ...userConfiguration,
-    alertmanager_config: stringify(userConfiguration.alertmanager_config),
+    alertmanager_config: stringifyYaml(userConfiguration.alertmanager_config),
   }),
 });
 
@@ -41,14 +41,14 @@ export const YamlToParsedUserConfiguration = z.codec(z.string(), ParsedUserConfi
   decode: (string) => {
     // 1. convert the YAML API response to a object with { template_files: {}, alertmanager_config: "" }
     // ⚠️ the alertmanager_config is still a YAML encoded string! We have to parse that too.
-    const parsedJSON = parse(string);
+    const parsedJSON = parseYaml(string);
     const userConfiguration = UserConfigurationSchema.parse(parsedJSON);
 
     return UserConfigurationSchemaCodec.decode(userConfiguration);
   },
   encode: (userConfiguration) => {
     const encodedAlertmanagerConfig = UserConfigurationSchemaCodec.encode(userConfiguration);
-    return stringify(encodedAlertmanagerConfig);
+    return stringifyYaml(encodedAlertmanagerConfig);
   },
 });
 
