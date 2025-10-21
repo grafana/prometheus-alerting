@@ -1,9 +1,11 @@
 import { alertmanagerApi } from '../../../api/alertmanager.endpoints';
+import { mimirAlertmanagerApi } from '../../../api/mimir.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 
 /**
  * Hook to fetch and manage inhibit rules from the Alertmanager configuration.
  * Uses the getConfiguration endpoint which returns ParsedUserConfiguration.
+ * Dynamically selects the correct API endpoint based on the data source implementation.
  *
  * Inhibit rules allow you to mute alerts based on the presence of other alerts.
  * For example, you can inhibit alerts about a service when an alert about the host is firing.
@@ -14,15 +16,29 @@ import { useAlertmanager } from '../../../hooks/useAlertmanager';
  * - Deleting inhibit rules
  */
 export function useInhibitRules() {
-  const { uid: dataSourceUID } = useAlertmanager();
+  const { uid: dataSourceUID, settings } = useAlertmanager();
+  const implementation = settings.jsonData?.implementation ?? 'prometheus';
 
-  return alertmanagerApi.endpoints.getConfiguration.useQuery(
+  // Select the appropriate API endpoint based on implementation
+  // Mimir uses getUserConfiguration, vanilla Alertmanager uses getConfiguration
+  const mimirQueryResult = mimirAlertmanagerApi.endpoints.getUserConfiguration.useQuery(
     { dataSourceUID },
     {
-      selectFromResult: (result) => ({
-        ...result,
-        inhibitRules: result.data?.alertmanager_config?.inhibit_rules ?? [],
-      }),
+      skip: implementation !== 'mimir',
     }
   );
+
+  const vanillaQueryResult = alertmanagerApi.endpoints.getConfiguration.useQuery(
+    { dataSourceUID },
+    {
+      skip: implementation === 'mimir',
+    }
+  );
+
+  const queryResult = implementation === 'mimir' ? mimirQueryResult : vanillaQueryResult;
+
+  return {
+    ...queryResult,
+    inhibitRules: queryResult.data?.alertmanager_config?.inhibit_rules ?? [],
+  };
 }
