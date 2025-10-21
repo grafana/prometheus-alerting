@@ -1,76 +1,111 @@
-export type PromRuleType = 'alerting' | 'recording';
+import { z } from 'zod';
 
-export type PromAlertingRuleState = 'firing' | 'inactive' | 'pending' | 'recovering' | 'unknown';
-export type PromAlertState = 'firing' | 'pending';
+// Basic types
+export const LabelsSchema = z.record(z.string(), z.string());
+export type Labels = z.infer<typeof LabelsSchema>;
 
-export type Labels = Record<string, string>;
-export type Annotations = Record<string, string>;
+export const AnnotationsSchema = z.record(z.string(), z.string());
+export type Annotations = z.infer<typeof AnnotationsSchema>;
 
-interface PromRuleDTOBase {
-  health: string;
-  name: string;
-  query: string; // expr
-  evaluationTime?: number;
-  lastEvaluation?: string;
-  lastError?: string;
-}
+export const PromRuleTypeSchema = z.enum(['alerting', 'recording']);
+export type PromRuleType = z.infer<typeof PromRuleTypeSchema>;
 
-export interface PromAlertingRuleDTO extends PromRuleDTOBase {
-  alerts?: Array<{
-    labels: Labels;
-    annotations: Annotations;
-    state: PromAlertState;
-    activeAt: string;
-    value: string;
-  }>;
-  labels?: Labels;
-  annotations?: Annotations;
-  duration?: number; // for
-  state: PromAlertingRuleState;
-  type: 'alerting';
-}
+export const PromAlertingRuleStateSchema = z.enum(['firing', 'inactive', 'pending', 'recovering', 'unknown']);
+export type PromAlertingRuleState = z.infer<typeof PromAlertingRuleStateSchema>;
 
-export interface PromRecordingRuleDTO extends PromRuleDTOBase {
-  health: string;
-  name: string;
-  query: string; // expr
-  type: 'recording';
-  labels?: Labels;
-}
+export const PromAlertStateSchema = z.enum(['firing', 'pending']);
+export type PromAlertState = z.infer<typeof PromAlertStateSchema>;
 
-export type PromRuleDTO = PromAlertingRuleDTO | PromRecordingRuleDTO;
+// Prometheus Rules (from /api/v1/rules)
+const PromRuleDTOBaseSchema = z.object({
+  health: z.string(),
+  name: z.string(),
+  query: z.string(), // expr
+  evaluationTime: z.number().optional(),
+  lastEvaluation: z.string().optional(),
+  lastError: z.string().optional(),
+});
 
-export interface PromRuleGroupDTO {
-  name: string;
-  file: string;
-  rules: PromRuleDTO[];
-  interval: number;
+export const PromAlertSchema = z.object({
+  labels: LabelsSchema,
+  annotations: AnnotationsSchema,
+  state: PromAlertStateSchema,
+  activeAt: z.string(),
+  value: z.string(),
+});
+export type PromAlert = z.infer<typeof PromAlertSchema>;
 
-  evaluationTime?: number; // these 2 are not in older prometheus payloads
-  lastEvaluation?: string;
-}
+export const PromAlertingRuleDTOSchema = PromRuleDTOBaseSchema.extend({
+  alerts: z.array(PromAlertSchema).optional(),
+  labels: LabelsSchema.optional(),
+  annotations: AnnotationsSchema.optional(),
+  duration: z.number().optional(), // for
+  state: PromAlertingRuleStateSchema,
+  type: z.literal('alerting'),
+});
+export type PromAlertingRuleDTO = z.infer<typeof PromAlertingRuleDTOSchema>;
+
+export const PromRecordingRuleDTOSchema = PromRuleDTOBaseSchema.extend({
+  type: z.literal('recording'),
+  labels: LabelsSchema.optional(),
+});
+export type PromRecordingRuleDTO = z.infer<typeof PromRecordingRuleDTOSchema>;
+
+export const PromRuleDTOSchema = z.discriminatedUnion('type', [PromAlertingRuleDTOSchema, PromRecordingRuleDTOSchema]);
+export type PromRuleDTO = z.infer<typeof PromRuleDTOSchema>;
+
+export const PromRuleGroupDTOSchema = z.object({
+  name: z.string(),
+  file: z.string(),
+  rules: z.array(PromRuleDTOSchema),
+  interval: z.number(),
+  evaluationTime: z.number().optional(), // these 2 are not in older prometheus payloads
+  lastEvaluation: z.string().optional(),
+});
+export type PromRuleGroupDTO = z.infer<typeof PromRuleGroupDTOSchema>;
 
 // Ruler rule DTOs (from Ruler API /api/v1/rules/*)
-interface RulerRuleBaseDTO {
-  expr: string;
-  labels?: Labels;
-}
+const RulerRuleBaseDTOSchema = z.object({
+  expr: z.string(),
+  labels: LabelsSchema.optional(),
+});
 
-export interface RulerRecordingRuleDTO extends RulerRuleBaseDTO {
-  record: string;
-}
+export const RulerRecordingRuleDTOSchema = RulerRuleBaseDTOSchema.extend({
+  record: z.string(),
+});
+export type RulerRecordingRuleDTO = z.infer<typeof RulerRecordingRuleDTOSchema>;
 
-export interface RulerAlertingRuleDTO extends RulerRuleBaseDTO {
-  alert: string;
-  for?: string;
-  annotations?: Annotations;
-  keep_firing_for?: string;
-}
+export const RulerAlertingRuleDTOSchema = RulerRuleBaseDTOSchema.extend({
+  alert: z.string(),
+  for: z.string().optional(),
+  annotations: AnnotationsSchema.optional(),
+  keep_firing_for: z.string().optional(),
+});
+export type RulerAlertingRuleDTO = z.infer<typeof RulerAlertingRuleDTOSchema>;
 
-export type RulerRuleDTO = RulerAlertingRuleDTO | RulerRecordingRuleDTO;
+// Ruler rules don't have a 'type' field, so we discriminate based on 'alert' vs 'record'
+// We use a union instead of discriminatedUnion since the discriminator fields are different
+export const RulerRuleDTOSchema = z.union([RulerAlertingRuleDTOSchema, RulerRecordingRuleDTOSchema]);
+export type RulerRuleDTO = z.infer<typeof RulerRuleDTOSchema>;
 
-export interface RulerRuleGroupDTO {
-  name: string;
-  interval?: string;
-  rules: RulerRuleDTO[];
-}
+export const RulerRuleGroupDTOSchema = z.object({
+  name: z.string(),
+  interval: z.string().optional(),
+  rules: z.array(RulerRuleDTOSchema),
+});
+export type RulerRuleGroupDTO = z.infer<typeof RulerRuleGroupDTOSchema>;
+
+// API response schemas
+export const GetPromRulesApiResponseSchema = z.object({
+  status: z.string(),
+  data: z.object({
+    groups: z.array(PromRuleGroupDTOSchema),
+    groupNextToken: z.string().optional(),
+  }),
+  errorType: z.string().optional(),
+  error: z.string().optional(),
+});
+export type GetPromRulesApiResponse = z.infer<typeof GetPromRulesApiResponseSchema>;
+
+export const GetRulerRuleGroupApiResponseSchema = RulerRuleGroupDTOSchema.nullable();
+export type GetRulerRuleGroupApiResponse = z.infer<typeof GetRulerRuleGroupApiResponseSchema>;

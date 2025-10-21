@@ -10,7 +10,8 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@reduxjs/toolkit": "^2.9.0"
+    "@reduxjs/toolkit": "^2.9.0",
+    "zod": "^4.1.12"
   },
   "exports": {
     "./vanilla": "./src/vanilla/index.ts"

@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 
-import { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
+import { PromRuleGroupDTO, GetPromRulesApiResponse } from '@grafana/external-rules/vanilla';
 
-import { PromRulesResponse, prometheusApi } from '../../../../api/prometheus.endpoints';
+import { prometheusApi } from '../../../../api/prometheus.endpoints';
 import { DataSourceRulesSourceIdentifier } from '../../../../types/datasources';
 
 const { useLazyGetGroupsQuery } = prometheusApi;
@@ -57,7 +57,7 @@ export function toIndividualRuleGroups<TGroup extends PromRuleGroupDTO>(
 // For unpaginated data sources we fetch everything in one go
 // For paginated we fetch the next page when needed
 async function* genericGroupsGenerator<TGroup>(
-  fetchGroups: (options: FetchGroupsOptions) => Promise<PromRulesResponse>,
+  fetchGroups: (options: FetchGroupsOptions) => Promise<GetPromRulesApiResponse>,
   groupLimit: number
 ) {
   let response = await fetchGroups({ groupLimit });

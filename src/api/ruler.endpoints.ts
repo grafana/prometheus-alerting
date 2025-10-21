@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-import { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
+import { RulerRuleGroupDTO, GetRulerRuleGroupApiResponseSchema } from '@grafana/external-rules/vanilla';
 
 interface DeleteRuleOptions {
   dataSourceUid: string;
@@ -38,6 +38,7 @@ export const rulerApi = createApi({
       providesTags: (_result, _error, { dataSourceUid, namespace, groupName }) => [
         { type: 'RulerRules' as const, id: `${dataSourceUid}/${namespace}/${groupName}` },
       ],
+      responseSchema: GetRulerRuleGroupApiResponseSchema,
     }),
     deleteRuleGroup: build.mutation<void, DeleteRuleOptions>({
       query: ({ dataSourceUid, namespace, groupName }) => ({

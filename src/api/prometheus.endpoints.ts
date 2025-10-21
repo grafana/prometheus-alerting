@@ -1,18 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-import { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
+import {
+  PromRuleGroupDTO,
+  GetPromRulesApiResponse,
+  GetPromRulesApiResponseSchema,
+} from '@grafana/external-rules/vanilla';
 
 import { produce } from 'immer';
-
-export interface PromRulesResponse {
-  status: string;
-  data: {
-    groups: PromRuleGroupDTO[];
-    groupNextToken?: string;
-  };
-  errorType?: string;
-  error?: string;
-}
 
 interface PromRulesOptions {
   ruleSource: { uid: string };
@@ -29,7 +23,7 @@ export const prometheusApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: '/' }),
   tagTypes: ['Rules'],
   endpoints: (build) => ({
-    getGroups: build.query<PromRulesResponse, PromRulesOptions>({
+    getGroups: build.query<GetPromRulesApiResponse, PromRulesOptions>({
       query: ({ ruleSource, namespace, groupName, ruleName, groupLimit, excludeAlerts, groupNextToken }) => {
         return {
           url: `api/prometheus/${ruleSource.uid}/api/v1/rules`,
@@ -46,10 +40,11 @@ export const prometheusApi = createApi({
           },
         };
       },
-      transformResponse: (response: PromRulesResponse) => {
+      transformResponse: (response: GetPromRulesApiResponse) => {
         return { ...response, data: { ...response.data, groups: response.data.groups.map(normalizeRuleGroup) } };
       },
       providesTags: ['Rules'],
+      responseSchema: GetPromRulesApiResponseSchema,
     }),
   }),
 });
