@@ -1,17 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../../components/testIds';
-import { Alert, InteractiveTable, EmptyState, TextLink } from '@grafana/ui';
+import { Alert, LinkButton, InteractiveTable, EmptyState, TextLink, Button } from '@grafana/ui';
 import { useTimeIntervals } from '../hooks/useTimeIntervals';
 import { t } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE, ROUTES } from '../../../constants';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { prefixRoute } from '../../../utils/utils.routing';
+import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
+import { deleteMuteTimingAction } from '../../../reducers/alertmanager/timeIntervals';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error } = useTimeIntervals();
+
+  const [produceNewConfig, { error: deleteError }] = useProduceNewAlertmanagerConfiguration();
+  const [deletingName, setDeletingName] = useState<string | null>(null);
+
+  const handleDelete = async (name: string) => {
+    if (
+      !window.confirm(t('time-intervals.delete-confirm', `Are you sure you want to delete time interval "${name}"?`))
+    ) {
+      return;
+    }
+
+    setDeletingName(name);
+    try {
+      await produceNewConfig(deleteMuteTimingAction({ name }));
+      // The list will automatically refresh due to cache invalidation
+    } catch (err) {
+      console.error('Failed to delete time interval:', err);
+    } finally {
+      setDeletingName(null);
+    }
+  };
 
   const formatTimeRange = (times?: Array<{ start_time: string; end_time: string }>) => {
     if (!times || times.length === 0) {
@@ -76,10 +99,30 @@ function TimeIntervalsPage() {
         <div style={{ whiteSpace: 'pre-line' }}>{formatTimeIntervalDetails(original)}</div>
       ),
     },
+    {
+      id: 'actions',
+      header: t('time-intervals.column.actions', 'Actions'),
+      cell: ({ row: { original } }: { row: { original: TimeInterval } }) => (
+        <Button
+          variant="destructive"
+          size="sm"
+          icon="trash-alt"
+          disabled={deletingName === original.name}
+          onClick={() => handleDelete(original.name)}
+        >
+          {deletingName === original.name
+            ? t('time-intervals.deleting', 'Deleting...')
+            : t('time-intervals.delete-button', 'Delete')}
+        </Button>
+      ),
+    },
   ];
 
   return (
     <AlertmanagerPage>
+      <LinkButton href={prefixRoute(ROUTES.CreateTimeInterval)}>
+        {t('time-intervals.create-button', 'Create time interval')}
+      </LinkButton>
       <div data-testid={testIds.timeIntervals.container}>
         {isLoading && (
           <div>
@@ -94,6 +137,13 @@ function TimeIntervalsPage() {
               : t('time-intervals.error-loading-message', 'Failed to fetch time intervals')}
           </Alert>
         )}
+        {deleteError ? (
+          <Alert title={t('time-intervals.error-deleting-title', 'Error deleting time interval')} severity="error">
+            {deleteError instanceof Error
+              ? deleteError.message
+              : t('time-intervals.error-deleting-message', 'Failed to delete time interval')}
+          </Alert>
+        ) : null}
         {!isLoading && timeIntervals.length > 0 && !error && (
           <InteractiveTable
             columns={columns}

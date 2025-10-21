@@ -20,10 +20,14 @@ export type ParsedUserConfiguration = z.infer<typeof ParsedUserConfigurationSche
  * We have to decode YAML twice because the Mimir API responds with a YAML payload and the entire alertmanager_config is _also_ encoded as YAML inside the entire YAML response.
  */
 const UserConfigurationSchemaCodec = z.codec(UserConfigurationSchema, ParsedUserConfigurationSchema, {
-  decode: (userConfiguration) => ({
-    ...userConfiguration,
-    alertmanager_config: ParsedAlertmanagerConfigSchema.parse(userConfiguration.alertmanager_config),
-  }),
+  decode: (userConfiguration) => {
+    const decodedConfiguration = parse(userConfiguration.alertmanager_config);
+
+    return {
+      ...userConfiguration,
+      alertmanager_config: ParsedAlertmanagerConfigSchema.parse(decodedConfiguration),
+    };
+  },
   encode: (userConfiguration) => ({
     ...userConfiguration,
     alertmanager_config: stringify(userConfiguration.alertmanager_config),
@@ -35,8 +39,15 @@ const UserConfigurationSchemaCodec = z.codec(UserConfigurationSchema, ParsedUser
  */
 export const YamlToParsedUserConfiguration = z.codec(z.string(), ParsedUserConfigurationSchema, {
   decode: (string) => {
+    // 1. convert the YAML API response to a object with { template_files: {}, alertmanager_config: "" }
+    // ⚠️ the alertmanager_config is still a YAML encoded string! We have to parse that too.
     const parsedJSON = parse(string);
-    return UserConfigurationSchemaCodec.decode(UserConfigurationSchema.parse(parsedJSON));
+    const userConfiguration = UserConfigurationSchema.parse(parsedJSON);
+
+    return UserConfigurationSchemaCodec.decode(userConfiguration);
   },
-  encode: (json) => stringify(json),
+  encode: (userConfiguration) => {
+    const encodedAlertmanagerConfig = UserConfigurationSchemaCodec.encode(userConfiguration);
+    return stringify(encodedAlertmanagerConfig);
+  },
 });

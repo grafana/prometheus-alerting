@@ -14,11 +14,10 @@ import { useAlertmanager } from '../../../hooks/useAlertmanager';
  * - Deleting time intervals
  */
 export function useTimeIntervals() {
-  const { uid: dataSourceUID, settings } = useAlertmanager();
-  const implementation = settings.jsonData?.implementation ?? 'prometheus';
+  const { uid: dataSourceUID } = useAlertmanager();
 
   return alertmanagerApi.endpoints.getStatus.useQuery(
-    { dataSourceUID, implementation },
+    { dataSourceUID },
     {
       selectFromResult: (result) => ({
         ...result,
@@ -27,3 +26,5 @@ export function useTimeIntervals() {
     }
   );
 }
+
+export function useAddTimeInterval() {}

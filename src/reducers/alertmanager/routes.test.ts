@@ -1,9 +1,8 @@
 import { produce } from 'immer';
 
 import { addRouteAction, deleteRouteAction, routesReducer, updateRouteAction } from './routes';
-import { addUniqueIdentifierToRoute, RouteWithID } from './utils/routes.utils';
 import { Route } from '@grafana/external-alertmanager/vanilla';
-import { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
+import { addUniqueIdentifierToRoute, ParsedUserConfiguration, RouteWithID } from '@grafana/external-alertmanager/mimir';
 
 describe('routes', () => {
   const defaultRoute: Route = {

@@ -8,11 +8,9 @@ import { notificationTemplatesReducer } from '../reducers/alertmanager/templates
 import { receiversReducer } from '../reducers/alertmanager/receivers';
 import { useAlertmanager } from './useAlertmanager';
 import { alertmanagerApi } from 'api/alertmanager.endpoints';
+import { mimirAlertmanagerApi } from 'api/mimir.endpoints';
 
 const ERR_NO_ACTIVE_AM = new Error('no active Alertmanager');
-
-// TODO: These endpoints need to be implemented in alertmanagerApi
-// const { useLazyGetAlertmanagerConfigurationQuery, useUpdateAlertmanagerConfigurationMutation } = alertmanagerApi;
 
 export const initialAlertmanagerConfiguration: ParsedUserConfiguration = {
   alertmanager_config: {
@@ -37,17 +35,16 @@ const configurationReducer = reduceReducers(
  * This hook will make sure we are always applying actions that mutate the Alertmanager configuration
  * on top of the latest Alertmanager configuration object.
  *
- * NOTE: This hook is currently incomplete and requires the following endpoints to be added to alertmanagerApi:
- * - useLazyGetAlertmanagerConfigurationQuery
- * - useUpdateAlertmanagerConfigurationMutation
+ * Currently supports Mimir alertmanager implementation.
  */
 export function useProduceNewAlertmanagerConfiguration() {
-  const { uid: dataSourceUID, settings } = useAlertmanager();
-  const implementation = settings.jsonData?.implementation ?? 'prometheus';
+  const { uid: dataSourceUID } = useAlertmanager();
 
-  const [fetchAlertmanagerConfig, fetchAlertmanagerState] = alertmanagerApi.endpoints.getStatus.useLazyQuery();
-  // const [updateAlertManager, updateAlertmanagerState] = useUpdateAlertmanagerConfigurationMutation();
-  // const newConfigurationState = mergeRequestStates(fetchAlertmanagerState, updateAlertmanagerState);
+  const [fetchAlertmanagerConfiguration, fetchAlertmanagerState] = alertmanagerApi.endpoints.getStatus.useLazyQuery();
+  const [updateAlertManagerConfiguration, updateAlertmanagerState] =
+    mimirAlertmanagerApi.endpoints.updateAlertmanagerConfig.useMutation();
+
+  const newConfigurationState = mergeRequestStates(fetchAlertmanagerState, updateAlertmanagerState);
 
   if (!dataSourceUID) {
     throw ERR_NO_ACTIVE_AM;
@@ -62,26 +59,27 @@ export function useProduceNewAlertmanagerConfiguration() {
    * └────────────────────────────┘  └───────────────┘  └───────────────────┘
    */
   const produceNewAlertmanagerConfiguration = async (action: Action) => {
-    // TODO: Implement once API endpoints are available
-    throw new Error('useProduceNewAlertmanagerConfiguration is not yet implemented - API endpoints need to be added');
+    // Fetch the current configuration
+    const statusResult = await fetchAlertmanagerConfiguration({ dataSourceUID }).unwrap();
 
-    // Future implementation:
-    // const currentAlertmanagerConfiguration = await fetchAlertmanagerConfig({ dataSourceUID, implementation }).unwrap();
-    // const newConfig = configurationReducer(currentAlertmanagerConfiguration, action);
-    // return updateAlertManager({
-    //   dataSourceUID,
-    //   implementation,
-    //   config: newConfig,
-    // }).unwrap();
-  };
+    if (!statusResult) {
+      throw new Error('Failed to fetch current Alertmanager configuration');
+    }
 
-  // TODO: Return actual state once endpoints are implemented
-  const newConfigurationState = {
-    error: undefined,
-    isUninitialized: true,
-    isSuccess: false,
-    isError: false,
-    isLoading: false,
+    // Transform the status response into ParsedUserConfiguration format
+    const currentConfig: ParsedUserConfiguration = {
+      alertmanager_config: statusResult.config.parsed,
+      template_files: {}, // Templates are in config.parsed.templates as string[], not as files
+    };
+
+    // Apply the reducer to produce the new configuration
+    const newConfig = configurationReducer(currentConfig, action);
+
+    // Update the Alertmanager with the new configuration
+    return updateAlertManagerConfiguration({
+      dataSourceUID,
+      configuration: newConfig,
+    }).unwrap();
   };
 
   return [produceNewAlertmanagerConfiguration, newConfigurationState] as const;

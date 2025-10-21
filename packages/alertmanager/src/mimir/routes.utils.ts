@@ -1,8 +1,8 @@
 import type { Route } from '@grafana/external-alertmanager/vanilla';
 import { produce } from 'immer';
 import { omit } from 'lodash';
-import hashObject from 'hash-object';
-import { ERROR_NEWER_CONFIGURATION } from '../../../constants';
+import hashObject from 'object-hash';
+import { ERROR_NEWER_CONFIGURATION } from './constants';
 import { arrayUtils } from '@grafana/data';
 
 export type RouteWithID = Route & { id: string };
@@ -81,7 +81,7 @@ export function cleanRouteIDs(route: RouteWithID): Route {
  * @returns A new route tree with the route updated
  * @throws Error if the route with the specified ID is not found
  */
-export const mergePartialAmRouteWithRouteTree = (
+export const mergePartialRouteWithRouteTree = (
   partialNewRoute: Partial<RouteWithID>,
   routeTree: RouteWithID
 ): RouteWithID => {
