@@ -11,9 +11,11 @@ import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { deleteMuteTimingAction } from '../../../reducers/alertmanager/timeIntervals';
+import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error } = useTimeIntervals();
+  const hasConfigurationAPI = useHasConfigurationAPI();
 
   const [produceNewConfig, { error: deleteError }] = useProduceNewAlertmanagerConfiguration();
   const [deletingName, setDeletingName] = useState<string | null>(null);
@@ -82,7 +84,7 @@ function TimeIntervalsPage() {
       .join('\n');
   };
 
-  const columns = [
+  const baseColumns = [
     {
       id: 'name',
       header: t('time-intervals.column.name', 'Name'),
@@ -99,30 +101,35 @@ function TimeIntervalsPage() {
         <div style={{ whiteSpace: 'pre-line' }}>{formatTimeIntervalDetails(original)}</div>
       ),
     },
-    {
-      id: 'actions',
-      header: t('time-intervals.column.actions', 'Actions'),
-      cell: ({ row: { original } }: { row: { original: TimeInterval } }) => (
-        <Button
-          variant="destructive"
-          size="sm"
-          icon="trash-alt"
-          disabled={deletingName === original.name}
-          onClick={() => handleDelete(original.name)}
-        >
-          {deletingName === original.name
-            ? t('time-intervals.deleting', 'Deleting...')
-            : t('time-intervals.delete-button', 'Delete')}
-        </Button>
-      ),
-    },
   ];
+
+  const actionsColumn = {
+    id: 'actions',
+    header: t('time-intervals.column.actions', 'Actions'),
+    cell: ({ row: { original } }: { row: { original: TimeInterval } }) => (
+      <Button
+        variant="destructive"
+        size="sm"
+        icon="trash-alt"
+        disabled={deletingName === original.name}
+        onClick={() => handleDelete(original.name)}
+      >
+        {deletingName === original.name
+          ? t('time-intervals.deleting', 'Deleting...')
+          : t('time-intervals.delete-button', 'Delete')}
+      </Button>
+    ),
+  };
+
+  const columns = hasConfigurationAPI ? [...baseColumns, actionsColumn] : baseColumns;
 
   return (
     <AlertmanagerPage>
-      <LinkButton href={prefixRoute(ROUTES.CreateTimeInterval)}>
-        {t('time-intervals.create-button', 'Create time interval')}
-      </LinkButton>
+      {hasConfigurationAPI && (
+        <LinkButton href={prefixRoute(ROUTES.CreateTimeInterval)}>
+          {t('time-intervals.create-button', 'Create time interval')}
+        </LinkButton>
+      )}
       <div data-testid={testIds.timeIntervals.container}>
         {isLoading && (
           <div>

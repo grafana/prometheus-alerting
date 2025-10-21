@@ -7,7 +7,6 @@ import { AlertmanagerDataSourceSettings } from 'types/datasources';
 export interface AlertmanagerHookResult {
   uid: string;
   settings: AlertmanagerDataSourceSettings;
-  hasConfigurationAPI: boolean;
 }
 
 /**
@@ -32,6 +31,5 @@ export function useAlertmanager(): AlertmanagerHookResult {
   return {
     uid: selectedUID,
     settings,
-    hasConfigurationAPI: settings.jsonData.implementation !== 'prometheus',
   };
 }
