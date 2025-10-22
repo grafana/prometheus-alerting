@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { parse, stringify } from '@std/yaml';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 
 import { ParsedAlertmanagerConfigSchema } from '../../../vanilla';
 
@@ -21,7 +21,7 @@ export type ParsedUserConfiguration = z.infer<typeof ParsedUserConfigurationSche
  */
 const UserConfigurationSchemaCodec = z.codec(UserConfigurationSchema, ParsedUserConfigurationSchema, {
   decode: (userConfiguration) => {
-    const decodedConfiguration = parse(userConfiguration.alertmanager_config);
+    const decodedConfiguration = parseYaml(userConfiguration.alertmanager_config);
 
     return {
       ...userConfiguration,
@@ -30,7 +30,7 @@ const UserConfigurationSchemaCodec = z.codec(UserConfigurationSchema, ParsedUser
   },
   encode: (userConfiguration) => ({
     ...userConfiguration,
-    alertmanager_config: stringify(userConfiguration.alertmanager_config),
+    alertmanager_config: stringifyYaml(userConfiguration.alertmanager_config),
   }),
 });
 
@@ -41,13 +41,43 @@ export const YamlToParsedUserConfiguration = z.codec(z.string(), ParsedUserConfi
   decode: (string) => {
     // 1. convert the YAML API response to a object with { template_files: {}, alertmanager_config: "" }
     // ⚠️ the alertmanager_config is still a YAML encoded string! We have to parse that too.
-    const parsedJSON = parse(string);
+    const parsedJSON = parseYaml(string);
     const userConfiguration = UserConfigurationSchema.parse(parsedJSON);
 
     return UserConfigurationSchemaCodec.decode(userConfiguration);
   },
   encode: (userConfiguration) => {
     const encodedAlertmanagerConfig = UserConfigurationSchemaCodec.encode(userConfiguration);
-    return stringify(encodedAlertmanagerConfig);
+    return stringifyYaml(encodedAlertmanagerConfig);
   },
 });
+
+/**
+ * This codec will convert a TransformedAlertmanagerStatusApiResponse (from the vanilla Alertmanager API)
+ * to a ParsedUserConfiguration (Mimir format).
+ *
+ * The TransformedAlertmanagerStatusApiResponse contains config.parsed which is a ParsedAlertmanagerConfig,
+ * while ParsedUserConfiguration wraps this in { template_files, alertmanager_config }.
+ *
+ * Note: When decoding from TransformedAlertmanagerStatusApiResponse, template_files will be empty
+ * since vanilla Alertmanager doesn't expose templates through the status endpoint.
+ */
+export const TransformedStatusToParsedUserConfiguration = {
+  decode: (statusResponse: {
+    config: { parsed: z.infer<typeof ParsedAlertmanagerConfigSchema> };
+  }): ParsedUserConfiguration => {
+    return {
+      template_files: {},
+      alertmanager_config: statusResponse.config.parsed,
+    };
+  },
+  encode: (
+    userConfiguration: ParsedUserConfiguration
+  ): { config: { parsed: z.infer<typeof ParsedAlertmanagerConfigSchema> } } => {
+    return {
+      config: {
+        parsed: userConfiguration.alertmanager_config,
+      },
+    };
+  },
+};

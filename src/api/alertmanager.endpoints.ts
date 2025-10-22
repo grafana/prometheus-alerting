@@ -1,7 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import {
   GetStatusApiArg,
-  AlertmanagerStatusSchema,
   AlertmanagerStatus,
   DeleteSilenceApiArg,
   DeleteSilenceApiResponse,
@@ -24,11 +23,10 @@ import {
   PostSilencesApiResponseSchema,
 } from '@grafana/external-alertmanager/vanilla';
 import {
-  TransformedAlertmanagerStatusApiResponse,
-  TransformedAlertmanagerStatusApiResponseSchema,
-  TransformedAlertmanagerStatusApiResponseTransform,
-  WithDataSourceInformation,
-} from './alertmanager.types';
+  ParsedUserConfiguration,
+  TransformedStatusToParsedUserConfiguration,
+} from '@grafana/external-alertmanager/mimir';
+import { TransformedAlertmanagerStatusApiResponseTransform, WithDataSourceInformation } from './alertmanager.types';
 import { getDataSourceSrv } from '@grafana/runtime';
 import { AlertManagerDataSourceJsonData } from 'types/datasources';
 
@@ -53,17 +51,17 @@ export const baseAlertmanagerApi = createApi({
 // Inject Prometheus-specific endpoints (getStatus)
 export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
   endpoints: (build) => ({
-    getStatus: build.query<TransformedAlertmanagerStatusApiResponse, WithDataSourceInformation<GetStatusApiArg>>({
+    getConfiguration: build.query<ParsedUserConfiguration, WithDataSourceInformation<GetStatusApiArg>>({
       query: ({ dataSourceUID }) => ({
         url: createAlertmanagerPath(dataSourceUID, `/v2/status`),
       }),
-      transformResponse: (response: AlertmanagerStatus): TransformedAlertmanagerStatusApiResponse => {
-        // Use Zod codec to parse YAML and validate the entire transformed response
-        return TransformedAlertmanagerStatusApiResponseTransform.parse(response);
+      transformResponse: (response: AlertmanagerStatus): ParsedUserConfiguration => {
+        // First, transform the status response to get the parsed config
+        const transformedStatus = TransformedAlertmanagerStatusApiResponseTransform.parse(response);
+        // Then use the codec to convert to ParsedUserConfiguration (Mimir format)
+        return TransformedStatusToParsedUserConfiguration.decode(transformedStatus);
       },
       providesTags: ['Configuration'],
-      rawResponseSchema: AlertmanagerStatusSchema,
-      responseSchema: TransformedAlertmanagerStatusApiResponseSchema,
     }),
     getSilences: build.query<GetSilencesApiResponse, WithDataSourceInformation<GetSilencesApiArg>>({
       query: ({ dataSourceUID, filter }) => ({
