@@ -149,6 +149,8 @@
   "key-value-list": {
     "empty-value": "(not set)",
     "false": "No",
+    "nested-items-count_one": "{{count}} item(s)",
+    "nested-items-count_other": "{{count}} item(s)",
     "true": "Yes"
   },
   "pages": {
@@ -210,6 +212,7 @@
     "error-loading-message": "Failed to fetch receivers",
     "error-loading-title": "Error loading receivers",
     "integration": {
+      "http-config-title": "HTTP Configuration",
       "no-config": "No configuration",
       "no-config-desc": "This integration has no visible configuration.",
       "unknown": "Unknown integration type",

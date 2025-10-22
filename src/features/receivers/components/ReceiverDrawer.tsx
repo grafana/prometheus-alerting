@@ -16,26 +16,45 @@ interface IntegrationItemProps {
 }
 
 function IntegrationItem({ type, config }: IntegrationItemProps) {
-  // Filter out empty/null values and convert to display-friendly format
+  // Extract http_config if it exists
+  const httpConfig = config.http_config as Record<string, unknown> | undefined;
+
+  // Filter out empty/null values
   const displayEntries = Object.entries(config)
     .filter(([key, value]) => {
-      // Skip internal or empty fields
-      if (key.startsWith('_') || value === undefined || value === null) {
+      // Skip internal, empty fields, and http_config (handled separately)
+      if (key.startsWith('_') || value === undefined || value === null || key === 'http_config') {
         return false;
       }
       return true;
     })
     .map(([key, value]) => {
-      // Convert snake_case to Title Case
-      const label = key
-        .split('_')
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-
-      return { label, value: value as string | number | boolean | undefined | null };
+      return { label: key, value: value as string | number | boolean | undefined | null };
     });
 
-  if (displayEntries.length === 0) {
+  // Process http_config entries if present
+  const httpConfigEntries = httpConfig
+    ? Object.entries(httpConfig)
+        .filter(([key, value]) => {
+          if (key.startsWith('_') || value === undefined || value === null) {
+            return false;
+          }
+          // Skip nested objects that are empty
+          if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
+            return false;
+          }
+          return true;
+        })
+        .map(([key, value]) => {
+          // Pass nested objects directly - KeyValueList will handle the rendering
+          return { label: key, value: value as string | number | boolean | Record<string, unknown> | undefined | null };
+        })
+    : [];
+
+  const hasMainConfig = displayEntries.length > 0;
+  const hasHttpConfig = httpConfigEntries.length > 0;
+
+  if (!hasMainConfig && !hasHttpConfig) {
     return (
       <Section title={type}>
         <Alert title={t('receivers.integration.no-config', 'No configuration')} severity="info">
@@ -46,9 +65,18 @@ function IntegrationItem({ type, config }: IntegrationItemProps) {
   }
 
   return (
-    <Section title={type}>
-      <KeyValueList items={displayEntries} />
-    </Section>
+    <Stack direction="column" gap={2}>
+      {hasMainConfig && (
+        <Section title={type}>
+          <KeyValueList items={displayEntries} />
+        </Section>
+      )}
+      {hasHttpConfig && (
+        <Section title={t('receivers.integration.http-config-title', 'HTTP Configuration')}>
+          <KeyValueList items={httpConfigEntries} />
+        </Section>
+      )}
+    </Stack>
   );
 }
 
