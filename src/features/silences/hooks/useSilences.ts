@@ -15,10 +15,13 @@ export function useSilences(filter?: string[]) {
 /**
  * Hook to fetch a single silence by ID
  */
-export function useSilence(silenceId: string) {
+export function useSilence(silenceId: string, options?: { skip?: boolean }) {
   const { uid: dataSourceUID } = useAlertmanager();
 
-  return alertmanagerApi.endpoints.getSilence.useQuery({ dataSourceUID, silenceId });
+  return alertmanagerApi.endpoints.getSilence.useQuery(
+    { dataSourceUID, silenceId },
+    { skip: options?.skip || !silenceId }
+  );
 }
 
 /**

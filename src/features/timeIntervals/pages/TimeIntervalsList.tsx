@@ -10,31 +10,22 @@ import { DEFAULT_PAGE_SIZE, ROUTES } from '../../../constants';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { prefixRoute } from '../../../utils/utils.routing';
-import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
-import { deleteMuteTimingAction } from '../../../reducers/alertmanager/timeIntervals';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { TimeIntervalDrawer } from '../components/TimeIntervalDrawer';
+import { locationService } from '@grafana/runtime';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error } = useTimeIntervals();
   const hasConfigurationAPI = useHasConfigurationAPI();
 
-  const [produceNewConfig, { error: deleteError }] = useProduceNewAlertmanagerConfiguration();
   const [selectedTimeInterval, setSelectedTimeInterval] = useState<TimeInterval | null>(null);
 
-  const handleDelete = async (timeInterval: TimeInterval) => {
-    try {
-      await produceNewConfig(deleteMuteTimingAction({ name: timeInterval.name }));
-      setSelectedTimeInterval(null);
-      // The list will automatically refresh due to cache invalidation
-    } catch (err) {
-      console.error('Failed to delete time interval:', err);
-    }
-  };
-
   const handleEdit = (timeInterval: TimeInterval) => {
-    // TODO: Implement edit functionality
-    console.log('Edit time interval:', timeInterval.name);
+    // Close the drawer
+    setSelectedTimeInterval(null);
+    // Navigate to the edit form
+    const editPath = prefixRoute(`time-intervals/${encodeURIComponent(timeInterval.name)}/edit`);
+    locationService.push(editPath);
   };
 
   const clickableCellStyles = css({
@@ -130,13 +121,7 @@ function TimeIntervalsPage() {
               : t('time-intervals.error-loading-message', 'Failed to fetch time intervals')}
           </Alert>
         )}
-        {deleteError ? (
-          <Alert title={t('time-intervals.error-deleting-title', 'Error deleting time interval')} severity="error">
-            {deleteError instanceof Error
-              ? deleteError.message
-              : t('time-intervals.error-deleting-message', 'Failed to delete time interval')}
-          </Alert>
-        ) : null}
+
         {!isLoading && timeIntervals.length > 0 && !error && (
           <InteractiveTable
             columns={columns}
@@ -162,7 +147,6 @@ function TimeIntervalsPage() {
             setSelectedTimeInterval(null);
           }}
           onEdit={hasConfigurationAPI ? handleEdit : undefined}
-          onRemove={hasConfigurationAPI ? handleDelete : undefined}
         />
       )}
     </AlertmanagerPage>

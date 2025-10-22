@@ -6,9 +6,8 @@ import { Alert, Stack, useStyles2, Text, Button, ConfirmModal } from '@grafana/u
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
-import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
-import { deleteMuteTimingAction } from '../../../reducers/alertmanager/timeIntervals';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
+import { useDeleteTimeInterval } from '../hooks/useTimeIntervals';
 
 interface TimeIntervalDetailsProps {
   timeInterval: TimeInterval;
@@ -80,9 +79,8 @@ interface TimeIntervalDrawerProps {
 
 export function TimeIntervalDrawer({ timeInterval, onClose, onEdit }: TimeIntervalDrawerProps) {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const hasConfigurationAPI = useHasConfigurationAPI();
-  const [produceNewConfig, { error: deleteError }] = useProduceNewAlertmanagerConfiguration();
+  const [deleteTimeInterval, { isLoading: isDeleting, error: deleteError }] = useDeleteTimeInterval();
 
   if (!timeInterval) {
     return null;
@@ -97,15 +95,13 @@ export function TimeIntervalDrawer({ timeInterval, onClose, onEdit }: TimeInterv
   };
 
   const handleConfirmRemove = async () => {
-    setIsDeleting(true);
     try {
-      await produceNewConfig(deleteMuteTimingAction({ name: timeInterval.name }));
+      await deleteTimeInterval(timeInterval.name);
       setIsConfirmModalOpen(false);
       onClose();
       // The list will automatically refresh due to cache invalidation
     } catch (err) {
       console.error('Failed to delete time interval:', err);
-      setIsDeleting(false);
       // Keep modal open on error so user can retry
     }
   };
