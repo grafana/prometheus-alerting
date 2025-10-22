@@ -1,4 +1,28 @@
 import { type Receiver } from '@grafana/external-alertmanager/vanilla';
+import { getAllIntegrationTypes, getIntegrationCount } from './integrationIcons';
+
+export interface IntegrationCount {
+  type: string;
+  count: number;
+}
+
+/**
+ * Gets all integration types and their counts for a receiver.
+ * @param receiver - The Receiver object to analyze
+ * @returns An array of integration types and counts
+ */
+export function getReceiverIntegrations(receiver: Receiver): IntegrationCount[] {
+  const integrations: IntegrationCount[] = [];
+
+  for (const type of getAllIntegrationTypes()) {
+    const count = getIntegrationCount(receiver, type);
+    if (count > 0) {
+      integrations.push({ type, count });
+    }
+  }
+
+  return integrations;
+}
 
 /**
  * Generates a human-readable description of a ContactPoint by summarizing its integrations.
@@ -13,25 +37,12 @@ import { type Receiver } from '@grafana/external-alertmanager/vanilla';
 export function getContactPointDescription(receiver: Receiver): string {
   const integrationCounts: Record<string, number> = {};
 
-  const countIntegration = (type: string, count: number) => {
+  for (const type of getAllIntegrationTypes()) {
+    const count = getIntegrationCount(receiver, type);
     if (count > 0) {
       integrationCounts[type] = count;
     }
-  };
-
-  countIntegration('email', receiver.email_configs?.length ?? 0);
-  countIntegration('slack', receiver.slack_configs?.length ?? 0);
-  countIntegration('pagerduty', receiver.pagerduty_configs?.length ?? 0);
-  countIntegration('webhook', receiver.webhook_configs?.length ?? 0);
-  countIntegration('opsgenie', receiver.opsgenie_configs?.length ?? 0);
-  countIntegration('wechat', receiver.wechat_configs?.length ?? 0);
-  countIntegration('pushover', receiver.pushover_configs?.length ?? 0);
-  countIntegration('victorops', receiver.victorops_configs?.length ?? 0);
-  countIntegration('sns', receiver.sns_configs?.length ?? 0);
-  countIntegration('telegram', receiver.telegram_configs?.length ?? 0);
-  countIntegration('discord', receiver.discord_configs?.length ?? 0);
-  countIntegration('webex', receiver.webex_configs?.length ?? 0);
-  countIntegration('msteams', receiver.msteams_configs?.length ?? 0);
+  }
 
   if (Object.keys(integrationCounts).length === 0) {
     return '<empty contact point>';

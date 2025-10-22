@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 import dataSourceReducer from './datasourceSlice';
 import { alertmanagerApi } from '../api/alertmanager.endpoints';
 import { featureDiscoveryApi } from '../api/featureDiscovery.endpoints';
@@ -6,7 +7,7 @@ import { prometheusApi } from '../api/prometheus.endpoints';
 import { rulerApi } from '../api/ruler.endpoints';
 
 export const createStore = (initialDataSourceUID: string) => {
-  return configureStore({
+  const store = configureStore({
     reducer: {
       dataSource: dataSourceReducer,
       [alertmanagerApi.reducerPath]: alertmanagerApi.reducer,
@@ -27,6 +28,10 @@ export const createStore = (initialDataSourceUID: string) => {
       },
     },
   });
+
+  setupListeners(store.dispatch);
+
+  return store;
 };
 
 export type AppStore = ReturnType<typeof createStore>;
