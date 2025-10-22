@@ -31,7 +31,7 @@ function TimeIntervalDetails({ timeInterval }: TimeIntervalDetailsProps) {
   if (!timeInterval.time_intervals || timeInterval.time_intervals.length === 0) {
     return (
       <Alert title={t('time-intervals.no-intervals', 'No time intervals')} severity="info">
-        {t('time-intervals.no-intervals-desc', 'This time interval has no configuration.')}
+        {t('time-intervals.drawer.no-intervals-desc', 'This time interval has no configuration.')}
       </Alert>
     );
   }

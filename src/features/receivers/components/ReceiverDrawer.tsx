@@ -107,7 +107,7 @@ export function ReceiverDrawer({ receiver, onClose }: ReceiverDrawerProps) {
       title={
         <Stack direction="column" gap={0}>
           <Text variant="bodySmall" color="secondary">
-            {t('receivers.detail.name', 'Receiver')}
+            {t('receivers.drawer.title', 'Receiver')}
           </Text>
           <Text variant="h2">{receiver.name}</Text>
         </Stack>

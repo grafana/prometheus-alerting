@@ -163,17 +163,15 @@ function TimeIntervalForm() {
                     }
                     severity="success"
                   >
-                    <Trans
-                      i18nKey={
-                        isEditMode
-                          ? 'time-intervals.form.success-updating-message'
-                          : 'time-intervals.form.success-message'
-                      }
-                    >
-                      {isEditMode
-                        ? 'Time interval has been updated successfully.'
-                        : 'Time interval has been created successfully.'}
-                    </Trans>
+                    {isEditMode ? (
+                      <Trans i18nKey="time-intervals.form.success-updating-message">
+                        Time interval has been updated successfully.
+                      </Trans>
+                    ) : (
+                      <Trans i18nKey="time-intervals.form.success-message">
+                        Time interval has been created successfully.
+                      </Trans>
+                    )}
                   </Alert>
                 )}
 

@@ -74,7 +74,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
   }),
   value: css({
     fontSize: theme.typography.body.fontSize,
-    color: theme.colors.text.primary,
+    color: theme.colors.text.secondary,
     whiteSpace: 'preserve',
     margin: 0,
     wordBreak: 'break-all',

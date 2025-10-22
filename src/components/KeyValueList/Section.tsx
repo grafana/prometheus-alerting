@@ -16,7 +16,11 @@ export function Section({ title, children }: SectionProps) {
     <div className={styles.section}>
       <div className={styles.sectionTitle} onClick={toggleCollapsed}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          {title && <Text variant="h5">{title}</Text>}
+          {title && (
+            <Text variant="body" color="maxContrast">
+              {title}
+            </Text>
+          )}
           <Icon name={collapsed ? 'angle-down' : 'angle-up'} />
         </Stack>
       </div>
