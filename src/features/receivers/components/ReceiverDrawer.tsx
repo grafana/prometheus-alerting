@@ -1,11 +1,10 @@
-import { css } from '@emotion/css';
 import React from 'react';
-import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { Alert, Stack, useStyles2, Text, Button } from '@grafana/ui';
+import { Alert, Stack, Text, Button } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
+import { Section } from '../../../components/KeyValueList/Section';
 import { extractIntegrationsFromReceiver } from '../utils/integrationIcons';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { deleteReceiverAction } from '../../../reducers/alertmanager/receivers';
@@ -17,8 +16,6 @@ interface IntegrationItemProps {
 }
 
 function IntegrationItem({ type, config }: IntegrationItemProps) {
-  const styles = useStyles2(getStyles);
-
   // Filter out empty/null values and convert to display-friendly format
   const displayEntries = Object.entries(config)
     .filter(([key, value]) => {
@@ -40,20 +37,18 @@ function IntegrationItem({ type, config }: IntegrationItemProps) {
 
   if (displayEntries.length === 0) {
     return (
-      <div className={styles.integrationCard}>
-        <h4 className={styles.integrationTitle}>{type}</h4>
+      <Section title={type}>
         <Alert title={t('receivers.integration.no-config', 'No configuration')} severity="info">
           {t('receivers.integration.no-config-desc', 'This integration has no visible configuration.')}
         </Alert>
-      </div>
+      </Section>
     );
   }
 
   return (
-    <div className={styles.integrationCard}>
-      <h4 className={styles.integrationTitle}>{type}</h4>
+    <Section title={type}>
       <KeyValueList items={displayEntries} />
-    </div>
+    </Section>
   );
 }
 
@@ -145,21 +140,3 @@ export function ReceiverDrawer({ receiver, onClose }: ReceiverDrawerProps) {
     </DrawerWithFooter>
   );
 }
-
-const getStyles = (theme: GrafanaTheme2) => ({
-  integrationCard: css({
-    border: `1px solid ${theme.colors.border.weak}`,
-    borderRadius: theme.shape.radius.default,
-    padding: theme.spacing(2),
-    backgroundColor: theme.colors.background.secondary,
-  }),
-  integrationTitle: css({
-    margin: 0,
-    marginBottom: theme.spacing(2),
-    fontSize: theme.typography.h5.fontSize,
-    fontWeight: theme.typography.fontWeightMedium,
-    textTransform: 'capitalize',
-    paddingBottom: theme.spacing(1),
-    borderBottom: `1px solid ${theme.colors.border.weak}`,
-  }),
-});

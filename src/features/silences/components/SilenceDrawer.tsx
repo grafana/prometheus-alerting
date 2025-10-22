@@ -7,6 +7,7 @@ import { AlertLabel } from '@grafana/alerting';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
+import { Section } from '../../../components/KeyValueList/Section';
 import { useDeleteSilence } from '../hooks/useSilences';
 import { formatMatchers, formatDateTime } from '../utils/silences.utils';
 
@@ -38,27 +39,24 @@ function SilenceDetails({ silence }: SilenceDetailsProps) {
 
   return (
     <Stack direction="column" gap={2}>
-      <div className={styles.section}>
-        <h4 className={styles.sectionTitle}>{t('silences.drawer.matchers-title', 'Matchers')}</h4>
+      <Section title={t('silences.drawer.matchers-title', 'Matchers')}>
         <Stack direction="row" gap={0.5} wrap>
           {formatMatchers(silence).map((matcher, index) => (
             <AlertLabel key={index} value={matcher} colorBy="value" size="sm" />
           ))}
         </Stack>
-      </div>
+      </Section>
 
-      <div className={styles.section}>
-        <h4 className={styles.sectionTitle}>{t('silences.drawer.details-title', 'Details')}</h4>
+      <Section title={t('silences.drawer.details-title', 'Details')}>
         <KeyValueList items={items} />
-      </div>
+      </Section>
 
       {silence.comment && (
-        <div className={styles.section}>
-          <h4 className={styles.sectionTitle}>{t('silences.drawer.comment-title', 'Comment')}</h4>
+        <Section title={t('silences.drawer.comment-title', 'Comment')}>
           <Text color="secondary">
             <pre className={styles.comment}>{silence.comment}</pre>
           </Text>
-        </div>
+        </Section>
       )}
     </Stack>
   );
@@ -173,20 +171,6 @@ export function SilenceDrawer({ silence, onClose, onEdit }: SilenceDrawerProps) 
 }
 
 const getStyles = (theme: GrafanaTheme2) => ({
-  section: css({
-    border: `1px solid ${theme.colors.border.weak}`,
-    borderRadius: theme.shape.radius.default,
-    padding: theme.spacing(2),
-    backgroundColor: theme.colors.background.secondary,
-  }),
-  sectionTitle: css({
-    margin: 0,
-    marginBottom: theme.spacing(2),
-    fontSize: theme.typography.h5.fontSize,
-    fontWeight: theme.typography.fontWeightMedium,
-    paddingBottom: theme.spacing(1),
-    borderBottom: `1px solid ${theme.colors.border.weak}`,
-  }),
   comment: css({
     margin: 0,
     whiteSpace: 'pre-wrap',

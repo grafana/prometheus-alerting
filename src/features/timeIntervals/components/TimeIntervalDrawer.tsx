@@ -1,11 +1,10 @@
-import { css } from '@emotion/css';
 import React, { useState } from 'react';
-import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { Alert, Stack, useStyles2, Text, Button, ConfirmModal } from '@grafana/ui';
+import { Alert, Stack, Text, Button, ConfirmModal } from '@grafana/ui';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
+import { Section } from '../../../components/KeyValueList/Section';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { useDeleteTimeInterval, useUpdateTimeInterval } from '../hooks/useTimeIntervals';
 import { TimeIntervalFormFields, type TimeIntervalFormData } from './TimeIntervalFormFields';
@@ -15,8 +14,6 @@ interface TimeIntervalDetailsProps {
 }
 
 function TimeIntervalDetails({ timeInterval }: TimeIntervalDetailsProps) {
-  const styles = useStyles2(getStyles);
-
   const formatTimeRange = (times?: Array<{ start_time: string; end_time: string }>) => {
     if (!times || times.length === 0) {
       return t('time-intervals.all-day', 'All day');
@@ -60,12 +57,12 @@ function TimeIntervalDetails({ timeInterval }: TimeIntervalDetailsProps) {
         ];
 
         return (
-          <div key={index} className={styles.intervalCard}>
-            <h4 className={styles.intervalTitle}>
-              {t('time-intervals.interval-number', 'Interval {{number}}', { number: index + 1 })}
-            </h4>
+          <Section
+            key={index}
+            title={t('time-intervals.interval-number', 'Interval {{number}}', { number: index + 1 })}
+          >
             <KeyValueList items={items} />
-          </div>
+          </Section>
         );
       })}
     </Stack>
@@ -217,20 +214,3 @@ export function TimeIntervalDrawer({ timeInterval, onClose }: TimeIntervalDrawer
     </>
   );
 }
-
-const getStyles = (theme: GrafanaTheme2) => ({
-  intervalCard: css({
-    border: `1px solid ${theme.colors.border.weak}`,
-    borderRadius: theme.shape.radius.default,
-    padding: theme.spacing(2),
-    backgroundColor: theme.colors.background.secondary,
-  }),
-  intervalTitle: css({
-    margin: 0,
-    marginBottom: theme.spacing(2),
-    fontSize: theme.typography.h5.fontSize,
-    fontWeight: theme.typography.fontWeightMedium,
-    paddingBottom: theme.spacing(1),
-    borderBottom: `1px solid ${theme.colors.border.weak}`,
-  }),
-});

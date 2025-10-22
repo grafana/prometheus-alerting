@@ -6,6 +6,7 @@ import { Alert, Stack, useStyles2, Text, TextLink } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
+import { Section } from '../../../components/KeyValueList/Section';
 import { ROUTES } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
 import type { RouteConfig } from './RouteCard';
@@ -41,10 +42,7 @@ function RouteDetails({ route }: RouteDetailsProps) {
   return (
     <Stack direction="column" gap={2}>
       {route.matchers && route.matchers.length > 0 && (
-        <div className={styles.section}>
-          <h4 className={styles.sectionTitle}>
-            <Trans i18nKey="routes.matchers-label">Matchers</Trans>
-          </h4>
+        <Section title={t('routes.matchers-label', 'Matchers')}>
           <div className={styles.matchersContainer}>
             {route.matchers.map((matcher, index) => {
               const matcherString =
@@ -54,38 +52,29 @@ function RouteDetails({ route }: RouteDetailsProps) {
               return <AlertLabel key={index} value={matcherString} colorBy="value" size="sm" />;
             })}
           </div>
-        </div>
+        </Section>
       )}
 
       {route.receiver && (
-        <div className={styles.section}>
-          <h4 className={styles.sectionTitle}>
-            <Trans i18nKey="routes.receiver-label">Receiver</Trans>
-          </h4>
+        <Section title={t('routes.receiver-label', 'Receiver')}>
           <TextLink href={prefixRoute(`${ROUTES.Receivers}/${encodeURIComponent(route.receiver)}`)} inline={true}>
             {route.receiver}
           </TextLink>
-        </div>
+        </Section>
       )}
 
       {items.length > 0 && (
-        <div className={styles.section}>
-          <h4 className={styles.sectionTitle}>
-            <Trans i18nKey="routes.configuration-label">Configuration</Trans>
-          </h4>
+        <Section title={t('routes.configuration-label', 'Configuration')}>
           <KeyValueList items={items} />
-        </div>
+        </Section>
       )}
 
       {route.routes && route.routes.length > 0 && (
-        <div className={styles.section}>
-          <h4 className={styles.sectionTitle}>
-            <Trans i18nKey="routes.child-routes-label">Child Routes</Trans>
-          </h4>
+        <Section title={t('routes.child-routes-label', 'Child Routes')}>
           <Alert title="" severity="info">
             {t('routes.child-routes-count', 'This route has {{count}} child route(s).', { count: route.routes.length })}
           </Alert>
-        </div>
+        </Section>
       )}
 
       {!route.matchers && !route.receiver && !route.group_by && (
@@ -138,20 +127,6 @@ export function RouteDrawer({ route, onClose }: RouteDrawerProps) {
 }
 
 const getStyles = (theme: GrafanaTheme2) => ({
-  section: css({
-    border: `1px solid ${theme.colors.border.weak}`,
-    borderRadius: theme.shape.radius.default,
-    padding: theme.spacing(2),
-    backgroundColor: theme.colors.background.secondary,
-  }),
-  sectionTitle: css({
-    margin: 0,
-    marginBottom: theme.spacing(2),
-    fontSize: theme.typography.h5.fontSize,
-    fontWeight: theme.typography.fontWeightMedium,
-    paddingBottom: theme.spacing(1),
-    borderBottom: `1px solid ${theme.colors.border.weak}`,
-  }),
   matchersContainer: css({
     display: 'flex',
     gap: theme.spacing(1),
