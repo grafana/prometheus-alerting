@@ -2,7 +2,7 @@ import { css } from '@emotion/css';
 import React, { useState } from 'react';
 import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { Alert, Stack, useStyles2, Text, Button, ConfirmModal, Badge } from '@grafana/ui';
+import { Alert, Stack, useStyles2, Text, Button, ConfirmModal, Badge, Tab, TabsBar, TabContent } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
@@ -10,6 +10,11 @@ import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
 import { useDeleteSilence } from '../hooks/useSilences';
 import { formatMatchers, formatDateTime } from '../utils/silences.utils';
+
+enum ActiveTab {
+  Configuration = 'configuration',
+  AffectedAlerts = 'affected-alerts',
+}
 
 interface SilenceDetailsProps {
   silence: GettableSilence;
@@ -69,6 +74,7 @@ interface SilenceDrawerProps {
 }
 
 export function SilenceDrawer({ silence, onClose, onEdit }: SilenceDrawerProps) {
+  const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.Configuration);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [expireSilence, { isLoading: isExpiring, error: deleteError }] = useDeleteSilence();
 
@@ -103,6 +109,21 @@ export function SilenceDrawer({ silence, onClose, onEdit }: SilenceDrawerProps) 
   const isExpired = silence.status.state === 'expired';
   const hasActions = onEdit || !isExpired;
 
+  const drawerTabs = (
+    <TabsBar>
+      <Tab
+        label={t('silences.drawer.tabs.configuration', 'Configuration')}
+        active={activeTab === ActiveTab.Configuration}
+        onChangeTab={() => setActiveTab(ActiveTab.Configuration)}
+      />
+      <Tab
+        label={t('silences.drawer.tabs.affected-alerts', 'Affected Alerts')}
+        active={activeTab === ActiveTab.AffectedAlerts}
+        onChangeTab={() => setActiveTab(ActiveTab.AffectedAlerts)}
+      />
+    </TabsBar>
+  );
+
   return (
     <>
       <DrawerWithFooter
@@ -124,6 +145,7 @@ export function SilenceDrawer({ silence, onClose, onEdit }: SilenceDrawerProps) 
         }
         onClose={onClose}
         width={500}
+        tabs={drawerTabs}
         footer={
           hasActions ? (
             <Stack gap={2} justifyContent="space-between">
@@ -149,7 +171,15 @@ export function SilenceDrawer({ silence, onClose, onEdit }: SilenceDrawerProps) 
               : t('silences.error-expiring-message', 'Failed to expire silence')}
           </Alert>
         )}
-        <SilenceDetails silence={silence} />
+
+        <TabContent>
+          {activeTab === ActiveTab.Configuration && <SilenceDetails silence={silence} />}
+          {activeTab === ActiveTab.AffectedAlerts && (
+            <Stack direction="column" gap={2}>
+              {/* Placeholder for affected alerts - to be implemented */}
+            </Stack>
+          )}
+        </TabContent>
       </DrawerWithFooter>
 
       <ConfirmModal
