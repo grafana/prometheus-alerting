@@ -35,3 +35,9 @@ export type DataSourceRuleIdentifier = PrometheusRuleIdentifier | CloudRuleIdent
 // Prefixes for rule identifiers
 export const PROMETHEUS_RULE_IDENTIFIER_PREFIX = 'pri' as const;
 export const CLOUD_RULE_IDENTIFIER_PREFIX = 'cri' as const;
+
+export interface RuleGroupIdentifier {
+  dataSourceUid: string; // data source UID
+  namespaceName: string;
+  groupName: string;
+}

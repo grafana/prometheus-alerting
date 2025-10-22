@@ -10,7 +10,7 @@ import { prometheusApi } from '../../../api/prometheus.endpoints';
 import { useGetRulerRuleGroupQuery } from '../../../api/ruler.endpoints';
 import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../types/rules';
 import { hashRule } from '@grafana/external-rules/hashing';
-import { getMatchingRulerRule } from '../../../utils/ruleMatching';
+import { getMatchingRulerRule } from '@grafana/external-rules/matching';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 

@@ -6,7 +6,7 @@ import { useDiscoverFeaturesQuery } from '../../../api/featureDiscovery.endpoint
 import { useGetRulerRuleGroupQuery } from '../../../api/ruler.endpoints';
 import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
 import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
-import { getMatchingRulerRule } from '../../../utils/ruleMatching';
+import { getMatchingRulerRule } from '@grafana/external-rules/matching';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 import { RuleActionsButtons } from './components/RuleActionsButtons';

@@ -1,0 +1,96 @@
+import { useMemo } from 'react';
+import { skipToken } from '@reduxjs/toolkit/query';
+import { DataSourceRuleIdentifier, isCloudRuleIdentifier } from '@grafana/external-rules';
+import { PromRuleDTO, PromRuleGroupDTO, RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
+
+import { useDiscoverFeaturesQuery } from '../../../api/featureDiscovery.endpoints';
+import { useGetGroupsQuery } from '../../../api/prometheus.endpoints';
+import { useGetRuleGroupQuery } from '../../../api/ruler.endpoints';
+import { getMatchingPromRule, matchPromRuleById, matchRulerRuleById } from '@grafana/external-rules/matching';
+
+export interface RuleDetailsResult {
+  promRule?: PromRuleDTO;
+  promGroup?: PromRuleGroupDTO;
+  rulerRule?: RulerRuleDTO;
+  rulerGroup?: RulerRuleGroupDTO;
+
+  dataSourceUid: string;
+  namespace: string;
+  groupName: string;
+  hasRulerApi: boolean;
+
+  loading: boolean;
+  error?: unknown;
+}
+
+export function useRuleDetails(identifier: DataSourceRuleIdentifier): RuleDetailsResult {
+  const { uid, namespace, groupName, ruleName } = identifier;
+  const isCloudRule = isCloudRuleIdentifier(identifier);
+
+  const { data: features, isLoading: featuresLoading, error: featuresError } = useDiscoverFeaturesQuery({ uid });
+
+  // For CRI, check if Ruler API is actually available
+  // For PRI, we never use Ruler API
+  const shouldFetchRulerData = isCloudRule && (features?.rulerApiEnabled ?? false);
+
+  // 2. Fetch from Prometheus API (always) - this gives us runtime state
+  const promQuery = useGetGroupsQuery({
+    ruleSource: { uid },
+    namespace,
+    groupName,
+    ruleName,
+  });
+
+  // 3. Fetch from Ruler API (only for CRI with Ruler API enabled) - this gives us configuration
+  const rulerQuery = useGetRuleGroupQuery(
+    shouldFetchRulerData
+      ? {
+          dataSourceUid: uid,
+          namespace,
+          groupName,
+        }
+      : skipToken
+  );
+
+  // 4. Extract rules using the correct matching strategy based on what data is available
+  const { promRule, promGroup, rulerRule, rulerGroup } = useMemo(() => {
+    // Get Prometheus group - must match namespace and groupName from identifier
+    const promGroups = promQuery.data?.data.groups ?? [];
+    const promGroup = promGroups.find((g) => g.file === namespace && g.name === groupName);
+
+    // Get Ruler group (only for CRI)
+    const rulerGroup = isCloudRule ? rulerQuery.data ?? undefined : undefined;
+
+    // Strategy: If Ruler API is available and we have ruler data, use it as source of truth
+    if (isCloudRule) {
+      const rulerRule = rulerGroup ? matchRulerRuleById(rulerGroup, identifier) : undefined;
+
+      // Match the corresponding Prometheus rule (for runtime state like alerts)
+      const promRule = rulerRule && promGroup ? getMatchingPromRule(promGroup.rules, rulerRule) : undefined;
+
+      return { promRule, promGroup, rulerRule, rulerGroup };
+    }
+
+    // For PRI (Prometheus Rule Identifier), we only use Prometheus API
+    const promRule = promGroup ? matchPromRuleById(promGroup, identifier) : undefined;
+
+    return { promRule, promGroup, rulerRule: undefined, rulerGroup: undefined };
+  }, [promQuery.data, rulerQuery.data, namespace, groupName, isCloudRule, identifier]);
+
+  // 5. Determine loading and error states
+  const loading = featuresLoading || promQuery.isLoading || (shouldFetchRulerData && rulerQuery.isLoading);
+  const error = featuresError || promQuery.error || rulerQuery.error;
+
+  return {
+    promRule,
+    promGroup,
+    rulerRule,
+    rulerGroup,
+    dataSourceUid: uid,
+    namespace,
+    groupName,
+    hasRulerApi: shouldFetchRulerData,
+    loading,
+    error,
+  };
+}

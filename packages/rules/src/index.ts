@@ -2,6 +2,7 @@
 export * from './identifiers';
 export * from './hashing';
 export * from './utils';
+export * from './matching';
 
 // Vanilla Prometheus exports
 export * from './vanilla';

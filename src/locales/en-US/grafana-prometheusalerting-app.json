@@ -337,6 +337,40 @@
     "route-label": "Route",
     "yes": "Yes"
   },
+  "rule-details": {
+    "details": {
+      "annotations": "Annotations",
+      "evaluation-behavior": "Evaluation Behavior",
+      "labels": "Labels",
+      "ruler-available": "✓ Ruler API Available",
+      "ruler-unavailable": "⚠ Ruler API Unavailable (Read-only)"
+    },
+    "error": {
+      "loading": "Error loading rule",
+      "not-found": "Rule not found",
+      "not-found-message": "The requested rule could not be found."
+    },
+    "field": {
+      "evaluation-time": "Evaluation Time",
+      "for": "Pending Period",
+      "health": "Health",
+      "interval": "Evaluation Interval",
+      "interval-value": "Every {{interval}}",
+      "last-error": "Last Error",
+      "last-evaluation": "Last Evaluation"
+    },
+    "instances": {
+      "count": "{{count}} active instance(s)",
+      "empty": "No active alert instances"
+    },
+    "loading": "Loading rule details...",
+    "tabs": {
+      "details": "Details",
+      "instances": "Instances",
+      "query": "Query"
+    },
+    "title": "Rule Details"
+  },
   "silences": {
     "column": {
       "actions": "Actions",

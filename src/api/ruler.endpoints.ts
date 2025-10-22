@@ -1,14 +1,13 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
 import { RulerRuleGroupDTO, GetRulerRuleGroupApiResponseSchema } from '@grafana/external-rules/vanilla';
 
-interface DeleteRuleOptions {
+interface GetRuleGroupParams {
   dataSourceUid: string;
   namespace: string;
   groupName: string;
 }
 
-interface GetRulerRuleGroupOptions {
+interface DeleteRuleGroupParams {
   dataSourceUid: string;
   namespace: string;
   groupName: string;
@@ -17,39 +16,35 @@ interface GetRulerRuleGroupOptions {
 export const rulerApi = createApi({
   reducerPath: 'rulerApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/' }),
-  tagTypes: ['RulerRules'],
+  tagTypes: ['RulerRuleGroup'],
   endpoints: (build) => ({
-    getRulerRuleGroup: build.query<RulerRuleGroupDTO | null, GetRulerRuleGroupOptions>({
+    getRuleGroup: build.query<RulerRuleGroupDTO | null, GetRuleGroupParams>({
       query: ({ dataSourceUid, namespace, groupName }) => ({
         url: `api/ruler/${dataSourceUid}/api/v1/rules/${encodeURIComponent(namespace)}/${encodeURIComponent(
           groupName
         )}`,
-        params: {
-          subtype: 'mimir',
-        },
       }),
-      transformErrorResponse: (response) => {
-        // Return null for 404 errors (group not found) instead of throwing
-        if (response.status === 404) {
-          return null;
-        }
-        return response;
-      },
       providesTags: (_result, _error, { dataSourceUid, namespace, groupName }) => [
-        { type: 'RulerRules' as const, id: `${dataSourceUid}/${namespace}/${groupName}` },
+        { type: 'RulerRuleGroup', id: `${dataSourceUid}/${namespace}/${groupName}` },
       ],
       responseSchema: GetRulerRuleGroupApiResponseSchema,
     }),
-    deleteRuleGroup: build.mutation<void, DeleteRuleOptions>({
+    deleteRuleGroup: build.mutation<void, DeleteRuleGroupParams>({
       query: ({ dataSourceUid, namespace, groupName }) => ({
         url: `api/ruler/${dataSourceUid}/api/v1/rules/${encodeURIComponent(namespace)}/${encodeURIComponent(
           groupName
         )}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['RulerRules'],
+      invalidatesTags: (_result, _error, { dataSourceUid, namespace, groupName }) => [
+        { type: 'RulerRuleGroup', id: `${dataSourceUid}/${namespace}/${groupName}` },
+      ],
     }),
   }),
 });
 
-export const { useGetRulerRuleGroupQuery, useDeleteRuleGroupMutation } = rulerApi;
+export const { useGetRuleGroupQuery, useLazyGetRuleGroupQuery, useDeleteRuleGroupMutation } = rulerApi;
+
+// Export aliases for backward compatibility with existing code
+export const useGetRulerRuleGroupQuery = useGetRuleGroupQuery;
+export const useLazyGetRulerRuleGroupQuery = useLazyGetRuleGroupQuery;
