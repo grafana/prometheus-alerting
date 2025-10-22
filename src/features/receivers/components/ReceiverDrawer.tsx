@@ -5,34 +5,11 @@ import { t } from '@grafana/i18n';
 import { Alert, Stack, useStyles2, Text, Button } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
+import { KeyValueList } from '../../../components/KeyValueList';
 import { extractIntegrationsFromReceiver } from '../utils/integrationIcons';
-
-interface KeyValuePairProps {
-  label: string;
-  value: string | number | boolean | undefined | null;
-}
-
-function KeyValuePair({ label, value }: KeyValuePairProps) {
-  const styles = useStyles2(getStyles);
-
-  const displayValue = () => {
-    if (value === undefined || value === null || value === '') {
-      return t('receivers.drawer.empty-value', '(not set)');
-    }
-    if (typeof value === 'boolean') {
-      return value ? t('receivers.drawer.true', 'Yes') : t('receivers.drawer.false', 'No');
-    }
-    return String(value);
-  };
-
-  return (
-    <div className={styles.keyValuePair}>
-      <dt className={styles.label}>{label}</dt>
-      <span className={styles.dots}></span>
-      <dd className={styles.value}>{displayValue()}</dd>
-    </div>
-  );
-}
+import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
+import { deleteReceiverAction } from '../../../reducers/alertmanager/receivers';
+import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 
 interface IntegrationItemProps {
   type: string;
@@ -58,7 +35,7 @@ function IntegrationItem({ type, config }: IntegrationItemProps) {
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 
-      return { key, label, value };
+      return { label, value: value as string | number | boolean | undefined | null };
     });
 
   if (displayEntries.length === 0) {
@@ -75,11 +52,7 @@ function IntegrationItem({ type, config }: IntegrationItemProps) {
   return (
     <div className={styles.integrationCard}>
       <h4 className={styles.integrationTitle}>{type}</h4>
-      <dl className={styles.keyValueList}>
-        {displayEntries.map(({ key, label, value }) => (
-          <KeyValuePair key={key} label={label} value={value as string | number | boolean | undefined | null} />
-        ))}
-      </dl>
+      <KeyValueList items={displayEntries} />
     </div>
   );
 }
@@ -112,24 +85,27 @@ function ReceiverIntegrations({ receiver }: ReceiverIntegrationsProps) {
 interface ReceiverDrawerProps {
   receiver: Receiver | null;
   onClose: () => void;
-  onEdit?: (receiver: Receiver) => void;
-  onRemove?: (receiver: Receiver) => void;
 }
 
-export function ReceiverDrawer({ receiver, onClose, onEdit, onRemove }: ReceiverDrawerProps) {
+export function ReceiverDrawer({ receiver, onClose }: ReceiverDrawerProps) {
+  const [produceNewConfig, { error: deleteError, isLoading: isDeleting }] = useProduceNewAlertmanagerConfiguration();
+  const hasConfigurationAPI = useHasConfigurationAPI();
+
   if (!receiver) {
     return null;
   }
 
   const handleEdit = () => {
-    onEdit?.(receiver);
+    // TODO: Implement edit functionality
+    console.log('Edit receiver:', receiver.name);
   };
 
-  const handleRemove = () => {
-    onRemove?.(receiver);
+  const handleRemove = async () => {
+    await produceNewConfig(deleteReceiverAction(receiver.name));
+    onClose();
   };
 
-  const hasActions = onEdit || onRemove;
+  const hasActions = hasConfigurationAPI;
 
   return (
     <DrawerWithFooter
@@ -146,21 +122,26 @@ export function ReceiverDrawer({ receiver, onClose, onEdit, onRemove }: Receiver
       footer={
         hasActions ? (
           <Stack gap={2} justifyContent="flex-end">
-            {onEdit && (
-              <Button variant="secondary" onClick={handleEdit}>
-                {t('receivers.drawer.edit', 'Edit')}
-              </Button>
-            )}
-            {onRemove && (
-              <Button variant="destructive" onClick={handleRemove}>
-                {t('receivers.drawer.remove', 'Remove')}
-              </Button>
-            )}
+            <Button variant="secondary" onClick={handleEdit}>
+              {t('receivers.drawer.edit', 'Edit')}
+            </Button>
+            <Button variant="destructive" onClick={handleRemove} disabled={isDeleting}>
+              {t('receivers.drawer.remove', 'Remove')}
+            </Button>
           </Stack>
         ) : undefined
       }
     >
-      <ReceiverIntegrations receiver={receiver} />
+      <Stack direction="column" gap={2}>
+        {deleteError && (
+          <Alert title={t('receivers.error-deleting-title', 'Error deleting receiver')} severity="error">
+            {deleteError instanceof Error
+              ? deleteError.message
+              : t('receivers.error-deleting-message', 'Failed to delete receiver')}
+          </Alert>
+        )}
+        <ReceiverIntegrations receiver={receiver} />
+      </Stack>
     </DrawerWithFooter>
   );
 }
@@ -180,37 +161,5 @@ const getStyles = (theme: GrafanaTheme2) => ({
     textTransform: 'capitalize',
     paddingBottom: theme.spacing(1),
     borderBottom: `1px solid ${theme.colors.border.weak}`,
-  }),
-  keyValueList: css({
-    margin: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing(1.5),
-  }),
-  keyValuePair: css({
-    display: 'flex',
-    alignItems: 'baseline',
-    gap: theme.spacing(1),
-    minHeight: theme.spacing(3),
-  }),
-  label: css({
-    margin: 0,
-    flexShrink: 0,
-    textAlign: 'left',
-  }),
-  dots: css({
-    flex: 1,
-    borderBottom: `2px dotted ${theme.colors.border.weak}`,
-    minWidth: theme.spacing(2),
-    height: '1px',
-    marginBottom: theme.spacing(0.5),
-  }),
-  value: css({
-    fontSize: theme.typography.body.fontSize,
-    color: theme.colors.text.primary,
-    whiteSpace: 'preserve',
-    margin: 0,
-    wordBreak: 'break-all',
-    textAlign: 'right',
   }),
 });

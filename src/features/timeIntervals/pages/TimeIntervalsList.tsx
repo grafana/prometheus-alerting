@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { css } from '@emotion/css';
 import { testIds } from '../../../components/testIds';
-import { Alert, LinkButton, InteractiveTable, EmptyState, TextLink, Button } from '@grafana/ui';
+import { Alert, LinkButton, InteractiveTable, EmptyState } from '@grafana/ui';
 import { useTimeIntervals } from '../hooks/useTimeIntervals';
 import { t } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE, ROUTES } from '../../../constants';
@@ -12,31 +13,33 @@ import { prefixRoute } from '../../../utils/utils.routing';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { deleteMuteTimingAction } from '../../../reducers/alertmanager/timeIntervals';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
+import { TimeIntervalDrawer } from '../components/TimeIntervalDrawer';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error } = useTimeIntervals();
   const hasConfigurationAPI = useHasConfigurationAPI();
 
   const [produceNewConfig, { error: deleteError }] = useProduceNewAlertmanagerConfiguration();
-  const [deletingName, setDeletingName] = useState<string | null>(null);
+  const [selectedTimeInterval, setSelectedTimeInterval] = useState<TimeInterval | null>(null);
 
-  const handleDelete = async (name: string) => {
-    if (
-      !window.confirm(t('time-intervals.delete-confirm', `Are you sure you want to delete time interval "${name}"?`))
-    ) {
-      return;
-    }
-
-    setDeletingName(name);
+  const handleDelete = async (timeInterval: TimeInterval) => {
     try {
-      await produceNewConfig(deleteMuteTimingAction({ name }));
+      await produceNewConfig(deleteMuteTimingAction({ name: timeInterval.name }));
+      setSelectedTimeInterval(null);
       // The list will automatically refresh due to cache invalidation
     } catch (err) {
       console.error('Failed to delete time interval:', err);
-    } finally {
-      setDeletingName(null);
     }
   };
+
+  const handleEdit = (timeInterval: TimeInterval) => {
+    // TODO: Implement edit functionality
+    console.log('Edit time interval:', timeInterval.name);
+  };
+
+  const clickableCellStyles = css({
+    cursor: 'pointer',
+  });
 
   const formatTimeRange = (times?: Array<{ start_time: string; end_time: string }>) => {
     if (!times || times.length === 0) {
@@ -84,44 +87,26 @@ function TimeIntervalsPage() {
       .join('\n');
   };
 
-  const baseColumns = [
+  const columns = [
     {
       id: 'name',
       header: t('time-intervals.column.name', 'Name'),
       cell: ({ row: { original } }: { row: { original: TimeInterval } }) => (
-        <TextLink href={prefixRoute(`${ROUTES.TimeIntervals}/${encodeURIComponent(original.name)}`)}>
+        <div className={clickableCellStyles} onClick={() => setSelectedTimeInterval(original)}>
           {original.name}
-        </TextLink>
+        </div>
       ),
     },
     {
       id: 'details',
       header: t('time-intervals.column.details', 'Details'),
       cell: ({ row: { original } }: { row: { original: TimeInterval } }) => (
-        <div style={{ whiteSpace: 'pre-line' }}>{formatTimeIntervalDetails(original)}</div>
+        <div className={clickableCellStyles} onClick={() => setSelectedTimeInterval(original)}>
+          <div style={{ whiteSpace: 'pre-line' }}>{formatTimeIntervalDetails(original)}</div>
+        </div>
       ),
     },
   ];
-
-  const actionsColumn = {
-    id: 'actions',
-    header: t('time-intervals.column.actions', 'Actions'),
-    cell: ({ row: { original } }: { row: { original: TimeInterval } }) => (
-      <Button
-        variant="destructive"
-        size="sm"
-        icon="trash-alt"
-        disabled={deletingName === original.name}
-        onClick={() => handleDelete(original.name)}
-      >
-        {deletingName === original.name
-          ? t('time-intervals.deleting', 'Deleting...')
-          : t('time-intervals.delete-button', 'Delete')}
-      </Button>
-    ),
-  };
-
-  const columns = hasConfigurationAPI ? [...baseColumns, actionsColumn] : baseColumns;
 
   return (
     <AlertmanagerPage>
@@ -170,6 +155,16 @@ function TimeIntervalsPage() {
           />
         )}
       </div>
+      {selectedTimeInterval && (
+        <TimeIntervalDrawer
+          timeInterval={selectedTimeInterval}
+          onClose={() => {
+            setSelectedTimeInterval(null);
+          }}
+          onEdit={hasConfigurationAPI ? handleEdit : undefined}
+          onRemove={hasConfigurationAPI ? handleDelete : undefined}
+        />
+      )}
     </AlertmanagerPage>
   );
 }
