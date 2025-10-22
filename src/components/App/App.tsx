@@ -65,7 +65,6 @@ function App(_props: AppRootProps) {
         <Route path={ROUTES.EditSilence} element={<SilenceForm />} />
         <Route path={ROUTES.Silences} element={<Silences />} />
         <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
-        <Route path={ROUTES.EditTimeInterval} element={<TimeIntervalForm />} />
         <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
         <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
         <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />

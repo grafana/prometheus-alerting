@@ -7,7 +7,8 @@ import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
-import { useDeleteTimeInterval } from '../hooks/useTimeIntervals';
+import { useDeleteTimeInterval, useUpdateTimeInterval } from '../hooks/useTimeIntervals';
+import { TimeIntervalFormFields, type TimeIntervalFormData } from './TimeIntervalFormFields';
 
 interface TimeIntervalDetailsProps {
   timeInterval: TimeInterval;
@@ -74,20 +75,54 @@ function TimeIntervalDetails({ timeInterval }: TimeIntervalDetailsProps) {
 interface TimeIntervalDrawerProps {
   timeInterval: TimeInterval | null;
   onClose: () => void;
-  onEdit?: (timeInterval: TimeInterval) => void;
 }
 
-export function TimeIntervalDrawer({ timeInterval, onClose, onEdit }: TimeIntervalDrawerProps) {
+export function TimeIntervalDrawer({ timeInterval, onClose }: TimeIntervalDrawerProps) {
+  const [isEditMode, setIsEditMode] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const hasConfigurationAPI = useHasConfigurationAPI();
   const [deleteTimeInterval, { isLoading: isDeleting, error: deleteError }] = useDeleteTimeInterval();
+  const [updateTimeInterval, { isLoading: isUpdating, error: updateError }] = useUpdateTimeInterval();
 
   if (!timeInterval) {
     return null;
   }
 
   const handleEdit = () => {
-    onEdit?.(timeInterval);
+    setIsEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+  };
+
+  const handleSaveEdit = async (data: TimeIntervalFormData) => {
+    const updatedTimeInterval = {
+      name: data.name,
+      time_intervals: [
+        {
+          times: [
+            {
+              start_time: data.startTime,
+              end_time: data.endTime,
+            },
+          ],
+          weekdays: data.weekdays ? data.weekdays.split(',').map((d) => d.trim()) : undefined,
+          days_of_month: data.daysOfMonth ? data.daysOfMonth.split(',').map((d) => d.trim()) : undefined,
+          months: data.months ? data.months.split(',').map((m) => m.trim()) : undefined,
+          years: data.years ? data.years.split(',').map((y) => y.trim()) : undefined,
+          location: data.location || undefined,
+        },
+      ],
+    };
+
+    try {
+      await updateTimeInterval(updatedTimeInterval, timeInterval.name);
+      setIsEditMode(false);
+      onClose();
+    } catch (err) {
+      console.error('Failed to update time interval:', err);
+    }
   };
 
   const handleRemove = () => {
@@ -110,8 +145,6 @@ export function TimeIntervalDrawer({ timeInterval, onClose, onEdit }: TimeInterv
     setIsConfirmModalOpen(false);
   };
 
-  const hasActions = onEdit || hasConfigurationAPI;
-
   return (
     <>
       <DrawerWithFooter
@@ -124,21 +157,17 @@ export function TimeIntervalDrawer({ timeInterval, onClose, onEdit }: TimeInterv
           </Stack>
         }
         onClose={onClose}
-        width={400}
+        width={isEditMode ? 500 : 400}
         footer={
-          hasActions ? (
+          !isEditMode && hasConfigurationAPI ? (
             <Stack gap={2} justifyContent="space-between">
-              {onEdit && (
-                <Button variant="secondary" onClick={handleEdit}>
-                  {t('time-intervals.drawer.edit', 'Edit')}
-                </Button>
-              )}
+              <Button variant="secondary" onClick={handleEdit}>
+                {t('time-intervals.drawer.edit', 'Edit')}
+              </Button>
               <div style={{ flex: 1 }} />
-              {hasConfigurationAPI && (
-                <Button variant="destructive" onClick={handleRemove} disabled={isDeleting}>
-                  {t('time-intervals.drawer.remove', 'Remove')}
-                </Button>
-              )}
+              <Button variant="destructive" onClick={handleRemove} disabled={isDeleting}>
+                {t('time-intervals.drawer.remove', 'Remove')}
+              </Button>
             </Stack>
           ) : undefined
         }
@@ -150,7 +179,24 @@ export function TimeIntervalDrawer({ timeInterval, onClose, onEdit }: TimeInterv
               : t('time-intervals.error-deleting-message', 'Failed to delete time interval')}
           </Alert>
         )}
-        <TimeIntervalDetails timeInterval={timeInterval} />
+        {isEditMode ? (
+          <TimeIntervalFormFields
+            timeInterval={timeInterval}
+            onSubmit={handleSaveEdit}
+            onCancel={handleCancelEdit}
+            isLoading={isUpdating}
+            error={updateError}
+            submitButtonText={
+              isUpdating
+                ? t('time-intervals.edit.updating', 'Updating...')
+                : t('time-intervals.edit.update-button', 'Update')
+            }
+            cancelButtonText={t('time-intervals.edit.cancel-button', 'Cancel')}
+            showNameField={false}
+          />
+        ) : (
+          <TimeIntervalDetails timeInterval={timeInterval} />
+        )}
       </DrawerWithFooter>
 
       <ConfirmModal

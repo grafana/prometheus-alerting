@@ -22,7 +22,6 @@ export enum ROUTES {
   EditSilence = 'silences/:id/edit',
   TimeIntervals = 'time-intervals',
   CreateTimeInterval = 'time-intervals/new',
-  EditTimeInterval = 'time-intervals/:name/edit',
   InhibitRules = 'inhibit-rules',
 }
 

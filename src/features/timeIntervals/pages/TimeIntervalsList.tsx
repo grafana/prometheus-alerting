@@ -12,21 +12,12 @@ import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { TimeIntervalDrawer } from '../components/TimeIntervalDrawer';
-import { locationService } from '@grafana/runtime';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error } = useTimeIntervals();
   const hasConfigurationAPI = useHasConfigurationAPI();
 
   const [selectedTimeInterval, setSelectedTimeInterval] = useState<TimeInterval | null>(null);
-
-  const handleEdit = (timeInterval: TimeInterval) => {
-    // Close the drawer
-    setSelectedTimeInterval(null);
-    // Navigate to the edit form
-    const editPath = prefixRoute(`time-intervals/${encodeURIComponent(timeInterval.name)}/edit`);
-    locationService.push(editPath);
-  };
 
   const clickableCellStyles = css({
     cursor: 'pointer',
@@ -146,7 +137,6 @@ function TimeIntervalsPage() {
           onClose={() => {
             setSelectedTimeInterval(null);
           }}
-          onEdit={hasConfigurationAPI ? handleEdit : undefined}
         />
       )}
     </AlertmanagerPage>
