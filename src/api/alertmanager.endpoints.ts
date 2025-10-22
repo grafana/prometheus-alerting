@@ -41,6 +41,7 @@ function createAlertmanagerPath(dataSourceUID: string, path: `/${string}`) {
 // Base API for Prometheus/vanilla Alertmanager
 export const baseAlertmanagerApi = createApi({
   reducerPath: 'alertmanagerApi',
+  refetchOnFocus: true,
   baseQuery: fetchBaseQuery({
     baseUrl: '/api/datasources/proxy/uid',
   }),

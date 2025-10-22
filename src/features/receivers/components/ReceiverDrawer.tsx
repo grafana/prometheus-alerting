@@ -129,6 +129,8 @@ export function ReceiverDrawer({ receiver, onClose, onEdit, onRemove }: Receiver
     onRemove?.(receiver);
   };
 
+  const hasActions = onEdit || onRemove;
+
   return (
     <DrawerWithFooter
       title={
@@ -142,14 +144,20 @@ export function ReceiverDrawer({ receiver, onClose, onEdit, onRemove }: Receiver
       onClose={onClose}
       width={400}
       footer={
-        <Stack justifyContent="flex-end">
-          <Button variant="secondary" onClick={handleEdit}>
-            {t('receivers.drawer.edit', 'Edit')}
-          </Button>
-          <Button variant="destructive" onClick={handleRemove}>
-            {t('receivers.drawer.remove', 'Remove')}
-          </Button>
-        </Stack>
+        hasActions ? (
+          <Stack gap={2} justifyContent="flex-end">
+            {onEdit && (
+              <Button variant="secondary" onClick={handleEdit}>
+                {t('receivers.drawer.edit', 'Edit')}
+              </Button>
+            )}
+            {onRemove && (
+              <Button variant="destructive" onClick={handleRemove}>
+                {t('receivers.drawer.remove', 'Remove')}
+              </Button>
+            )}
+          </Stack>
+        ) : undefined
       }
     >
       <ReceiverIntegrations receiver={receiver} />
