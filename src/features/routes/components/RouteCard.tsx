@@ -14,18 +14,23 @@ export interface RouteConfig {
   group_wait?: string;
   group_interval?: string;
   repeat_interval?: string;
-  matchers?: string[];
+  matchers?: string[] | Array<{ name: string; value: string; isRegex: boolean }>;
+  active_time_intervals?: string[];
+  mute_time_intervals?: string[];
 }
 
 interface RouteCardProps {
   route: RouteConfig;
   level?: number;
+  onClick?: (route: RouteConfig) => void;
 }
 
-export function RouteCard({ route, level = 0 }: RouteCardProps) {
+export function RouteCard({ route, level = 0, onClick }: RouteCardProps) {
   const cardStyle = css`
     margin-bottom: 8px;
     margin-left: ${level * 16}px;
+    ${onClick ? 'cursor: pointer;' : ''}
+    ${onClick ? '&:hover { background-color: rgba(0, 0, 0, 0.05); }' : ''}
   `;
 
   const headerRowStyle = css`
@@ -43,16 +48,30 @@ export function RouteCard({ route, level = 0 }: RouteCardProps) {
     flex-wrap: wrap;
   `;
 
+  const handleClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking on a link
+    if ((e.target as HTMLElement).tagName === 'A' || (e.target as HTMLElement).closest('a')) {
+      return;
+    }
+    if (onClick) {
+      onClick(route);
+    }
+  };
+
   return (
     <>
-      <Card className={cardStyle}>
+      <Card className={cardStyle} onClick={handleClick}>
         <Card.Heading>
           <div className={headerRowStyle}>
             {route.matchers && route.matchers.length > 0 ? (
               <div className={matchersContainerStyle}>
-                {route.matchers.map((matcher, index) => (
-                  <AlertLabel key={index} value={matcher} colorBy="value" size="sm" />
-                ))}
+                {route.matchers.map((matcher, index) => {
+                  const matcherString =
+                    typeof matcher === 'string'
+                      ? matcher
+                      : `${matcher.name}${matcher.isRegex ? '=~' : '='}${matcher.value}`;
+                  return <AlertLabel key={index} value={matcherString} colorBy="value" size="sm" />;
+                })}
               </div>
             ) : (
               <Trans i18nKey="routes.route-label">Route</Trans>
@@ -115,7 +134,7 @@ export function RouteCard({ route, level = 0 }: RouteCardProps) {
       {route.routes && route.routes.length > 0 && (
         <>
           {route.routes.map((childRoute, index) => (
-            <RouteCard key={index} route={childRoute} level={level + 1} />
+            <RouteCard key={index} route={childRoute} level={level + 1} onClick={onClick} />
           ))}
         </>
       )}

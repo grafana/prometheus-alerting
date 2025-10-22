@@ -29,7 +29,7 @@ type TimeIntervalFormData = z.infer<typeof TimeIntervalFormSchema>;
 function TimeIntervalForm() {
   const { name } = useParams<{ name: string }>();
   const isEditMode = Boolean(name);
-  const { isLoading: isLoadingTimeIntervals, error: loadError } = useTimeIntervals();
+  const { timeIntervals, isLoading: isLoadingTimeIntervals, error: loadError } = useTimeIntervals();
   const [addTimeInterval, { isLoading: isAdding, error: addError, isSuccess: isAddSuccess }] = useAddTimeInterval();
   const [updateTimeInterval, { isLoading: isUpdating, error: updateError, isSuccess: isUpdateSuccess }] =
     useUpdateTimeInterval();
