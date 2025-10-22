@@ -1,8 +1,8 @@
 import React from 'react';
 import { css } from '@emotion/css';
 import { GrafanaTheme2, dateTimeFormat } from '@grafana/data';
-import { useStyles2 } from '@grafana/ui';
-import { t } from '@grafana/i18n';
+import { useStyles2, Stack, Box, Text, Badge, Alert } from '@grafana/ui';
+import { Trans, t } from '@grafana/i18n';
 import { PromRuleDTO, PromRuleGroupDTO, RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
 interface Props {
@@ -48,81 +48,114 @@ export function DetailsTab({ promRule, rulerRule, promGroup, rulerGroup, hasRule
   })();
 
   return (
-    <div className={styles.container}>
-      <h3 className={styles.sectionTitle}>{t('rule-details.details.evaluation-behavior', 'Evaluation Behavior')}</h3>
+    <Box padding={2}>
+      <Stack direction="column" gap={3}>
+        {/* Evaluation Behavior Section */}
+        <Box>
+          <Box marginBottom={2}>
+            <Text variant="h5">
+              <Trans i18nKey="rule-details.details.evaluation-behavior">Evaluation Behavior</Trans>
+            </Text>
+          </Box>
 
-      <div className={styles.detailsGrid}>
-        {interval && (
-          <DetailField label={t('rule-details.field.interval', 'Evaluation Interval')}>
-            {t('rule-details.field.interval-value', 'Every {{interval}}', { interval })}
-          </DetailField>
-        )}
+          <div className={styles.detailsGrid}>
+            {interval && (
+              <DetailField label={t('rule-details.field.interval', 'Evaluation Interval')}>
+                {t('rule-details.field.interval-value', 'Every {{interval}}', { interval })}
+              </DetailField>
+            )}
 
-        {forDuration && <DetailField label={t('rule-details.field.for', 'Pending Period')}>{forDuration}</DetailField>}
+            {forDuration && (
+              <DetailField label={t('rule-details.field.for', 'Pending Period')}>{forDuration}</DetailField>
+            )}
 
-        {promRule.lastEvaluation && (
-          <DetailField label={t('rule-details.field.last-evaluation', 'Last Evaluation')}>
-            {dateTimeFormat(promRule.lastEvaluation)}
-          </DetailField>
-        )}
+            {promRule.lastEvaluation && (
+              <DetailField label={t('rule-details.field.last-evaluation', 'Last Evaluation')}>
+                {dateTimeFormat(promRule.lastEvaluation)}
+              </DetailField>
+            )}
 
-        {promRule.evaluationTime !== undefined && (
-          <DetailField label={t('rule-details.field.evaluation-time', 'Evaluation Time')}>
-            {promRule.evaluationTime.toFixed(3)}s
-          </DetailField>
-        )}
+            {promRule.evaluationTime !== undefined && (
+              <DetailField label={t('rule-details.field.evaluation-time', 'Evaluation Time')}>
+                {t('rule-details.field.evaluation-time-value', '{{time}}s', {
+                  time: promRule.evaluationTime.toFixed(3),
+                })}
+              </DetailField>
+            )}
 
-        {promRule.health && (
-          <DetailField label={t('rule-details.field.health', 'Health')}>{promRule.health}</DetailField>
-        )}
-
-        {promRule.lastError && (
-          <DetailField label={t('rule-details.field.last-error', 'Last Error')}>
-            <pre className={styles.error}>{promRule.lastError}</pre>
-          </DetailField>
-        )}
-      </div>
-
-      {Object.keys(labels).length > 0 && (
-        <>
-          <h3 className={styles.sectionTitle}>{t('rule-details.details.labels', 'Labels')}</h3>
-          <div className={styles.keyValueList}>
-            {Object.entries(labels).map(([key, value]) => (
-              <div key={key} className={styles.keyValue}>
-                <span className={styles.key}>{key}:</span>
-                <span className={styles.value}>{value}</span>
-              </div>
-            ))}
+            {promRule.health && (
+              <DetailField label={t('rule-details.field.health', 'Health')}>{promRule.health}</DetailField>
+            )}
           </div>
-        </>
-      )}
 
-      {Object.keys(annotations).length > 0 && (
-        <>
-          <h3 className={styles.sectionTitle}>{t('rule-details.details.annotations', 'Annotations')}</h3>
-          <div className={styles.keyValueList}>
-            {Object.entries(annotations).map(([key, value]) => (
-              <div key={key} className={styles.keyValue}>
-                <span className={styles.key}>{key}:</span>
-                <span className={styles.value}>{value}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+          {promRule.lastError && (
+            <Box marginTop={2}>
+              <Alert title={t('rule-details.field.last-error', 'Last Error')} severity="error">
+                <pre className={styles.errorPre}>{promRule.lastError}</pre>
+              </Alert>
+            </Box>
+          )}
+        </Box>
 
-      <div className={styles.dataSource}>
-        {hasRulerApi ? (
-          <span className={styles.dataSourceBadge}>
-            {t('rule-details.details.ruler-available', '✓ Ruler API Available')}
-          </span>
-        ) : (
-          <span className={styles.dataSourceBadgeWarning}>
-            {t('rule-details.details.ruler-unavailable', '⚠ Ruler API Unavailable (Read-only)')}
-          </span>
+        {/* Labels Section */}
+        {Object.keys(labels).length > 0 && (
+          <Box>
+            <Box marginBottom={2}>
+              <Text variant="h5">
+                <Trans i18nKey="rule-details.details.labels">Labels</Trans>
+              </Text>
+            </Box>
+            <Stack direction="column" gap={1}>
+              {Object.entries(labels).map(([key, value]) => (
+                <Box key={key} padding={1} backgroundColor="secondary" borderRadius="default" display="flex" gap={1}>
+                  <Text variant="bodySmall" weight="medium">
+                    {key}:
+                  </Text>
+                  <Text variant="bodySmall" color="secondary">
+                    {value}
+                  </Text>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
         )}
-      </div>
-    </div>
+
+        {/* Annotations Section */}
+        {Object.keys(annotations).length > 0 && (
+          <Box>
+            <Box marginBottom={2}>
+              <Text variant="h5">
+                <Trans i18nKey="rule-details.details.annotations">Annotations</Trans>
+              </Text>
+            </Box>
+            <Stack direction="column" gap={1}>
+              {Object.entries(annotations).map(([key, value]) => (
+                <Box key={key} padding={1} backgroundColor="secondary" borderRadius="default" display="flex" gap={1}>
+                  <Text variant="bodySmall" weight="medium">
+                    {key}:
+                  </Text>
+                  <Text variant="bodySmall" color="secondary">
+                    {value}
+                  </Text>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        )}
+
+        {/* Data Source Status */}
+        <Box marginTop={1} paddingTop={2} borderStyle="solid" borderColor="weak">
+          {hasRulerApi ? (
+            <Badge text={t('rule-details.details.ruler-available', '✓ Ruler API Available')} color="green" />
+          ) : (
+            <Badge
+              text={t('rule-details.details.ruler-unavailable', '⚠ Ruler API Unavailable (Read-only)')}
+              color="orange"
+            />
+          )}
+        </Box>
+      </Stack>
+    </Box>
   );
 }
 
@@ -132,13 +165,13 @@ interface DetailFieldProps {
 }
 
 function DetailField({ label, children }: DetailFieldProps) {
-  const styles = useStyles2(getFieldStyles);
-
   return (
-    <div className={styles.field}>
-      <div className={styles.label}>{label}</div>
-      <div className={styles.value}>{children}</div>
-    </div>
+    <Stack direction="column" gap={0.5}>
+      <Text variant="bodySmall" weight="medium" color="secondary">
+        {label}
+      </Text>
+      <Text variant="body">{children ?? ''}</Text>
+    </Stack>
   );
 }
 
@@ -155,89 +188,14 @@ function formatDuration(seconds: number): string {
 }
 
 const getStyles = (theme: GrafanaTheme2) => ({
-  container: css({
-    padding: theme.spacing(2),
-  }),
-  sectionTitle: css({
-    fontSize: theme.typography.h5.fontSize,
-    fontWeight: theme.typography.fontWeightMedium,
-    marginTop: theme.spacing(3),
-    marginBottom: theme.spacing(2),
-    '&:first-child': {
-      marginTop: 0,
-    },
-  }),
   detailsGrid: css({
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
     gap: theme.spacing(2),
   }),
-  keyValueList: css({
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing(1),
-  }),
-  keyValue: css({
-    display: 'flex',
-    gap: theme.spacing(1),
-    padding: theme.spacing(1),
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.shape.radius.default,
-  }),
-  key: css({
-    fontWeight: theme.typography.fontWeightMedium,
-    color: theme.colors.text.primary,
-    minWidth: '150px',
-  }),
-  value: css({
-    color: theme.colors.text.secondary,
-    wordBreak: 'break-word',
-  }),
-  error: css({
-    padding: theme.spacing(1),
-    backgroundColor: theme.colors.error.transparent,
-    border: `1px solid ${theme.colors.error.border}`,
-    borderRadius: theme.shape.radius.default,
+  errorPre: css({
     fontSize: theme.typography.bodySmall.fontSize,
     whiteSpace: 'pre-wrap',
     margin: 0,
-  }),
-  dataSource: css({
-    marginTop: theme.spacing(3),
-    paddingTop: theme.spacing(2),
-    borderTop: `1px solid ${theme.colors.border.weak}`,
-  }),
-  dataSourceBadge: css({
-    display: 'inline-block',
-    padding: theme.spacing(0.5, 1),
-    backgroundColor: theme.colors.success.transparent,
-    color: theme.colors.success.text,
-    borderRadius: theme.shape.radius.default,
-    fontSize: theme.typography.bodySmall.fontSize,
-  }),
-  dataSourceBadgeWarning: css({
-    display: 'inline-block',
-    padding: theme.spacing(0.5, 1),
-    backgroundColor: theme.colors.warning.transparent,
-    color: theme.colors.warning.text,
-    borderRadius: theme.shape.radius.default,
-    fontSize: theme.typography.bodySmall.fontSize,
-  }),
-});
-
-const getFieldStyles = (theme: GrafanaTheme2) => ({
-  field: css({
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing(0.5),
-  }),
-  label: css({
-    fontSize: theme.typography.bodySmall.fontSize,
-    fontWeight: theme.typography.fontWeightMedium,
-    color: theme.colors.text.secondary,
-  }),
-  value: css({
-    fontSize: theme.typography.body.fontSize,
-    color: theme.colors.text.primary,
   }),
 });

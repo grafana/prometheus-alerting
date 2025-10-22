@@ -1,6 +1,6 @@
 import { PromRuleDTO, PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
-import { fuzzyMatches } from '../../../../utils/fuzzySearch';
+import { fuzzyMatches } from './fuzzySearch';
 import { labelsMatchMatchers, looseParseMatcher } from '../../../../utils/labels';
 
 interface GroupFilterOptions {
