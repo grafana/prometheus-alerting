@@ -2,8 +2,9 @@ import { css } from '@emotion/css';
 import React from 'react';
 import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { Alert, Stack, useStyles2, Drawer, Text } from '@grafana/ui';
+import { Alert, Stack, useStyles2, Text, Button } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
+import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { extractIntegrationsFromReceiver } from '../utils/integrationIcons';
 
 interface KeyValuePairProps {
@@ -111,17 +112,25 @@ function ReceiverIntegrations({ receiver }: ReceiverIntegrationsProps) {
 interface ReceiverDrawerProps {
   receiver: Receiver | null;
   onClose: () => void;
+  onEdit?: (receiver: Receiver) => void;
+  onRemove?: (receiver: Receiver) => void;
 }
 
-export function ReceiverDrawer({ receiver, onClose }: ReceiverDrawerProps) {
-  const styles = useStyles2(getStyles);
-
+export function ReceiverDrawer({ receiver, onClose, onEdit, onRemove }: ReceiverDrawerProps) {
   if (!receiver) {
     return null;
   }
 
+  const handleEdit = () => {
+    onEdit?.(receiver);
+  };
+
+  const handleRemove = () => {
+    onRemove?.(receiver);
+  };
+
   return (
-    <Drawer
+    <DrawerWithFooter
       title={
         <Stack direction="column" gap={0}>
           <Text variant="bodySmall" color="secondary">
@@ -132,19 +141,23 @@ export function ReceiverDrawer({ receiver, onClose }: ReceiverDrawerProps) {
       }
       onClose={onClose}
       width={400}
-      scrollableContent={true}
+      footer={
+        <Stack justifyContent="flex-end">
+          <Button variant="secondary" onClick={handleEdit}>
+            {t('receivers.drawer.edit', 'Edit')}
+          </Button>
+          <Button variant="destructive" onClick={handleRemove}>
+            {t('receivers.drawer.remove', 'Remove')}
+          </Button>
+        </Stack>
+      }
     >
-      <div className={styles.drawerContent}>
-        <ReceiverIntegrations receiver={receiver} />
-      </div>
-    </Drawer>
+      <ReceiverIntegrations receiver={receiver} />
+    </DrawerWithFooter>
   );
 }
 
 const getStyles = (theme: GrafanaTheme2) => ({
-  drawerContent: css({
-    padding: theme.spacing(2),
-  }),
   integrationCard: css({
     border: `1px solid ${theme.colors.border.weak}`,
     borderRadius: theme.shape.radius.default,
@@ -187,9 +200,9 @@ const getStyles = (theme: GrafanaTheme2) => ({
   value: css({
     fontSize: theme.typography.body.fontSize,
     color: theme.colors.text.primary,
+    whiteSpace: 'preserve',
     margin: 0,
-    wordBreak: 'break-word',
+    wordBreak: 'break-all',
     textAlign: 'right',
-    flexShrink: 0,
   }),
 });
