@@ -17,7 +17,7 @@ const MatchersCell = ({ matchers }: { matchers?: string[] }) => {
 
   return (
     <Stack direction="row">
-      {matchers.map((matcher, index) => (
+      {matchers.map((matcher) => (
         <AlertLabel key={matcher} value={matcher} colorBy="value" />
       ))}
     </Stack>

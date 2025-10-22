@@ -3,9 +3,11 @@
  * Supports label matchers like: team=frontend, severity!=low, region=~us-.*, cluster!~test.*
  */
 
+import { MatcherOperator } from '@grafana/external-alertmanager/vanilla';
+
 export interface Matcher {
   name: string;
-  operator: '=' | '!=' | '=~' | '!~';
+  operator: MatcherOperator;
   value: string;
 }
 

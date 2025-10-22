@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../../components/testIds';
@@ -7,12 +7,11 @@ import { useRoutes } from '../hooks/useRoutes';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { t } from '@grafana/i18n';
 import { computeInheritedTree } from '@grafana/alerting/unstable';
-import { RouteCard, type RouteConfig } from '../components/RouteCard';
-import { RouteDrawer } from '../components/RouteDrawer';
+import { RouteCard } from '../components/RouteCard';
+import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 
 function RoutesPage() {
   const { route, isLoading, error } = useRoutes();
-  const [selectedRoute, setSelectedRoute] = useState<RouteConfig | null>(null);
 
   // Compute the inherited tree to show all properties including inherited ones
   const routeTree = useMemo(() => {
@@ -20,16 +19,8 @@ function RoutesPage() {
       return undefined;
     }
     // @ts-expect-error - Type mismatch between Route and computeInheritedTree expected type, but they're compatible at runtime
-    return computeInheritedTree(route) as any as RouteConfig;
+    return computeInheritedTree(route) as any as RouteWithID;
   }, [route]);
-
-  const handleRouteClick = (route: RouteConfig) => {
-    setSelectedRoute(route);
-  };
-
-  const handleCloseDrawer = () => {
-    setSelectedRoute(null);
-  };
 
   return (
     <AlertmanagerPage subTitle={t('routes.page-subtitle', 'Determine how alerts are routed to contact points')}>
@@ -42,7 +33,7 @@ function RoutesPage() {
         )}
         {!isLoading && routeTree && !error && (
           <div>
-            <RouteCard route={routeTree} onClick={handleRouteClick} />
+            <RouteCard currentRoute={routeTree} numberOfMatchingInstances={0} isDefaultPolicy={true} />
           </div>
         )}
         {!isLoading && !route && !error && (
@@ -52,7 +43,6 @@ function RoutesPage() {
           />
         )}
       </div>
-      {selectedRoute && <RouteDrawer route={selectedRoute} onClose={handleCloseDrawer} />}
     </AlertmanagerPage>
   );
 }

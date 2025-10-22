@@ -73,7 +73,7 @@
   },
   "dependencies": {
     "@emotion/css": "11.10.6",
-    "@grafana/alerting": "^12.3.0-18459344598",
+    "@grafana/alerting": "^12.3.0-18720481639",
     "@grafana/data": "^12.2.0",
     "@grafana/i18n": "^12.2.0",
     "@grafana/runtime": "^12.2.0",
@@ -96,6 +96,7 @@
     "reduce-reducers": "^1.0.4",
     "rxjs": "7.8.2",
     "tinycolor2": "^1.6.0",
+    "type-fest": "^5.1.0",
     "yaml": "^2.8.1",
     "zod": "^4.1.12"
   },
