@@ -8,7 +8,12 @@ import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
 import { Button, Icon, IconButton, Stack, Text, Tooltip, getTagColorsFromName, useStyles2 } from '@grafana/ui';
 
-import { normalizeMatchers, ObjectMatcher, stringifyObjectMatcher } from '@grafana/external-alertmanager/vanilla';
+import {
+  normalizeMatchers,
+  ObjectMatcher,
+  stringifyObjectMatcher,
+  Route,
+} from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { MetaText } from 'features/rules/list/components/MetaText';
 import { AlertLabel } from '@grafana/alerting';
@@ -19,10 +24,16 @@ interface Props {
   numberOfMatchingInstances: number;
   currentRoute: RouteWithID;
   isDefaultPolicy?: boolean;
+  onRouteClick?: (route: Route) => void;
 }
 
 const RouteCard = (props: Props) => {
-  const { numberOfMatchingInstances: mumberOfMatchingInstances, currentRoute, isDefaultPolicy = false } = props;
+  const {
+    numberOfMatchingInstances: mumberOfMatchingInstances,
+    currentRoute,
+    isDefaultPolicy = false,
+    onRouteClick,
+  } = props;
 
   const styles = useStyles2(getStyles);
 
@@ -55,11 +66,18 @@ const RouteCard = (props: Props) => {
   const moreCount = childPoliciesToRender.length - pageOfChildren.length;
   const showMore = moreCount > 0;
 
+  const handleClick = () => {
+    if (onRouteClick) {
+      onRouteClick(currentRoute);
+    }
+  };
+
   return (
     <Stack direction="column" gap={1.5}>
       <div
-        className={styles.policyWrapper(false)}
+        className={styles.policyWrapper(false, Boolean(onRouteClick))}
         data-testid={isDefaultPolicy ? 'am-root-route-container' : 'am-route-container'}
+        onClick={handleClick}
       >
         {/* continueMatching and showMatchesAllLabelsWarning are mutually exclusive so the icons can't overlap */}
         {continueMatching && <ContinueMatchingIndicator />}
@@ -121,7 +139,12 @@ const RouteCard = (props: Props) => {
         {showPolicyChildren && (
           <>
             {pageOfChildren.map((child: RouteWithID) => (
-              <RouteCard key={child.id} currentRoute={child} numberOfMatchingInstances={0} />
+              <RouteCard
+                key={child.id}
+                currentRoute={child}
+                numberOfMatchingInstances={0}
+                onRouteClick={onRouteClick}
+              />
             ))}
             {showMore && (
               <Button
@@ -410,7 +433,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
   policyItemWrapper: css({
     padding: theme.spacing(1.5),
   }),
-  policyWrapper: (hasFocus = false) =>
+  policyWrapper: (hasFocus = false, isClickable = false) =>
     css({
       flex: 1,
       position: 'relative',
@@ -420,6 +443,13 @@ const getStyles = (theme: GrafanaTheme2) => ({
       ...(hasFocus && {
         borderColor: theme.colors.primary.border,
         background: theme.colors.primary.transparent,
+      }),
+      ...(isClickable && {
+        cursor: 'pointer',
+        '&:hover': {
+          background: theme.colors.background.elevated,
+          borderColor: theme.colors.border.medium,
+        },
       }),
     }),
   metadata: css({
