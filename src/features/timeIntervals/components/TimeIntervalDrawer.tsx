@@ -169,11 +169,13 @@ export function TimeIntervalDrawer({ timeInterval, onClose }: TimeIntervalDrawer
           ) : undefined
         }
       >
-        {deleteError && (
+        {Boolean(deleteError) && (
           <Alert title={t('time-intervals.error-deleting-title', 'Error deleting time interval')} severity="error">
-            {deleteError instanceof Error
-              ? deleteError.message
-              : t('time-intervals.error-deleting-message', 'Failed to delete time interval')}
+            {String(
+              deleteError instanceof Error
+                ? deleteError.message
+                : t('time-intervals.error-deleting-message', 'Failed to delete time interval')
+            )}
           </Alert>
         )}
         {isEditMode ? (

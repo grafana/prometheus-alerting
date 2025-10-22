@@ -17,18 +17,12 @@ const ROUTES_PER_PAGE = 20;
 
 interface Props {
   numberOfMatchingInstances: number;
-
   currentRoute: RouteWithID;
   isDefaultPolicy?: boolean;
 }
 
 const RouteCard = (props: Props) => {
-  const {
-    numberOfMatchingInstances: mumberOfMatchingInstances,
-
-    currentRoute,
-    isDefaultPolicy = false,
-  } = props;
+  const { numberOfMatchingInstances: mumberOfMatchingInstances, currentRoute, isDefaultPolicy = false } = props;
 
   const styles = useStyles2(getStyles);
 
@@ -92,6 +86,7 @@ const RouteCard = (props: Props) => {
                   <>
                     {hasMatchers ? (
                       <>
+                        {/* @TODO we should use the "key" as the "colorBy" here but we can't because we stringify the entire matcher :( */}
                         {matchers.map((matcher, index) => (
                           <AlertLabel key={index} value={stringifyObjectMatcher(matcher)} colorBy="value" size="sm" />
                         ))}

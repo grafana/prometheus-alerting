@@ -128,11 +128,13 @@ export function ReceiverDrawer({ receiver, onClose }: ReceiverDrawerProps) {
       }
     >
       <Stack direction="column" gap={2}>
-        {deleteError && (
+        {Boolean(deleteError) && (
           <Alert title={t('receivers.error-deleting-title', 'Error deleting receiver')} severity="error">
-            {deleteError instanceof Error
-              ? deleteError.message
-              : t('receivers.error-deleting-message', 'Failed to delete receiver')}
+            {String(
+              deleteError instanceof Error
+                ? deleteError.message
+                : t('receivers.error-deleting-message', 'Failed to delete receiver')
+            )}
           </Alert>
         )}
         <ReceiverIntegrations receiver={receiver} />

@@ -81,7 +81,7 @@ export function TimeIntervalFormFields({
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack direction="column" gap={2}>
-        {error && (
+        {Boolean(error) && (
           <Alert
             title={
               isEditMode
@@ -90,7 +90,9 @@ export function TimeIntervalFormFields({
             }
             severity="error"
           >
-            {error instanceof Error ? error.message : t('time-intervals.form.error-generic', 'An error occurred')}
+            {String(
+              error instanceof Error ? error.message : t('time-intervals.form.error-generic', 'An error occurred')
+            )}
           </Alert>
         )}
 

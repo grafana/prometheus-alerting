@@ -1,5 +1,5 @@
 import { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
-import { AlertmanagerReceiverBuilder } from '../../mockApi';
+import { Receiver } from '@grafana/external-alertmanager/vanilla';
 
 import { addReceiverAction, deleteReceiverAction, receiversReducer, updateReceiverAction } from './receivers';
 
@@ -23,22 +23,20 @@ describe('receivers', () => {
 
   describe('adding receivers', () => {
     it('should be able to add a new Alertmanager receiver', () => {
-      const newReceiver = new AlertmanagerReceiverBuilder()
-        .withName('new contact point')
-        .addEmailConfig((b) => b.withTo('address@domain.com'))
-        .build();
+      const newReceiver: Receiver = {
+        name: 'new contact point',
+        email_configs: [{ to: 'address@domain.com' }],
+      };
 
       const action = addReceiverAction(newReceiver);
       expect(receiversReducer(initialConfig, action)).toMatchSnapshot();
     });
 
     it('should be able to add a new Grafana Alertmanager receiver', () => {
-      const newReceiver = new AlertmanagerReceiverBuilder()
-        .withName('another contact point')
-        .addGrafanaReceiverConfig((receiver) =>
-          receiver.withType('oncall').withName('emea-oncall').addSetting('url', 'https://oncall.example.com')
-        )
-        .build();
+      const newReceiver: Receiver = {
+        name: 'another contact point',
+        webhook_configs: [{ url: 'https://oncall.example.com' }],
+      };
 
       const action = addReceiverAction(newReceiver);
       expect(receiversReducer(initialConfig, action)).toMatchSnapshot();
@@ -52,7 +50,7 @@ describe('receivers', () => {
         template_files: {},
       };
 
-      const newReceiver = new AlertmanagerReceiverBuilder().withName('my receiver').build();
+      const newReceiver: Receiver = { name: 'my receiver' };
       const action = addReceiverAction(newReceiver);
 
       expect(() => {
@@ -70,7 +68,7 @@ describe('receivers', () => {
         template_files: {},
       };
 
-      const updatedReceiver = new AlertmanagerReceiverBuilder().withName('my receiver').build();
+      const updatedReceiver: Receiver = { name: 'my receiver' };
       const action = updateReceiverAction({ name: 'does not exist', receiver: updatedReceiver });
 
       expect(() => {
@@ -86,7 +84,7 @@ describe('receivers', () => {
         template_files: {},
       };
 
-      const updatedReceiver = new AlertmanagerReceiverBuilder().withName('receiver 1').build();
+      const updatedReceiver: Receiver = { name: 'receiver 1' };
       const action = updateReceiverAction({ name: 'receiver 2', receiver: updatedReceiver });
 
       expect(() => {
@@ -106,17 +104,17 @@ describe('receivers', () => {
         template_files: {},
       };
 
-      const updatedReceiver = new AlertmanagerReceiverBuilder().withName('receiver 2').build();
+      const updatedReceiver: Receiver = { name: 'receiver 2' };
       const action = updateReceiverAction({ name: 'receiver 1', receiver: updatedReceiver });
 
       expect(receiversReducer(config, action)).toMatchSnapshot();
     });
 
     it('should allow updating an existing receiver', () => {
-      const existingReceiver = new AlertmanagerReceiverBuilder()
-        .withName('existing receiver')
-        .addEmailConfig((build) => build.withTo('address@domain.com'))
-        .build();
+      const existingReceiver: Receiver = {
+        name: 'existing receiver',
+        email_configs: [{ to: 'address@domain.com' }],
+      };
 
       const config: ParsedUserConfiguration = {
         alertmanager_config: {
@@ -125,10 +123,10 @@ describe('receivers', () => {
         template_files: {},
       };
 
-      const updatedReceiver = new AlertmanagerReceiverBuilder()
-        .withName('existing receiver')
-        .addEmailConfig((build) => build.withTo('address+1@domain.com'))
-        .build();
+      const updatedReceiver: Receiver = {
+        name: 'existing receiver',
+        email_configs: [{ to: 'address+1@domain.com' }],
+      };
       const action = updateReceiverAction({ name: 'existing receiver', receiver: updatedReceiver });
 
       expect(receiversReducer(config, action)).toMatchSnapshot();

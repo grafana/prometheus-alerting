@@ -2,7 +2,6 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { AppRootProps } from '@grafana/data';
 import { config } from '@grafana/runtime';
-import { setupListeners } from '@reduxjs/toolkit/query';
 import { ROUTES, STORAGE_KEYS } from '../../constants';
 import { StoreProvider } from '../StoreProvider/StoreProvider';
 import { createStore } from '../../store/store';

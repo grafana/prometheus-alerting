@@ -4,15 +4,15 @@ import { GrafanaTheme2 } from '@grafana/data';
 import { t, Trans } from '@grafana/i18n';
 import { Alert, Stack, useStyles2, Text, TextLink } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
+import { Route } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
 import { ROUTES } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
-import type { RouteConfig } from './RouteCard';
 
 interface RouteDetailsProps {
-  route: RouteConfig;
+  route: Route;
 }
 
 function RouteDetails({ route }: RouteDetailsProps) {
@@ -44,12 +44,8 @@ function RouteDetails({ route }: RouteDetailsProps) {
       {route.matchers && route.matchers.length > 0 && (
         <Section title={t('routes.matchers-label', 'Matchers')}>
           <div className={styles.matchersContainer}>
-            {route.matchers.map((matcher, index) => {
-              const matcherString =
-                typeof matcher === 'string'
-                  ? matcher
-                  : `${matcher.name}${matcher.isRegex ? '=~' : '='}${matcher.value}`;
-              return <AlertLabel key={index} value={matcherString} colorBy="value" size="sm" />;
+            {route.matchers.map((matcher: string, index: number) => {
+              return <AlertLabel key={index} value={matcher} colorBy="value" size="sm" />;
             })}
           </div>
         </Section>
@@ -89,7 +85,7 @@ function RouteDetails({ route }: RouteDetailsProps) {
 }
 
 interface RouteDrawerProps {
-  route: RouteConfig | null;
+  route: Route | null;
   onClose: () => void;
 }
 
@@ -98,7 +94,7 @@ export function RouteDrawer({ route, onClose }: RouteDrawerProps) {
     return null;
   }
 
-  const getRouteTitle = (route: RouteConfig) => {
+  const getRouteTitle = (route: Route) => {
     if (route.matchers && route.matchers.length > 0) {
       return route.matchers.join(', ');
     }
