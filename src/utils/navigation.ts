@@ -34,6 +34,14 @@ export const rules = {
   },
 
   /**
+   * Generate a link to clone/duplicate a specific rule
+   */
+  clonePageLink(identifier: DataSourceRuleIdentifier): string {
+    const id = stringifyIdentifier(identifier);
+    return `${PLUGIN_BASE_URL}/rules/new?copyFrom=${encodeURIComponent(id)}`;
+  },
+
+  /**
    * Generate a shareable link to view a rule (full URL)
    */
   shareLink(identifier: DataSourceRuleIdentifier): string {

@@ -1,0 +1,212 @@
+import { css } from '@emotion/css';
+import React, { useMemo, useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+import { GrafanaTheme2 } from '@grafana/data';
+import { t } from '@grafana/i18n';
+import { locationService } from '@grafana/runtime';
+import { Button, Stack, useStyles2 } from '@grafana/ui';
+
+import type { RulerRuleDTO } from '@grafana/external-rules/vanilla';
+import type { CloudRuleIdentifier } from '@grafana/external-rules';
+
+import { useUpsertRuleGroupMutation } from '../../../../api/ruler.endpoints';
+import { RuleFormValues, RuleFormType } from '../types';
+import { defaultFormValuesForRuleType } from '../formDefaults';
+import { formValuesToRulerRuleDTO } from '../formTransform';
+import { isCloudAlertingRuleByType, isCloudRecordingRuleByType } from '../ruleTypeHelpers';
+import { useProduceNewRuleGroup } from '../hooks/useProduceNewRuleGroup';
+import { ruleFormSchema } from '../validation';
+import { addRuleAction, updateRuleAction } from '../ruleGroupReducer';
+
+import { RuleNameInput } from './RuleNameInput';
+import { CloudDataSourceSelector } from './CloudDataSourceSelector';
+import { ExpressionEditor } from './ExpressionEditor';
+import { RecordingRuleEditor } from './RecordingRuleEditor';
+import { CloudEvaluationBehavior } from './CloudEvaluationBehavior';
+import { LabelsField } from './LabelsField';
+import { AnnotationsStep } from './AnnotationsStep';
+
+interface Props {
+  ruleType: RuleFormType;
+  dataSourceUid?: string | null;
+  prefill?: Partial<RuleFormValues>;
+  onCancel?: () => void;
+  /** Identifier for the rule being edited (undefined for new rules) */
+  existingRuleIdentifier?: CloudRuleIdentifier;
+}
+
+export const RuleForm = ({
+  ruleType,
+  dataSourceUid: initialDataSourceUid,
+  prefill,
+  onCancel,
+  existingRuleIdentifier,
+}: Props) => {
+  const styles = useStyles2(getStyles);
+  const navigate = useNavigate();
+  const [upsertRuleGroup, { isLoading: isSaving }] = useUpsertRuleGroupMutation();
+  const [produceNewRuleGroup] = useProduceNewRuleGroup();
+
+  // Initialize data source UID from prefill or prop
+  const initialUid = useMemo(() => {
+    // TODO: Convert dataSourceName to UID if needed
+    return initialDataSourceUid ?? null;
+  }, [initialDataSourceUid]);
+
+  const [currentDataSourceUid, setCurrentDataSourceUid] = useState<string | null>(initialUid);
+
+  // Create default form values, merging with prefill if provided
+  const defaultValues: RuleFormValues = useMemo(() => {
+    const defaults = defaultFormValuesForRuleType(ruleType);
+    if (prefill) {
+      return { ...defaults, ...prefill };
+    }
+    return defaults;
+  }, [ruleType, prefill]);
+
+  const formAPI = useForm<RuleFormValues>({
+    mode: 'onSubmit',
+    defaultValues,
+    shouldFocusError: true,
+    resolver: zodResolver(ruleFormSchema),
+  });
+
+  const {
+    handleSubmit,
+    watch,
+    formState: { isSubmitting },
+  } = formAPI;
+
+  const type = watch('type');
+  const isAlerting = isCloudAlertingRuleByType(type);
+  const isRecording = isCloudRecordingRuleByType(type);
+
+  const onChangeDataSource = (uid: string) => {
+    setCurrentDataSourceUid(uid);
+  };
+
+  const onSubmit = async (values: RuleFormValues) => {
+    console.log('Form submitted with values:', values);
+    console.log('Current data source UID:', currentDataSourceUid);
+    console.log('Existing rule identifier (for edit mode):', existingRuleIdentifier);
+
+    try {
+      // Data source UID validation (not in form values)
+      if (!currentDataSourceUid) {
+        console.error('No data source selected');
+        throw new Error('No data source selected');
+      }
+
+      // All other validations are handled by Zod schema
+      // Convert form values to RulerRuleDTO
+      console.log('Converting form values to RulerRuleDTO...');
+      const ruleDTO: RulerRuleDTO = formValuesToRulerRuleDTO(values);
+      console.log('RulerRuleDTO:', ruleDTO);
+
+      // Determine which action to use
+      const action = existingRuleIdentifier
+        ? updateRuleAction({ identifier: existingRuleIdentifier, rule: ruleDTO })
+        : addRuleAction({ rule: ruleDTO, groupName: values.group });
+
+      console.log('Action to apply:', action.type);
+
+      // Use the hook to safely fetch and update the rule group
+      console.log('Producing new rule group...');
+      const newRuleGroup = await produceNewRuleGroup(
+        currentDataSourceUid,
+        values.namespace,
+        values.group,
+        [action] // Pass actions array
+      );
+
+      console.log('New rule group produced with', newRuleGroup.rules.length, 'rules:', newRuleGroup);
+
+      // Submit to API
+      console.log('Submitting to API...');
+      const result = await upsertRuleGroup({
+        dataSourceUid: currentDataSourceUid,
+        namespace: values.namespace,
+        payload: newRuleGroup,
+      }).unwrap();
+      console.log('API call successful:', result);
+
+      // Navigate back to rules list on success
+      locationService.push('/a/grafana-prometheusalerting-app/rules');
+    } catch (error) {
+      console.error('Failed to save rule:', error);
+      // TODO: Show error notification
+      alert(`Failed to save rule: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      // Default: navigate back
+      navigate(-1);
+    }
+  };
+
+  return (
+    <FormProvider {...formAPI}>
+      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+        <div className={styles.contentOuter}>
+          <Stack direction="column" gap={3}>
+            {/* Step 1: Rule Name */}
+            <RuleNameInput />
+
+            {/* Step 2: Data Source Selector */}
+            <CloudDataSourceSelector disabled={false} onChangeCloudDatasource={onChangeDataSource} />
+
+            {/* Step 3: Query/Expression Editor */}
+            {isAlerting && <ExpressionEditor />}
+            {isRecording && <RecordingRuleEditor />}
+
+            {/* Step 4: Evaluation Behavior (includes namespace/group) */}
+            <CloudEvaluationBehavior />
+
+            {/* Step 5: Labels */}
+            <LabelsField />
+
+            {/* Step 6: Annotations (alerting only) */}
+            {isAlerting && <AnnotationsStep />}
+
+            {/* Actions */}
+            <Stack direction="row" alignItems="center" gap={2}>
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={isSubmitting || isSaving}
+                icon={isSubmitting || isSaving ? 'spinner' : undefined}
+              >
+                {t('alerting.rule-form.save', 'Save')}
+              </Button>
+              <Button type="button" variant="secondary" disabled={isSubmitting || isSaving} onClick={handleCancel}>
+                {t('alerting.rule-form.cancel', 'Cancel')}
+              </Button>
+            </Stack>
+          </Stack>
+        </div>
+      </form>
+    </FormProvider>
+  );
+};
+
+const getStyles = (theme: GrafanaTheme2) => ({
+  form: css({
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+  }),
+  contentOuter: css({
+    background: theme.colors.background.primary,
+    overflow: 'hidden',
+    maxWidth: theme.breakpoints.values.xl,
+    flex: 1,
+  }),
+});

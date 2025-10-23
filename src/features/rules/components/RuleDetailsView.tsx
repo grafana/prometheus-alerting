@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { css } from '@emotion/css';
-import { GrafanaTheme2 } from '@grafana/data';
-import { useStyles2, Tab, TabsBar, TabContent, Stack, Box, Text } from '@grafana/ui';
+import { Tab, TabsBar, TabContent, Stack, Box, Text } from '@grafana/ui';
 import { Trans, t } from '@grafana/i18n';
 import { PromRuleDTO, PromRuleGroupDTO, RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
@@ -36,11 +34,9 @@ export function RuleDetailsView({
   groupName,
   hasRulerApi,
 }: Props) {
-  const styles = useStyles2(getStyles);
   const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.Query);
 
-  // Determine rule name and type
-  const ruleName = promRule.name;
+  // Determine rule type
   const isAlertingRule = promRule.type === 'alerting';
 
   // Field selection with preference for ruler data when available
@@ -48,100 +44,64 @@ export function RuleDetailsView({
   const labels = rulerRule?.labels ?? promRule.labels ?? {};
 
   return (
-    <Box padding={2}>
-      {/* Title */}
-      <Stack direction="row" alignItems="center" gap={2}>
-        <h1 className={styles.title}>{ruleName}</h1>
-        {promRule.type === 'alerting' && (
-          <Box padding={0.5} paddingX={1} backgroundColor="secondary" borderRadius="default">
-            <Text variant="bodySmall">
-              <Trans i18nKey="rule-details.state-label">
-                State: {promRule.state}
-                {promRule.health && ` (${promRule.health})`}
-              </Trans>
-            </Text>
-          </Box>
-        )}
-        {promRule.type === 'recording' && (
-          <Box padding={0.5} paddingX={1} backgroundColor="secondary" borderRadius="default">
-            <Text variant="bodySmall">
-              <Trans i18nKey="rule-details.recording-rule">Recording Rule</Trans>
-            </Text>
-          </Box>
-        )}
-      </Stack>
-
+    <Stack direction="column" gap={2}>
       {/* Metadata */}
-      <Box marginTop={2}>
-        <Box padding={1} backgroundColor="secondary" borderRadius="default" display="flex" gap={2}>
-          {Object.keys(labels).length > 0 && (
-            <Text variant="bodySmall">
-              <Trans i18nKey="rule-details.labels">
-                <strong>Labels:</strong> {JSON.stringify(labels)}
-              </Trans>
-            </Text>
-          )}
+      <Box padding={1} backgroundColor="secondary" borderRadius="default" display="flex" gap={2}>
+        {Object.keys(labels).length > 0 && (
           <Text variant="bodySmall">
-            <Trans i18nKey="rule-details.group">
-              <strong>Group:</strong> {groupName}
+            <Trans i18nKey="rule-details.labels">
+              <strong>Labels:</strong> {JSON.stringify(labels)}
             </Trans>
           </Text>
-          <Text variant="bodySmall">
-            <Trans i18nKey="rule-details.namespace">
-              <strong>Namespace:</strong> {namespace}
-            </Trans>
-          </Text>
-        </Box>
+        )}
+        <Text variant="bodySmall">
+          <Trans i18nKey="rule-details.group">
+            <strong>Group:</strong> {groupName}
+          </Trans>
+        </Text>
+        <Text variant="bodySmall">
+          <Trans i18nKey="rule-details.namespace">
+            <strong>Namespace:</strong> {namespace}
+          </Trans>
+        </Text>
       </Box>
 
       {/* Tabs */}
-      <Box marginTop={2}>
-        <TabsBar>
+      <TabsBar>
+        <Tab
+          label={t('rule-details.tabs.query', 'Query')}
+          active={activeTab === ActiveTab.Query}
+          onChangeTab={() => setActiveTab(ActiveTab.Query)}
+        />
+        {isAlertingRule && (
           <Tab
-            label={t('rule-details.tabs.query', 'Query')}
-            active={activeTab === ActiveTab.Query}
-            onChangeTab={() => setActiveTab(ActiveTab.Query)}
+            label={t('rule-details.tabs.instances', 'Instances')}
+            active={activeTab === ActiveTab.Instances}
+            onChangeTab={() => setActiveTab(ActiveTab.Instances)}
+            counter={promRule.type === 'alerting' ? promRule.alerts?.length : undefined}
           />
-          {isAlertingRule && (
-            <Tab
-              label={t('rule-details.tabs.instances', 'Instances')}
-              active={activeTab === ActiveTab.Instances}
-              onChangeTab={() => setActiveTab(ActiveTab.Instances)}
-              counter={promRule.type === 'alerting' ? promRule.alerts?.length : undefined}
-            />
-          )}
-          <Tab
-            label={t('rule-details.tabs.details', 'Details')}
-            active={activeTab === ActiveTab.Details}
-            onChangeTab={() => setActiveTab(ActiveTab.Details)}
-          />
-        </TabsBar>
-      </Box>
+        )}
+        <Tab
+          label={t('rule-details.tabs.details', 'Details')}
+          active={activeTab === ActiveTab.Details}
+          onChangeTab={() => setActiveTab(ActiveTab.Details)}
+        />
+      </TabsBar>
 
       {/* Tab Content */}
-      <Box marginTop={2}>
-        <TabContent>
-          {activeTab === ActiveTab.Query && <QueryTab query={query} dataSourceUid={dataSourceUid} />}
-          {activeTab === ActiveTab.Instances && isAlertingRule && <InstancesTab promRule={promRule} />}
-          {activeTab === ActiveTab.Details && (
-            <DetailsTab
-              promRule={promRule}
-              rulerRule={rulerRule}
-              promGroup={promGroup}
-              rulerGroup={rulerGroup}
-              hasRulerApi={hasRulerApi}
-            />
-          )}
-        </TabContent>
-      </Box>
-    </Box>
+      <TabContent>
+        {activeTab === ActiveTab.Query && <QueryTab query={query} dataSourceUid={dataSourceUid} />}
+        {activeTab === ActiveTab.Instances && isAlertingRule && <InstancesTab promRule={promRule} />}
+        {activeTab === ActiveTab.Details && (
+          <DetailsTab
+            promRule={promRule}
+            rulerRule={rulerRule}
+            promGroup={promGroup}
+            rulerGroup={rulerGroup}
+            hasRulerApi={hasRulerApi}
+          />
+        )}
+      </TabContent>
+    </Stack>
   );
 }
-
-const getStyles = (theme: GrafanaTheme2) => ({
-  title: css({
-    margin: 0,
-    fontSize: theme.typography.h2.fontSize,
-    fontWeight: theme.typography.h2.fontWeight,
-  }),
-});

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 
 import { SelectableValue } from '@grafana/data';
-import { t } from '@grafana/i18n';
+import { t, Trans } from '@grafana/i18n';
 import { PluginPage } from '@grafana/runtime';
-import { Box, RadioButtonGroup, Stack } from '@grafana/ui';
+import { Box, Button, Dropdown, Menu, RadioButtonGroup, Stack } from '@grafana/ui';
 
 import { testIds } from '../../../components/testIds';
+import { PLUGIN_BASE_URL } from '../../../constants';
 import { RulesFilter } from '../components/RulesFilter';
 import { useRulesFilter } from '../hooks/useRulesFilter';
 import { FilterView } from '../list/FilterView';
@@ -28,6 +29,21 @@ function RulesPage() {
     { label: t('alerting.rule-list.view-mode.list', 'List'), value: 'list' },
   ];
 
+  const newRuleMenu = (
+    <Menu>
+      <Menu.Item
+        label={t('alerting.rule-list.new-alerting-rule', 'New alerting rule')}
+        icon="bell"
+        url={`${PLUGIN_BASE_URL}/rules/new?type=alerting`}
+      />
+      <Menu.Item
+        label={t('alerting.rule-list.new-recording-rule', 'New recording rule')}
+        icon="chart-line"
+        url={`${PLUGIN_BASE_URL}/rules/new?type=recording`}
+      />
+    </Menu>
+  );
+
   return (
     <PluginPage>
       <div data-testid={testIds.rules.container}>
@@ -38,6 +54,11 @@ function RulesPage() {
               <RulesFilter />
             </Box>
             <RadioButtonGroup value={viewMode} options={viewModeOptions} onChange={setViewMode} />
+            <Dropdown overlay={newRuleMenu} placement="bottom-end">
+              <Button icon="plus" variant="primary">
+                <Trans i18nKey="alerting.rule-list.new-rule">New rule</Trans>
+              </Button>
+            </Dropdown>
           </Stack>
 
           {/* Render appropriate view based on mode */}

@@ -1,11 +1,16 @@
 import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { parseIdentifier } from '@grafana/external-rules';
+import { parseIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules';
 import { Alert, LoadingPlaceholder } from '@grafana/ui';
+import { PluginPage } from '@grafana/runtime';
 import { t } from '@grafana/i18n';
 
 import { useRuleDetails } from '../hooks/useRuleDetails';
 import { RuleDetailsView } from '../components/RuleDetailsView';
+import { RuleActionsButtons } from '../list/components/RuleActionsButtons';
+import { useDeleteRuleModal } from '../list/components/DeleteRuleModal';
+import { rules as rulesNav } from '../../../utils/navigation';
+import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 
 function RuleDetails() {
   const { ruleIdentifier } = useParams<{ ruleIdentifier: string }>();
@@ -23,34 +28,96 @@ function RuleDetails() {
 
   const { promRule, rulerRule, promGroup, rulerGroup, loading, error, ...meta } = useRuleDetails(identifier);
 
+  const [deleteModal, showDeleteModal] = useDeleteRuleModal();
+
+  const handleDuplicate = (identifier: DataSourceRuleIdentifier) => {
+    const cloneUrl = rulesNav.clonePageLink(identifier);
+    window.location.href = cloneUrl;
+  };
+
   if (loading) {
-    return <LoadingPlaceholder text={t('rule-details.loading', 'Loading rule details...')} />;
+    return (
+      <PluginPage>
+        <LoadingPlaceholder text={t('rule-details.loading', 'Loading rule details...')} />
+      </PluginPage>
+    );
   }
 
   if (error) {
     return (
-      <Alert severity="error" title={t('rule-details.error.loading', 'Error loading rule')}>
-        {String(error)}
-      </Alert>
+      <PluginPage>
+        <Alert severity="error" title={t('rule-details.error.loading', 'Error loading rule')}>
+          {String(error)}
+        </Alert>
+      </PluginPage>
     );
   }
 
   if (!promRule) {
     return (
-      <Alert severity="warning" title={t('rule-details.error.not-found', 'Rule not found')}>
-        {t('rule-details.error.not-found-message', 'The requested rule could not be found.')}
-      </Alert>
+      <PluginPage
+        pageNav={{
+          text: t('rule-details.error.not-found', 'Rule not found'),
+        }}
+      >
+        <Alert severity="warning" title={t('rule-details.error.not-found', 'Rule not found')}>
+          {t('rule-details.error.not-found-message', 'The requested rule could not be found.')}
+        </Alert>
+      </PluginPage>
     );
   }
 
-  return (
-    <RuleDetailsView
+  // Setup group identifier for actions
+  const groupIdentifier: DataSourceRuleGroupIdentifier = {
+    rulesSource: {
+      uid: meta.dataSourceUid,
+      name: '',
+      ruleSourceType: 'datasource',
+    },
+    namespace: {
+      name: meta.namespace,
+    },
+    groupName: meta.groupName,
+    groupOrigin: 'datasource',
+  };
+
+  // Prepare subTitle with state badge
+  const subTitle =
+    promRule.type === 'alerting'
+      ? `State: ${promRule.state}${promRule.health ? ` (${promRule.health})` : ''}`
+      : 'Recording Rule';
+
+  // Prepare actions
+  const actions = (
+    <RuleActionsButtons
+      rule={rulerRule}
       promRule={promRule}
-      rulerRule={rulerRule}
-      promGroup={promGroup}
-      rulerGroup={rulerGroup}
-      {...meta}
+      groupIdentifier={groupIdentifier}
+      rulerApiEnabled={meta.hasRulerApi}
+      onDelete={showDeleteModal}
+      onDuplicate={handleDuplicate}
     />
+  );
+
+  return (
+    <>
+      <PluginPage
+        pageNav={{
+          text: promRule.name,
+        }}
+        subTitle={subTitle}
+        actions={actions}
+      >
+        <RuleDetailsView
+          promRule={promRule}
+          rulerRule={rulerRule}
+          promGroup={promGroup}
+          rulerGroup={rulerGroup}
+          {...meta}
+        />
+      </PluginPage>
+      {deleteModal}
+    </>
   );
 }
 

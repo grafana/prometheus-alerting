@@ -7,6 +7,7 @@ import { useGetRulerRuleGroupQuery } from '../../../api/ruler.endpoints';
 import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
 import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { getMatchingRulerRule } from '@grafana/external-rules/matching';
+import { rules as rulesNav } from '../../../utils/navigation';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 import { RuleActionsButtons } from './components/RuleActionsButtons';
@@ -64,8 +65,9 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
   const [deleteModal, showDeleteModal] = useDeleteRuleModal();
 
   const handleDuplicate = (identifier: DataSourceRuleIdentifier) => {
-    // TODO: Implement duplicate functionality (navigate to rule editor with pre-filled data)
-    console.log('Duplicate rule:', identifier);
+    // Navigate to rule editor with copyFrom parameter for cloning
+    const cloneUrl = rulesNav.clonePageLink(identifier);
+    window.location.href = cloneUrl;
   };
 
   const actions = useMemo(() => {
