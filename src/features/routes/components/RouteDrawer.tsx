@@ -1,8 +1,8 @@
 import { css } from '@emotion/css';
-import React from 'react';
+import React, { useState } from 'react';
 import { GrafanaTheme2 } from '@grafana/data';
 import { t, Trans } from '@grafana/i18n';
-import { Alert, Stack, useStyles2, Text, TextLink } from '@grafana/ui';
+import { Alert, Stack, useStyles2, Text, TextLink, Tab, TabsBar, TabContent } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
@@ -10,6 +10,11 @@ import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
 import { ROUTES } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
+
+enum ActiveTab {
+  Configuration = 'configuration',
+  Instances = 'instances',
+}
 
 interface RouteDetailsProps {
   route: Route;
@@ -90,6 +95,8 @@ interface RouteDrawerProps {
 }
 
 export function RouteDrawer({ route, onClose }: RouteDrawerProps) {
+  const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.Configuration);
+
   if (!route) {
     return null;
   }
@@ -104,6 +111,21 @@ export function RouteDrawer({ route, onClose }: RouteDrawerProps) {
     return t('routes.route-label', 'Route');
   };
 
+  const drawerTabs = (
+    <TabsBar>
+      <Tab
+        label={t('routes.drawer.tabs.configuration', 'Configuration')}
+        active={activeTab === ActiveTab.Configuration}
+        onChangeTab={() => setActiveTab(ActiveTab.Configuration)}
+      />
+      <Tab
+        label={t('routes.drawer.tabs.instances', 'Instances')}
+        active={activeTab === ActiveTab.Instances}
+        onChangeTab={() => setActiveTab(ActiveTab.Instances)}
+      />
+    </TabsBar>
+  );
+
   return (
     <DrawerWithFooter
       title={
@@ -116,8 +138,16 @@ export function RouteDrawer({ route, onClose }: RouteDrawerProps) {
       }
       onClose={onClose}
       width={400}
+      tabs={drawerTabs}
     >
-      <RouteDetails route={route} />
+      <TabContent>
+        {activeTab === ActiveTab.Configuration && <RouteDetails route={route} />}
+        {activeTab === ActiveTab.Instances && (
+          <Stack direction="column" gap={2}>
+            {/* Placeholder for instances - to be implemented */}
+          </Stack>
+        )}
+      </TabContent>
     </DrawerWithFooter>
   );
 }
