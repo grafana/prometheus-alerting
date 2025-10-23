@@ -21,11 +21,24 @@ export type ParsedUserConfiguration = z.infer<typeof ParsedUserConfigurationSche
  */
 const UserConfigurationSchemaCodec = z.codec(UserConfigurationSchema, ParsedUserConfigurationSchema, {
   decode: (userConfiguration) => {
+    // Mimir may return an empty string for alertmanager_config when no config exists.
+    // YAML parsing of an empty string yields null. Treat only that case as an empty configuration; otherwise validate strictly and surface schema errors.
     const decodedConfiguration = parseYaml(userConfiguration.alertmanager_config);
+    if (decodedConfiguration == null) {
+      return {
+        ...userConfiguration,
+        alertmanager_config: ParsedAlertmanagerConfigSchema.parse({}),
+      };
+    }
+
+    const parsed = ParsedAlertmanagerConfigSchema.safeParse(decodedConfiguration);
+    if (!parsed.success) {
+      throw parsed.error;
+    }
 
     return {
       ...userConfiguration,
-      alertmanager_config: ParsedAlertmanagerConfigSchema.parse(decodedConfiguration),
+      alertmanager_config: parsed.data,
     };
   },
   encode: (userConfiguration) => ({

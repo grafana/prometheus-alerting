@@ -1,8 +1,14 @@
 {
   "alerting": {
+    "all-matches-indicator": {
+      "content-this-policy-matches-all-labels": "This policy matches all labels"
+    },
     "clipboard": {
       "error": "Failed to copy to clipboard",
       "success": "URL copied to clipboard"
+    },
+    "continue-matching-indicator": {
+      "content-route-continue-matching-other-policies": "This route will continue matching other policies"
     },
     "delete-rule": {
       "cancel": "Cancel",
@@ -21,6 +27,43 @@
     "more-button": {
       "aria-label": "More",
       "button-text": "More"
+    },
+    "policies": {
+      "aria-label-collapse": "Collapse",
+      "aria-label-expand": "Expand",
+      "default-policy": {
+        "description": "All alert instances will be handled by the default policy if no other matching policies are found.",
+        "title": "Default policy"
+      },
+      "metadata": {
+        "active-time": "Active when",
+        "delivered-to": "Delivered to",
+        "grouped-by": "Grouped by",
+        "grouping": {
+          "none": "Not grouping",
+          "single-group": "Single group"
+        },
+        "mute-time": "Muted when",
+        "n-instances_one": "instance",
+        "n-instances_other": "instance",
+        "timingOptions": {
+          "groupInterval": {
+            "description": "How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent.",
+            "label": "Wait <1>{{ groupWait }}</1> before sending updates"
+          },
+          "groupWait": {
+            "description": "How long to initially wait to send a notification for a group of alert instances.",
+            "label": "Wait <1>{{ groupWait }}</1> to group instances"
+          },
+          "repeatInterval": {
+            "description": "How often notifications are sent if the group of alerts has not changed since the last notification.",
+            "label": "Repeated every <1>{{ repeatInterval }}</1>"
+          }
+        }
+      },
+      "n-more-policies_one": "{{count}} additional policies",
+      "n-more-policies_other": "{{count}} additional policies",
+      "no-matchers": "No matchers"
     },
     "rule-actions": {
       "copy-link": "Copy link",
@@ -103,6 +146,13 @@
     "no-matchers": "None",
     "no-rules-message": "No inhibit rules are configured in the Alertmanager."
   },
+  "key-value-list": {
+    "empty-value": "(not set)",
+    "false": "No",
+    "nested-items-count_one": "{{count}} item(s)",
+    "nested-items-count_other": "{{count}} item(s)",
+    "true": "Yes"
+  },
   "pages": {
     "alertmanager-picker": {
       "label": "Choose Alertmanager"
@@ -132,6 +182,11 @@
       "webhook-url": "Webhook URL",
       "webhook-url-desc": "Discord webhook URL"
     },
+    "drawer": {
+      "edit": "Edit",
+      "remove": "Remove",
+      "title": "Receiver"
+    },
     "email": {
       "auth-identity": "Identity",
       "auth-identity-desc": "SMTP authentication identity",
@@ -152,9 +207,14 @@
       "to": "To",
       "to-desc": "Email address to send notifications to"
     },
+    "error-deleting-message": "Failed to delete receiver",
+    "error-deleting-title": "Error deleting receiver",
     "error-loading-message": "Failed to fetch receivers",
     "error-loading-title": "Error loading receivers",
     "integration": {
+      "http-config-title": "HTTP Configuration",
+      "no-config": "No configuration",
+      "no-config-desc": "This integration has no visible configuration.",
       "unknown": "Unknown integration type",
       "unknown-desc": "Integration type \"{{type}}\" is not supported"
     },
@@ -323,17 +383,27 @@
     }
   },
   "routes": {
-    "continue-label": "Continue:",
+    "child-routes-count_one": "This route has {{count}} child route(s).",
+    "child-routes-count_other": "This route has {{count}} child route(s).",
+    "child-routes-label": "Child Routes",
+    "configuration-label": "Configuration",
+    "continue-label": "Continue",
+    "detail": {
+      "title": "Route"
+    },
     "error-loading-message": "Failed to fetch routes",
     "error-loading-title": "Error loading routes",
-    "group-by-label": "Group by:",
-    "group-interval-label": "Group interval:",
-    "group-wait-label": "Group wait:",
+    "group-by-label": "Group by",
+    "group-interval-label": "Group interval",
+    "group-wait-label": "Group wait",
+    "matchers-label": "Matchers",
     "no": "No",
     "no-routes-message": "No routing configuration is available in the Alertmanager.",
     "page-subtitle": "Determine how alerts are routed to contact points",
-    "receiver-label": "Receiver:",
-    "repeat-interval-label": "Repeat interval:",
+    "receiver-label": "Receiver",
+    "repeat-interval-label": "Repeat interval",
+    "root-route-desc": "This is the root route. All alerts will be processed through this route and its children.",
+    "root-route-title": "Root Route",
     "route-label": "Route",
     "yes": "Yes"
   },
@@ -352,6 +422,7 @@
     },
     "field": {
       "evaluation-time": "Evaluation Time",
+      "evaluation-time-value": "{{time}}s",
       "for": "Pending Period",
       "health": "Health",
       "interval": "Evaluation Interval",
@@ -359,28 +430,49 @@
       "last-error": "Last Error",
       "last-evaluation": "Last Evaluation"
     },
+    "group": "<0>Group:</0> {groupName}",
     "instances": {
-      "count": "{{count}} active instance(s)",
+      "columns": {
+        "active-at": "Active Since",
+        "labels": "Labels",
+        "state": "State"
+      },
+      "count_one": "{{count}} active instance(s)",
+      "count_other": "{{count}} active instance(s)",
+      "details": {
+        "annotations": "Annotations",
+        "value": "<0>Value:</0> {alert.value}"
+      },
       "empty": "No active alert instances"
     },
+    "labels": "<0>Labels:</0> {JSON.stringify(labels)}",
     "loading": "Loading rule details...",
+    "namespace": "<0>Namespace:</0> {namespace}",
+    "query": {
+      "logql": "LogQL Query",
+      "promql": "PromQL Query"
+    },
+    "recording-rule": "Recording Rule",
+    "state-label": "State: {promRule.state}{promRule.health && ` (${promRule.health})`}",
     "tabs": {
       "details": "Details",
       "instances": "Instances",
       "query": "Query"
-    },
-    "title": "Rule Details"
+    }
   },
   "silences": {
     "column": {
-      "actions": "Actions",
-      "created-by": "Created By",
       "ends-at": "Ends At",
       "matchers": "Matchers",
       "starts-at": "Starts At",
       "status": "Status"
     },
-    "comment-label": "Comment:",
+    "confirm-expire": {
+      "body": "Are you sure you want to expire this silence? This action will immediately stop the silence from muting alerts.",
+      "cancel": "Cancel",
+      "confirm": "Expire",
+      "title": "Expire Silence"
+    },
     "create": {
       "add-matcher": "Add Matcher",
       "cancel": "Cancel",
@@ -410,6 +502,7 @@
       "operator-not-equal": "!= (Not Equal)",
       "operator-regex": "=~ (Regex Match)",
       "operator-regex-not-equal": "!~ (Regex Not Match)",
+      "page-title": "Create Silence",
       "remove-matcher": "Remove matcher",
       "starts-at": "Start Time",
       "starts-at-description": "When the silence should begin",
@@ -419,16 +512,44 @@
       "time-mode-relative": "Relative"
     },
     "create-button": "Create Silence",
+    "drawer": {
+      "comment-title": "Comment",
+      "created-by": "Created By",
+      "details-title": "Details",
+      "edit": "Edit",
+      "ends-at": "Ends At",
+      "expire": "Expire",
+      "expiring": "Expiring...",
+      "matchers-title": "Matchers",
+      "starts-at": "Starts At",
+      "tabs": {
+        "affected-alerts": "Affected Alerts",
+        "configuration": "Configuration"
+      },
+      "title": "Silence",
+      "updated-at": "Updated At"
+    },
+    "edit": {
+      "error-loading": "Failed to load silence",
+      "error-loading-title": "Error loading silence",
+      "error-message": "Failed to update silence",
+      "error-title": "Error updating silence",
+      "not-found-message": "The silence \"{{id}}\" does not exist.",
+      "not-found-title": "Silence not found",
+      "page-title": "Edit Silence",
+      "submit": "Update Silence",
+      "updating": "Updating..."
+    },
+    "error-expiring-message": "Failed to expire silence",
+    "error-expiring-title": "Error expiring silence",
     "error-loading-message": "Failed to fetch silences",
     "error-loading-title": "Error loading silences",
-    "expire-button": "Expire",
     "expire-modal": {
       "body": "Are you sure you want to expire this silence?",
       "cancel": "Cancel",
       "confirm": "Expire",
       "title": "Expire Silence"
     },
-    "expiring-button": "Expiring...",
     "no-silences-message": "No silences are currently configured in the Alertmanager."
   },
   "templates": {
@@ -446,6 +567,13 @@
       "details": "Details",
       "name": "Name"
     },
+    "confirm-remove": {
+      "body": "Are you sure you want to remove the time interval \"{{name}}\"? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Remove",
+      "title": "Remove Time Interval"
+    },
+    "create-button": "Create time interval",
     "days-of-month-label": "Days of Month",
     "detail": {
       "back": "Back to time intervals",
@@ -455,10 +583,68 @@
       "name-desc": "Name of the time interval",
       "not-found-message": "The time interval \"{{name}}\" does not exist.",
       "not-found-title": "Time interval not found",
-      "subtitle": "Time interval: {{name}}"
+      "subtitle": "Time interval: {{name}}",
+      "title": "Time Interval"
     },
+    "drawer": {
+      "edit": "Edit",
+      "no-intervals-desc": "This time interval has no configuration.",
+      "remove": "Remove"
+    },
+    "edit": {
+      "cancel-button": "Cancel",
+      "update-button": "Update",
+      "updating": "Updating..."
+    },
+    "error-deleting-message": "Failed to delete time interval",
+    "error-deleting-title": "Error deleting time interval",
     "error-loading-message": "Failed to fetch time intervals",
     "error-loading-title": "Error loading time intervals",
+    "form": {
+      "cancel-button": "Cancel",
+      "create-button": "Create Time Interval",
+      "creating": "Creating...",
+      "days-of-month-description": "Comma-separated list of days (e.g., 1, 15, -1 for last day)",
+      "days-of-month-label": "Days of Month",
+      "days-of-month-placeholder": "1, 15, -1",
+      "edit-page-title": "Edit Time Interval",
+      "end-time-description": "End time in HH:MM format",
+      "end-time-label": "End Time",
+      "end-time-placeholder": "23:59",
+      "error-generic": "An error occurred",
+      "error-loading": "Failed to load time interval",
+      "error-loading-title": "Error loading time interval",
+      "error-title": "Error creating time interval",
+      "error-updating-title": "Error updating time interval",
+      "location-description": "IANA timezone (e.g., UTC, America/New_York)",
+      "location-label": "Location/Timezone",
+      "location-placeholder": "UTC",
+      "months-description": "Comma-separated list (e.g., january, february)",
+      "months-label": "Months",
+      "months-placeholder": "january, february",
+      "name-description": "A unique name for this time interval",
+      "name-label": "Name",
+      "name-placeholder": "my-time-interval",
+      "not-found-message": "The time interval \"{{name}}\" does not exist.",
+      "not-found-title": "Time interval not found",
+      "page-title": "Create Time Interval",
+      "start-time-description": "Start time in HH:MM format",
+      "start-time-label": "Start Time",
+      "start-time-placeholder": "00:00",
+      "success-message": "Time interval has been created successfully.",
+      "success-title": "Time interval created",
+      "success-updating-message": "Time interval has been updated successfully.",
+      "success-updating-title": "Time interval updated",
+      "update-button": "Update Time Interval",
+      "updating": "Updating...",
+      "weekdays-description": "Comma-separated list (e.g., monday, tuesday, wednesday)",
+      "weekdays-label": "Weekdays",
+      "weekdays-placeholder": "monday, tuesday, wednesday",
+      "years-description": "Comma-separated list (e.g., 2024, 2025)",
+      "years-label": "Years",
+      "years-placeholder": "2024, 2025"
+    },
+    "interval-number": "Interval {{number}}",
     "location-label": "Location",
     "months-label": "Months",
     "no-intervals": "No time intervals",

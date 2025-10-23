@@ -2,7 +2,6 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { AppRootProps } from '@grafana/data';
 import { config } from '@grafana/runtime';
-import { setupListeners } from '@reduxjs/toolkit/query';
 import { ROUTES, STORAGE_KEYS } from '../../constants';
 import { StoreProvider } from '../StoreProvider/StoreProvider';
 import { createStore } from '../../store/store';
@@ -62,6 +61,7 @@ function App(_props: AppRootProps) {
         <Route path={ROUTES.Receivers} element={<Receivers />} />
         <Route path={ROUTES.Templates} element={<Templates />} />
         <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
+        <Route path={ROUTES.EditSilence} element={<SilenceForm />} />
         <Route path={ROUTES.Silences} element={<Silences />} />
         <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
         <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />

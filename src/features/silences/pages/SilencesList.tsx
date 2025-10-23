@@ -1,83 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { css } from '@emotion/css';
 import { testIds } from '../../../components/testIds';
-import { Alert, InteractiveTable, EmptyState, LinkButton, Stack, Button, Text } from '@grafana/ui';
+import { Alert, InteractiveTable, EmptyState, LinkButton, Stack } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
-import { useSilences, useDeleteSilence } from '../hooks/useSilences';
+import { useSilences } from '../hooks/useSilences';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ROUTES, DEFAULT_PAGE_SIZE } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
-import { useExpireSilenceModal } from './ExpireSilenceModal';
+import { SilenceDrawer } from '../components/SilenceDrawer';
+import { locationService } from '@grafana/runtime';
 
 function SilencesPage() {
   const { data: silences = [], isLoading, error } = useSilences();
-  const [expireSilence, { isLoading: isExpiring }] = useDeleteSilence();
+  const [selectedSilence, setSelectedSilence] = useState<GettableSilence | null>(null);
 
-  const handleExpireSilence = async (silenceId: string) => {
-    try {
-      await expireSilence(silenceId);
-    } catch (err) {
-      console.error('Failed to expire silence:', err);
-    }
+  const handleEdit = (silence: GettableSilence) => {
+    // Close the drawer
+    setSelectedSilence(null);
+    // Navigate to the edit form
+    const editPath = prefixRoute(`silences/${encodeURIComponent(silence.id)}/edit`);
+    locationService.push(editPath);
   };
 
-  const [expireSilenceModal, showExpireSilenceModal, , expiringSilenceId] = useExpireSilenceModal(handleExpireSilence);
+  const clickableCellStyles = css({
+    cursor: 'pointer',
+  });
 
   const columns = [
     {
       id: 'status',
       header: t('silences.column.status', 'Status'),
-      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => getStatusBadge(original.status.state),
+      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => (
+        <div className={clickableCellStyles} onClick={() => setSelectedSilence(original)}>
+          {getStatusBadge(original.status.state)}
+        </div>
+      ),
     },
     {
       id: 'matchers',
       header: t('silences.column.matchers', 'Matchers'),
       cell: ({ row: { original } }: { row: { original: GettableSilence } }) => (
-        <Stack direction="row" gap={0.5}>
-          {formatMatchers(original).map((matcher, index) => (
-            <AlertLabel key={index} value={matcher} colorBy="value" size="sm" />
-          ))}
-        </Stack>
+        <div className={clickableCellStyles} onClick={() => setSelectedSilence(original)}>
+          <Stack direction="row" gap={0.5}>
+            {formatMatchers(original).map((matcher, index) => (
+              <AlertLabel key={index} value={matcher} colorBy="value" size="sm" />
+            ))}
+          </Stack>
+        </div>
       ),
     },
     {
       id: 'startsAt',
       header: t('silences.column.starts-at', 'Starts At'),
-      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => formatDateTime(original.startsAt),
+      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => (
+        <div className={clickableCellStyles} onClick={() => setSelectedSilence(original)}>
+          {formatDateTime(original.startsAt)}
+        </div>
+      ),
     },
     {
       id: 'endsAt',
       header: t('silences.column.ends-at', 'Ends At'),
-      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => formatDateTime(original.endsAt),
-    },
-    {
-      id: 'createdBy',
-      header: t('silences.column.created-by', 'Created By'),
-      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => original.createdBy,
-    },
-    {
-      id: 'actions',
-      header: t('silences.column.actions', 'Actions'),
-      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => {
-        const isExpiringSilence = expiringSilenceId === original.id && isExpiring;
-
-        return (
-          <Button
-            variant="destructive"
-            size="sm"
-            fill="outline"
-            onClick={() => showExpireSilenceModal(original.id)}
-            icon="trash-alt"
-            disabled={original.status.state === 'expired' || isExpiringSilence}
-          >
-            {isExpiringSilence ? t('silences.expiring-button', 'Expiring...') : t('silences.expire-button', 'Expire')}
-          </Button>
-        );
-      },
+      cell: ({ row: { original } }: { row: { original: GettableSilence } }) => (
+        <div className={clickableCellStyles} onClick={() => setSelectedSilence(original)}>
+          {formatDateTime(original.endsAt)}
+        </div>
+      ),
     },
   ];
 
@@ -108,14 +101,6 @@ function SilencesPage() {
               data={silences}
               getRowId={(silence) => silence.id}
               pageSize={DEFAULT_PAGE_SIZE}
-              renderExpandedRow={(silence) => (
-                <Stack direction="column">
-                  <Text color="primary">{t('silences.comment-label', 'Comment:')}</Text>
-                  <Text color="secondary">
-                    <pre>{silence.comment}</pre>
-                  </Text>
-                </Stack>
-              )}
             />
           )}
           {!isLoading && silences.length === 0 && !error && (
@@ -127,7 +112,9 @@ function SilencesPage() {
         </Stack>
       </div>
 
-      {expireSilenceModal}
+      {selectedSilence && (
+        <SilenceDrawer silence={selectedSilence} onClose={() => setSelectedSilence(null)} onEdit={handleEdit} />
+      )}
     </AlertmanagerPage>
   );
 }

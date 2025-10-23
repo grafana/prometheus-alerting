@@ -1,38 +1,14 @@
-import { css } from '@emotion/css';
 import React from 'react';
-import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { Alert, Stack, useStyles2, Text, Button } from '@grafana/ui';
+import { Alert, Stack, Text, Button } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
+import { KeyValueList } from '../../../components/KeyValueList';
+import { Section } from '../../../components/KeyValueList/Section';
 import { extractIntegrationsFromReceiver } from '../utils/integrationIcons';
-
-interface KeyValuePairProps {
-  label: string;
-  value: string | number | boolean | undefined | null;
-}
-
-function KeyValuePair({ label, value }: KeyValuePairProps) {
-  const styles = useStyles2(getStyles);
-
-  const displayValue = () => {
-    if (value === undefined || value === null || value === '') {
-      return t('receivers.drawer.empty-value', '(not set)');
-    }
-    if (typeof value === 'boolean') {
-      return value ? t('receivers.drawer.true', 'Yes') : t('receivers.drawer.false', 'No');
-    }
-    return String(value);
-  };
-
-  return (
-    <div className={styles.keyValuePair}>
-      <dt className={styles.label}>{label}</dt>
-      <span className={styles.dots}></span>
-      <dd className={styles.value}>{displayValue()}</dd>
-    </div>
-  );
-}
+import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
+import { deleteReceiverAction } from '../../../reducers/alertmanager/receivers';
+import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 
 interface IntegrationItemProps {
   type: string;
@@ -40,47 +16,67 @@ interface IntegrationItemProps {
 }
 
 function IntegrationItem({ type, config }: IntegrationItemProps) {
-  const styles = useStyles2(getStyles);
+  // Extract http_config if it exists
+  const httpConfig = config.http_config as Record<string, unknown> | undefined;
 
-  // Filter out empty/null values and convert to display-friendly format
+  // Filter out empty/null values
   const displayEntries = Object.entries(config)
     .filter(([key, value]) => {
-      // Skip internal or empty fields
-      if (key.startsWith('_') || value === undefined || value === null) {
+      // Skip internal, empty fields, and http_config (handled separately)
+      if (key.startsWith('_') || value === undefined || value === null || key === 'http_config') {
         return false;
       }
       return true;
     })
     .map(([key, value]) => {
-      // Convert snake_case to Title Case
-      const label = key
-        .split('_')
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-
-      return { key, label, value };
+      return { label: key, value: value as string | number | boolean | undefined | null };
     });
 
-  if (displayEntries.length === 0) {
+  // Process http_config entries if present
+  const httpConfigEntries = httpConfig
+    ? Object.entries(httpConfig)
+        .filter(([key, value]) => {
+          if (key.startsWith('_') || value === undefined || value === null) {
+            return false;
+          }
+          // Skip nested objects that are empty
+          if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
+            return false;
+          }
+          return true;
+        })
+        .map(([key, value]) => {
+          // Pass nested objects directly - KeyValueList will handle the rendering
+          return { label: key, value: value as string | number | boolean | Record<string, unknown> | undefined | null };
+        })
+    : [];
+
+  const hasMainConfig = displayEntries.length > 0;
+  const hasHttpConfig = httpConfigEntries.length > 0;
+
+  if (!hasMainConfig && !hasHttpConfig) {
     return (
-      <div className={styles.integrationCard}>
-        <h4 className={styles.integrationTitle}>{type}</h4>
+      <Section title={type}>
         <Alert title={t('receivers.integration.no-config', 'No configuration')} severity="info">
           {t('receivers.integration.no-config-desc', 'This integration has no visible configuration.')}
         </Alert>
-      </div>
+      </Section>
     );
   }
 
   return (
-    <div className={styles.integrationCard}>
-      <h4 className={styles.integrationTitle}>{type}</h4>
-      <dl className={styles.keyValueList}>
-        {displayEntries.map(({ key, label, value }) => (
-          <KeyValuePair key={key} label={label} value={value as string | number | boolean | undefined | null} />
-        ))}
-      </dl>
-    </div>
+    <Stack direction="column" gap={2}>
+      {hasMainConfig && (
+        <Section title={type}>
+          <KeyValueList items={displayEntries} />
+        </Section>
+      )}
+      {hasHttpConfig && (
+        <Section title={t('receivers.integration.http-config-title', 'HTTP Configuration')}>
+          <KeyValueList items={httpConfigEntries} />
+        </Section>
+      )}
+    </Stack>
   );
 }
 
@@ -112,31 +108,34 @@ function ReceiverIntegrations({ receiver }: ReceiverIntegrationsProps) {
 interface ReceiverDrawerProps {
   receiver: Receiver | null;
   onClose: () => void;
-  onEdit?: (receiver: Receiver) => void;
-  onRemove?: (receiver: Receiver) => void;
 }
 
-export function ReceiverDrawer({ receiver, onClose, onEdit, onRemove }: ReceiverDrawerProps) {
+export function ReceiverDrawer({ receiver, onClose }: ReceiverDrawerProps) {
+  const [produceNewConfig, { error: deleteError, isLoading: isDeleting }] = useProduceNewAlertmanagerConfiguration();
+  const hasConfigurationAPI = useHasConfigurationAPI();
+
   if (!receiver) {
     return null;
   }
 
   const handleEdit = () => {
-    onEdit?.(receiver);
+    // TODO: Implement edit functionality
+    console.log('Edit receiver:', receiver.name);
   };
 
-  const handleRemove = () => {
-    onRemove?.(receiver);
+  const handleRemove = async () => {
+    await produceNewConfig(deleteReceiverAction(receiver.name));
+    onClose();
   };
 
-  const hasActions = onEdit || onRemove;
+  const hasActions = hasConfigurationAPI;
 
   return (
     <DrawerWithFooter
       title={
         <Stack direction="column" gap={0}>
           <Text variant="bodySmall" color="secondary">
-            {t('receivers.detail.name', 'Receiver')}
+            {t('receivers.drawer.title', 'Receiver')}
           </Text>
           <Text variant="h2">{receiver.name}</Text>
         </Stack>
@@ -146,71 +145,28 @@ export function ReceiverDrawer({ receiver, onClose, onEdit, onRemove }: Receiver
       footer={
         hasActions ? (
           <Stack gap={2} justifyContent="flex-end">
-            {onEdit && (
-              <Button variant="secondary" onClick={handleEdit}>
-                {t('receivers.drawer.edit', 'Edit')}
-              </Button>
-            )}
-            {onRemove && (
-              <Button variant="destructive" onClick={handleRemove}>
-                {t('receivers.drawer.remove', 'Remove')}
-              </Button>
-            )}
+            <Button variant="secondary" onClick={handleEdit}>
+              {t('receivers.drawer.edit', 'Edit')}
+            </Button>
+            <Button variant="destructive" onClick={handleRemove} disabled={isDeleting}>
+              {t('receivers.drawer.remove', 'Remove')}
+            </Button>
           </Stack>
         ) : undefined
       }
     >
-      <ReceiverIntegrations receiver={receiver} />
+      <Stack direction="column" gap={2}>
+        {Boolean(deleteError) && (
+          <Alert title={t('receivers.error-deleting-title', 'Error deleting receiver')} severity="error">
+            {String(
+              deleteError instanceof Error
+                ? deleteError.message
+                : t('receivers.error-deleting-message', 'Failed to delete receiver')
+            )}
+          </Alert>
+        )}
+        <ReceiverIntegrations receiver={receiver} />
+      </Stack>
     </DrawerWithFooter>
   );
 }
-
-const getStyles = (theme: GrafanaTheme2) => ({
-  integrationCard: css({
-    border: `1px solid ${theme.colors.border.weak}`,
-    borderRadius: theme.shape.radius.default,
-    padding: theme.spacing(2),
-    backgroundColor: theme.colors.background.secondary,
-  }),
-  integrationTitle: css({
-    margin: 0,
-    marginBottom: theme.spacing(2),
-    fontSize: theme.typography.h5.fontSize,
-    fontWeight: theme.typography.fontWeightMedium,
-    textTransform: 'capitalize',
-    paddingBottom: theme.spacing(1),
-    borderBottom: `1px solid ${theme.colors.border.weak}`,
-  }),
-  keyValueList: css({
-    margin: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing(1.5),
-  }),
-  keyValuePair: css({
-    display: 'flex',
-    alignItems: 'baseline',
-    gap: theme.spacing(1),
-    minHeight: theme.spacing(3),
-  }),
-  label: css({
-    margin: 0,
-    flexShrink: 0,
-    textAlign: 'left',
-  }),
-  dots: css({
-    flex: 1,
-    borderBottom: `2px dotted ${theme.colors.border.weak}`,
-    minWidth: theme.spacing(2),
-    height: '1px',
-    marginBottom: theme.spacing(0.5),
-  }),
-  value: css({
-    fontSize: theme.typography.body.fontSize,
-    color: theme.colors.text.primary,
-    whiteSpace: 'preserve',
-    margin: 0,
-    wordBreak: 'break-all',
-    textAlign: 'right',
-  }),
-});

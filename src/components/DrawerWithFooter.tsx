@@ -5,13 +5,14 @@ import { Drawer, useStyles2 } from '@grafana/ui';
 
 interface DrawerWithFooterProps extends ComponentProps<typeof Drawer> {
   footer?: ReactNode;
+  tabs?: ReactNode;
 }
 
-export function DrawerWithFooter({ footer, children, ...props }: DrawerWithFooterProps) {
+export function DrawerWithFooter({ footer, tabs, children, ...props }: DrawerWithFooterProps) {
   const styles = useStyles2(getStyles);
 
   return (
-    <Drawer {...props} scrollableContent={false}>
+    <Drawer {...props} tabs={tabs} scrollableContent={false}>
       <div className={styles.container}>
         <div className={styles.body}>{children}</div>
         {footer && <div className={styles.footer}>{footer}</div>}
