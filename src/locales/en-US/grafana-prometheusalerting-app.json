@@ -522,6 +522,10 @@
       "expiring": "Expiring...",
       "matchers-title": "Matchers",
       "starts-at": "Starts At",
+      "tabs": {
+        "affected-alerts": "Affected Alerts",
+        "configuration": "Configuration"
+      },
       "title": "Silence",
       "updated-at": "Updated At"
     },
