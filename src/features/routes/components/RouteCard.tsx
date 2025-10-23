@@ -347,8 +347,8 @@ export const TimingOptionsMeta = ({ groupWait, groupInterval, repeatInterval }: 
         )}
       >
         <span>
-          <Trans i18nKey="alerting.policies.metadata.timingOptions.groupWait.label">
-            Wait <Text color="primary">{groupWait}</Text> to group instances
+          <Trans i18nKey="alerting.policies.metadata.timingOptions.groupWait.label" values={{ groupWait }}>
+            Wait <Text color="primary">{'{{ groupWait }}'}</Text> to group instances
           </Trans>
         </span>
       </Tooltip>
@@ -365,8 +365,8 @@ export const TimingOptionsMeta = ({ groupWait, groupInterval, repeatInterval }: 
         )}
       >
         <span>
-          <Trans i18nKey="alerting.policies.metadata.timingOptions.groupInterval.label">
-            Wait <Text color="primary">{groupInterval}</Text> before sending updates
+          <Trans i18nKey="alerting.policies.metadata.timingOptions.groupInterval.label" values={{ groupWait }}>
+            Wait <Text color="primary">{'{{ groupWait }}'}</Text> before sending updates
           </Trans>
         </span>
       </Tooltip>
@@ -383,8 +383,8 @@ export const TimingOptionsMeta = ({ groupWait, groupInterval, repeatInterval }: 
         )}
       >
         <span>
-          <Trans i18nKey="alerting.policies.metadata.timingOptions.repeatInterval.label">
-            Repeated every <Text color="primary">{repeatInterval}</Text>
+          <Trans i18nKey="alerting.policies.metadata.timingOptions.repeatInterval.label" values={{ repeatInterval }}>
+            Repeated every <Text color="primary">{'{{ repeatInterval }}'}</Text>
           </Trans>
         </span>
       </Tooltip>
