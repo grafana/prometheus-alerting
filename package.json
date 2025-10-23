@@ -31,7 +31,7 @@
     "@testing-library/react": "14.0.0",
     "@types/jest": "^29.5.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20.8.7",
+    "@types/node": "^20.19.19",
     "@types/object-hash": "^3.0.6",
     "@types/pluralize": "^0.0.33",
     "@types/testing-library__jest-dom": "5.14.8",
