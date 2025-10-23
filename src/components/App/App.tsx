@@ -2,6 +2,8 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { AppRootProps } from '@grafana/data';
 import { config } from '@grafana/runtime';
+import { useTheme2 } from '@grafana/ui';
+import { SkeletonTheme } from 'react-loading-skeleton';
 import { ROUTES, STORAGE_KEYS } from '../../constants';
 import { StoreProvider } from '../StoreProvider/StoreProvider';
 import { createStore } from '../../store/store';
@@ -49,28 +51,35 @@ function getInitialDataSourceUID(): string {
 const store = createStore(getInitialDataSourceUID());
 
 function App(_props: AppRootProps) {
+  const theme = useTheme2();
+
   return (
     <StoreProvider store={store}>
-      <Routes>
-        <Route path={ROUTES.Routes} element={<RouteTree />} />
-        <Route path={ROUTES.Rules} element={<Rules />} />
-        <Route path={ROUTES.RuleView} element={<RuleDetails />} />
-        <Route path={ROUTES.RuleEdit} element={<RuleEditor />} />
-        <Route path={ROUTES.RuleNew} element={<RuleEditor />} />
-        <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
-        <Route path={ROUTES.Receivers} element={<Receivers />} />
-        <Route path={ROUTES.Templates} element={<Templates />} />
-        <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
-        <Route path={ROUTES.EditSilence} element={<SilenceForm />} />
-        <Route path={ROUTES.Silences} element={<Silences />} />
-        <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
-        <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
-        <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
-        <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
+      <SkeletonTheme
+        baseColor={theme.colors.background.secondary}
+        highlightColor={theme.colors.emphasize(theme.colors.background.secondary, 0.03)}
+      >
+        <Routes>
+          <Route path={ROUTES.Routes} element={<RouteTree />} />
+          <Route path={ROUTES.Rules} element={<Rules />} />
+          <Route path={ROUTES.RuleView} element={<RuleDetails />} />
+          <Route path={ROUTES.RuleEdit} element={<RuleEditor />} />
+          <Route path={ROUTES.RuleNew} element={<RuleEditor />} />
+          <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
+          <Route path={ROUTES.Receivers} element={<Receivers />} />
+          <Route path={ROUTES.Templates} element={<Templates />} />
+          <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
+          <Route path={ROUTES.EditSilence} element={<SilenceForm />} />
+          <Route path={ROUTES.Silences} element={<Silences />} />
+          <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
+          <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
+          <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
+          <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
 
-        {/* Default page */}
-        <Route path="*" element={<Landing />} />
-      </Routes>
+          {/* Default page */}
+          <Route path="*" element={<Landing />} />
+        </Routes>
+      </SkeletonTheme>
     </StoreProvider>
   );
 }

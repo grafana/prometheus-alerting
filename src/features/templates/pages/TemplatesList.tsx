@@ -1,6 +1,6 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+
 import { testIds } from '../../../components/testIds';
 import { Alert, InteractiveTable, EmptyState } from '@grafana/ui';
 import { useTemplates } from '../hooks/useTemplates';

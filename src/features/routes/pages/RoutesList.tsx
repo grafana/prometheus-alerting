@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+
 import { testIds } from '../../../components/testIds';
 import { Alert, EmptyState } from '@grafana/ui';
 import { useRoutes } from '../hooks/useRoutes';

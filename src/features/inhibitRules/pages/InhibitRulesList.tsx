@@ -1,6 +1,5 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../../components/testIds';
 import { Alert, InteractiveTable, Stack, EmptyState } from '@grafana/ui';
 import { useInhibitRules } from '../hooks/useInhibitRules';
