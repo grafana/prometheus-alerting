@@ -1,8 +1,11 @@
+import { describe, it, test, expect } from 'vitest';
 import { Matcher, Route } from './api/types/common';
+
 import {
   isPromQLStyleMatcher,
   matcherToObjectMatcher,
   normalizeMatchers,
+  ObjectMatcher,
   parseMatcher,
   parsePromQLStyleMatcher,
   parsePromQLStyleMatcherLoose,
@@ -17,7 +20,7 @@ describe('Prometheus matcher utilities', () => {
 
     it('should work for matchers', () => {
       const route: Route = { matchers: ['foo=bar', 'foo!=bar', 'foo=~bar', 'foo!~bar'] };
-      expect(normalizeMatchers(route)).toEqual([
+      expect(normalizeMatchers(route)).toEqual<ObjectMatcher[]>([
         ['foo', '=', 'bar'],
         ['foo', '!=', 'bar'],
         ['foo', '=~', 'bar'],
@@ -26,8 +29,8 @@ describe('Prometheus matcher utilities', () => {
     });
     it('should work for match and match_re', () => {
       const route: Route = { match: { foo: 'bar' }, match_re: { foo: 'bar' } };
-      expect(normalizeMatchers(route)).toEqual([
-        ['foo', '', 'bar'],
+      expect(normalizeMatchers(route)).toEqual<ObjectMatcher[]>([
+        ['foo', '=~', 'bar'],
         ['foo', '=', 'bar'],
       ]);
     });
@@ -35,7 +38,7 @@ describe('Prometheus matcher utilities', () => {
       const route: Route = {
         matchers: ['{ foo=bar, baz!=qux }'],
       };
-      expect(normalizeMatchers(route)).toEqual([
+      expect(normalizeMatchers(route)).toEqual<ObjectMatcher[]>([
         ['foo', eq, 'bar'],
         ['baz', neq, 'qux'],
       ]);
