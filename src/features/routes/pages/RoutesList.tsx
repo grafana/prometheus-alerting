@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import Skeleton from 'react-loading-skeleton';
 
 import { testIds } from '../../../components/testIds';
 import { Alert, EmptyState } from '@grafana/ui';
@@ -28,8 +27,7 @@ function RoutesPage() {
   return (
     <AlertmanagerPage subTitle={t('routes.page-subtitle', 'Determine how alerts are routed to contact points')}>
       <div data-testid={testIds.routes.container}>
-        {/* @TODO nicer skeletons */}
-        {isLoading && <Skeleton height={100} count={3} />}
+        {isLoading && <RouteCard.Skeleton count={3} />}
         {error && (
           <Alert title={t('routes.error-loading-title', 'Error loading routes')} severity="error">
             {error instanceof Error ? error.message : t('routes.error-loading-message', 'Failed to fetch routes')}
