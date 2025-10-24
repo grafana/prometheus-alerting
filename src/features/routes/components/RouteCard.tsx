@@ -2,7 +2,7 @@ import { css } from '@emotion/css';
 import { isArray, uniqueId } from 'lodash';
 import * as React from 'react';
 import { FC, Fragment, ReactNode, useState } from 'react';
-import { useToggle } from 'react-use';
+import { useToggle } from '@react-hookz/web';
 import Skeleton from 'react-loading-skeleton';
 
 import { GrafanaTheme2 } from '@grafana/data';

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useIntersection } from 'react-use';
+import { useIntersectionObserver } from '@react-hookz/web';
 
 interface LoadMoreHelperProps {
   handleLoad: () => void;
@@ -7,13 +7,13 @@ interface LoadMoreHelperProps {
 
 export function LoadMoreHelper({ handleLoad }: LoadMoreHelperProps) {
   const intersectionRef = useRef<HTMLDivElement>(null);
-  const intersection = useIntersection(intersectionRef, {
+  const intersection = useIntersectionObserver<HTMLDivElement>(intersectionRef, {
     root: null,
-    threshold: 1,
+    threshold: [1],
   });
 
   useEffect(() => {
-    const completelyInView = intersection && intersection.intersectionRatio > 0;
+    const completelyInView = intersection && intersection.isIntersecting;
     if (completelyInView) {
       handleLoad();
     }
@@ -21,4 +21,3 @@ export function LoadMoreHelper({ handleLoad }: LoadMoreHelperProps) {
 
   return <div ref={intersectionRef} data-testid="load-more-helper" />;
 }
-
