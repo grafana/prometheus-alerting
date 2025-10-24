@@ -1,6 +1,6 @@
 import React from 'react';
 import { t } from '@grafana/i18n';
-import { Alert, Stack, Text, Button } from '@grafana/ui';
+import { Alert, Stack, Text, Button, IconButton } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
@@ -108,9 +108,10 @@ function ReceiverIntegrations({ receiver }: ReceiverIntegrationsProps) {
 interface ReceiverDrawerProps {
   receiver: Receiver | null;
   onClose: () => void;
+  showBackButton?: boolean;
 }
 
-export function ReceiverDrawer({ receiver, onClose }: ReceiverDrawerProps) {
+export function ReceiverDrawer({ receiver, onClose, showBackButton = false }: ReceiverDrawerProps) {
   const [produceNewConfig, { error: deleteError, isLoading: isDeleting }] = useProduceNewAlertmanagerConfiguration();
   const hasConfigurationAPI = useHasConfigurationAPI();
 
@@ -128,16 +129,28 @@ export function ReceiverDrawer({ receiver, onClose }: ReceiverDrawerProps) {
     onClose();
   };
 
-  const hasActions = hasConfigurationAPI;
+  const hasActions = hasConfigurationAPI && !showBackButton;
 
   return (
     <DrawerWithFooter
       title={
-        <Stack direction="column" gap={0}>
-          <Text variant="bodySmall" color="secondary">
-            {t('receivers.drawer.title', 'Receiver')}
-          </Text>
-          <Text variant="h2">{receiver.name}</Text>
+        <Stack direction="row" gap={1} alignItems="center">
+          {showBackButton && (
+            <IconButton
+              name="arrow-left"
+              size="lg"
+              variant="secondary"
+              onClick={onClose}
+              tooltip={t('receivers.drawer.back', 'Back to route')}
+              aria-label={t('receivers.drawer.back', 'Back to route')}
+            />
+          )}
+          <Stack direction="column" gap={0}>
+            <Text variant="bodySmall" color="secondary">
+              {t('receivers.drawer.title', 'Receiver')}
+            </Text>
+            <Text variant="h2">{receiver.name}</Text>
+          </Stack>
         </Stack>
       }
       onClose={onClose}

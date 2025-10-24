@@ -2,14 +2,12 @@ import { css } from '@emotion/css';
 import React, { useState } from 'react';
 import { GrafanaTheme2 } from '@grafana/data';
 import { t, Trans } from '@grafana/i18n';
-import { Alert, Stack, useStyles2, Text, TextLink, Tab, TabsBar, TabContent } from '@grafana/ui';
+import { Alert, Stack, useStyles2, Text, Tab, TabsBar, TabContent, Button } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
-import { ROUTES } from '../../../constants';
-import { prefixRoute } from '../../../utils/utils.routing';
 
 enum ActiveTab {
   Configuration = 'configuration',
@@ -18,9 +16,10 @@ enum ActiveTab {
 
 interface RouteDetailsProps {
   route: Route;
+  onReceiverClick?: (receiverName: string) => void;
 }
 
-function RouteDetails({ route }: RouteDetailsProps) {
+function RouteDetails({ route, onReceiverClick }: RouteDetailsProps) {
   const styles = useStyles2(getStyles);
 
   const items = [
@@ -58,9 +57,19 @@ function RouteDetails({ route }: RouteDetailsProps) {
 
       {route.receiver && (
         <Section title={t('routes.receiver-label', 'Receiver')}>
-          <TextLink href={prefixRoute(`${ROUTES.Receivers}/${encodeURIComponent(route.receiver)}`)} inline={true}>
-            {route.receiver}
-          </TextLink>
+          {onReceiverClick ? (
+            <Button
+              variant="secondary"
+              fill="text"
+              size="sm"
+              onClick={() => onReceiverClick(route.receiver!)}
+              style={{ padding: 0, height: 'auto' }}
+            >
+              {route.receiver}
+            </Button>
+          ) : (
+            <Text>{route.receiver}</Text>
+          )}
         </Section>
       )}
 
@@ -92,9 +101,10 @@ function RouteDetails({ route }: RouteDetailsProps) {
 interface RouteDrawerProps {
   route: Route | null;
   onClose: () => void;
+  onReceiverClick?: (receiverName: string) => void;
 }
 
-export function RouteDrawer({ route, onClose }: RouteDrawerProps) {
+export function RouteDrawer({ route, onClose, onReceiverClick }: RouteDrawerProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.Configuration);
 
   if (!route) {
@@ -144,7 +154,7 @@ export function RouteDrawer({ route, onClose }: RouteDrawerProps) {
         {activeTab === ActiveTab.Configuration && <RouteDetails route={route} />}
         {activeTab === ActiveTab.Instances && (
           <Stack direction="column" gap={2}>
-            {/* Placeholder for instances - to be implemented */}
+            <RouteDetails route={route} onReceiverClick={onReceiverClick} />
           </Stack>
         )}
       </TabContent>
