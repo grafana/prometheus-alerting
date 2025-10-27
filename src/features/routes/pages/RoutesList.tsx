@@ -40,7 +40,7 @@ function RoutesPage() {
     if (!selectedReceiverName) {
       return null;
     }
-    return receivers.find((r: { name?: string }) => r.name === selectedReceiverName) || null;
+    return receivers.find((r) => r.name === selectedReceiverName) || null;
   }, [selectedReceiverName, receivers]);
 
   const handleReceiverClick = (receiverName: string) => {
