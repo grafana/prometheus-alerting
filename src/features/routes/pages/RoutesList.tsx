@@ -29,8 +29,10 @@ function RoutesPage() {
     if (!route) {
       return undefined;
     }
-    // @ts-expect-error - Type mismatch between Route and computeInheritedTree expected type, but they're compatible at runtime
-    return computeInheritedTree(route) as any as RouteWithID;
+    // Cast the route to the expected type for computeInheritedTree
+    // The Route type from vanilla has string[] matchers, but computeInheritedTree expects RoutingTreeMatcher[]
+    // This is compatible at runtime since the function handles both formats
+    return computeInheritedTree(route as any) as RouteWithID;
   }, [route]);
 
   // Find the selected receiver
@@ -38,7 +40,7 @@ function RoutesPage() {
     if (!selectedReceiverName) {
       return null;
     }
-    return receivers.find((r) => r.name === selectedReceiverName) || null;
+    return receivers.find((r: { name?: string }) => r.name === selectedReceiverName) || null;
   }, [selectedReceiverName, receivers]);
 
   const handleReceiverClick = (receiverName: string) => {
@@ -81,18 +83,10 @@ function RoutesPage() {
         )}
       </div>
       {selectedRoute && (
-        <RouteDrawer
-          route={selectedRoute}
-          onClose={handleRouteDrawerClose}
-          onReceiverClick={handleReceiverClick}
-        />
+        <RouteDrawer route={selectedRoute} onClose={handleRouteDrawerClose} onReceiverClick={handleReceiverClick} />
       )}
       {selectedReceiverName && (
-        <ReceiverDrawer
-          receiver={selectedReceiver}
-          onClose={handleReceiverDrawerClose}
-          showBackButton={true}
-        />
+        <ReceiverDrawer receiver={selectedReceiver} onClose={handleReceiverDrawerClose} showBackButton={true} />
       )}
     </AlertmanagerPage>
   );

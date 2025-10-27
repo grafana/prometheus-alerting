@@ -1,6 +1,6 @@
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
-import { alertmanagerApi } from '../../../api/alertmanager.endpoints';
-import { mimirAlertmanagerApi } from '../../../api/mimir.endpoints';
+import { mimirAlertmanagerApi } from 'api/alertmanager/mimir.endpoints';
+import { alertmanagerApi } from 'api/alertmanager/vanilla.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import {

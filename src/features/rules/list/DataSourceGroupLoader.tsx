@@ -5,14 +5,15 @@ import { skipToken } from '@reduxjs/toolkit/query';
 
 import { Alert } from '@grafana/ui';
 
-import { useDiscoverFeaturesQuery } from '../../../api/featureDiscovery.endpoints';
-import { prometheusApi } from '../../../api/prometheus.endpoints';
-import { useGetRulerRuleGroupQuery } from '../../../api/ruler.endpoints';
-import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../types/rules';
+import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
+import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
+import { useGetRulerRuleGroupQuery } from '../../../api/rules/mimir.endpoints';
+import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 import { hashRule } from '@grafana/external-rules/hashing';
 import { getMatchingRulerRule } from '@grafana/external-rules/matching';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
+import { RulesSourceApplication } from '../../../api/rules/featureDiscovery.types';
 
 const { useGetGroupsQuery } = prometheusApi;
 

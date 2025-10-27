@@ -1,5 +1,5 @@
-import { alertmanagerApi } from '../../../api/alertmanager.endpoints';
-import { mimirAlertmanagerApi } from '../../../api/mimir.endpoints';
+import { alertmanagerApi } from '../../../api/alertmanager/vanilla.endpoints';
+import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 
 /**

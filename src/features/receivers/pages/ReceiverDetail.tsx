@@ -150,7 +150,7 @@ function ReceiverDetail() {
     triggerFetch();
   }, [triggerFetch]);
 
-  const receiver = receivers.find((r) => r.name === name);
+  const receiver = receivers.find((r: Receiver) => r.name === name);
 
   // If loading is complete and receiver not found, show error
   const notFound = !isLoading && !receiver && !error;

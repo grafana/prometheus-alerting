@@ -2,8 +2,7 @@ import React, { memo, useMemo } from 'react';
 
 import { skipToken } from '@reduxjs/toolkit/query';
 
-import { useDiscoverFeaturesQuery } from '../../../api/featureDiscovery.endpoints';
-import { useGetRulerRuleGroupQuery } from '../../../api/ruler.endpoints';
+import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
 import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
 import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { getMatchingRulerRule } from '@grafana/external-rules/matching';
@@ -12,6 +11,7 @@ import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 import { RuleActionsButtons } from './components/RuleActionsButtons';
 import { useDeleteRuleModal } from './components/DeleteRuleModal';
 import { SkeletonListItem } from './components/ListItem';
+import { useGetRulerRuleGroupQuery } from 'api/rules/mimir.endpoints';
 
 interface DataSourceRuleLoaderProps {
   rule: Rule;
