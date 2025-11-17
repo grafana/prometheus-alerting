@@ -2,8 +2,8 @@ import React, { memo, useMemo } from 'react';
 
 import { skipToken } from '@reduxjs/toolkit/query';
 
-import { useDiscoverFeaturesQuery } from '../../../api/prometheus/featureDiscovery.endpoints';
-import { useGetRulerRuleGroupQuery } from '../../../api/prometheus/ruler.endpoints';
+import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
+import { useGetRulerRuleGroupQuery } from '../../../api/rules/mimir.endpoints';
 import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
 import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { getMatchingRulerRule } from '@grafana/external-rules/matching';

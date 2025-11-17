@@ -2,9 +2,9 @@ import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import dataSourceReducer from './datasourceSlice';
 import { alertmanagerApi } from '../api/alertmanager/alertmanager.endpoints';
-import { featureDiscoveryApi } from '../api/prometheus/featureDiscovery.endpoints';
-import { prometheusApi } from '../api/prometheus/prometheus.endpoints';
-import { rulerApi } from '../api/prometheus/ruler.endpoints';
+import { featureDiscoveryApi } from '../api/rules/featureDiscovery.endpoints';
+import { prometheusApi } from '../api/rules/prometheus.endpoints';
+import { rulerApi } from '../api/rules/mimir.endpoints';
 
 export const createStore = (initialDataSourceUID: string) => {
   const store = configureStore({

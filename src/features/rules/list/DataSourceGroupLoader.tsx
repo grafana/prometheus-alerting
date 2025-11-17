@@ -5,9 +5,9 @@ import { skipToken } from '@reduxjs/toolkit/query';
 
 import { Alert } from '@grafana/ui';
 
-import { useDiscoverFeaturesQuery } from '../../../api/prometheus/featureDiscovery.endpoints';
-import { prometheusApi } from '../../../api/prometheus/prometheus.endpoints';
-import { useGetRulerRuleGroupQuery } from '../../../api/prometheus/ruler.endpoints';
+import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
+import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
+import { useGetRulerRuleGroupQuery } from '../../../api/rules/mimir.endpoints';
 import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../types/rules';
 import { hashRule } from '@grafana/external-rules/hashing';
 import { getMatchingRulerRule } from '@grafana/external-rules/matching';

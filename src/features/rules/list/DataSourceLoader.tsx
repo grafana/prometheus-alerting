@@ -1,7 +1,7 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 
-import { useDiscoverFeaturesQuery } from '../../../api/prometheus/featureDiscovery.endpoints';
+import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
 import { DataSourceRulesSourceIdentifier } from '../../../types/datasources';
 
 import { DataSourceSection } from './components/DataSourceSection';

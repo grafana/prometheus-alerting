@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import { PromRuleGroupDTO, GetPromRulesApiResponse } from '@grafana/external-rules/vanilla';
 
-import { prometheusApi } from '../../../../api/prometheus/prometheus.endpoints';
+import { prometheusApi } from '../../../../api/rules/prometheus.endpoints';
 import { DataSourceRulesSourceIdentifier } from '../../../../types/datasources';
 
 const { useLazyGetGroupsQuery } = prometheusApi;
