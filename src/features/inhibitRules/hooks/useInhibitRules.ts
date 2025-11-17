@@ -1,3 +1,4 @@
+import { normalizeInhibitRuleMatchers } from '@grafana/external-alertmanager/vanilla';
 import { alertmanagerApi } from '../../../api/alertmanager/alertmanager.endpoints';
 import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
@@ -9,6 +10,8 @@ import { useAlertmanager } from '../../../hooks/useAlertmanager';
  *
  * Inhibit rules allow you to mute alerts based on the presence of other alerts.
  * For example, you can inhibit alerts about a service when an alert about the host is firing.
+ *
+ * The hook normalizes matchers from string arrays to ObjectMatcher arrays.
  *
  * This hook can be extended in the future to support:
  * - Creating new inhibit rules
@@ -37,8 +40,11 @@ export function useInhibitRules() {
 
   const queryResult = implementation === 'mimir' ? mimirQueryResult : vanillaQueryResult;
 
+  const rawInhibitRules = queryResult.data?.alertmanager_config?.inhibit_rules ?? [];
+  const inhibitRules = rawInhibitRules.map(normalizeInhibitRuleMatchers);
+
   return {
     ...queryResult,
-    inhibitRules: queryResult.data?.alertmanager_config?.inhibit_rules ?? [],
+    inhibitRules,
   };
 }

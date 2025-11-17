@@ -1,7 +1,7 @@
 import React from 'react';
 import { t } from '@grafana/i18n';
 import { Alert, Stack, Text, Button } from '@grafana/ui';
-import type { InhibitRule } from '@grafana/external-alertmanager/vanilla';
+import { type NormalizedInhibitRule, stringifyObjectMatcher } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { Section } from '../../../components/KeyValueList/Section';
 import { KeyValuePair } from '../../../components/KeyValueList/KeyValueList';
@@ -11,7 +11,7 @@ import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { AlertLabel } from '@grafana/alerting';
 
 interface InhibitRuleDetailsProps {
-  inhibitRule: InhibitRule;
+  inhibitRule: NormalizedInhibitRule;
 }
 
 function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
@@ -26,7 +26,7 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
         <KeyValuePair label={t('inhibit-rules.drawer.source-matchers', 'Source Matchers')} value={hasSourceMatchers ? (
           <Stack direction="row" gap={0.5} wrap="wrap">
             {inhibitRule.source_matchers!.map((matcher, idx) => (
-              <AlertLabel key={`source-${idx}`} value={matcher} colorBy="value" />
+              <AlertLabel key={`source-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
             ))}
           </Stack>
         ) : (
@@ -37,7 +37,7 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
         <KeyValuePair label={t('inhibit-rules.drawer.target-matchers', 'Target Matchers')} value={hasTargetMatchers ? (
           <Stack direction="row" gap={0.5} wrap="wrap">
             {inhibitRule.target_matchers!.map((matcher, idx) => (
-              <AlertLabel key={`target-${idx}`} value={matcher} colorBy="value" />
+              <AlertLabel key={`target-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
             ))}
           </Stack>
         ) : (
@@ -65,7 +65,7 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
 }
 
 interface InhibitRuleDrawerProps {
-  inhibitRule: InhibitRule | null;
+  inhibitRule: NormalizedInhibitRule | null;
   inhibitRuleIndex: number | null;
   onClose: () => void;
 }
@@ -91,7 +91,7 @@ export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: In
   // Create a title based on the rule's matchers
   const getTitle = () => {
     if (inhibitRule.source_matchers && inhibitRule.source_matchers.length > 0) {
-      return inhibitRule.source_matchers[0];
+      return stringifyObjectMatcher(inhibitRule.source_matchers[0]);
     }
     return t('inhibit-rules.drawer.default-title', 'Inhibit Rule');
   };
