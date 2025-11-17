@@ -1,5 +1,6 @@
 import { type Receiver } from '@grafana/external-alertmanager/vanilla';
 import { getAllIntegrationTypes, getIntegrationCount } from './integrationIcons';
+import { JsonValue } from 'type-fest';
 
 export interface IntegrationCount {
   type: string;
@@ -56,4 +57,15 @@ export function getContactPointDescription(receiver: Receiver): string {
     .join(', ');
 
   return description;
+}
+
+// Vanilla Alertmanager will respond with this value for sensitive fields
+const SECRET_TOKEN = '<secret>';
+
+/**
+ * This function will transform a receiver's key-value pair. Curerntly used for translating encrypted secrets for vanilla Alertmanager.
+ */
+export function transformEntry ([key, value]: [string, JsonValue]): { label: string, value: JsonValue } {
+  const transformedValue = value === SECRET_TOKEN ? '*************' : value;
+  return { label: key, value: transformedValue };
 }

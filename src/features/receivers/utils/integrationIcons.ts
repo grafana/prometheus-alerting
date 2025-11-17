@@ -1,5 +1,6 @@
 import type { IconName } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
+import { JsonValue } from 'type-fest';
 
 /**
  * Maps integration types to their corresponding Grafana icon names.
@@ -59,8 +60,8 @@ export function getAllIntegrationTypes(): IntegrationType[] {
  */
 export function extractIntegrationsFromReceiver(
   receiver: Receiver
-): Array<{ type: IntegrationType; config: Record<string, unknown> }> {
-  const integrations: Array<{ type: IntegrationType; config: Record<string, unknown> }> = [];
+): Array<{ type: IntegrationType; config: Record<string, JsonValue> }> {
+  const integrations: Array<{ type: IntegrationType; config: Record<string, JsonValue> }> = [];
 
   for (const type of getAllIntegrationTypes()) {
     const configKey = INTEGRATION_CONFIG_KEYS[type];
@@ -68,7 +69,7 @@ export function extractIntegrationsFromReceiver(
 
     if (configs && Array.isArray(configs)) {
       configs.forEach((config) => {
-        integrations.push({ type, config: config as Record<string, unknown> });
+        integrations.push({ type, config });
       });
     }
   }

@@ -9,15 +9,17 @@ import { extractIntegrationsFromReceiver } from '../utils/integrationIcons';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { deleteReceiverAction } from '../../../reducers/alertmanager/receivers';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
+import { transformEntry } from '../utils/receiversUtils';
+import { JsonValue } from 'type-fest';
 
 interface IntegrationItemProps {
   type: string;
-  config: Record<string, unknown>;
+  config: Record<string, JsonValue>;
 }
 
 function IntegrationItem({ type, config }: IntegrationItemProps) {
   // Extract http_config if it exists
-  const httpConfig = config.http_config as Record<string, unknown> | undefined;
+  const httpConfig = config.http_config ?? {};
 
   // Filter out empty/null values
   const displayEntries = Object.entries(config)
@@ -28,28 +30,21 @@ function IntegrationItem({ type, config }: IntegrationItemProps) {
       }
       return true;
     })
-    .map(([key, value]) => {
-      return { label: key, value: value as string | number | boolean | undefined | null };
-    });
+    .map(transformEntry);
 
   // Process http_config entries if present
-  const httpConfigEntries = httpConfig
-    ? Object.entries(httpConfig)
-        .filter(([key, value]) => {
-          if (key.startsWith('_') || value === undefined || value === null) {
-            return false;
-          }
-          // Skip nested objects that are empty
-          if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
-            return false;
-          }
-          return true;
-        })
-        .map(([key, value]) => {
-          // Pass nested objects directly - KeyValueList will handle the rendering
-          return { label: key, value: value as string | number | boolean | Record<string, unknown> | undefined | null };
-        })
-    : [];
+  const httpConfigEntries = Object.entries(httpConfig)
+      .filter(([key, value]) => {
+        if (key.startsWith('_') || value === undefined || value === null) {
+          return false;
+        }
+        // Skip nested objects that are empty
+        if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
+          return false;
+        }
+        return true;
+      })
+      .map(transformEntry);
 
   const hasMainConfig = displayEntries.length > 0;
   const hasHttpConfig = httpConfigEntries.length > 0;

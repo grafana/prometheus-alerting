@@ -3,12 +3,11 @@ import React from 'react';
 import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
 import { useStyles2 } from '@grafana/ui';
-
-type KeyValueValue = string | number | boolean | undefined | null | Record<string, unknown>;
+import { JsonValue } from 'type-fest';
 
 interface KeyValuePairProps {
   label: string;
-  value?: KeyValueValue;
+  value?: JsonValue;
   children?: React.ReactNode;
 }
 
@@ -34,13 +33,13 @@ export function KeyValuePair({ label, value, children }: KeyValuePairProps) {
     const childContent =
       children ||
       (isObject &&
-        Object.entries(value as Record<string, unknown>)
+        Object.entries(value)
           .filter(([, v]) => v !== undefined && v !== null && v !== '')
           .map(([key, val], index) => (
-            <KeyValuePair key={`${key}-${index}`} label={key} value={val as KeyValueValue} />
+            <KeyValuePair key={`${key}-${index}`} label={key} value={val} />
           )));
 
-    const itemCount = isObject ? Object.keys(value as Record<string, unknown>).length : 0;
+    const itemCount = isObject ? Object.keys(value).length : 0;
 
     return (
       <div className={styles.nestedGroup}>
@@ -68,7 +67,7 @@ export function KeyValuePair({ label, value, children }: KeyValuePairProps) {
 }
 
 interface KeyValueListProps {
-  items: Array<{ label: string; value: KeyValueValue }>;
+  items: Array<{ label: string; value: JsonValue }>;
 }
 
 export function KeyValueList({ items }: KeyValueListProps) {
