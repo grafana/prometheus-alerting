@@ -147,6 +147,7 @@ export function RouteDrawer({ route, onClose, onReceiverClick }: RouteDrawerProp
       <TabContent>
         {activeTab === ActiveTab.Configuration && <RouteDetails route={route} onReceiverClick={onReceiverClick} />}
         {activeTab === ActiveTab.Instances && (
+          // eslint-disable-next-line @grafana/i18n/no-untranslated-strings
           <>Instances</>
         )}
       </TabContent>
