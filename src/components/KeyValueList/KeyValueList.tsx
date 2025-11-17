@@ -7,12 +7,15 @@ import { JsonValue } from 'type-fest';
 
 interface KeyValuePairProps {
   label: string;
-  value?: JsonValue;
+  value?: JsonValue | React.ReactNode;
   children?: React.ReactNode;
 }
 
 export function KeyValuePair({ label, value, children }: KeyValuePairProps) {
   const styles = useStyles2(getStyles);
+
+  // Check if value is a React element/node
+  const isReactNode = React.isValidElement(value);
 
   const displayValue = () => {
     if (value === undefined || value === null || value === '') {
@@ -21,12 +24,20 @@ export function KeyValuePair({ label, value, children }: KeyValuePairProps) {
     if (typeof value === 'boolean') {
       return value ? t('key-value-list.true', 'Yes') : t('key-value-list.false', 'No');
     }
+    // If it's a React node, render it directly
+    if (isReactNode) {
+      return value;
+    }
     return String(value);
   };
 
-  // Check if value is a non-empty object
+  // Check if value is a non-empty object (but not a React element)
   const isObject =
-    typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length > 0;
+    !isReactNode &&
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.keys(value).length > 0;
 
   // If children are provided, render as nested group
   if (children || isObject) {
@@ -67,7 +78,7 @@ export function KeyValuePair({ label, value, children }: KeyValuePairProps) {
 }
 
 interface KeyValueListProps {
-  items: Array<{ label: string; value: JsonValue }>;
+  items: Array<{ label: string; value: JsonValue | React.ReactNode }>;
 }
 
 export function KeyValueList({ items }: KeyValueListProps) {

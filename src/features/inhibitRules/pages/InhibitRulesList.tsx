@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
+import { css } from '@emotion/css';
 import { testIds } from '../../../components/testIds';
 import { Alert, InteractiveTable, Stack, EmptyState } from '@grafana/ui';
 import { useInhibitRules } from '../hooks/useInhibitRules';
@@ -8,6 +9,7 @@ import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import type { InhibitRule } from '@grafana/external-alertmanager/vanilla';
 import { AlertLabel } from '@grafana/alerting';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { InhibitRuleDrawer } from '../components/InhibitRuleDrawer';
 
 const MatchersCell = ({ matchers }: { matchers?: string[] }) => {
   if (!matchers || matchers.length === 0) {
@@ -25,27 +27,53 @@ const MatchersCell = ({ matchers }: { matchers?: string[] }) => {
 
 function InhibitRulesPage() {
   const { inhibitRules, isLoading, error } = useInhibitRules();
+  const [selectedInhibitRule, setSelectedInhibitRule] = useState<InhibitRule | null>(null);
+  const [selectedInhibitRuleIndex, setSelectedInhibitRuleIndex] = useState<number | null>(null);
+
+  const clickableCellStyles = css({
+    cursor: 'pointer',
+  });
+
+  const handleRowClick = (rule: InhibitRule, index: number) => {
+    setSelectedInhibitRule(rule);
+    setSelectedInhibitRuleIndex(index);
+  };
 
   const columns = [
     {
       id: 'source_matchers',
       header: t('inhibit-rules.column.source-matchers', 'Source Matchers'),
-      cell: ({ row: { original } }: { row: { original: InhibitRule } }) => (
-        <MatchersCell matchers={original.source_matchers} />
+      cell: ({ row: { original, index } }: { row: { original: InhibitRule; index: number } }) => (
+        <div className={clickableCellStyles} onClick={() => handleRowClick(original, index)}>
+          <MatchersCell matchers={original.source_matchers} />
+        </div>
       ),
     },
     {
       id: 'target_matchers',
       header: t('inhibit-rules.column.target-matchers', 'Target Matchers'),
-      cell: ({ row: { original } }: { row: { original: InhibitRule } }) => (
-        <MatchersCell matchers={original.target_matchers} />
+      cell: ({ row: { original, index } }: { row: { original: InhibitRule; index: number } }) => (
+        <div className={clickableCellStyles} onClick={() => handleRowClick(original, index)}>
+          <MatchersCell matchers={original.target_matchers} />
+        </div>
       ),
     },
     {
       id: 'equal',
       header: t('inhibit-rules.column.equal', 'Equal'),
-      cell: ({ row: { original } }: { row: { original: InhibitRule } }) =>
-        original.equal && original.equal.length > 0 ? original.equal.join(', ') : '-',
+      cell: ({ row: { original, index } }: { row: { original: InhibitRule; index: number } }) => (
+        <div className={clickableCellStyles} onClick={() => handleRowClick(original, index)}>
+          {original.equal && original.equal.length > 0 ? (
+            <Stack direction="row" gap={0.5}>
+              {original.equal.map((label, idx) => (
+                <AlertLabel key={`${label}-${idx}`} value={label} colorBy="value" />
+              ))}
+            </Stack>
+          ) : (
+            '-'
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -80,6 +108,16 @@ function InhibitRulesPage() {
           />
         )}
       </div>
+      {selectedInhibitRule && (
+        <InhibitRuleDrawer
+          inhibitRule={selectedInhibitRule}
+          inhibitRuleIndex={selectedInhibitRuleIndex}
+          onClose={() => {
+            setSelectedInhibitRule(null);
+            setSelectedInhibitRuleIndex(null);
+          }}
+        />
+      )}
     </AlertmanagerPage>
   );
 }
