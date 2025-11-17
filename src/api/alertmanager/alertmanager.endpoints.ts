@@ -26,9 +26,10 @@ import {
   ParsedUserConfiguration,
   TransformedStatusToParsedUserConfiguration,
 } from '@grafana/external-alertmanager/mimir';
-import { TransformedAlertmanagerStatusApiResponseTransform, WithDataSourceInformation } from './alertmanager.types';
+
 import { getDataSourceSrv } from '@grafana/runtime';
 import { AlertManagerDataSourceJsonData } from 'types/datasources';
+import { WithDataSourceInformation, TransformedAlertmanagerStatusApiResponseTransform } from './alertmanager.types';
 
 function createAlertmanagerPath(dataSourceUID: string, path: `/${string}`) {
   const dsSettings = getDataSourceSrv().getInstanceSettings(dataSourceUID);
