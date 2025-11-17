@@ -68,18 +68,12 @@ const RouteCard = (props: Props) => {
   const moreCount = childPoliciesToRender.length - pageOfChildren.length;
   const showMore = moreCount > 0;
 
-  const handleClick = () => {
-    if (onRouteClick) {
-      onRouteClick(currentRoute);
-    }
-  };
-
   return (
     <Stack direction="column" gap={1.5}>
       <div
         className={styles.policyWrapper(false, Boolean(onRouteClick))}
         data-testid={isDefaultPolicy ? 'am-root-route-container' : 'am-route-container'}
-        onClick={handleClick}
+        onClick={() => onRouteClick?.(currentRoute)}
       >
         {/* continueMatching and showMatchesAllLabelsWarning are mutually exclusive so the icons can't overlap */}
         {continueMatching && <ContinueMatchingIndicator />}

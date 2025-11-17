@@ -2,7 +2,7 @@ import { css } from '@emotion/css';
 import React, { useState } from 'react';
 import { GrafanaTheme2 } from '@grafana/data';
 import { t, Trans } from '@grafana/i18n';
-import { Alert, Stack, useStyles2, Text, Tab, TabsBar, TabContent, Button } from '@grafana/ui';
+import { Alert, Stack, useStyles2, Text, Tab, TabsBar, TabContent, TextLink } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
@@ -58,15 +58,9 @@ function RouteDetails({ route, onReceiverClick }: RouteDetailsProps) {
       {route.receiver && (
         <Section title={t('routes.receiver-label', 'Receiver')}>
           {onReceiverClick ? (
-            <Button
-              variant="secondary"
-              fill="text"
-              size="sm"
-              onClick={() => onReceiverClick(route.receiver!)}
-              style={{ padding: 0, height: 'auto' }}
-            >
+            <TextLink color='link' onClick={() => onReceiverClick(route.receiver!)} href='#'>
               {route.receiver}
-            </Button>
+            </TextLink>
           ) : (
             <Text>{route.receiver}</Text>
           )}
@@ -151,11 +145,9 @@ export function RouteDrawer({ route, onClose, onReceiverClick }: RouteDrawerProp
       tabs={drawerTabs}
     >
       <TabContent>
-        {activeTab === ActiveTab.Configuration && <RouteDetails route={route} />}
+        {activeTab === ActiveTab.Configuration && <RouteDetails route={route} onReceiverClick={onReceiverClick} />}
         {activeTab === ActiveTab.Instances && (
-          <Stack direction="column" gap={2}>
-            <RouteDetails route={route} onReceiverClick={onReceiverClick} />
-          </Stack>
+          <>Instances</>
         )}
       </TabContent>
     </DrawerWithFooter>
