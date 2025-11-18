@@ -21,18 +21,19 @@ export const INTEGRATION_ICONS: Record<AllIntegrationTypes, IconName> = {
   slack: 'slack',
   pagerduty: 'pagerduty',
   webhook: 'link',
-  opsgenie: 'cloud',
-  wechat: 'comment-alt',
+  opsgenie: 'bug',
+  wechat: 'comments-alt',
   pushover: 'mobile-android',
   victorops: 'bell',
   sns: 'amazon',
   telegram: 'telegram-alt',
   discord: 'discord',
-  webex: 'camera',
+  // @ts-expect-error
+  webex: 'video',
   msteams: 'microsoft',
   msteamsv2: 'microsoft',
   jira: 'bug',
-  rocketchat: 'comment-alt',
+  rocketchat: 'rocket',
   incidentio: 'fire',
 } as const;
 
