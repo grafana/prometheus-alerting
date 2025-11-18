@@ -21,6 +21,11 @@ export function KeyValuePair({ label, value, children }: KeyValuePairProps) {
     if (value === undefined || value === null || value === '') {
       return t('key-value-list.empty-value', '(not set)');
     }
+
+    if (String(value).startsWith('{{') && String(value).endsWith('}}')) {
+      return <pre>{String(value)}</pre>
+    }
+
     if (typeof value === 'boolean') {
       return value ? t('key-value-list.true', 'Yes') : t('key-value-list.false', 'No');
     }
