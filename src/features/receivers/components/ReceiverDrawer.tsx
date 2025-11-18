@@ -34,17 +34,17 @@ function IntegrationItem({ type, config }: IntegrationItemProps) {
 
   // Process http_config entries if present
   const httpConfigEntries = Object.entries(httpConfig)
-      .filter(([key, value]) => {
-        if (key.startsWith('_') || value === undefined || value === null) {
-          return false;
-        }
-        // Skip nested objects that are empty
-        if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
-          return false;
-        }
-        return true;
-      })
-      .map(transformEntry);
+    .filter(([key, value]) => {
+      if (key.startsWith('_') || value === undefined || value === null) {
+        return false;
+      }
+      // Skip nested objects that are empty
+      if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
+        return false;
+      }
+      return true;
+    })
+    .map(transformEntry);
 
   const hasMainConfig = displayEntries.length > 0;
   const hasHttpConfig = httpConfigEntries.length > 0;

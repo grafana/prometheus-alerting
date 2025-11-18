@@ -23,7 +23,11 @@ const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
   return (
     <Stack direction="row">
       {matchers.map((matcher, idx) => (
-        <AlertLabel key={`${stringifyObjectMatcher(matcher)}-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
+        <AlertLabel
+          key={`${stringifyObjectMatcher(matcher)}-${idx}`}
+          value={stringifyObjectMatcher(matcher)}
+          colorBy="value"
+        />
       ))}
     </Stack>
   );

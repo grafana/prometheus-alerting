@@ -1,6 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-
 import { DataSourceFeatures, discoverDataSourceFeatures } from './featureDiscovery';
 
 export const featureDiscoveryApi = createApi({

@@ -81,18 +81,10 @@ function RoutesPage() {
         )}
       </div>
       {selectedRoute && (
-        <RouteDrawer
-          route={selectedRoute}
-          onClose={handleRouteDrawerClose}
-          onReceiverClick={handleReceiverClick}
-        />
+        <RouteDrawer route={selectedRoute} onClose={handleRouteDrawerClose} onReceiverClick={handleReceiverClick} />
       )}
       {selectedReceiverName && (
-        <ReceiverDrawer
-          receiver={selectedReceiver}
-          onClose={handleReceiverDrawerClose}
-          showBackButton={true}
-        />
+        <ReceiverDrawer receiver={selectedReceiver} onClose={handleReceiverDrawerClose} showBackButton={true} />
       )}
     </AlertmanagerPage>
   );

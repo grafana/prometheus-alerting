@@ -9,6 +9,7 @@ This is a Grafana App Plugin for managing Prometheus Alerting and Alertmanager c
 ## Development Commands
 
 ### Build and Development
+
 ```bash
 npm run dev          # Build in development mode with watch
 npm run build        # Production build
@@ -18,6 +19,7 @@ npm run lint:fix     # Run ESLint and Prettier to fix issues
 ```
 
 ### Testing
+
 ```bash
 npm run test         # Run tests in watch mode (requires git init)
 npm run test:ci      # Run all tests once and exit
@@ -25,12 +27,14 @@ npm run e2e          # Run E2E tests with Playwright (requires npm run server fi
 ```
 
 ### Development Server
+
 ```bash
 npm run server       # Start Grafana in Docker with the plugin loaded
 GRAFANA_VERSION=11.3.0 npm run server  # Start specific Grafana version
 ```
 
 ### Internationalization
+
 ```bash
 npm run i18n-extract # Extract translation strings after adding t() or <Trans />
 ```
@@ -38,16 +42,19 @@ npm run i18n-extract # Extract translation strings after adding t() or <Trans />
 ## Code Quality Standards
 
 ### TypeScript
+
 - Never use `as` to type cast unless it can't be avoided
 - Never use `any` and prefer `unknown` unless it can't be avoided
 - Run `npm run typecheck` to verify types
 
 ### Linting and Formatting
+
 - Verify code with `npm run lint` and `npm run typecheck`
 - Use Prettier to format code (runs with `npm run lint:fix`)
 - ESLint configured with `@grafana/eslint-config`
 
 ### Internationalization
+
 - Use `t()` function from `@grafana/i18n` for all user-facing text
 - Use `<Trans />` component for JSX content that needs translation
 - Run `npm run i18n-extract` whenever new translations are added
@@ -55,19 +62,25 @@ npm run i18n-extract # Extract translation strings after adding t() or <Trans />
 ## Architecture
 
 ### Monorepo Structure
+
 This is a monorepo with workspace packages:
+
 - `/packages/alertmanager/` - `@grafana/external-alertmanager` - Shared Alertmanager types (vanilla/mimir)
 - `/packages/rules/` - `@grafana/external-rules` - Shared rules API types
 
 ### State Management
+
 Uses Redux Toolkit with RTK Query for data fetching:
+
 - Store configuration: `src/store/store.ts`
 - Data source selection: `src/store/datasourceSlice.ts` (persisted to sessionStorage)
 - API endpoints: `src/api/*.endpoints.ts`
 - Custom hooks: `src/store/hooks.ts` (`useAppDispatch`, `useAppSelector`)
 
 ### Feature Organization
+
 Features are organized by domain in `src/features/`:
+
 - `rules/` - Alert rules management (list, details, editor)
 - `routes/` - Alertmanager routing tree
 - `receivers/` - Notification receivers/contact points (with integration-specific forms)
@@ -77,6 +90,7 @@ Features are organized by domain in `src/features/`:
 - `inhibitRules/` - Alert inhibition rules
 
 Each feature follows this structure:
+
 ```
 feature/
 ├── pages/        # Top-level page components
@@ -87,19 +101,24 @@ feature/
 ```
 
 ### API Communication Pattern
+
 The plugin supports multiple Alertmanager implementations (vanilla Prometheus, Mimir):
+
 - Dynamic baseQuery routes requests based on data source UID and implementation type
 - URLs constructed as: `/api/datasources/proxy/uid/{uid}/...`
 - All API calls include `dataSourceUID` and `implementation` parameters
 - Feature hooks use `useAlertmanager()` to get current data source details
 
 ### Form Handling
+
 - Uses `react-hook-form` for form state management
 - Uses `@hookform/resolvers` with `zod` for validation schemas
 - Validation schemas defined in feature `utils/` directories
 
 ### Routing
+
 Routes defined in `src/constants.ts`:
+
 - Base URL: `/a/grafana-prometheusalerting-app/`
 - Main router in `src/components/App/App.tsx`
 - Pages configured in `src/plugin.json`
@@ -107,6 +126,7 @@ Routes defined in `src/constants.ts`:
 ## Common Development Patterns
 
 ### Adding a New Feature
+
 1. Create feature directory: `src/features/featureName/`
 2. Create hook in `hooks/useFeature.ts` that uses RTK Query
 3. Create page component in `pages/FeaturePage.tsx`
@@ -115,6 +135,7 @@ Routes defined in `src/constants.ts`:
 6. Add page entry to `src/plugin.json` includes array
 
 ### Working with Alertmanager Data
+
 ```typescript
 // Get current Alertmanager data source
 const { uid: dataSourceUID, settings } = useAlertmanager();
@@ -133,25 +154,27 @@ const [trigger, result] = alertmanagerApi.endpoints.getStatus.useLazyQuery({
 ```
 
 ### Using Feature Hooks
+
 Feature hooks combine data fetching, transformation, and error handling:
+
 ```typescript
 const [loadReceivers, { receivers, isLoading, error }] = useReceivers();
 ```
 
 ## Key Files Reference
 
-| Path | Purpose |
-|------|---------|
-| `src/module.tsx` | Plugin entry point with lazy loading |
-| `src/components/App/App.tsx` | Main router and Redux store provider |
-| `src/store/store.ts` | Redux store configuration |
-| `src/api/*.endpoints.ts` | RTK Query API endpoint definitions |
-| `src/hooks/useAlertmanager.ts` | Get current Alertmanager from Redux |
-| `src/constants.ts` | Route definitions, storage keys, constants |
-| `src/plugin.json` | Plugin metadata and navigation pages |
-| `src/types/` | Core TypeScript type definitions |
-| `packages/alertmanager/` | Shared Alertmanager types |
-| `packages/rules/` | Shared rules API types |
+| Path                           | Purpose                                    |
+| ------------------------------ | ------------------------------------------ |
+| `src/module.tsx`               | Plugin entry point with lazy loading       |
+| `src/components/App/App.tsx`   | Main router and Redux store provider       |
+| `src/store/store.ts`           | Redux store configuration                  |
+| `src/api/*.endpoints.ts`       | RTK Query API endpoint definitions         |
+| `src/hooks/useAlertmanager.ts` | Get current Alertmanager from Redux        |
+| `src/constants.ts`             | Route definitions, storage keys, constants |
+| `src/plugin.json`              | Plugin metadata and navigation pages       |
+| `src/types/`                   | Core TypeScript type definitions           |
+| `packages/alertmanager/`       | Shared Alertmanager types                  |
+| `packages/rules/`              | Shared rules API types                     |
 
 ## Important Conventions
 

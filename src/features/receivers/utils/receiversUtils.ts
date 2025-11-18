@@ -65,7 +65,7 @@ const SECRET_TOKEN = '<secret>';
 /**
  * This function will transform a receiver's key-value pair. Curerntly used for translating encrypted secrets for vanilla Alertmanager.
  */
-export function transformEntry ([key, value]: [string, JsonValue]): { label: string, value: JsonValue } {
+export function transformEntry([key, value]: [string, JsonValue]): { label: string; value: JsonValue } {
   const transformedValue = value === SECRET_TOKEN ? '*************' : value;
   return { label: key, value: transformedValue };
 }

@@ -72,6 +72,7 @@ App plugins can let you create a custom out-of-the-box monitoring experience by 
 To install and test the plugin in a local Grafana instance (outside of Docker):
 
 1. Clone the repository and follow the build instructions above:
+
    ```bash
    git clone https://github.com/grafana/prometheus-alerting
    cd prometheus-alerting
@@ -80,12 +81,14 @@ To install and test the plugin in a local Grafana instance (outside of Docker):
    ```
 
 2. Configure Grafana to load plugins from your local directory. In your Grafana configuration file (e.g., `custom.ini` or `grafana.ini`), add:
+
    ```ini
    [paths]
    plugins = /Users/your-username/grafana-plugins
    ```
 
 3. Create a symlink from your Grafana plugins directory to the cloned repository:
+
    ```bash
    ln -s /path/to/prometheus-alerting /path/to/grafana-plugins/grafana-prometheusalerting-app
    ```

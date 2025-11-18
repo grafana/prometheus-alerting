@@ -58,7 +58,7 @@ function RouteDetails({ route, onReceiverClick }: RouteDetailsProps) {
       {route.receiver && (
         <Section title={t('routes.receiver-label', 'Receiver')}>
           {onReceiverClick ? (
-            <TextLink color='link' onClick={() => onReceiverClick(route.receiver!)} href='#'>
+            <TextLink color="link" onClick={() => onReceiverClick(route.receiver!)} href="#">
               {route.receiver}
             </TextLink>
           ) : (

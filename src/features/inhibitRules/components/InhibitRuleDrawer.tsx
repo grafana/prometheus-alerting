@@ -23,34 +23,49 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
     <Section title={t('inhibit-rules.drawer.details', 'Inhibit Rule Details')}>
       <Stack direction="column" gap={2}>
         {/* Source matchers */}
-        <KeyValuePair label={t('inhibit-rules.drawer.source-matchers', 'Source Matchers')} value={hasSourceMatchers ? (
-          <Stack direction="row" gap={0.5} wrap="wrap">
-            {inhibitRule.source_matchers!.map((matcher, idx) => (
-              <AlertLabel key={`source-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
-            ))}
-          </Stack>
-        ) : (
-          <Text color="secondary">{t('inhibit-rules.drawer.none', 'None')}</Text>
-        )} />
+        <KeyValuePair
+          label={t('inhibit-rules.drawer.source-matchers', 'Source Matchers')}
+          value={
+            hasSourceMatchers ? (
+              <Stack direction="row" gap={0.5} wrap="wrap">
+                {inhibitRule.source_matchers!.map((matcher, idx) => (
+                  <AlertLabel key={`source-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
+                ))}
+              </Stack>
+            ) : (
+              <Text color="secondary">{t('inhibit-rules.drawer.none', 'None')}</Text>
+            )
+          }
+        />
 
         {/* Target matchers */}
-        <KeyValuePair label={t('inhibit-rules.drawer.target-matchers', 'Target Matchers')} value={hasTargetMatchers ? (
-          <Stack direction="row" gap={0.5} wrap="wrap">
-            {inhibitRule.target_matchers!.map((matcher, idx) => (
-              <AlertLabel key={`target-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
-            ))}
-          </Stack>
-        ) : (
-          <Text color="secondary">{t('inhibit-rules.drawer.none', 'None')}</Text>
-        )} />
+        <KeyValuePair
+          label={t('inhibit-rules.drawer.target-matchers', 'Target Matchers')}
+          value={
+            hasTargetMatchers ? (
+              <Stack direction="row" gap={0.5} wrap="wrap">
+                {inhibitRule.target_matchers!.map((matcher, idx) => (
+                  <AlertLabel key={`target-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
+                ))}
+              </Stack>
+            ) : (
+              <Text color="secondary">{t('inhibit-rules.drawer.none', 'None')}</Text>
+            )
+          }
+        />
 
         {/* Equal labels */}
         {hasEqualLabels && (
-          <KeyValuePair label={t('inhibit-rules.drawer.equal', 'Equal Labels')} value={<Stack direction="row" gap={0.5} wrap="wrap">
-            {inhibitRule.equal!.map((label, idx) => (
-              <AlertLabel key={`equal-${idx}`} value={label} colorBy="value" />
-            ))}
-          </Stack>} />
+          <KeyValuePair
+            label={t('inhibit-rules.drawer.equal', 'Equal Labels')}
+            value={
+              <Stack direction="row" gap={0.5} wrap="wrap">
+                {inhibitRule.equal!.map((label, idx) => (
+                  <AlertLabel key={`equal-${idx}`} value={label} colorBy="value" />
+                ))}
+              </Stack>
+            }
+          />
         )}
 
         {/* Show info if completely empty */}

@@ -23,7 +23,7 @@ export function KeyValuePair({ label, value, children }: KeyValuePairProps) {
     }
 
     if (String(value).startsWith('{{') && String(value).endsWith('}}')) {
-      return <pre>{String(value)}</pre>
+      return <pre>{String(value)}</pre>;
     }
 
     if (typeof value === 'boolean') {
@@ -51,9 +51,7 @@ export function KeyValuePair({ label, value, children }: KeyValuePairProps) {
       (isObject &&
         Object.entries(value)
           .filter(([, v]) => v !== undefined && v !== null && v !== '')
-          .map(([key, val], index) => (
-            <KeyValuePair key={`${key}-${index}`} label={key} value={val} />
-          )));
+          .map(([key, val], index) => <KeyValuePair key={`${key}-${index}`} label={key} value={val} />));
 
     const itemCount = isObject ? Object.keys(value).length : 0;
 
