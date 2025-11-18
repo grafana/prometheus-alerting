@@ -61,11 +61,40 @@ export function getContactPointDescription(receiver: Receiver): string {
 
 // Vanilla Alertmanager will respond with this value for sensitive fields
 const SECRET_TOKEN = '<secret>';
+const OUR_SECRET_TOKEN = '*************';
 
 /**
- * This function will transform a receiver's key-value pair. Curerntly used for translating encrypted secrets for vanilla Alertmanager.
+ * This function will transform a receiver's key-value pair recursively.
+ * Currently used for translating encrypted secrets for vanilla Alertmanager.
  */
 export function transformEntry([key, value]: [string, JsonValue]): { label: string; value: JsonValue } {
-  const transformedValue = value === SECRET_TOKEN ? '*************' : value;
+  const transformedValue = transformValue(value);
   return { label: key, value: transformedValue };
+}
+
+/**
+ * Recursively transforms values, replacing SECRET_TOKEN with masked string in nested structures.
+ */
+function transformValue(value: JsonValue): JsonValue {
+  // Replace secret token with masked string
+  if (value === SECRET_TOKEN) {
+    return OUR_SECRET_TOKEN;
+  }
+
+  // Recursively handle arrays
+  if (Array.isArray(value)) {
+    return value.map(transformValue);
+  }
+
+  // Recursively handle objects
+  if (value !== null && typeof value === 'object') {
+    const result: Record<string, JsonValue> = {};
+    for (const [k, v] of Object.entries(value)) {
+      result[k] = transformValue(v);
+    }
+    return result;
+  }
+
+  // Return primitives as-is
+  return value;
 }
