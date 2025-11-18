@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, Field, Input, Stack } from '@grafana/ui';
+import { Alert, Button, Field, Input, Stack, Combobox } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
+import { IANA_TIMEZONES } from '../utils/timezones';
 
 export const TimeIntervalFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -46,6 +47,7 @@ export function TimeIntervalFormFields({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<TimeIntervalFormData>({
     resolver: zodResolver(TimeIntervalFormSchema),
@@ -197,7 +199,19 @@ export function TimeIntervalFormFields({
           invalid={!!errors.location}
           error={errors.location?.message}
         >
-          <Input {...register('location')} placeholder={t('time-intervals.form.location-placeholder', 'UTC')} />
+          <Controller
+            name="location"
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <Combobox
+                options={IANA_TIMEZONES}
+                value={IANA_TIMEZONES.find((tz) => tz.value === value) || IANA_TIMEZONES[0]}
+                onChange={(option) => onChange(option.value)}
+                placeholder={t('time-intervals.form.location-placeholder', 'UTC')}
+                isClearable={false}
+              />
+            )}
+          />
         </Field>
 
         <Stack direction="row" gap={2}>
