@@ -9,7 +9,7 @@ import { extractIntegrationsFromReceiver, getIntegrationIcon } from '../utils/in
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { deleteReceiverAction } from '../../../reducers/alertmanager/receivers';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
-import { transformEntry } from '../utils/receiversUtils';
+import { filterAndTransformConfigEntries } from '../utils/receiversUtils';
 import { JsonValue } from 'type-fest';
 
 interface IntegrationItemProps {
@@ -19,32 +19,17 @@ interface IntegrationItemProps {
 
 function IntegrationItem({ type, config }: IntegrationItemProps) {
   // Extract http_config if it exists
-  const httpConfig = config.http_config ?? {};
+  const httpConfig = (config.http_config as Record<string, JsonValue>) ?? {};
 
-  // Filter out empty/null values
-  const displayEntries = Object.entries(config)
-    .filter(([key, value]) => {
-      // Skip internal, empty fields, and http_config (handled separately)
-      if (key.startsWith('_') || value === undefined || value === null || key === 'http_config') {
-        return false;
-      }
-      return true;
-    })
-    .map(transformEntry);
+  // Filter and transform main config entries (excluding http_config which is handled separately)
+  const displayEntries = filterAndTransformConfigEntries(config, {
+    excludeKeys: ['http_config'],
+  });
 
-  // Process http_config entries if present
-  const httpConfigEntries = Object.entries(httpConfig)
-    .filter(([key, value]) => {
-      if (key.startsWith('_') || value === undefined || value === null) {
-        return false;
-      }
-      // Skip nested objects that are empty
-      if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
-        return false;
-      }
-      return true;
-    })
-    .map(transformEntry);
+  // Filter and transform http_config entries with empty object exclusion
+  const httpConfigEntries = filterAndTransformConfigEntries(httpConfig, {
+    excludeEmptyObjects: true,
+  });
 
   const hasMainConfig = displayEntries.length > 0;
   const hasHttpConfig = httpConfigEntries.length > 0;

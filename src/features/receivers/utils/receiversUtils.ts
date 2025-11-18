@@ -98,3 +98,57 @@ function transformValue(value: JsonValue): JsonValue {
   // Return primitives as-is
   return value;
 }
+
+/**
+ * Checks if a config entry should be displayed in the UI.
+ * Filters out internal fields (starting with '_'), empty/null values, and optionally specific keys.
+ */
+export function shouldDisplayConfigEntry(
+  key: string,
+  value: JsonValue,
+  options?: {
+    excludeKeys?: string[];
+    excludeEmptyObjects?: boolean;
+  }
+): boolean {
+  const { excludeKeys = [], excludeEmptyObjects = false } = options ?? {};
+
+  // Skip internal fields (starting with underscore)
+  if (key.startsWith('_')) {
+    return false;
+  }
+
+  // Skip undefined or null values
+  if (value === undefined || value === null) {
+    return false;
+  }
+
+  // Skip excluded keys
+  if (excludeKeys.includes(key)) {
+    return false;
+  }
+
+  // Skip empty objects if requested
+  if (excludeEmptyObjects && typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Filters and transforms config entries for display.
+ * Removes internal fields, empty values, and optionally specific keys.
+ * Transforms sensitive values (secrets) to masked strings.
+ */
+export function filterAndTransformConfigEntries(
+  config: Record<string, JsonValue>,
+  options?: {
+    excludeKeys?: string[];
+    excludeEmptyObjects?: boolean;
+  }
+): Array<{ label: string; value: JsonValue }> {
+  return Object.entries(config)
+    .filter(([key, value]) => shouldDisplayConfigEntry(key, value, options))
+    .map(transformEntry);
+}

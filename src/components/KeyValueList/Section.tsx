@@ -5,7 +5,7 @@ import { GrafanaTheme2 } from '@grafana/data';
 import { useToggle } from '@react-hookz/web';
 
 export interface SectionProps extends PropsWithChildren {
-  title?: string;
+  title?: string | React.ReactNode;
 }
 
 export function Section({ title, children }: SectionProps) {
@@ -17,9 +17,13 @@ export function Section({ title, children }: SectionProps) {
       <div className={styles.sectionTitle} onClick={toggleCollapsed}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           {title && (
-            <Text variant="body" color="maxContrast">
-              {title}
-            </Text>
+            typeof title === 'string' ? (
+              <Text variant="body" color="maxContrast">
+                {title}
+              </Text>
+            ) : (
+              <div>{title}</div>
+            )
           )}
           <Icon name={collapsed ? 'angle-down' : 'angle-up'} />
         </Stack>
