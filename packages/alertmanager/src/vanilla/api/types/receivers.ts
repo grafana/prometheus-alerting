@@ -463,6 +463,125 @@ export const MSTeamsConfigSchema = z
     }
   });
 
+export const MSTeamsV2ConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    webhook_url: z.string().optional(),
+    webhook_url_file: z.string().optional(),
+    title: z.string().optional(),
+    text: z.string().optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.webhook_url && data.webhook_url_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'webhook_url and webhook_url_file are mutually exclusive',
+        path: ['webhook_url'],
+      });
+    }
+  });
+
+export const JiraConfigSchema = z.object({
+  send_resolved: z.boolean().optional(),
+  api_url: z.string().optional(),
+  api_type: z.string().optional(),
+  project: z.string(),
+  summary: z.string().optional(),
+  description: z.string().optional(),
+  labels: z.array(z.string()).optional(),
+  priority: z.string().optional(),
+  issue_type: z.string().optional(),
+  resolve_transition: z.string().optional(),
+  reopen_transition: z.string().optional(),
+  wont_fix_resolution: z.string().optional(),
+  reopen_duration: z.string().optional(),
+  fields: z.record(z.string(), z.string()).optional(),
+  http_config: HTTPConfigSchema.optional(),
+});
+
+export const RocketchatFieldConfigSchema = z.object({
+  title: z.string().optional(),
+  value: z.string().optional(),
+  short: z.boolean().optional(),
+});
+
+export const RocketchatActionConfigSchema = z.object({
+  type: z.string().optional(),
+  text: z.string().optional(),
+  url: z.string().optional(),
+  msg: z.string().optional(),
+  msg_in_chat_window: z.boolean().optional(),
+});
+
+export const RocketchatConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    api_url: z.string().optional(),
+    channel: z.string().optional(),
+    token: z.string().optional(),
+    token_file: z.string().optional(),
+    token_id: z.string().optional(),
+    token_id_file: z.string().optional(),
+    color: z.string().optional(),
+    emoji: z.string().optional(),
+    icon_url: z.string().optional(),
+    text: z.string().optional(),
+    title: z.string().optional(),
+    title_link: z.string().optional(),
+    image_url: z.string().optional(),
+    thumb_url: z.string().optional(),
+    link_names: z.string().optional(),
+    short_fields: z.boolean().optional(),
+    fields: z.array(RocketchatFieldConfigSchema).optional(),
+    actions: z.array(RocketchatActionConfigSchema).optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.token && data.token_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'token and token_file are mutually exclusive',
+        path: ['token'],
+      });
+    }
+    if (data.token_id && data.token_id_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'token_id and token_id_file are mutually exclusive',
+        path: ['token_id'],
+      });
+    }
+  });
+
+export const IncidentioConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    url: z.string().optional(),
+    url_file: z.string().optional(),
+    alert_source_token: z.string().optional(),
+    alert_source_token_file: z.string().optional(),
+    max_alerts: z.number().optional(),
+    timeout: z.string().optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.url && data.url_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'url and url_file are mutually exclusive',
+        path: ['url'],
+      });
+    }
+    if (data.alert_source_token && data.alert_source_token_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'alert_source_token and alert_source_token_file are mutually exclusive',
+        path: ['alert_source_token'],
+      });
+    }
+  });
+
 // Receiver schema
 export const ReceiverSchema = z.object({
   name: z.string(),
@@ -479,6 +598,10 @@ export const ReceiverSchema = z.object({
   discord_configs: z.array(DiscordConfigSchema).optional(),
   webex_configs: z.array(WebexConfigSchema).optional(),
   msteams_configs: z.array(MSTeamsConfigSchema).optional(),
+  msteamsv2_configs: z.array(MSTeamsV2ConfigSchema).optional(),
+  jira_configs: z.array(JiraConfigSchema).optional(),
+  rocketchat_configs: z.array(RocketchatConfigSchema).optional(),
+  incidentio_configs: z.array(IncidentioConfigSchema).optional(),
 });
 
 // Export inferred types
@@ -506,6 +629,12 @@ export type TelegramConfig = z.infer<typeof TelegramConfigSchema>;
 export type DiscordConfig = z.infer<typeof DiscordConfigSchema>;
 export type WebexConfig = z.infer<typeof WebexConfigSchema>;
 export type MSTeamsConfig = z.infer<typeof MSTeamsConfigSchema>;
+export type MSTeamsV2Config = z.infer<typeof MSTeamsV2ConfigSchema>;
+export type JiraConfig = z.infer<typeof JiraConfigSchema>;
+export type RocketchatFieldConfig = z.infer<typeof RocketchatFieldConfigSchema>;
+export type RocketchatActionConfig = z.infer<typeof RocketchatActionConfigSchema>;
+export type RocketchatConfig = z.infer<typeof RocketchatConfigSchema>;
+export type IncidentioConfig = z.infer<typeof IncidentioConfigSchema>;
 export type Receiver = z.infer<typeof ReceiverSchema>;
 
 // Type guard functions for receiver discrimination
@@ -566,6 +695,28 @@ export function hasMSTeamsConfigs(receiver: Receiver): receiver is Receiver & { 
   return Array.isArray(receiver.msteams_configs) && receiver.msteams_configs.length > 0;
 }
 
+export function hasMSTeamsV2Configs(
+  receiver: Receiver
+): receiver is Receiver & { msteamsv2_configs: MSTeamsV2Config[] } {
+  return Array.isArray(receiver.msteamsv2_configs) && receiver.msteamsv2_configs.length > 0;
+}
+
+export function hasJiraConfigs(receiver: Receiver): receiver is Receiver & { jira_configs: JiraConfig[] } {
+  return Array.isArray(receiver.jira_configs) && receiver.jira_configs.length > 0;
+}
+
+export function hasRocketchatConfigs(
+  receiver: Receiver
+): receiver is Receiver & { rocketchat_configs: RocketchatConfig[] } {
+  return Array.isArray(receiver.rocketchat_configs) && receiver.rocketchat_configs.length > 0;
+}
+
+export function hasIncidentioConfigs(
+  receiver: Receiver
+): receiver is Receiver & { incidentio_configs: IncidentioConfig[] } {
+  return Array.isArray(receiver.incidentio_configs) && receiver.incidentio_configs.length > 0;
+}
+
 // Helper function to get all configured receiver types for a receiver
 export function getReceiverTypes(receiver: Receiver): string[] {
   const types: string[] = [];
@@ -607,6 +758,18 @@ export function getReceiverTypes(receiver: Receiver): string[] {
   }
   if (hasMSTeamsConfigs(receiver)) {
     types.push('msteams');
+  }
+  if (hasMSTeamsV2Configs(receiver)) {
+    types.push('msteamsv2');
+  }
+  if (hasJiraConfigs(receiver)) {
+    types.push('jira');
+  }
+  if (hasRocketchatConfigs(receiver)) {
+    types.push('rocketchat');
+  }
+  if (hasIncidentioConfigs(receiver)) {
+    types.push('incidentio');
   }
   return types;
 }
