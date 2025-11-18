@@ -19,17 +19,55 @@ export function useAlertmanager(): AlertmanagerHookResult {
   const availableAlertmanagers = useAvailableAlertmanagers();
 
   const settings = useMemo(() => {
-    const settings = availableAlertmanagers.find((am) => am.uid === selectedUID);
+    // If no UID is selected yet, try to use the first available Alertmanager
+    const uidToFind = selectedUID || availableAlertmanagers[0]?.uid;
+
+    if (!uidToFind) {
+      throw new Error('No Alertmanager data sources configured');
+    }
+
+    const settings = availableAlertmanagers.find((am) => am.uid === uidToFind);
 
     if (!settings) {
-      throw new Error(`no such Alertmanager: ${selectedUID}`);
+      throw new Error(`no such Alertmanager: ${uidToFind}`);
     }
 
     return settings;
   }, [selectedUID, availableAlertmanagers]);
 
   return {
-    uid: selectedUID,
+    uid: settings.uid,
     settings,
   };
+}
+
+/**
+ * Safe version of useAlertmanager that returns null instead of throwing an error.
+ * Use this when you want to handle the absence of an Alertmanager gracefully.
+ */
+export function useAlertmanagerSafe(): AlertmanagerHookResult | null {
+  const selectedUID = useAppSelector(selectDataSourceUID);
+  const availableAlertmanagers = useAvailableAlertmanagers();
+
+  const result = useMemo((): AlertmanagerHookResult | null => {
+    // If no UID is selected yet, try to use the first available Alertmanager
+    const uidToFind = selectedUID || availableAlertmanagers[0]?.uid;
+
+    if (!uidToFind) {
+      return null;
+    }
+
+    const settings = availableAlertmanagers.find((am) => am.uid === uidToFind);
+
+    if (!settings) {
+      return null;
+    }
+
+    return {
+      uid: settings.uid,
+      settings,
+    };
+  }, [selectedUID, availableAlertmanagers]);
+
+  return result;
 }

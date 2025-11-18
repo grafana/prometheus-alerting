@@ -114,20 +114,54 @@
     }
   },
   "app-config": {
-    "api-key": {
-      "description": "A secret key for authenticating to our custom API",
-      "label": "API Key",
-      "placeholder": "Your secret API key"
+    "alertmanager-selection": {
+      "title": "Alertmanager"
     },
     "api-settings": {
-      "title": "API Settings"
+      "title": "Configuration file"
     },
-    "api-url": {
-      "description": "",
-      "label": "API Url",
-      "placeholder": "E.g.: http://mywebsite.com/api/v1"
+    "cluster": {
+      "name": "Name",
+      "peer": "",
+      "status": "Status"
     },
-    "submit-button": "Save API settings"
+    "cluster-status": {
+      "title": "Cluster Status"
+    },
+    "error": {
+      "message": "Failed to load Alertmanager status. Please check your data source configuration.",
+      "title": "Error loading Alertmanager status"
+    },
+    "loading": "Loading Alertmanager status...",
+    "no-alertmanager": {
+      "message": "No Alertmanager data sources are configured. Please configure at least one Alertmanager data source to use this plugin.",
+      "title": "No Alertmanager configured"
+    },
+    "no-data": {
+      "message": "No Alertmanager status data available.",
+      "title": "No data"
+    },
+    "status": {
+      "title": "Status",
+      "uptime": "Uptime"
+    },
+    "version": {
+      "branch": "Branch",
+      "build-date": "Build Date",
+      "build-user": "Build User",
+      "go-version": "Go Version",
+      "revision": "Revision",
+      "version": "Version"
+    },
+    "version-information": {
+      "title": "Version Information"
+    }
+  },
+  "cluster-status": {
+    "disabled": "Disabled",
+    "ready": "Ready",
+    "settling": "Settling",
+    "unknown": "Unknown"
   },
   "common": {
     "all": "All",
@@ -135,12 +169,32 @@
     "clear": "Clear",
     "close": "Close"
   },
+  "components": {
+    "alertmanager-picker": {
+      "label": "Choose Alertmanager"
+    }
+  },
   "inhibit-rules": {
     "column": {
       "equal": "Equal",
       "source-matchers": "Source Matchers",
       "target-matchers": "Target Matchers"
     },
+    "drawer": {
+      "default-title": "Inhibit Rule",
+      "details": "Inhibit Rule Details",
+      "edit": "Edit",
+      "equal": "Equal Labels",
+      "no-config": "No configuration",
+      "no-config-desc": "This inhibit rule has no visible configuration.",
+      "none": "None",
+      "remove": "Remove",
+      "source-matchers": "Source Matchers",
+      "target-matchers": "Target Matchers",
+      "title": "Inhibit Rule"
+    },
+    "error-deleting-message": "Failed to delete inhibit rule",
+    "error-deleting-title": "Error deleting inhibit rule",
     "error-loading-message": "Failed to fetch inhibit rules",
     "error-loading-title": "Error loading inhibit rules",
     "no-matchers": "None",
@@ -154,9 +208,6 @@
     "true": "Yes"
   },
   "pages": {
-    "alertmanager-picker": {
-      "label": "Choose Alertmanager"
-    },
     "silences": {
       "subtitle": "Stop notifications from one or more alerting rules"
     }
@@ -183,6 +234,7 @@
       "webhook-url-desc": "Discord webhook URL"
     },
     "drawer": {
+      "back": "Back to route",
       "edit": "Edit",
       "remove": "Remove",
       "title": "Receiver"
@@ -390,6 +442,12 @@
     "continue-label": "Continue",
     "detail": {
       "title": "Route"
+    },
+    "drawer": {
+      "tabs": {
+        "configuration": "Configuration",
+        "instances": "Instances"
+      }
     },
     "error-loading-message": "Failed to fetch routes",
     "error-loading-title": "Error loading routes",

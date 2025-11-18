@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { PluginType } from '@grafana/data';
 import AppConfig, { AppConfigProps } from './AppConfig';
-import { testIds } from '../testIds';
 
 describe('Components/AppConfig', () => {
   let props: AppConfigProps;
@@ -31,8 +30,6 @@ describe('Components/AppConfig', () => {
     render(<AppConfig plugin={plugin} query={props.query} />);
 
     expect(screen.queryByRole('group', { name: /api settings/i })).toBeInTheDocument();
-    expect(screen.queryByTestId(testIds.appConfig.apiKey)).toBeInTheDocument();
-    expect(screen.queryByTestId(testIds.appConfig.apiUrl)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /save api settings/i })).toBeInTheDocument();
   });
 });

@@ -21,6 +21,6 @@ export const dataSourceSlice = createSlice({
 
 export const { setDataSourceUID } = dataSourceSlice.actions;
 
-export const selectDataSourceUID = (state: RootState) => state.dataSource.selectedUID;
+export const selectDataSourceUID = (state: RootState) => state.dataSource?.selectedUID ?? '';
 
 export default dataSourceSlice.reducer;
