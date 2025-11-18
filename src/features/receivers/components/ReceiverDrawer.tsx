@@ -1,11 +1,11 @@
 import React from 'react';
 import { t } from '@grafana/i18n';
-import { Alert, Stack, Text, Button, IconButton } from '@grafana/ui';
+import { Alert, Stack, Text, Button, IconButton, Icon } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
-import { extractIntegrationsFromReceiver } from '../utils/integrationIcons';
+import { extractIntegrationsFromReceiver, getIntegrationIcon } from '../utils/integrationIcons';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { deleteReceiverAction } from '../../../reducers/alertmanager/receivers';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
@@ -49,9 +49,17 @@ function IntegrationItem({ type, config }: IntegrationItemProps) {
   const hasMainConfig = displayEntries.length > 0;
   const hasHttpConfig = httpConfigEntries.length > 0;
 
+  const iconName = getIntegrationIcon(type);
+  const titleWithIcon = (
+    <Stack direction="row" gap={1} alignItems="center">
+      <Icon name={iconName} />
+      <span>{type}</span>
+    </Stack>
+  );
+
   if (!hasMainConfig && !hasHttpConfig) {
     return (
-      <Section title={type}>
+      <Section title={titleWithIcon}>
         <Alert title={t('receivers.integration.no-config', 'No configuration')} severity="info">
           {t('receivers.integration.no-config-desc', 'This integration has no visible configuration.')}
         </Alert>
@@ -62,7 +70,7 @@ function IntegrationItem({ type, config }: IntegrationItemProps) {
   return (
     <Stack direction="column" gap={2}>
       {hasMainConfig && (
-        <Section title={type}>
+        <Section title={titleWithIcon}>
           <KeyValueList items={displayEntries} />
         </Section>
       )}
