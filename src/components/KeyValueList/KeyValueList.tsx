@@ -22,8 +22,8 @@ export function KeyValuePair({ label, value, children }: KeyValuePairProps) {
       return t('key-value-list.empty-value', '(not set)');
     }
 
-    if (String(value).startsWith('{{') && String(value).endsWith('}}')) {
-      return <pre>{String(value)}</pre>;
+    if (String(value).includes('{{') && String(value).includes('}}')) {
+      return <code>{String(value)}</code>;
     }
 
     if (typeof value === 'boolean') {
