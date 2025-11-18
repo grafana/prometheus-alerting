@@ -13,19 +13,10 @@ import { ROUTES, DEFAULT_PAGE_SIZE } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
 import { SilenceDrawer } from '../components/SilenceDrawer';
-import { locationService } from '@grafana/runtime';
 
 function SilencesPage() {
   const { data: silences = [], isLoading, error } = useSilences();
   const [selectedSilence, setSelectedSilence] = useState<GettableSilence | null>(null);
-
-  const handleEdit = (silence: GettableSilence) => {
-    // Close the drawer
-    setSelectedSilence(null);
-    // Navigate to the edit form
-    const editPath = prefixRoute(`silences/${encodeURIComponent(silence.id)}/edit`);
-    locationService.push(editPath);
-  };
 
   const clickableCellStyles = css({
     cursor: 'pointer',
@@ -112,9 +103,7 @@ function SilencesPage() {
         </Stack>
       </div>
 
-      {selectedSilence && (
-        <SilenceDrawer silence={selectedSilence} onClose={() => setSelectedSilence(null)} onEdit={handleEdit} />
-      )}
+      {selectedSilence && <SilenceDrawer silence={selectedSilence} onClose={() => setSelectedSilence(null)} />}
     </AlertmanagerPage>
   );
 }

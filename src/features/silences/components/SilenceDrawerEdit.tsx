@@ -1,0 +1,67 @@
+import React from 'react';
+import { t } from '@grafana/i18n';
+import type { GettableSilence, PostableSilence } from '@grafana/external-alertmanager/vanilla';
+import { useCreateSilence } from '../hooks/useSilences';
+import { SilenceFormFields } from './SilenceFormFields';
+import type { SilenceFormData } from '../utils/silenceFormSchema';
+import { parsePrometheusDuration } from '../../../utils/time.utils';
+
+interface SilenceDrawerEditProps {
+  silence: GettableSilence;
+  onCancel: () => void;
+  onSuccess: () => void;
+}
+
+export function SilenceDrawerEdit({ silence, onCancel, onSuccess }: SilenceDrawerEditProps) {
+  const [updateSilence, { isLoading: isUpdating, error: updateError }] = useCreateSilence();
+
+  const handleSave = async (data: SilenceFormData) => {
+    let startsAt: string;
+    let endsAt: string;
+
+    if (data.timeMode === 'relative') {
+      // Calculate absolute times from relative duration
+      const startDate = new Date();
+      const durationMs = parsePrometheusDuration(data.duration!);
+      const endDate = new Date(startDate.getTime() + durationMs);
+
+      startsAt = startDate.toISOString();
+      endsAt = endDate.toISOString();
+    } else {
+      // Use absolute times
+      startsAt = new Date(data.startsAt!).toISOString();
+      endsAt = new Date(data.endsAt!).toISOString();
+    }
+
+    const postableData: PostableSilence = {
+      matchers: data.matchers,
+      startsAt,
+      endsAt,
+      createdBy: data.createdBy,
+      comment: data.comment,
+      // Include ID when editing to update the existing silence
+      id: silence.id,
+    };
+
+    try {
+      await updateSilence(postableData);
+      onSuccess();
+    } catch (err) {
+      console.error('Failed to update silence:', err);
+    }
+  };
+
+  return (
+    <SilenceFormFields
+      silence={silence}
+      onSubmit={handleSave}
+      onCancel={onCancel}
+      isLoading={isUpdating}
+      error={updateError}
+      submitButtonText={
+        isUpdating ? t('silences.edit.updating', 'Updating...') : t('silences.edit.submit', 'Update Silence')
+      }
+      cancelButtonText={t('silences.create.cancel', 'Cancel')}
+    />
+  );
+}

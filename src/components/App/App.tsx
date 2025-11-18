@@ -41,7 +41,6 @@ function App(_props: AppRootProps) {
           <Route path={ROUTES.Receivers} element={<Receivers />} />
           <Route path={ROUTES.Templates} element={<Templates />} />
           <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
-          <Route path={ROUTES.EditSilence} element={<SilenceForm />} />
           <Route path={ROUTES.Silences} element={<Silences />} />
           <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
           <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
