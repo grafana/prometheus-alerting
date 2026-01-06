@@ -14,6 +14,7 @@ import {
 import { AlertLabel } from '@grafana/alerting';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { InhibitRuleDrawer } from '../components/InhibitRuleDrawer';
+import { stringifyFetchError } from '../../../utils/errors';
 
 const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
   if (!matchers || matchers.length === 0) {
@@ -96,9 +97,7 @@ function InhibitRulesPage() {
         )}
         {error && (
           <Alert title={t('inhibit-rules.error-loading-title', 'Error loading inhibit rules')} severity="error">
-            {error instanceof Error
-              ? error.message
-              : t('inhibit-rules.error-loading-message', 'Failed to fetch inhibit rules')}
+            {stringifyFetchError(error)}
           </Alert>
         )}
         {!isLoading && inhibitRules.length > 0 && !error && (

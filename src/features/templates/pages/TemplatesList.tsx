@@ -7,6 +7,7 @@ import { useTemplates } from '../hooks/useTemplates';
 import { t } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { stringifyFetchError } from '../../../utils/errors';
 
 interface TemplateRow {
   path: string;
@@ -39,7 +40,7 @@ function TemplatesPage() {
         )}
         {error && (
           <Alert title={t('templates.error-loading-title', 'Error loading templates')} severity="error">
-            {error instanceof Error ? error.message : t('templates.error-loading-message', 'Failed to fetch templates')}
+            {stringifyFetchError(error)}
           </Alert>
         )}
         {!isLoading && templates.length > 0 && !error && (

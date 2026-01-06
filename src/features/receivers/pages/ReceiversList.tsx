@@ -12,6 +12,7 @@ import { getContactPointDescription, getReceiverIntegrations } from '../utils/re
 import { getIntegrationIcon } from '../utils/integrationIcons';
 import { ReceiverDrawer } from '../components/ReceiverDrawer';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
+import { stringifyFetchError } from '../../../utils/errors';
 
 import { t } from '@grafana/i18n';
 
@@ -71,7 +72,7 @@ function ReceiversPage() {
         {isLoading && <Skeleton height={24} count={5} />}
         {error && (
           <Alert title={t('receivers.error-loading-title', 'Error loading receivers')} severity="error">
-            {'error' in error ? error.error : t('receivers.error-loading-message', 'Failed to fetch receivers')}
+            {stringifyFetchError(error)}
           </Alert>
         )}
         {!isLoading && receivers.length > 0 && !error && (

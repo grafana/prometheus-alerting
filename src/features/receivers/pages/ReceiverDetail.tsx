@@ -11,6 +11,7 @@ import { useReceivers } from '../hooks/useReceivers';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { ROUTES } from '../../../constants';
+import { stringifyFetchError } from '../../../utils/errors';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 import {
   EmailForm,
@@ -168,7 +169,7 @@ function ReceiverDetail() {
         {isLoading && <Skeleton height={24} count={10} />}
         {error && (
           <Alert title={t('receivers.detail.not-found-title', 'Receiver not found')} severity="error">
-            {'error' in error ? error.error : t('receivers.error-loading-message', 'Failed to fetch receivers')}
+            {stringifyFetchError(error)}
           </Alert>
         )}
         {notFound && (

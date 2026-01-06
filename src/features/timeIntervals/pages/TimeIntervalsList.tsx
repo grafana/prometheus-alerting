@@ -12,6 +12,7 @@ import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { TimeIntervalDrawer } from '../components/TimeIntervalDrawer';
+import { stringifyFetchError } from '../../../utils/errors';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error } = useTimeIntervals();
@@ -106,10 +107,7 @@ function TimeIntervalsPage() {
         )}
         {error && (
           <Alert title={t('time-intervals.error-loading-title', 'Error loading time intervals')} severity="error">
-            {JSON.stringify(error, null, 2)}
-            {error instanceof Error
-              ? error.message
-              : t('time-intervals.error-loading-message', 'Failed to fetch time intervals')}
+            {stringifyFetchError(error)}
           </Alert>
         )}
 

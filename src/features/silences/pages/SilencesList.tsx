@@ -11,6 +11,7 @@ import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ROUTES, DEFAULT_PAGE_SIZE } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
+import { stringifyFetchError } from '../../../utils/errors';
 import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
 import { SilenceDrawer } from '../components/SilenceDrawer';
 
@@ -83,7 +84,7 @@ function SilencesPage() {
           )}
           {error && (
             <Alert title={t('silences.error-loading-title', 'Error loading silences')} severity="error">
-              {error instanceof Error ? error.message : t('silences.error-loading-message', 'Failed to fetch silences')}
+              {stringifyFetchError(error)}
             </Alert>
           )}
           {!isLoading && silences.length > 0 && !error && (
