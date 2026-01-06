@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { css } from '@emotion/css';
 import { testIds } from '../../../components/testIds';
-import { Alert, InteractiveTable, Stack, EmptyState } from '@grafana/ui';
+import { InteractiveTable, Stack, EmptyState } from '@grafana/ui';
 import { useInhibitRules } from '../hooks/useInhibitRules';
 import { t } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
@@ -13,8 +13,8 @@ import {
 } from '@grafana/external-alertmanager/vanilla';
 import { AlertLabel } from '@grafana/alerting';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { DataSourceError } from '../../../components/AlertmanagerError';
 import { InhibitRuleDrawer } from '../components/InhibitRuleDrawer';
-import { stringifyFetchError } from '../../../utils/errors';
 
 const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
   if (!matchers || matchers.length === 0) {
@@ -87,7 +87,9 @@ function InhibitRulesPage() {
   ];
 
   return (
-    <AlertmanagerPage>
+    <AlertmanagerPage
+      subTitle={t('inhibit-rules.page-subtitle', 'Suppress alerts based on other active alerts')}
+    >
       <div data-testid={testIds.inhibitRules.container}>
         {isLoading && (
           <div>
@@ -96,9 +98,10 @@ function InhibitRulesPage() {
           </div>
         )}
         {error && (
-          <Alert title={t('inhibit-rules.error-loading-title', 'Error loading inhibit rules')} severity="error">
-            {stringifyFetchError(error)}
-          </Alert>
+          <DataSourceError
+            error={error}
+            title={t('inhibit-rules.error-loading-title', 'Error loading inhibit rules')}
+          />
         )}
         {!isLoading && inhibitRules.length > 0 && !error && (
           <InteractiveTable

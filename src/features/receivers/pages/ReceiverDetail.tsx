@@ -5,13 +5,13 @@ import Skeleton from 'react-loading-skeleton';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { Alert, LinkButton, Stack, Field, Input, useStyles2, FieldSet, EmptyState } from '@grafana/ui';
+import { LinkButton, Stack, Field, Input, useStyles2, FieldSet, EmptyState } from '@grafana/ui';
 import { testIds } from '../../../components/testIds';
 import { useReceivers } from '../hooks/useReceivers';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { DataSourceError } from '../../../components/AlertmanagerError';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { ROUTES } from '../../../constants';
-import { stringifyFetchError } from '../../../utils/errors';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 import {
   EmailForm,
@@ -168,9 +168,7 @@ function ReceiverDetail() {
       <div data-testid={testIds.receivers.detail} className={styles.wrapper}>
         {isLoading && <Skeleton height={24} count={10} />}
         {error && (
-          <Alert title={t('receivers.detail.not-found-title', 'Receiver not found')} severity="error">
-            {stringifyFetchError(error)}
-          </Alert>
+          <DataSourceError error={error} title={t('receivers.detail.not-found-title', 'Receiver not found')} />
         )}
         {notFound && (
           <EmptyState variant="not-found" message={t('receivers.error-loading-title', 'Error loading receivers')}>

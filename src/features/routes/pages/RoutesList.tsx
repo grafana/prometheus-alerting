@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../../components/testIds';
-import { Alert, EmptyState } from '@grafana/ui';
+import { EmptyState } from '@grafana/ui';
 import { useRoutes } from '../hooks/useRoutes';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { DataSourceError } from '../../../components/AlertmanagerError';
 import { t } from '@grafana/i18n';
 import { computeInheritedTree } from '@grafana/alerting/unstable';
 import { RouteCard } from '../components/RouteCard';
@@ -12,7 +13,6 @@ import { RouteDrawer } from '../components/RouteDrawer';
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { ReceiverDrawer } from '../../receivers/components/ReceiverDrawer';
 import { useReceivers } from '../../receivers/hooks/useReceivers';
-import { stringifyFetchError } from '../../../utils/errors';
 
 function RoutesPage() {
   const { route, isLoading, error } = useRoutes();
@@ -59,11 +59,7 @@ function RoutesPage() {
     <AlertmanagerPage subTitle={t('routes.page-subtitle', 'Determine how alerts are routed to contact points')}>
       <div data-testid={testIds.routes.container}>
         {isLoading && <RouteCard.Skeleton count={3} />}
-        {error && (
-          <Alert title={t('routes.error-loading-title', 'Error loading routes')} severity="error">
-            {stringifyFetchError(error)}
-          </Alert>
-        )}
+        {error && <DataSourceError error={error} title={t('routes.error-loading-title', 'Error loading routes')} />}
         {!isLoading && routeTree && !error && (
           <div>
             <RouteCard

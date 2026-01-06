@@ -3,16 +3,16 @@ import Skeleton from 'react-loading-skeleton';
 
 import { css } from '@emotion/css';
 import { testIds } from '../../../components/testIds';
-import { InteractiveTable, Alert, EmptyState, Icon, Stack, Tooltip } from '@grafana/ui';
+import { InteractiveTable, EmptyState, Icon, Stack, Tooltip } from '@grafana/ui';
 import { type Receiver } from '@grafana/external-alertmanager/vanilla';
 
 import { useReceivers } from '../hooks/useReceivers';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { DataSourceError } from '../../../components/AlertmanagerError';
 import { getContactPointDescription, getReceiverIntegrations } from '../utils/receiversUtils';
 import { getIntegrationIcon } from '../utils/integrationIcons';
 import { ReceiverDrawer } from '../components/ReceiverDrawer';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
-import { stringifyFetchError } from '../../../utils/errors';
 
 import { t } from '@grafana/i18n';
 
@@ -67,13 +67,13 @@ function ReceiversPage() {
   ];
 
   return (
-    <AlertmanagerPage>
+    <AlertmanagerPage
+      subTitle={t('receivers.page-subtitle', 'Configure how and where to send alert notifications')}
+    >
       <div data-testid={testIds.receivers.container}>
         {isLoading && <Skeleton height={24} count={5} />}
         {error && (
-          <Alert title={t('receivers.error-loading-title', 'Error loading receivers')} severity="error">
-            {stringifyFetchError(error)}
-          </Alert>
+          <DataSourceError error={error} title={t('receivers.error-loading-title', 'Error loading receivers')} />
         )}
         {!isLoading && receivers.length > 0 && !error && (
           <InteractiveTable

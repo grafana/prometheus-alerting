@@ -3,15 +3,15 @@ import Skeleton from 'react-loading-skeleton';
 
 import { css } from '@emotion/css';
 import { testIds } from '../../../components/testIds';
-import { Alert, InteractiveTable, EmptyState, LinkButton, Stack } from '@grafana/ui';
+import { InteractiveTable, EmptyState, LinkButton, Stack } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { useSilences } from '../hooks/useSilences';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { DataSourceError } from '../../../components/AlertmanagerError';
 import { ROUTES, DEFAULT_PAGE_SIZE } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
-import { stringifyFetchError } from '../../../utils/errors';
 import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
 import { SilenceDrawer } from '../components/SilenceDrawer';
 
@@ -83,9 +83,7 @@ function SilencesPage() {
             </div>
           )}
           {error && (
-            <Alert title={t('silences.error-loading-title', 'Error loading silences')} severity="error">
-              {stringifyFetchError(error)}
-            </Alert>
+            <DataSourceError error={error} title={t('silences.error-loading-title', 'Error loading silences')} />
           )}
           {!isLoading && silences.length > 0 && !error && (
             <InteractiveTable

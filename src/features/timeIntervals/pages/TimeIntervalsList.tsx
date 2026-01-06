@@ -3,16 +3,16 @@ import Skeleton from 'react-loading-skeleton';
 
 import { css } from '@emotion/css';
 import { testIds } from '../../../components/testIds';
-import { Alert, LinkButton, InteractiveTable, EmptyState } from '@grafana/ui';
+import { LinkButton, InteractiveTable, EmptyState } from '@grafana/ui';
 import { useTimeIntervals } from '../hooks/useTimeIntervals';
 import { t } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE, ROUTES } from '../../../constants';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { DataSourceError } from '../../../components/AlertmanagerError';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { TimeIntervalDrawer } from '../components/TimeIntervalDrawer';
-import { stringifyFetchError } from '../../../utils/errors';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error } = useTimeIntervals();
@@ -92,7 +92,9 @@ function TimeIntervalsPage() {
   ];
 
   return (
-    <AlertmanagerPage>
+    <AlertmanagerPage
+      subTitle={t('time-intervals.page-subtitle', 'Define time windows for muting or activating notifications')}
+    >
       {hasConfigurationAPI && (
         <LinkButton href={prefixRoute(ROUTES.CreateTimeInterval)}>
           {t('time-intervals.create-button', 'Create time interval')}
@@ -106,9 +108,10 @@ function TimeIntervalsPage() {
           </div>
         )}
         {error && (
-          <Alert title={t('time-intervals.error-loading-title', 'Error loading time intervals')} severity="error">
-            {stringifyFetchError(error)}
-          </Alert>
+          <DataSourceError
+            error={error}
+            title={t('time-intervals.error-loading-title', 'Error loading time intervals')}
+          />
         )}
 
         {!isLoading && timeIntervals.length > 0 && !error && (

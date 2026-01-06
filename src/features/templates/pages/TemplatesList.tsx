@@ -2,12 +2,12 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 
 import { testIds } from '../../../components/testIds';
-import { Alert, InteractiveTable, EmptyState } from '@grafana/ui';
+import { InteractiveTable, EmptyState } from '@grafana/ui';
 import { useTemplates } from '../hooks/useTemplates';
 import { t } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
-import { stringifyFetchError } from '../../../utils/errors';
+import { DataSourceError } from '../../../components/AlertmanagerError';
 
 interface TemplateRow {
   path: string;
@@ -30,7 +30,7 @@ function TemplatesPage() {
   ];
 
   return (
-    <AlertmanagerPage>
+    <AlertmanagerPage subTitle={t('templates.page-subtitle', 'Customize notification message templates')}>
       <div data-testid={testIds.templates.container}>
         {isLoading && (
           <div>
@@ -39,9 +39,7 @@ function TemplatesPage() {
           </div>
         )}
         {error && (
-          <Alert title={t('templates.error-loading-title', 'Error loading templates')} severity="error">
-            {stringifyFetchError(error)}
-          </Alert>
+          <DataSourceError error={error} title={t('templates.error-loading-title', 'Error loading templates')} />
         )}
         {!isLoading && templates.length > 0 && !error && (
           <InteractiveTable

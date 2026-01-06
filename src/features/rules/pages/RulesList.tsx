@@ -29,7 +29,7 @@ function RulesPage() {
   ];
 
   return (
-    <PluginPage>
+    <PluginPage subTitle={t('rules.page-subtitle', 'Manage and monitor alert rules from your data sources')}>
       <div data-testid={testIds.rules.container}>
         <Stack direction="column" gap={2}>
           {/* Search and view controls */}
