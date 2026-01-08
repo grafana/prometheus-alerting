@@ -1,10 +1,8 @@
-import { css } from '@emotion/css';
 import React, { useMemo } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 
-import { GrafanaTheme2, SelectableValue } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { Field, VirtualizedSelect, useStyles2 } from '@grafana/ui';
+import { Combobox, Field, Stack, type ComboboxOption } from '@grafana/ui';
 
 import { RuleFormValues } from '../types';
 import { useNamespacesAndGroups } from '../hooks/useNamespacesAndGroups';
@@ -21,12 +19,11 @@ export const GroupAndNamespaceFields = ({ dataSourceUid }: Props) => {
     setValue,
   } = useFormContext<RuleFormValues>();
 
-  const style = useStyles2(getStyle);
   const { namespaceGroups, isLoading } = useNamespacesAndGroups(dataSourceUid);
 
   const namespace = watch('namespace');
 
-  const namespaceOptions: Array<SelectableValue<string>> = useMemo(
+  const namespaceOptions: Array<ComboboxOption<string>> = useMemo(
     () =>
       Array.from(namespaceGroups.keys()).map((namespace) => ({
         label: namespace,
@@ -35,13 +32,13 @@ export const GroupAndNamespaceFields = ({ dataSourceUid }: Props) => {
     [namespaceGroups]
   );
 
-  const groupOptions: Array<SelectableValue<string>> = useMemo(
+  const groupOptions: Array<ComboboxOption<string>> = useMemo(
     () => (namespace && namespaceGroups.get(namespace)?.map((group) => ({ label: group, value: group }))) || [],
     [namespace, namespaceGroups]
   );
 
   return (
-    <div className={style.flexRow}>
+    <Stack direction="row" gap={3}>
       <Field
         data-testid="namespace-picker"
         label={t('alerting.group-and-namespace-fields.namespace-picker-label-namespace', 'Namespace')}
@@ -53,21 +50,28 @@ export const GroupAndNamespaceFields = ({ dataSourceUid }: Props) => {
         invalid={!!errors.namespace?.message}
       >
         <Controller
-          render={({ field: { onChange, ref, ...field } }) => (
-            <VirtualizedSelect
-              {...field}
-              allowCustomValue
-              className={style.input}
-              onChange={(value) => {
-                setValue('group', ''); // Reset group if namespace changes
-                onChange(value.value);
-              }}
-              options={namespaceOptions}
-              width={42}
-              isLoading={isLoading}
-              disabled={isLoading}
-            />
-          )}
+          render={({ field: { onChange, value, ref, ...field } }) => {
+            const selectedOption = namespaceOptions.find((opt) => opt.value === value);
+            return (
+              <Combobox
+                {...field}
+                value={selectedOption?.value ? selectedOption : value ? { label: value, value } : undefined}
+                onChange={(option) => {
+                  setValue('group', ''); // Reset group if namespace changes
+                  onChange(option?.value ?? '');
+                }}
+                createCustomValue
+                options={namespaceOptions}
+                width={42}
+                loading={isLoading}
+                disabled={isLoading}
+                placeholder={t(
+                  'alerting.group-and-namespace-fields.namespace-placeholder',
+                  'Select or create namespace'
+                )}
+              />
+            );
+          }}
           name="namespace"
           control={control}
           rules={{
@@ -86,20 +90,24 @@ export const GroupAndNamespaceFields = ({ dataSourceUid }: Props) => {
         invalid={!!errors.group?.message}
       >
         <Controller
-          render={({ field: { ref, ...field } }) => (
-            <VirtualizedSelect
-              {...field}
-              allowCustomValue
-              options={groupOptions}
-              width={42}
-              onChange={(value) => {
-                setValue('group', value.value ?? '');
-              }}
-              className={style.input}
-              isLoading={isLoading}
-              disabled={isLoading}
-            />
-          )}
+          render={({ field: { value, ref, ...field } }) => {
+            const selectedOption = groupOptions.find((opt) => opt.value === value);
+            return (
+              <Combobox
+                {...field}
+                value={selectedOption?.value ? selectedOption : value ? { label: value, value } : undefined}
+                options={groupOptions}
+                width={42}
+                onChange={(option) => {
+                  setValue('group', option?.value ?? '');
+                }}
+                createCustomValue
+                loading={isLoading}
+                disabled={isLoading || !namespace}
+                placeholder={t('alerting.group-and-namespace-fields.group-placeholder', 'Select or create group')}
+              />
+            );
+          }}
           name="group"
           control={control}
           rules={{
@@ -107,21 +115,6 @@ export const GroupAndNamespaceFields = ({ dataSourceUid }: Props) => {
           }}
         />
       </Field>
-    </div>
+    </Stack>
   );
 };
-
-const getStyle = (theme: GrafanaTheme2) => ({
-  flexRow: css({
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-
-    '& > * + *': {
-      marginLeft: theme.spacing(3),
-    },
-  }),
-  input: css({
-    width: '330px !important',
-  }),
-});

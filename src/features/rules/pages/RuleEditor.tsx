@@ -4,7 +4,7 @@ import { parseIdentifier, DataSourceRuleIdentifier, isCloudRuleIdentifier } from
 
 import { t } from '@grafana/i18n';
 import { PluginPage } from '@grafana/runtime';
-import { Alert, LoadingPlaceholder } from '@grafana/ui';
+import { Alert, Button, Stack } from '@grafana/ui';
 
 import { RuleForm } from '../rule-editor/components/RuleForm';
 import { translateRouteParamToRuleType } from '../rule-editor/formDefaults';
@@ -13,6 +13,20 @@ import { useRuleDetails } from '../hooks/useRuleDetails';
 import { RuleFormValues, RuleFormType } from '../rule-editor/types';
 
 // TODO: Add access control checks
+
+/**
+ * RuleFormSkeleton - Loading skeleton for the rule form
+ */
+function RuleFormSkeleton() {
+  return (
+    <Stack direction="column" gap={3}>
+      {/* Simplified loading state - just show informative message */}
+      <Alert severity="info" title={t('alerting.rule-editor.loading-sections', 'Loading form sections...')}>
+        {t('alerting.rule-editor.loading-sections-desc', 'Preparing the rule editor form...')}
+      </Alert>
+    </Stack>
+  );
+}
 
 /**
  * NewRuleEditor - Creates a new rule from scratch
@@ -69,23 +83,8 @@ function EditRuleEditor({ ruleIdentifier }: { ruleIdentifier: string }) {
 }
 
 function EditRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRuleIdentifier }) {
-  // Only cloud rules (data source managed) can be edited
-  if (!isCloudRuleIdentifier(identifier)) {
-    return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.edit-rule', 'Edit rule'),
-        }}
-      >
-        <Alert severity="error" title={t('alerting.rule-editor.unsupported-rule-type', 'Unsupported rule type')}>
-          {t(
-            'alerting.rule-editor.only-cloud-rules-editable',
-            'Only data source managed rules can be edited in this plugin.'
-          )}
-        </Alert>
-      </PluginPage>
-    );
-  }
+  // Check if this is a cloud rule - do this before hooks
+  const isCloudRule = isCloudRuleIdentifier(identifier);
 
   const { promRule, rulerRule, loading, error, ...meta } = useRuleDetails(identifier);
 
@@ -113,6 +112,24 @@ function EditRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRu
     }
   }, [rulerRule, meta]);
 
+  // Only cloud rules can be edited
+  if (!isCloudRule) {
+    return (
+      <PluginPage
+        pageNav={{
+          text: t('alerting.rule-editor.edit-rule', 'Edit rule'),
+        }}
+      >
+        <Alert severity="error" title={t('alerting.rule-editor.unsupported-rule-type', 'Unsupported rule type')}>
+          {t(
+            'alerting.rule-editor.only-cloud-rules-editable',
+            'Only data source managed rules can be edited in this plugin.'
+          )}
+        </Alert>
+      </PluginPage>
+    );
+  }
+
   if (loading) {
     return (
       <PluginPage
@@ -120,7 +137,12 @@ function EditRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRu
           text: t('alerting.rule-editor.edit-rule', 'Edit rule'),
         }}
       >
-        <LoadingPlaceholder text={t('alerting.rule-editor.loading-rule', 'Loading rule...')} />
+        <Stack direction="column" gap={2}>
+          <Alert severity="info" title={t('alerting.rule-editor.loading-rule', 'Loading rule...')}>
+            {t('alerting.rule-editor.loading-description', 'Fetching rule details and configuration...')}
+          </Alert>
+          <RuleFormSkeleton />
+        </Stack>
       </PluginPage>
     );
   }
@@ -133,7 +155,17 @@ function EditRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRu
         }}
       >
         <Alert severity="error" title={t('alerting.rule-editor.failed-to-load', 'Failed to load rule')}>
-          {String(error)}
+          <Stack direction="column" gap={2}>
+            <div>{String(error)}</div>
+            <Stack direction="row" gap={1}>
+              <Button variant="secondary" size="sm" onClick={() => window.location.reload()} icon="sync">
+                {t('alerting.rule-editor.retry', 'Retry')}
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => window.history.back()} icon="arrow-left">
+                {t('alerting.rule-editor.go-back', 'Go back')}
+              </Button>
+            </Stack>
+          </Stack>
         </Alert>
       </PluginPage>
     );
@@ -160,14 +192,19 @@ function EditRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRu
     <PluginPage
       pageNav={{
         text: pageTitle,
+        parentItem: {
+          text: meta.groupName,
+          parentItem: {
+            text: meta.namespace,
+            parentItem: {
+              text: t('alerting.rule-editor.rules', 'Rules'),
+              url: '/a/grafana-prometheusalerting-app/rules',
+            },
+          },
+        },
       }}
     >
-      <RuleForm
-        ruleType={ruleType}
-        prefill={prefill}
-        dataSourceUid={meta.dataSourceUid}
-        existingRuleIdentifier={identifier}
-      />
+      <RuleForm ruleType={ruleType} prefill={prefill} existingRuleIdentifier={identifier} />
     </PluginPage>
   );
 }
@@ -203,23 +240,8 @@ function CloneRuleEditor({ copyFrom }: { copyFrom: string }) {
 }
 
 function CloneRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRuleIdentifier }) {
-  // Only cloud rules (data source managed) can be cloned
-  if (!isCloudRuleIdentifier(identifier)) {
-    return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.clone-rule', 'Clone rule'),
-        }}
-      >
-        <Alert severity="error" title={t('alerting.rule-editor.unsupported-rule-type', 'Unsupported rule type')}>
-          {t(
-            'alerting.rule-editor.only-cloud-rules-cloneable',
-            'Only data source managed rules can be cloned in this plugin.'
-          )}
-        </Alert>
-      </PluginPage>
-    );
-  }
+  // Check if this is a cloud rule - do this before hooks
+  const isCloudRule = isCloudRuleIdentifier(identifier);
 
   const { promRule, rulerRule, loading, error, ...meta } = useRuleDetails(identifier);
 
@@ -250,6 +272,24 @@ function CloneRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceR
     }
   }, [rulerRule, meta]);
 
+  // Only cloud rules can be cloned
+  if (!isCloudRule) {
+    return (
+      <PluginPage
+        pageNav={{
+          text: t('alerting.rule-editor.clone-rule', 'Clone rule'),
+        }}
+      >
+        <Alert severity="error" title={t('alerting.rule-editor.unsupported-rule-type', 'Unsupported rule type')}>
+          {t(
+            'alerting.rule-editor.only-cloud-rules-cloneable',
+            'Only data source managed rules can be cloned in this plugin.'
+          )}
+        </Alert>
+      </PluginPage>
+    );
+  }
+
   if (loading) {
     return (
       <PluginPage
@@ -257,7 +297,12 @@ function CloneRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceR
           text: t('alerting.rule-editor.clone-rule', 'Clone rule'),
         }}
       >
-        <LoadingPlaceholder text={t('alerting.rule-editor.loading-rule', 'Loading rule...')} />
+        <Stack direction="column" gap={2}>
+          <Alert severity="info" title={t('alerting.rule-editor.loading-rule', 'Loading rule...')}>
+            {t('alerting.rule-editor.loading-description', 'Fetching rule details and configuration...')}
+          </Alert>
+          <RuleFormSkeleton />
+        </Stack>
       </PluginPage>
     );
   }
@@ -270,7 +315,17 @@ function CloneRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceR
         }}
       >
         <Alert severity="error" title={t('alerting.rule-editor.failed-to-load', 'Failed to load rule')}>
-          {String(error)}
+          <Stack direction="column" gap={2}>
+            <div>{String(error)}</div>
+            <Stack direction="row" gap={1}>
+              <Button variant="secondary" size="sm" onClick={() => window.location.reload()} icon="sync">
+                {t('alerting.rule-editor.retry', 'Retry')}
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => window.history.back()} icon="arrow-left">
+                {t('alerting.rule-editor.go-back', 'Go back')}
+              </Button>
+            </Stack>
+          </Stack>
         </Alert>
       </PluginPage>
     );
@@ -297,9 +352,19 @@ function CloneRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceR
     <PluginPage
       pageNav={{
         text: pageTitle,
+        parentItem: {
+          text: meta.groupName,
+          parentItem: {
+            text: meta.namespace,
+            parentItem: {
+              text: t('alerting.rule-editor.rules', 'Rules'),
+              url: '/a/grafana-prometheusalerting-app/rules',
+            },
+          },
+        },
       }}
     >
-      <RuleForm ruleType={ruleType} prefill={prefill} dataSourceUid={meta.dataSourceUid} />
+      <RuleForm ruleType={ruleType} prefill={prefill} />
     </PluginPage>
   );
 }

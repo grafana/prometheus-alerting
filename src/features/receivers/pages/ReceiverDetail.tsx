@@ -5,7 +5,7 @@ import Skeleton from 'react-loading-skeleton';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { LinkButton, Stack, Field, Input, useStyles2, FieldSet, EmptyState } from '@grafana/ui';
+import { LinkButton, Stack, Field, Input, useStyles2, FieldSet, EmptyState, Alert } from '@grafana/ui';
 import { testIds } from '../../../components/testIds';
 import { useReceivers } from '../hooks/useReceivers';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';

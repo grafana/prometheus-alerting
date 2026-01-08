@@ -14,8 +14,8 @@ export function defaultFormValuesForRuleType(type: RuleFormType): RuleFormValues
     annotations: [],
     namespace: '',
     expression: '',
-    forTime: 1,
-    forTimeUnit: 'm',
+    forTime: 0,
+    forTimeUnit: 's',
   });
 }
 

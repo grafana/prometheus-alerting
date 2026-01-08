@@ -3,7 +3,7 @@ import React, { ReactElement } from 'react';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { FieldSet, InlineSwitch, Stack, Text, useStyles2 } from '@grafana/ui';
+import { InlineSwitch, Stack, useStyles2 } from '@grafana/ui';
 
 export interface RuleEditorSectionProps {
   title: string;
@@ -28,49 +28,56 @@ export const RuleEditorSection = ({
 
   return (
     <div className={styles.parent}>
-      <FieldSet
-        className={cx(fullWidth && styles.fullWidth)}
-        label={
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Text variant="h3">
+      <div className={styles.header}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <div>
+            <h3 className={styles.title}>
               {stepNo}. {title}
-            </Text>
-            {switchMode && (
-              <Text variant="bodySmall">
-                <InlineSwitch
-                  value={switchMode.isAdvancedMode}
-                  onChange={(event) => {
-                    switchMode.setAdvancedMode(event.currentTarget.checked);
-                  }}
-                  label={t('alerting.rule-editor-section.label-advanced-options', 'Advanced options')}
-                  showLabel
-                  transparent
-                  className={styles.reverse}
-                />
-              </Text>
-            )}
-          </Stack>
-        }
-      >
-        <Stack direction="column">
-          {description && <div className={styles.description}>{description}</div>}
-          {children}
+            </h3>
+            {description && <div className={styles.description}>{description}</div>}
+          </div>
+          {switchMode && (
+            <InlineSwitch
+              value={switchMode.isAdvancedMode}
+              onChange={(event) => {
+                switchMode.setAdvancedMode(event.currentTarget.checked);
+              }}
+              label={t('alerting.rule-editor-section.label-advanced-options', 'Advanced options')}
+              showLabel
+              transparent
+              className={styles.reverse}
+            />
+          )}
         </Stack>
-      </FieldSet>
+      </div>
+      <div className={cx(styles.content, fullWidth && styles.fullWidth)}>{children}</div>
     </div>
   );
 };
 
 const getStyles = (theme: GrafanaTheme2) => ({
   parent: css({
-    display: 'flex',
-    flexDirection: 'row',
-    border: `solid 1px ${theme.colors.border.weak}`,
-    borderRadius: theme.shape.radius.default,
-    padding: `${theme.spacing(2)} ${theme.spacing(3)}`,
+    paddingBottom: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+    borderBottom: `1px solid ${theme.colors.border.weak}`,
+  }),
+  header: css({
+    marginBottom: theme.spacing(2),
+  }),
+  title: css({
+    fontSize: theme.typography.h5.fontSize,
+    fontWeight: theme.typography.fontWeightMedium,
+    marginBottom: theme.spacing(0.5),
+    margin: 0,
   }),
   description: css({
-    marginTop: `-${theme.spacing(2)}`,
+    marginTop: theme.spacing(0.5),
+    display: 'block',
+    fontSize: theme.typography.bodySmall.fontSize,
+    color: theme.colors.text.secondary,
+  }),
+  content: css({
+    // Minimal padding, let child components control their own spacing
   }),
   fullWidth: css({
     width: '100%',

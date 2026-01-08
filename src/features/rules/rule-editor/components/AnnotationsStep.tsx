@@ -24,8 +24,8 @@ export const AnnotationsStep = () => {
 
   return (
     <RuleEditorSection
-      stepNo={5}
-      title={t('alerting.annotations.title', 'Configure notification message')}
+      stepNo={4}
+      title={t('alerting.annotations.title', 'Annotations')}
       description={t('alerting.annotations.description', 'Add more context to your alert notifications.')}
       fullWidth
     >

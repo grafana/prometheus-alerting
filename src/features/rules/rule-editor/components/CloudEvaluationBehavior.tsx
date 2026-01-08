@@ -29,7 +29,7 @@ export const CloudEvaluationBehavior = () => {
 
   return (
     <RuleEditorSection
-      stepNo={3}
+      stepNo={2}
       title={t('alerting.cloud-evaluation-behavior.title-set-evaluation-behavior', 'Set evaluation behavior')}
     >
       <Field

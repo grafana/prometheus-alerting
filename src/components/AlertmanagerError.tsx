@@ -2,10 +2,10 @@ import React from 'react';
 import { Alert, Text } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { useAlertmanagerSafe } from '../hooks/useAlertmanager';
-import { stringifyFetchError } from '../utils/errors';
+import { stringifyFetchError, ErrorLike } from '../utils/errors';
 
 interface DataSourceErrorProps {
-  error: unknown;
+  error: ErrorLike;
   title: string;
 }
 

@@ -12,49 +12,37 @@ import { Button, Stack, useStyles2 } from '@grafana/ui';
 import type { RulerRuleDTO } from '@grafana/external-rules/vanilla';
 import type { CloudRuleIdentifier } from '@grafana/external-rules';
 
-import { useUpsertRuleGroupMutation } from '../../../../api/ruler.endpoints';
+import { useUpsertRuleGroupMutation } from '../../../../api/rules/mimir.endpoints';
 import { RuleFormValues, RuleFormType } from '../types';
 import { defaultFormValuesForRuleType } from '../formDefaults';
 import { formValuesToRulerRuleDTO } from '../formTransform';
-import { isCloudAlertingRuleByType, isCloudRecordingRuleByType } from '../ruleTypeHelpers';
+import { isCloudAlertingRuleByType } from '../ruleTypeHelpers';
 import { useProduceNewRuleGroup } from '../hooks/useProduceNewRuleGroup';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import { ruleFormSchema } from '../validation';
 import { addRuleAction, updateRuleAction } from '../ruleGroupReducer';
 
-import { RuleNameInput } from './RuleNameInput';
-import { CloudDataSourceSelector } from './CloudDataSourceSelector';
-import { ExpressionEditor } from './ExpressionEditor';
-import { RecordingRuleEditor } from './RecordingRuleEditor';
+import { RuleDefinitionSection } from './RuleDefinitionSection';
 import { CloudEvaluationBehavior } from './CloudEvaluationBehavior';
 import { LabelsField } from './LabelsField';
 import { AnnotationsStep } from './AnnotationsStep';
 
 interface Props {
   ruleType: RuleFormType;
-  dataSourceUid?: string | null;
   prefill?: Partial<RuleFormValues>;
   onCancel?: () => void;
   /** Identifier for the rule being edited (undefined for new rules) */
   existingRuleIdentifier?: CloudRuleIdentifier;
 }
 
-export const RuleForm = ({
-  ruleType,
-  dataSourceUid: initialDataSourceUid,
-  prefill,
-  onCancel,
-  existingRuleIdentifier,
-}: Props) => {
+export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }: Props) => {
   const styles = useStyles2(getStyles);
   const navigate = useNavigate();
   const [upsertRuleGroup, { isLoading: isSaving }] = useUpsertRuleGroupMutation();
   const [produceNewRuleGroup] = useProduceNewRuleGroup();
 
-  // Initialize data source UID from prefill or prop
-  const initialUid = useMemo(() => {
-    // TODO: Convert dataSourceName to UID if needed
-    return initialDataSourceUid ?? null;
-  }, [initialDataSourceUid]);
+  // Initialize data source UID from existing rule identifier (when editing)
+  const initialUid = existingRuleIdentifier?.uid ?? null;
 
   const [currentDataSourceUid, setCurrentDataSourceUid] = useState<string | null>(initialUid);
 
@@ -80,9 +68,11 @@ export const RuleForm = ({
     formState: { isSubmitting },
   } = formAPI;
 
+  // Warn about unsaved changes
+  useUnsavedChanges(true);
+
   const type = watch('type');
   const isAlerting = isCloudAlertingRuleByType(type);
-  const isRecording = isCloudRecordingRuleByType(type);
 
   const onChangeDataSource = (uid: string) => {
     setCurrentDataSourceUid(uid);
@@ -155,40 +145,37 @@ export const RuleForm = ({
     <FormProvider {...formAPI}>
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         <div className={styles.contentOuter}>
-          <Stack direction="column" gap={3}>
-            {/* Step 1: Rule Name */}
-            <RuleNameInput />
+          <Stack direction="column" gap={0}>
+            <div className={styles.sections}>
+              {/* Step 1: Rule Definition (name, data source, query) */}
+              <RuleDefinitionSection onChangeCloudDatasource={onChangeDataSource} />
 
-            {/* Step 2: Data Source Selector */}
-            <CloudDataSourceSelector disabled={false} onChangeCloudDatasource={onChangeDataSource} />
+              {/* Step 2: Evaluation Behavior (includes namespace/group) */}
+              <CloudEvaluationBehavior />
 
-            {/* Step 3: Query/Expression Editor */}
-            {isAlerting && <ExpressionEditor />}
-            {isRecording && <RecordingRuleEditor />}
+              {/* Step 3: Labels */}
+              <LabelsField />
 
-            {/* Step 4: Evaluation Behavior (includes namespace/group) */}
-            <CloudEvaluationBehavior />
-
-            {/* Step 5: Labels */}
-            <LabelsField />
-
-            {/* Step 6: Annotations (alerting only) */}
-            {isAlerting && <AnnotationsStep />}
+              {/* Step 4: Annotations (alerting only) */}
+              {isAlerting && <AnnotationsStep />}
+            </div>
 
             {/* Actions */}
-            <Stack direction="row" alignItems="center" gap={2}>
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={isSubmitting || isSaving}
-                icon={isSubmitting || isSaving ? 'spinner' : undefined}
-              >
-                {t('alerting.rule-form.save', 'Save')}
-              </Button>
-              <Button type="button" variant="secondary" disabled={isSubmitting || isSaving} onClick={handleCancel}>
-                {t('alerting.rule-form.cancel', 'Cancel')}
-              </Button>
-            </Stack>
+            <div className={styles.actions}>
+              <Stack direction="row" alignItems="center" gap={2}>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={isSubmitting || isSaving}
+                  icon={isSubmitting || isSaving ? 'spinner' : undefined}
+                >
+                  {t('alerting.rule-form.save', 'Save')}
+                </Button>
+                <Button type="button" variant="secondary" disabled={isSubmitting || isSaving} onClick={handleCancel}>
+                  {t('alerting.rule-form.cancel', 'Cancel')}
+                </Button>
+              </Stack>
+            </div>
           </Stack>
         </div>
       </form>
@@ -208,5 +195,12 @@ const getStyles = (theme: GrafanaTheme2) => ({
     overflow: 'hidden',
     maxWidth: theme.breakpoints.values.xl,
     flex: 1,
+    padding: theme.spacing(2),
+  }),
+  sections: css({
+    // Container for form sections - allows :last-child selector to work properly
+  }),
+  actions: css({
+    paddingTop: theme.spacing(2),
   }),
 });

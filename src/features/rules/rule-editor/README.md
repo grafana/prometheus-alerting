@@ -6,8 +6,8 @@ This directory contains the rule form functionality for creating and editing dat
 
 - ✅ Create new alerting rules
 - ✅ Create new recording rules
-- ✅ Edit existing rules (TODO: fetch logic)
-- ✅ Clone existing rules (TODO: fetch logic)
+- ✅ Edit existing rules
+- ✅ Clone existing rules
 - ✅ Form validation with react-hook-form
 - ✅ PromQL/LogQL expression editor
 - ✅ Namespace and group management
@@ -20,27 +20,26 @@ This directory contains the rule form functionality for creating and editing dat
 ```
 rule-editor/
 ├── components/          # Form UI components
-│   ├── RuleForm.tsx              # Main form component
-│   ├── RuleNameInput.tsx         # Rule name input field
-│   ├── CloudDataSourceSelector.tsx   # Data source picker
-│   ├── CloudRulesSourcePicker.tsx    # Filtered DS picker
-│   ├── ExpressionEditor.tsx      # PromQL/LogQL editor (alerting)
-│   ├── RecordingRuleEditor.tsx   # Expression editor (recording)
+│   ├── RuleForm.tsx                  # Main form component
+│   ├── RuleDefinitionSection.tsx     # Rule name, data source, expression
+│   ├── CloudRulesSourcePicker.tsx    # Filtered DS picker with Ruler API
 │   ├── CloudEvaluationBehavior.tsx   # Pending period & group/namespace
 │   ├── GroupAndNamespaceFields.tsx   # Namespace & group selectors
-│   ├── LabelsField.tsx           # Labels management
-│   ├── LabelsEditorModal.tsx     # Label editor modal
-│   ├── AnnotationsStep.tsx       # Annotations editor
-│   └── RuleEditorSection.tsx     # Section wrapper component
+│   ├── LabelsField.tsx               # Labels management
+│   ├── LabelsEditorModal.tsx         # Label editor modal
+│   ├── AnnotationsStep.tsx           # Annotations editor
+│   └── RuleEditorSection.tsx         # Section wrapper component
 ├── hooks/               # Custom hooks
-│   └── useNamespacesAndGroups.ts # Fetch namespaces/groups from Ruler API
+│   ├── useNamespacesAndGroups.ts     # Fetch namespaces/groups from Ruler API
+│   ├── useProduceNewRuleGroup.ts     # Safely update rule groups
+│   └── useUnsavedChanges.ts          # Warn about unsaved changes
 ├── types.ts            # TypeScript types (RuleFormType, RuleFormValues)
 ├── formDefaults.ts     # Default form values
 ├── formTransform.ts    # Convert between form values and RulerRuleDTO
 ├── ruleTypeHelpers.ts  # Rule type detection utilities
-├── datasourceValidation.ts  # Data source type validation
+├── ruleGroupReducer.ts # Rule group update actions
 ├── timeOptions.ts      # Time unit options for dropdowns
-└── cloneRule.ts        # Clone rule utility
+└── validation.ts       # Zod schema for form validation
 ```
 
 ## Usage
@@ -84,13 +83,11 @@ The mutation POSTs to `/api/ruler/{uid}/api/v1/rules/{namespace}` with the rule 
 
 ## Form Flow
 
-1. **Step 1:** Define rule name
-2. **Step 2:** Select data source (Prometheus/Mimir/Cortex/Loki with Ruler API)
-3. **Step 3:** Write PromQL/LogQL expression
-4. **Step 4:** Configure evaluation (pending period, namespace, group)
-5. **Step 5:** Add labels
-6. **Step 6:** Add annotations (alerting rules only)
-7. **Submit:** Save via Ruler API
+1. **Step 1:** Define rule (name, data source, expression)
+2. **Step 2:** Set evaluation behavior (pending period, namespace, group)
+3. **Step 3:** Add labels
+4. **Step 4:** Add annotations (alerting rules only)
+5. **Submit:** Save via Ruler API
 
 ## Key Differences from Grafana's Implementation
 

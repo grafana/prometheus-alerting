@@ -1,10 +1,11 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { DataSourceInstanceSettings } from '@grafana/data';
+import { t } from '@grafana/i18n';
 import { getDataSourceSrv } from '@grafana/runtime';
-import { Select } from '@grafana/ui';
+import { Combobox, type ComboboxOption } from '@grafana/ui';
 
-import { isSupportedExternalRulesSourceType } from '../datasourceValidation';
+import { useRulesSourcesWithRuler } from '../hooks/useRulesSourcesWithRuler';
 
 interface Props {
   disabled?: boolean;
@@ -14,35 +15,40 @@ interface Props {
 
 export function CloudRulesSourcePicker({ value, disabled, onChange }: Props) {
   // Get all data sources that support Ruler API
-  const dataSourceOptions = useMemo(() => {
-    const allDataSources = getDataSourceSrv().getList();
-    return allDataSources
-      .filter((ds) => isSupportedExternalRulesSourceType(ds.type))
-      .map((ds) => ({
-        label: ds.name,
-        value: ds.uid,
-      }));
-  }, []);
+  const { rulesSourcesWithRuler, isLoading } = useRulesSourcesWithRuler();
 
-  const handleChange = useCallback(
-    (selected: { value?: string }) => {
-      if (selected.value) {
-        const ds = getDataSourceSrv().getInstanceSettings(selected.value);
-        if (ds) {
-          onChange(ds);
-        }
+  const dataSourceOptions = useMemo(() => {
+    return rulesSourcesWithRuler.map((ds) => ({
+      label: ds.name,
+      value: ds.uid,
+      description: ds.type,
+    }));
+  }, [rulesSourcesWithRuler]);
+
+  const selectedOption = useMemo(() => {
+    return dataSourceOptions.find((opt) => opt.value === value);
+  }, [dataSourceOptions, value]);
+
+  const handleChange = (option: ComboboxOption<string> | null) => {
+    if (option?.value) {
+      const ds = getDataSourceSrv().getInstanceSettings(option.value);
+      if (ds) {
+        onChange(ds);
       }
-    },
-    [onChange]
-  );
+    }
+  };
 
   return (
-    <Select
+    <Combobox
       options={dataSourceOptions}
-      value={value}
+      value={selectedOption}
       onChange={handleChange}
-      disabled={disabled}
-      placeholder="Select a data source"
+      disabled={disabled || isLoading}
+      placeholder={
+        isLoading
+          ? t('alerting.cloud-rules-source-picker.loading', 'Loading data sources...')
+          : t('alerting.cloud-rules-source-picker.placeholder', 'Select a data source')
+      }
     />
   );
 }

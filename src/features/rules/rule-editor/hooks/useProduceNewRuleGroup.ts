@@ -1,5 +1,5 @@
 import { Action } from '@reduxjs/toolkit';
-import { useLazyGetRuleGroupQuery } from '../../../../api/ruler.endpoints';
+import { useLazyGetRuleGroupQuery } from '../../../../api/rules/mimir.endpoints';
 import { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { ruleGroupReducer, addRuleAction } from '../ruleGroupReducer';
 
@@ -50,7 +50,7 @@ export function useProduceNewRuleGroup() {
       groupName,
     })
       .unwrap()
-      .catch((error) => {
+      .catch((error: any) => {
         // If group doesn't exist (404), return null to create a new one
         if (error?.status === 404 || error?.data?.status === 404) {
           return null;

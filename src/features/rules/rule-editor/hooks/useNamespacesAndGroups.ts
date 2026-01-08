@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useLazyGetAllRulesQuery, RulerRulesConfigDTO } from 'api/ruler.endpoints';
+import { useLazyGetAllRulesQuery, RulerRulesConfigDTO } from '../../../../api/rules/mimir.endpoints';
 
 /**
  * Hook to fetch namespaces and groups from a data source
@@ -35,11 +35,13 @@ export function useNamespacesAndGroups(dataSourceUid: string | null) {
 function rulerRulesToNamespaceGroups(rulerConfig: RulerRulesConfigDTO): Map<string, string[]> {
   const result = new Map<string, string[]>();
 
-  Object.entries(rulerConfig).forEach(([namespace, groups]) => {
-    result.set(
-      namespace,
-      groups.map((group) => group.name)
-    );
+  Object.entries(rulerConfig).forEach(([namespace, groups]: [string, unknown]) => {
+    if (Array.isArray(groups)) {
+      result.set(
+        namespace,
+        groups.map((group: { name: string }) => group.name)
+      );
+    }
   });
 
   return result;

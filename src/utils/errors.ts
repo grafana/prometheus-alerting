@@ -1,7 +1,7 @@
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { SerializedError } from '@reduxjs/toolkit';
 
-type ErrorLike = FetchBaseQueryError | SerializedError;
+export type ErrorLike = FetchBaseQueryError | SerializedError;
 
 /**
  * Converts an RTK Query error into a human-readable string with status codes and details.

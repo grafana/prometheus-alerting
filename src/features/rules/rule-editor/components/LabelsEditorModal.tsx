@@ -1,7 +1,9 @@
+import { css } from '@emotion/css';
 import React, { useState } from 'react';
 
+import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { Button, Field, Input, Modal, Stack } from '@grafana/ui';
+import { Button, Field, Input, Modal, Stack, useStyles2 } from '@grafana/ui';
 
 import { KVObject } from '../types';
 
@@ -13,6 +15,7 @@ interface Props {
 }
 
 export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Props) => {
+  const styles = useStyles2(getStyles);
   const [labels, setLabels] = useState<KVObject[]>(initialLabels.length > 0 ? initialLabels : [{ key: '', value: '' }]);
 
   const handleAddLabel = () => {
@@ -43,15 +46,23 @@ export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Pr
     >
       <Stack direction="column" gap={2}>
         {labels.map((label, index) => (
-          <Stack key={index} direction="row" gap={1} alignItems="flex-start">
-            <Field label={index === 0 ? t('alerting.labels-editor-modal.label-key', 'Key') : ''}>
+          <Stack key={index} direction="row" gap={1} alignItems="flex-end">
+            <Field
+              label={index === 0 ? t('alerting.labels-editor-modal.label-key', 'Key') : ''}
+              className={styles.fieldKey}
+              noMargin
+            >
               <Input
                 value={label.key}
                 onChange={(e) => handleLabelChange(index, 'key', e.currentTarget.value)}
                 placeholder={t('alerting.labels-editor-modal.placeholder-key', 'Label key')}
               />
             </Field>
-            <Field label={index === 0 ? t('alerting.labels-editor-modal.label-value', 'Value') : ''}>
+            <Field
+              label={index === 0 ? t('alerting.labels-editor-modal.label-value', 'Value') : ''}
+              className={styles.fieldValue}
+              noMargin
+            >
               <Input
                 value={label.value}
                 onChange={(e) => handleLabelChange(index, 'value', e.currentTarget.value)}
@@ -64,7 +75,6 @@ export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Pr
               icon="trash-alt"
               onClick={() => handleRemoveLabel(index)}
               tooltip={t('alerting.labels-editor-modal.remove-label', 'Remove label')}
-              style={{ marginTop: index === 0 ? '32px' : '0' }}
             />
           </Stack>
         ))}
@@ -85,3 +95,12 @@ export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Pr
     </Modal>
   );
 };
+
+const getStyles = (theme: GrafanaTheme2) => ({
+  fieldKey: css({
+    flexGrow: 1,
+  }),
+  fieldValue: css({
+    flexGrow: 1,
+  }),
+});
