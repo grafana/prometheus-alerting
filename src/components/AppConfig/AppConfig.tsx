@@ -1,131 +1,123 @@
-import React, { ChangeEvent, useState } from 'react';
-import { lastValueFrom } from 'rxjs';
-import { AppPluginMeta, PluginConfigPageProps, PluginMeta } from '@grafana/data';
-import { getBackendSrv } from '@grafana/runtime';
-import { Button, Field, FieldSet, Input, SecretInput } from '@grafana/ui';
+import React from 'react';
+import { AppPluginMeta, PluginConfigPageProps } from '@grafana/data';
+import { CodeEditor, FieldSet, LoadingPlaceholder, Alert } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { testIds } from '../testIds';
+import { KeyValueList } from 'components/KeyValueList';
+import { alertmanagerApi } from 'api/alertmanager/alertmanager.endpoints';
+import { useAlertmanagerSafe } from 'hooks/useAlertmanager';
+import { StoreProvider } from '../StoreProvider/StoreProvider';
+import { sharedStore } from '../../store/store';
+import { AlertmanagerPicker } from '../AlertmanagerPicker/AlertmanagerPicker';
+import { ClusterStatus } from './ClusterStatus';
 
-type AppPluginSettings = {
-  apiUrl?: string;
-};
-
-type State = {
-  // The URL to reach our custom API.
-  apiUrl: string;
-  // Tells us if the API key secret is set.
-  isApiKeySet: boolean;
-  // A secret key for our custom API.
-  apiKey: string;
-};
+type AppPluginSettings = {};
 
 export interface AppConfigProps extends PluginConfigPageProps<AppPluginMeta<AppPluginSettings>> {}
 
-const AppConfig = ({ plugin }: AppConfigProps) => {
-  const { enabled, pinned, jsonData, secureJsonFields } = plugin.meta;
-  const [state, setState] = useState<State>({
-    apiUrl: jsonData?.apiUrl || '',
-    apiKey: '',
-    isApiKeySet: Boolean(secureJsonFields?.apiKey),
-  });
+const AppConfigStatusContent = () => {
+  const alertmanager = useAlertmanagerSafe();
 
-  const isSubmitDisabled = Boolean(!state.apiUrl || (!state.isApiKeySet && !state.apiKey));
+  // eslint detects a false positive here
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  const {
+    data: status,
+    isLoading,
+    error,
+  } = alertmanagerApi.endpoints.getStatus.useQuery(
+    { dataSourceUID: alertmanager?.uid ?? '' },
+    { skip: !alertmanager?.uid }
+  );
 
-  const onResetApiKey = () =>
-    setState({
-      ...state,
-      apiKey: '',
-      isApiKeySet: false,
-    });
+  if (!alertmanager) {
+    return (
+      <Alert title={t('app-config.no-alertmanager.title', 'No Alertmanager configured')} severity="warning">
+        {t(
+          'app-config.no-alertmanager.message',
+          'No Alertmanager data sources are configured. Please configure at least one Alertmanager data source to use this plugin.'
+        )}
+      </Alert>
+    );
+  }
 
-  const onChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setState({
-      ...state,
-      [event.target.name]: event.target.value.trim(),
-    });
-  };
+  if (isLoading) {
+    return <LoadingPlaceholder text={t('app-config.loading', 'Loading Alertmanager status...')} />;
+  }
 
-  const onSubmit = async () => {
-    if (isSubmitDisabled) {
-      return;
-    }
+  if (error) {
+    return (
+      <Alert title={t('app-config.error.title', 'Error loading Alertmanager status')} severity="error">
+        {t(
+          'app-config.error.message',
+          'Failed to load Alertmanager status. Please check your data source configuration.'
+        )}
+      </Alert>
+    );
+  }
 
-    await updatePluginAndReload(plugin.meta.id, {
-      enabled,
-      pinned,
-      jsonData: {
-        apiUrl: state.apiUrl,
-      },
-      // This cannot be queried later by the frontend.
-      // We don't want to override it in case it was set previously and left untouched now.
-      secureJsonData: state.isApiKeySet
-        ? undefined
-        : {
-            apiKey: state.apiKey,
-          },
-    });
-  };
+  if (!status) {
+    return (
+      <Alert title={t('app-config.no-data.title', 'No data')} severity="info">
+        {t('app-config.no-data.message', 'No Alertmanager status data available.')}
+      </Alert>
+    );
+  }
+
+  const statusItems = [{ label: t('app-config.status.uptime', 'Uptime'), value: status.uptime }];
+
+  const peers = (status.cluster.peers ?? []).map((peer, idx) => ({
+    label: t('app-config.cluster.peer', `Peer ${idx + 1}`),
+    value: `${peer.name} (${peer.address})`,
+  }));
+
+  const clusterItems = [
+    { label: t('app-config.cluster.name', 'Name'), value: status.cluster.name ?? '-' },
+    { label: t('app-config.cluster.status', 'Status'), value: <ClusterStatus status={status.cluster.status} /> },
+    ...peers,
+  ];
+
+  const versionItems = [
+    { label: t('app-config.version.version', 'Version'), value: status.versionInfo.version },
+    { label: t('app-config.version.revision', 'Revision'), value: status.versionInfo.revision },
+    { label: t('app-config.version.branch', 'Branch'), value: status.versionInfo.branch },
+    { label: t('app-config.version.build-user', 'Build User'), value: status.versionInfo.buildUser },
+    { label: t('app-config.version.build-date', 'Build Date'), value: status.versionInfo.buildDate },
+    { label: t('app-config.version.go-version', 'Go Version'), value: status.versionInfo.goVersion },
+  ];
 
   return (
-    <form onSubmit={onSubmit}>
-      <FieldSet label={t('app-config.api-settings.title', 'API Settings')}>
-        <Field
-          label={t('app-config.api-key.label', 'API Key')}
-          description={t('app-config.api-key.description', 'A secret key for authenticating to our custom API')}
-        >
-          <SecretInput
-            width={60}
-            id="config-api-key"
-            data-testid={testIds.appConfig.apiKey}
-            name="apiKey"
-            value={state.apiKey}
-            isConfigured={state.isApiKeySet}
-            placeholder={t('app-config.api-key.placeholder', 'Your secret API key')}
-            onChange={onChange}
-            onReset={onResetApiKey}
-          />
-        </Field>
-
-        <Field label={t('app-config.api-url.label', 'API Url')} description={t('app-config.api-url.description', '')}>
-          <Input
-            width={60}
-            name="apiUrl"
-            id="config-api-url"
-            data-testid={testIds.appConfig.apiUrl}
-            value={state.apiUrl}
-            placeholder={t('app-config.api-url.placeholder', 'E.g.: http://mywebsite.com/api/v1')}
-            onChange={onChange}
-          />
-        </Field>
-
-        <Button type="submit" data-testid={testIds.appConfig.submit} disabled={isSubmitDisabled}>
-          {t('app-config.submit-button', 'Save API settings')}
-        </Button>
+    <>
+      <FieldSet label={t('app-config.status.title', 'Status')}>
+        <KeyValueList items={statusItems} />
       </FieldSet>
-    </form>
+      <FieldSet label={t('app-config.cluster-status.title', 'Cluster Status')}>
+        <KeyValueList items={clusterItems} />
+      </FieldSet>
+      <FieldSet label={t('app-config.version-information.title', 'Version Information')}>
+        <KeyValueList items={versionItems} />
+      </FieldSet>
+      <FieldSet label={t('app-config.api-settings.title', 'Configuration file')}>
+        <CodeEditor value={status.config.original} language={'yaml'} height={600} readOnly />
+      </FieldSet>
+    </>
   );
 };
 
+const AppConfigContent = ({ plugin }: AppConfigProps) => {
+  return (
+    <div data-testid={testIds.appConfig}>
+      <FieldSet label={t('app-config.alertmanager-selection.title', 'Alertmanager')}>
+        <AlertmanagerPicker alwaysShow />
+      </FieldSet>
+      <AppConfigStatusContent />
+    </div>
+  );
+};
+
+const AppConfig = (props: AppConfigProps) => (
+  <StoreProvider store={sharedStore}>
+    <AppConfigContent {...props} />
+  </StoreProvider>
+);
+
 export default AppConfig;
-
-const updatePluginAndReload = async (pluginId: string, data: Partial<PluginMeta<AppPluginSettings>>) => {
-  try {
-    await updatePlugin(pluginId, data);
-
-    // Reloading the page as the changes made here wouldn't be propagated to the actual plugin otherwise.
-    // This is not ideal, however unfortunately currently there is no supported way for updating the plugin state.
-    window.location.reload();
-  } catch (e) {
-    console.error('Error while updating the plugin', e);
-  }
-};
-
-const updatePlugin = async (pluginId: string, data: Partial<PluginMeta>) => {
-  const response = getBackendSrv().fetch({
-    url: `/api/plugins/${pluginId}/settings`,
-    method: 'POST',
-    data,
-  });
-
-  return lastValueFrom(response);
-};

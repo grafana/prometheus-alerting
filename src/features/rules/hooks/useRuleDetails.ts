@@ -3,9 +3,9 @@ import { skipToken } from '@reduxjs/toolkit/query';
 import { DataSourceRuleIdentifier, isCloudRuleIdentifier } from '@grafana/external-rules';
 import { PromRuleDTO, PromRuleGroupDTO, RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
-import { useDiscoverFeaturesQuery } from '../../../api/featureDiscovery.endpoints';
-import { useGetGroupsQuery } from '../../../api/prometheus.endpoints';
-import { useGetRuleGroupQuery } from '../../../api/ruler.endpoints';
+import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
+import { useGetGroupsQuery } from '../../../api/rules/prometheus.endpoints';
+import { useGetRuleGroupQuery } from '../../../api/rules/mimir.endpoints';
 import { getMatchingPromRule, matchPromRuleById, matchRulerRuleById } from '@grafana/external-rules/matching';
 
 export interface RuleDetailsResult {

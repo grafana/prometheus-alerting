@@ -1,30 +1,46 @@
 import type { IconName } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
+import { JsonValue } from 'type-fest';
+
+/**
+ * Extract integration type names from Receiver config keys
+ * e.g., "email_configs" -> "email"
+ */
+type ReceiverConfigKeys = keyof Receiver;
+type ExtractIntegrationName<T extends string> = T extends `${infer Name}_configs` ? Name : never;
+type AllIntegrationTypes = ExtractIntegrationName<ReceiverConfigKeys>;
 
 /**
  * Maps integration types to their corresponding Grafana icon names.
  * Based on common contact point integrations in Alertmanager.
+ *
+ * TypeScript will error if any integration from Receiver is missing!
  */
-export const INTEGRATION_ICONS: Record<string, IconName> = {
+export const INTEGRATION_ICONS: Record<AllIntegrationTypes, IconName> = {
   email: 'envelope',
   slack: 'slack',
   pagerduty: 'pagerduty',
   webhook: 'link',
-  opsgenie: 'cloud',
-  wechat: 'comment-alt',
+  opsgenie: 'bug',
+  wechat: 'comments-alt',
   pushover: 'mobile-android',
   victorops: 'bell',
   sns: 'amazon',
   telegram: 'telegram-alt',
   discord: 'discord',
-  webex: 'camera',
+  // @ts-expect-error
+  webex: 'video',
   msteams: 'microsoft',
+  msteamsv2: 'microsoft',
+  jira: 'bug',
+  rocketchat: 'rocket',
+  incidentio: 'fire',
 } as const;
 
 /**
- * Type representing an integration type key
+ * Type representing an integration type key (derived from Receiver schema)
  */
-export type IntegrationType = keyof typeof INTEGRATION_ICONS;
+export type IntegrationType = AllIntegrationTypes;
 
 /**
  * Mapping of integration types to their corresponding config property names in a Receiver object.
@@ -43,6 +59,10 @@ const INTEGRATION_CONFIG_KEYS: Record<IntegrationType, keyof Receiver> = {
   discord: 'discord_configs',
   webex: 'webex_configs',
   msteams: 'msteams_configs',
+  msteamsv2: 'msteamsv2_configs',
+  jira: 'jira_configs',
+  rocketchat: 'rocketchat_configs',
+  incidentio: 'incidentio_configs',
 } as const;
 
 /**
@@ -59,8 +79,8 @@ export function getAllIntegrationTypes(): IntegrationType[] {
  */
 export function extractIntegrationsFromReceiver(
   receiver: Receiver
-): Array<{ type: IntegrationType; config: Record<string, unknown> }> {
-  const integrations: Array<{ type: IntegrationType; config: Record<string, unknown> }> = [];
+): Array<{ type: IntegrationType; config: Record<string, JsonValue> }> {
+  const integrations: Array<{ type: IntegrationType; config: Record<string, JsonValue> }> = [];
 
   for (const type of getAllIntegrationTypes()) {
     const configKey = INTEGRATION_CONFIG_KEYS[type];
@@ -68,7 +88,7 @@ export function extractIntegrationsFromReceiver(
 
     if (configs && Array.isArray(configs)) {
       configs.forEach((config) => {
-        integrations.push({ type, config: config as Record<string, unknown> });
+        integrations.push({ type, config });
       });
     }
   }
@@ -93,5 +113,6 @@ export function getIntegrationCount(receiver: Receiver, type: IntegrationType): 
  * Returns a default icon if the type is not found.
  */
 export function getIntegrationIcon(integrationType: string): IconName {
-  return INTEGRATION_ICONS[integrationType.toLowerCase()] ?? 'channel-add';
+  const key = integrationType.toLowerCase() as IntegrationType;
+  return INTEGRATION_ICONS[key] ?? 'channel-add';
 }

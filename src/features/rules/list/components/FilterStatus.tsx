@@ -46,4 +46,3 @@ export function FilterStatus({ state, numberOfRules, onCancel }: FilterStatusPro
     </Card>
   );
 }
-

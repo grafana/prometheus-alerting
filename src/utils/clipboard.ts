@@ -29,4 +29,3 @@ export function copyToClipboard(text: string): void {
     }
   );
 }
-

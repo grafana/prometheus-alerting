@@ -26,9 +26,10 @@ import {
   ParsedUserConfiguration,
   TransformedStatusToParsedUserConfiguration,
 } from '@grafana/external-alertmanager/mimir';
-import { TransformedAlertmanagerStatusApiResponseTransform, WithDataSourceInformation } from './alertmanager.types';
+
 import { getDataSourceSrv } from '@grafana/runtime';
 import { AlertManagerDataSourceJsonData } from 'types/datasources';
+import { WithDataSourceInformation, TransformedAlertmanagerStatusApiResponseTransform } from './alertmanager.types';
 
 function createAlertmanagerPath(dataSourceUID: string, path: `/${string}`) {
   const dsSettings = getDataSourceSrv().getInstanceSettings(dataSourceUID);
@@ -52,6 +53,14 @@ export const baseAlertmanagerApi = createApi({
 // Inject Prometheus-specific endpoints (getStatus)
 export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
   endpoints: (build) => ({
+    // this endpoint returns the entire status object – currently only used by the configuration page.
+    // to grab the Alertmanager configuration use "getConfiguration" endpoint.
+    getStatus: build.query<AlertmanagerStatus, WithDataSourceInformation<GetStatusApiArg>>({
+      query: ({ dataSourceUID }) => ({
+        url: createAlertmanagerPath(dataSourceUID, `/v2/status`),
+      }),
+      providesTags: ['Configuration'],
+    }),
     getConfiguration: build.query<ParsedUserConfiguration, WithDataSourceInformation<GetStatusApiArg>>({
       query: ({ dataSourceUID }) => ({
         url: createAlertmanagerPath(dataSourceUID, `/v2/status`),

@@ -1,31 +1,23 @@
 import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+
 import { css } from '@emotion/css';
 import { testIds } from '../../../components/testIds';
-import { Alert, InteractiveTable, EmptyState, LinkButton, Stack } from '@grafana/ui';
+import { InteractiveTable, EmptyState, LinkButton, Stack } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { useSilences } from '../hooks/useSilences';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { DataSourceError } from '../../../components/AlertmanagerError';
 import { ROUTES, DEFAULT_PAGE_SIZE } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
 import { SilenceDrawer } from '../components/SilenceDrawer';
-import { locationService } from '@grafana/runtime';
 
 function SilencesPage() {
   const { data: silences = [], isLoading, error } = useSilences();
   const [selectedSilence, setSelectedSilence] = useState<GettableSilence | null>(null);
-
-  const handleEdit = (silence: GettableSilence) => {
-    // Close the drawer
-    setSelectedSilence(null);
-    // Navigate to the edit form
-    const editPath = prefixRoute(`silences/${encodeURIComponent(silence.id)}/edit`);
-    locationService.push(editPath);
-  };
 
   const clickableCellStyles = css({
     cursor: 'pointer',
@@ -91,9 +83,7 @@ function SilencesPage() {
             </div>
           )}
           {error && (
-            <Alert title={t('silences.error-loading-title', 'Error loading silences')} severity="error">
-              {error instanceof Error ? error.message : t('silences.error-loading-message', 'Failed to fetch silences')}
-            </Alert>
+            <DataSourceError error={error} title={t('silences.error-loading-title', 'Error loading silences')} />
           )}
           {!isLoading && silences.length > 0 && !error && (
             <InteractiveTable
@@ -112,9 +102,7 @@ function SilencesPage() {
         </Stack>
       </div>
 
-      {selectedSilence && (
-        <SilenceDrawer silence={selectedSilence} onClose={() => setSelectedSilence(null)} onEdit={handleEdit} />
-      )}
+      {selectedSilence && <SilenceDrawer silence={selectedSilence} onClose={() => setSelectedSilence(null)} />}
     </AlertmanagerPage>
   );
 }

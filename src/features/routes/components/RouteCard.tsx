@@ -2,11 +2,13 @@ import { css } from '@emotion/css';
 import { isArray, uniqueId } from 'lodash';
 import * as React from 'react';
 import { FC, Fragment, ReactNode, useState } from 'react';
-import { useToggle } from 'react-use';
+import { useToggle } from '@react-hookz/web';
+import Skeleton from 'react-loading-skeleton';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
 import { Button, Icon, IconButton, Stack, Text, Tooltip, getTagColorsFromName, useStyles2 } from '@grafana/ui';
+import { attachSkeleton } from '@grafana/ui/unstable';
 
 import {
   normalizeMatchers,
@@ -66,18 +68,12 @@ const RouteCard = (props: Props) => {
   const moreCount = childPoliciesToRender.length - pageOfChildren.length;
   const showMore = moreCount > 0;
 
-  const handleClick = () => {
-    if (onRouteClick) {
-      onRouteClick(currentRoute);
-    }
-  };
-
   return (
     <Stack direction="column" gap={1.5}>
       <div
         className={styles.policyWrapper(false, Boolean(onRouteClick))}
         data-testid={isDefaultPolicy ? 'am-root-route-container' : 'am-route-container'}
-        onClick={handleClick}
+        onClick={() => onRouteClick?.(currentRoute)}
       >
         {/* continueMatching and showMatchesAllLabelsWarning are mutually exclusive so the icons can't overlap */}
         {continueMatching && <ContinueMatchingIndicator />}
@@ -482,4 +478,27 @@ const getStyles = (theme: GrafanaTheme2) => ({
   }),
 });
 
-export { RouteCard };
+// 💀 Skeleton variant of RouteCard
+const RouteCardSkeleton: FC<{ count?: number }> = ({ count = 1 }) => {
+  const styles = useStyles2(getStyles);
+
+  return (
+    <Stack direction="column" gap={1.5}>
+      {Array.from({ length: count }).map((_, index) => (
+        <div key={index} className={styles.policyWrapper(false, false)}>
+          <div className={styles.policyItemWrapper}>
+            <Stack direction="column" gap={1}>
+              <Skeleton height={24} width="10%" />
+              <Skeleton height={16} width="60%" />
+            </Stack>
+          </div>
+        </div>
+      ))}
+    </Stack>
+  );
+};
+
+// Attach skeleton to RouteCard component
+const RouteCardWithSkeleton = attachSkeleton(RouteCard, RouteCardSkeleton);
+
+export { RouteCardWithSkeleton as RouteCard };

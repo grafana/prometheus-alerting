@@ -5,7 +5,7 @@ import { Trans, t } from '@grafana/i18n';
 import { getAppEvents } from '@grafana/runtime';
 import { Button, Modal } from '@grafana/ui';
 
-import { useDeleteRuleGroupMutation } from '../../../../api/ruler.endpoints';
+import { useDeleteRuleGroupMutation } from '../../../../api/rules/mimir.endpoints';
 import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 
 interface DeleteRuleModalProps {

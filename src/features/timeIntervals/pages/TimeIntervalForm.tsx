@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Field, Input, Stack } from '@grafana/ui';
 import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ROUTES } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';

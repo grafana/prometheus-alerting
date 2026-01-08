@@ -14,7 +14,7 @@ import {
   RadioButtonGroup,
 } from '@grafana/ui';
 import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { useCreateSilence, useSilence } from '../hooks/useSilences';
 import { SilenceFormSchema, type SilenceFormData } from '../utils/silenceFormSchema';

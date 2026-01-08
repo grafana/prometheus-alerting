@@ -51,9 +51,15 @@ export const TimeIntervalSchema = z.object({
 });
 
 export const InhibitRuleSchema = z.object({
+  // Current properties
   target_matchers: z.array(z.string()).optional(),
   source_matchers: z.array(z.string()).optional(),
   equal: z.array(z.string()).optional(),
+  // Deprecated properties (kept for backward compatibility)
+  target_match: z.record(z.string(), z.string()).optional(),
+  target_match_re: z.record(z.string(), z.string()).optional(),
+  source_match: z.record(z.string(), z.string()).optional(),
+  source_match_re: z.record(z.string(), z.string()).optional(),
 });
 
 export const RoutesSchema = z.object({

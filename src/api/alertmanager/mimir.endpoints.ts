@@ -9,14 +9,6 @@ import { getDataSourceSrv } from '@grafana/runtime';
 import { AlertManagerDataSourceJsonData } from 'types/datasources';
 import z from 'zod';
 
-export interface UpdateAlertmanagerConfigApiArg extends WithDataSourceInformation {
-  configuration: ParsedUserConfiguration;
-}
-
-export interface UpdateAlertmanagerConfigApiResponse {
-  success: boolean;
-}
-
 /**
  * Validates that the data source is configured for Mimir implementation.
  * Throws an error if the data source is not using Mimir.
@@ -69,3 +61,11 @@ export const mimirAlertmanagerApi = baseAlertmanagerApi.injectEndpoints({
     }),
   }),
 });
+
+export interface UpdateAlertmanagerConfigApiArg extends WithDataSourceInformation {
+  configuration: ParsedUserConfiguration;
+}
+
+export interface UpdateAlertmanagerConfigApiResponse {
+  success: boolean;
+}

@@ -1,4 +1,4 @@
-import { Matcher, Route } from './api/types/common';
+import { InhibitRule, Matcher, Route } from './api/types/common';
 import { TupleToUnion } from 'type-fest';
 
 const matcherOperators = ['=~', '!~', '!=', '='] as const;
@@ -33,6 +33,85 @@ export const normalizeMatchers = (route: Route): ObjectMatcher[] => {
   }
 
   return routeMatchers;
+};
+
+/**
+ * Normalized inhibit rule with matchers converted to ObjectMatcher arrays
+ * and deprecated properties omitted
+ */
+export type NormalizedInhibitRule = Omit<
+  InhibitRule,
+  'source_matchers' | 'target_matchers' | 'source_match' | 'source_match_re' | 'target_match' | 'target_match_re'
+> & {
+  source_matchers: ObjectMatcher[];
+  target_matchers: ObjectMatcher[];
+};
+
+/**
+ * Normalizes the matchers in an inhibit rule from string arrays to ObjectMatcher arrays.
+ * This function handles both current and deprecated properties:
+ * - source_matchers / target_matchers (current)
+ * - source_match / source_match_re (deprecated)
+ * - target_match / target_match_re (deprecated)
+ *
+ * The deprecated properties are normalized into the new format and then omitted from the result.
+ */
+export const normalizeInhibitRuleMatchers = (inhibitRule: InhibitRule): NormalizedInhibitRule => {
+  const sourceMatchers: ObjectMatcher[] = [];
+  const targetMatchers: ObjectMatcher[] = [];
+
+  // Parse source_matchers (current property)
+  if (inhibitRule.source_matchers) {
+    inhibitRule.source_matchers.forEach((matcher) => {
+      const parsedMatchers = parseMatcherToArray(matcher).map(matcherToObjectMatcher);
+      sourceMatchers.push(...parsedMatchers);
+    });
+  }
+
+  // Parse source_match_re (deprecated)
+  if (inhibitRule.source_match_re) {
+    Object.entries(inhibitRule.source_match_re).forEach(([label, value]) => {
+      sourceMatchers.push([label, '=~', value]);
+    });
+  }
+
+  // Parse source_match (deprecated)
+  if (inhibitRule.source_match) {
+    Object.entries(inhibitRule.source_match).forEach(([label, value]) => {
+      sourceMatchers.push([label, '=', value]);
+    });
+  }
+
+  // Parse target_matchers (current property)
+  if (inhibitRule.target_matchers) {
+    inhibitRule.target_matchers.forEach((matcher) => {
+      const parsedMatchers = parseMatcherToArray(matcher).map(matcherToObjectMatcher);
+      targetMatchers.push(...parsedMatchers);
+    });
+  }
+
+  // Parse target_match_re (deprecated)
+  if (inhibitRule.target_match_re) {
+    Object.entries(inhibitRule.target_match_re).forEach(([label, value]) => {
+      targetMatchers.push([label, '=~', value]);
+    });
+  }
+
+  // Parse target_match (deprecated)
+  if (inhibitRule.target_match) {
+    Object.entries(inhibitRule.target_match).forEach(([label, value]) => {
+      targetMatchers.push([label, '=', value]);
+    });
+  }
+
+  // Omit deprecated properties from the result
+  const { source_match, source_match_re, target_match, target_match_re, ...restOfRule } = inhibitRule;
+
+  return {
+    ...restOfRule,
+    source_matchers: sourceMatchers,
+    target_matchers: targetMatchers,
+  };
 };
 
 export function matcherToObjectMatcher(matcher: Matcher): ObjectMatcher {

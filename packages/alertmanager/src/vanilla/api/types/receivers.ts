@@ -16,100 +16,273 @@ export const TLSConfigSchema = z.object({
   insecure_skip_verify: z.boolean().optional(),
 });
 
-export const BasicAuthConfigSchema = z.object({
-  username: z.string().optional(),
-  password: z.string().optional(),
-  password_file: z.string().optional(),
-});
+export const BasicAuthConfigSchema = z
+  .object({
+    username: z.string().optional(),
+    password: z.string().optional(),
+    password_file: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.password && data.password_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'password and password_file are mutually exclusive',
+        path: ['password'],
+      });
+    }
+  });
 
-export const AuthorizationConfigSchema = z.object({
-  type: z.string().optional(),
-  credentials: z.string().optional(),
-  credentials_file: z.string().optional(),
-});
+export const AuthorizationConfigSchema = z
+  .object({
+    type: z.string().optional(),
+    credentials: z.string().optional(),
+    credentials_file: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.credentials && data.credentials_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'credentials and credentials_file are mutually exclusive',
+        path: ['credentials'],
+      });
+    }
+  });
 
-export const OAuth2ConfigSchema = z.object({
-  client_id: z.string(),
-  client_secret: z.string().optional(),
-  client_secret_file: z.string().optional(),
-  scopes: z.array(z.string()).optional(),
-  token_url: z.string(),
-  endpoint_params: z.record(z.string(), z.string()).optional(),
-});
+export const OAuth2ConfigSchema = z
+  .object({
+    client_id: z.string(),
+    client_secret: z.string().optional(),
+    client_secret_file: z.string().optional(),
+    scopes: z.array(z.string()).optional(),
+    token_url: z.string(),
+    endpoint_params: z.record(z.string(), z.string()).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.client_secret && data.client_secret_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'client_secret and client_secret_file are mutually exclusive',
+        path: ['client_secret'],
+      });
+    }
+  });
 
-export const HTTPConfigSchema = z.object({
-  basic_auth: BasicAuthConfigSchema.optional(),
-  authorization: AuthorizationConfigSchema.optional(),
-  oauth2: OAuth2ConfigSchema.optional(),
-  proxy_url: z.string().optional(),
-  follow_redirects: z.boolean().optional(),
-  tls_config: TLSConfigSchema.optional(),
-});
+export const HTTPConfigSchema = z
+  .object({
+    basic_auth: BasicAuthConfigSchema.optional(),
+    authorization: AuthorizationConfigSchema.optional(),
+    oauth2: OAuth2ConfigSchema.optional(),
+    proxy_url: z.string().optional(),
+    follow_redirects: z.boolean().optional(),
+    tls_config: TLSConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    const authMethods = [data.basic_auth, data.authorization, data.oauth2].filter(Boolean);
+    if (authMethods.length > 1) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'basic_auth, authorization, and oauth2 are mutually exclusive',
+        path: ['basic_auth'],
+      });
+    }
+  });
 
 // Zod schemas for individual receiver configuration types
 
-export const EmailConfigSchema = z.object({
-  to: z.string().optional(),
-  from: z.string().optional(),
-  smarthost: z.string().optional(),
-  auth_username: z.string().optional(),
-  auth_password: z.string().optional(),
-  auth_identity: z.string().optional(),
-  headers: z.record(z.string(), z.string()).optional(),
-  html: z.string().optional(),
-  text: z.string().optional(),
-  require_tls: z.boolean().optional(),
-  http_config: HTTPConfigSchema.optional(),
-});
+export const EmailConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    to: z.string().optional(),
+    from: z.string().optional(),
+    smarthost: z.string().optional(),
+    hello: z.string().optional(),
+    auth_username: z.string().optional(),
+    auth_password: z.string().optional(),
+    auth_password_file: z.string().optional(),
+    auth_secret: z.string().optional(),
+    auth_identity: z.string().optional(),
+    headers: z.record(z.string(), z.string()).optional(),
+    html: z.string().optional(),
+    text: z.string().optional(),
+    require_tls: z.boolean().optional(),
+    tls_config: TLSConfigSchema.optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.auth_password && data.auth_password_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'auth_password and auth_password_file are mutually exclusive',
+        path: ['auth_password'],
+      });
+    }
+  });
 
-export const SlackConfigSchema = z.object({
-  api_url: z.string().optional(),
-  channel: z.string().optional(),
-  username: z.string().optional(),
-  color: z.string().optional(),
+export const SlackFieldConfigSchema = z.object({
   title: z.string().optional(),
-  title_link: z.string().optional(),
-  pretext: z.string().optional(),
+  value: z.string().optional(),
+  short: z.boolean().optional(),
+});
+
+export const SlackActionConfigSchema = z.object({
+  type: z.string().optional(),
   text: z.string().optional(),
-  footer: z.string().optional(),
-  icon_emoji: z.string().optional(),
-  icon_url: z.string().optional(),
-  image_url: z.string().optional(),
-  thumb_url: z.string().optional(),
-  http_config: HTTPConfigSchema.optional(),
-});
-
-export const PagerdutyConfigSchema = z.object({
-  routing_key: z.string().optional(),
-  service_key: z.string().optional(),
   url: z.string().optional(),
-  client: z.string().optional(),
-  client_url: z.string().optional(),
-  description: z.string().optional(),
-  severity: z.string().optional(),
-  details: z.record(z.string(), z.string()).optional(),
-  http_config: HTTPConfigSchema.optional(),
+  style: z.string().optional(),
+  name: z.string().optional(),
+  value: z.string().optional(),
+  confirm: z
+    .object({
+      title: z.string().optional(),
+      text: z.string().optional(),
+      ok_text: z.string().optional(),
+      dismiss_text: z.string().optional(),
+    })
+    .optional(),
 });
 
-export const WebhookConfigSchema = z.object({
-  url: z.string().optional(),
-  max_alerts: z.number().optional(),
-  http_config: HTTPConfigSchema.optional(),
+export const SlackConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    api_url: z.string().optional(),
+    api_url_file: z.string().optional(),
+    channel: z.string().optional(),
+    username: z.string().optional(),
+    color: z.string().optional(),
+    title: z.string().optional(),
+    title_link: z.string().optional(),
+    pretext: z.string().optional(),
+    text: z.string().optional(),
+    fields: z.array(SlackFieldConfigSchema).optional(),
+    short_fields: z.boolean().optional(),
+    footer: z.string().optional(),
+    fallback: z.string().optional(),
+    callback_id: z.string().optional(),
+    icon_emoji: z.string().optional(),
+    icon_url: z.string().optional(),
+    image_url: z.string().optional(),
+    thumb_url: z.string().optional(),
+    link_names: z.boolean().optional(),
+    mrkdwn_in: z.array(z.string()).optional(),
+    actions: z.array(SlackActionConfigSchema).optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.api_url && data.api_url_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'api_url and api_url_file are mutually exclusive',
+        path: ['api_url'],
+      });
+    }
+  });
+
+export const PagerdutyLinkConfigSchema = z.object({
+  href: z.string().optional(),
+  text: z.string().optional(),
 });
 
-export const OpsGenieConfigSchema = z.object({
-  api_key: z.string().optional(),
-  api_url: z.string().optional(),
-  message: z.string().optional(),
-  description: z.string().optional(),
-  source: z.string().optional(),
-  details: z.record(z.string(), z.string()).optional(),
-  tags: z.string().optional(),
-  priority: z.string().optional(),
-  http_config: HTTPConfigSchema.optional(),
+export const PagerdutyImageConfigSchema = z.object({
+  src: z.string().optional(),
+  href: z.string().optional(),
+  alt: z.string().optional(),
 });
+
+export const PagerdutyConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    routing_key: z.string().optional(),
+    routing_key_file: z.string().optional(),
+    service_key: z.string().optional(),
+    service_key_file: z.string().optional(),
+    url: z.string().optional(),
+    client: z.string().optional(),
+    client_url: z.string().optional(),
+    description: z.string().optional(),
+    severity: z.string().optional(),
+    class: z.string().optional(),
+    component: z.string().optional(),
+    group: z.string().optional(),
+    source: z.string().optional(),
+    details: z.record(z.string(), z.string()).optional(),
+    images: z.array(PagerdutyImageConfigSchema).optional(),
+    links: z.array(PagerdutyLinkConfigSchema).optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.routing_key && data.routing_key_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'routing_key and routing_key_file are mutually exclusive',
+        path: ['routing_key'],
+      });
+    }
+    if (data.service_key && data.service_key_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'service_key and service_key_file are mutually exclusive',
+        path: ['service_key'],
+      });
+    }
+  });
+
+export const WebhookConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    url: z.string().optional(),
+    url_file: z.string().optional(),
+    max_alerts: z.number().optional(),
+    timeout: z.string().optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.url && data.url_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'url and url_file are mutually exclusive',
+        path: ['url'],
+      });
+    }
+  });
+
+export const OpsGenieResponderConfigSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().optional(),
+  username: z.string().optional(),
+  type: z.string().optional(),
+});
+
+export const OpsGenieConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    api_key: z.string().optional(),
+    api_key_file: z.string().optional(),
+    api_url: z.string().optional(),
+    message: z.string().optional(),
+    description: z.string().optional(),
+    source: z.string().optional(),
+    details: z.record(z.string(), z.string()).optional(),
+    responders: z.array(OpsGenieResponderConfigSchema).optional(),
+    tags: z.string().optional(),
+    note: z.string().optional(),
+    priority: z.string().optional(),
+    entity: z.string().optional(),
+    actions: z.string().optional(),
+    update_alerts: z.boolean().optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.api_key && data.api_key_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'api_key and api_key_file are mutually exclusive',
+        path: ['api_key'],
+      });
+    }
+  });
 
 export const WechatConfigSchema = z.object({
+  send_resolved: z.boolean().optional(),
   api_url: z.string().optional(),
   corp_id: z.string().optional(),
   agent_id: z.string().optional(),
@@ -118,33 +291,96 @@ export const WechatConfigSchema = z.object({
   to_party: z.string().optional(),
   to_tag: z.string().optional(),
   message: z.string().optional(),
-  http_config: HTTPConfigSchema.optional(),
-});
-
-export const PushoverConfigSchema = z.object({
-  user_key: z.string().optional(),
-  token: z.string().optional(),
-  title: z.string().optional(),
-  message: z.string().optional(),
-  url: z.string().optional(),
-  priority: z.string().optional(),
-  retry: z.string().optional(),
-  expire: z.string().optional(),
-  http_config: HTTPConfigSchema.optional(),
-});
-
-export const VictorOpsConfigSchema = z.object({
-  api_key: z.string().optional(),
-  api_url: z.string().optional(),
-  routing_key: z.string().optional(),
   message_type: z.string().optional(),
-  entity_display_name: z.string().optional(),
-  state_message: z.string().optional(),
-  monitoring_tool: z.string().optional(),
   http_config: HTTPConfigSchema.optional(),
 });
+
+export const PushoverConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    user_key: z.string().optional(),
+    user_key_file: z.string().optional(),
+    token: z.string().optional(),
+    token_file: z.string().optional(),
+    title: z.string().optional(),
+    message: z.string().optional(),
+    url: z.string().optional(),
+    url_title: z.string().optional(),
+    device: z.string().optional(),
+    sound: z.string().optional(),
+    priority: z.string().optional(),
+    retry: z.string().optional(),
+    expire: z.string().optional(),
+    ttl: z.string().optional(),
+    html: z.boolean().optional(),
+    monospace: z.boolean().optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.user_key && data.user_key_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'user_key and user_key_file are mutually exclusive',
+        path: ['user_key'],
+      });
+    }
+    if (data.token && data.token_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'token and token_file are mutually exclusive',
+        path: ['token'],
+      });
+    }
+  });
+
+export const VictorOpsConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    api_key: z.string().optional(),
+    api_key_file: z.string().optional(),
+    api_url: z.string().optional(),
+    routing_key: z.string().optional(),
+    message_type: z.string().optional(),
+    entity_display_name: z.string().optional(),
+    state_message: z.string().optional(),
+    monitoring_tool: z.string().optional(),
+    custom_fields: z.record(z.string(), z.string()).optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.api_key && data.api_key_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'api_key and api_key_file are mutually exclusive',
+        path: ['api_key'],
+      });
+    }
+  });
+
+export const SigV4ConfigSchema = z
+  .object({
+    region: z.string().optional(),
+    access_key: z.string().optional(),
+    secret_key: z.string().optional(),
+    profile: z.string().optional(),
+    role_arn: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const hasAccessKey = !!data.access_key;
+    const hasSecretKey = !!data.secret_key;
+    if (hasAccessKey !== hasSecretKey) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'access_key and secret_key must both be supplied or both be blank',
+        path: ['access_key'],
+      });
+    }
+  });
 
 export const SNSConfigSchema = z.object({
+  send_resolved: z.boolean().optional(),
+  api_url: z.string().optional(),
+  sigv4: SigV4ConfigSchema.optional(),
   topic_arn: z.string().optional(),
   phone_number: z.string().optional(),
   target_arn: z.string().optional(),
@@ -154,36 +390,197 @@ export const SNSConfigSchema = z.object({
   http_config: HTTPConfigSchema.optional(),
 });
 
-export const TelegramConfigSchema = z.object({
-  api_url: z.string().optional(),
-  bot_token: z.string().optional(),
-  chat_id: z.number().optional(),
-  message: z.string().optional(),
-  disable_notifications: z.boolean().optional(),
-  parse_mode: z.string().optional(),
-  http_config: HTTPConfigSchema.optional(),
-});
+export const TelegramConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    api_url: z.string().optional(),
+    bot_token: z.string().optional(),
+    bot_token_file: z.string().optional(),
+    chat_id: z.number().optional(),
+    message_thread_id: z.number().optional(),
+    message: z.string().optional(),
+    disable_notifications: z.boolean().optional(),
+    parse_mode: z.string().optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.bot_token && data.bot_token_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'bot_token and bot_token_file are mutually exclusive',
+        path: ['bot_token'],
+      });
+    }
+  });
 
-export const DiscordConfigSchema = z.object({
-  webhook_url: z.string().optional(),
-  title: z.string().optional(),
-  message: z.string().optional(),
-  http_config: HTTPConfigSchema.optional(),
-});
+export const DiscordConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    webhook_url: z.string().optional(),
+    webhook_url_file: z.string().optional(),
+    title: z.string().optional(),
+    message: z.string().optional(),
+    content: z.string().optional(),
+    username: z.string().optional(),
+    avatar_url: z.string().optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.webhook_url && data.webhook_url_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'webhook_url and webhook_url_file are mutually exclusive',
+        path: ['webhook_url'],
+      });
+    }
+  });
 
 export const WebexConfigSchema = z.object({
+  send_resolved: z.boolean().optional(),
   api_url: z.string().optional(),
   room_id: z.string().optional(),
   message: z.string().optional(),
   http_config: HTTPConfigSchema.optional(),
 });
 
-export const MSTeamsConfigSchema = z.object({
-  webhook_url: z.string().optional(),
-  title: z.string().optional(),
-  text: z.string().optional(),
+export const MSTeamsConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    webhook_url: z.string().optional(),
+    webhook_url_file: z.string().optional(),
+    title: z.string().optional(),
+    summary: z.string().optional(),
+    text: z.string().optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.webhook_url && data.webhook_url_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'webhook_url and webhook_url_file are mutually exclusive',
+        path: ['webhook_url'],
+      });
+    }
+  });
+
+export const MSTeamsV2ConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    webhook_url: z.string().optional(),
+    webhook_url_file: z.string().optional(),
+    title: z.string().optional(),
+    text: z.string().optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.webhook_url && data.webhook_url_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'webhook_url and webhook_url_file are mutually exclusive',
+        path: ['webhook_url'],
+      });
+    }
+  });
+
+export const JiraConfigSchema = z.object({
+  send_resolved: z.boolean().optional(),
+  api_url: z.string().optional(),
+  api_type: z.string().optional(),
+  project: z.string(),
+  summary: z.string().optional(),
+  description: z.string().optional(),
+  labels: z.array(z.string()).optional(),
+  priority: z.string().optional(),
+  issue_type: z.string().optional(),
+  resolve_transition: z.string().optional(),
+  reopen_transition: z.string().optional(),
+  wont_fix_resolution: z.string().optional(),
+  reopen_duration: z.string().optional(),
+  fields: z.record(z.string(), z.string()).optional(),
   http_config: HTTPConfigSchema.optional(),
 });
+
+export const RocketchatFieldConfigSchema = z.object({
+  title: z.string().optional(),
+  value: z.string().optional(),
+  short: z.boolean().optional(),
+});
+
+export const RocketchatActionConfigSchema = z.object({
+  type: z.string().optional(),
+  text: z.string().optional(),
+  url: z.string().optional(),
+  msg: z.string().optional(),
+  msg_in_chat_window: z.boolean().optional(),
+});
+
+export const RocketchatConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    api_url: z.string().optional(),
+    channel: z.string().optional(),
+    token: z.string().optional(),
+    token_file: z.string().optional(),
+    token_id: z.string().optional(),
+    token_id_file: z.string().optional(),
+    color: z.string().optional(),
+    emoji: z.string().optional(),
+    icon_url: z.string().optional(),
+    text: z.string().optional(),
+    title: z.string().optional(),
+    title_link: z.string().optional(),
+    image_url: z.string().optional(),
+    thumb_url: z.string().optional(),
+    link_names: z.string().optional(),
+    short_fields: z.boolean().optional(),
+    fields: z.array(RocketchatFieldConfigSchema).optional(),
+    actions: z.array(RocketchatActionConfigSchema).optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.token && data.token_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'token and token_file are mutually exclusive',
+        path: ['token'],
+      });
+    }
+    if (data.token_id && data.token_id_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'token_id and token_id_file are mutually exclusive',
+        path: ['token_id'],
+      });
+    }
+  });
+
+export const IncidentioConfigSchema = z
+  .object({
+    send_resolved: z.boolean().optional(),
+    url: z.string().optional(),
+    url_file: z.string().optional(),
+    alert_source_token: z.string().optional(),
+    alert_source_token_file: z.string().optional(),
+    max_alerts: z.number().optional(),
+    timeout: z.string().optional(),
+    http_config: HTTPConfigSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.url && data.url_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'url and url_file are mutually exclusive',
+        path: ['url'],
+      });
+    }
+    if (data.alert_source_token && data.alert_source_token_file) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'alert_source_token and alert_source_token_file are mutually exclusive',
+        path: ['alert_source_token'],
+      });
+    }
+  });
 
 // Receiver schema
 export const ReceiverSchema = z.object({
@@ -201,6 +598,10 @@ export const ReceiverSchema = z.object({
   discord_configs: z.array(DiscordConfigSchema).optional(),
   webex_configs: z.array(WebexConfigSchema).optional(),
   msteams_configs: z.array(MSTeamsConfigSchema).optional(),
+  msteamsv2_configs: z.array(MSTeamsV2ConfigSchema).optional(),
+  jira_configs: z.array(JiraConfigSchema).optional(),
+  rocketchat_configs: z.array(RocketchatConfigSchema).optional(),
+  incidentio_configs: z.array(IncidentioConfigSchema).optional(),
 });
 
 // Export inferred types
@@ -210,18 +611,30 @@ export type AuthorizationConfig = z.infer<typeof AuthorizationConfigSchema>;
 export type OAuth2Config = z.infer<typeof OAuth2ConfigSchema>;
 export type HTTPConfig = z.infer<typeof HTTPConfigSchema>;
 export type EmailConfig = z.infer<typeof EmailConfigSchema>;
+export type SlackFieldConfig = z.infer<typeof SlackFieldConfigSchema>;
+export type SlackActionConfig = z.infer<typeof SlackActionConfigSchema>;
 export type SlackConfig = z.infer<typeof SlackConfigSchema>;
+export type PagerdutyLinkConfig = z.infer<typeof PagerdutyLinkConfigSchema>;
+export type PagerdutyImageConfig = z.infer<typeof PagerdutyImageConfigSchema>;
 export type PagerdutyConfig = z.infer<typeof PagerdutyConfigSchema>;
 export type WebhookConfig = z.infer<typeof WebhookConfigSchema>;
+export type OpsGenieResponderConfig = z.infer<typeof OpsGenieResponderConfigSchema>;
 export type OpsGenieConfig = z.infer<typeof OpsGenieConfigSchema>;
 export type WechatConfig = z.infer<typeof WechatConfigSchema>;
 export type PushoverConfig = z.infer<typeof PushoverConfigSchema>;
 export type VictorOpsConfig = z.infer<typeof VictorOpsConfigSchema>;
+export type SigV4Config = z.infer<typeof SigV4ConfigSchema>;
 export type SNSConfig = z.infer<typeof SNSConfigSchema>;
 export type TelegramConfig = z.infer<typeof TelegramConfigSchema>;
 export type DiscordConfig = z.infer<typeof DiscordConfigSchema>;
 export type WebexConfig = z.infer<typeof WebexConfigSchema>;
 export type MSTeamsConfig = z.infer<typeof MSTeamsConfigSchema>;
+export type MSTeamsV2Config = z.infer<typeof MSTeamsV2ConfigSchema>;
+export type JiraConfig = z.infer<typeof JiraConfigSchema>;
+export type RocketchatFieldConfig = z.infer<typeof RocketchatFieldConfigSchema>;
+export type RocketchatActionConfig = z.infer<typeof RocketchatActionConfigSchema>;
+export type RocketchatConfig = z.infer<typeof RocketchatConfigSchema>;
+export type IncidentioConfig = z.infer<typeof IncidentioConfigSchema>;
 export type Receiver = z.infer<typeof ReceiverSchema>;
 
 // Type guard functions for receiver discrimination
@@ -282,6 +695,28 @@ export function hasMSTeamsConfigs(receiver: Receiver): receiver is Receiver & { 
   return Array.isArray(receiver.msteams_configs) && receiver.msteams_configs.length > 0;
 }
 
+export function hasMSTeamsV2Configs(
+  receiver: Receiver
+): receiver is Receiver & { msteamsv2_configs: MSTeamsV2Config[] } {
+  return Array.isArray(receiver.msteamsv2_configs) && receiver.msteamsv2_configs.length > 0;
+}
+
+export function hasJiraConfigs(receiver: Receiver): receiver is Receiver & { jira_configs: JiraConfig[] } {
+  return Array.isArray(receiver.jira_configs) && receiver.jira_configs.length > 0;
+}
+
+export function hasRocketchatConfigs(
+  receiver: Receiver
+): receiver is Receiver & { rocketchat_configs: RocketchatConfig[] } {
+  return Array.isArray(receiver.rocketchat_configs) && receiver.rocketchat_configs.length > 0;
+}
+
+export function hasIncidentioConfigs(
+  receiver: Receiver
+): receiver is Receiver & { incidentio_configs: IncidentioConfig[] } {
+  return Array.isArray(receiver.incidentio_configs) && receiver.incidentio_configs.length > 0;
+}
+
 // Helper function to get all configured receiver types for a receiver
 export function getReceiverTypes(receiver: Receiver): string[] {
   const types: string[] = [];
@@ -323,6 +758,18 @@ export function getReceiverTypes(receiver: Receiver): string[] {
   }
   if (hasMSTeamsConfigs(receiver)) {
     types.push('msteams');
+  }
+  if (hasMSTeamsV2Configs(receiver)) {
+    types.push('msteamsv2');
+  }
+  if (hasJiraConfigs(receiver)) {
+    types.push('jira');
+  }
+  if (hasRocketchatConfigs(receiver)) {
+    types.push('rocketchat');
+  }
+  if (hasIncidentioConfigs(receiver)) {
+    types.push('incidentio');
   }
   return types;
 }

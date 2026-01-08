@@ -67,6 +67,41 @@ App plugins can let you create a custom out-of-the-box monitoring experience by 
    npm run lint:fix
    ```
 
+## Installing the plugin in a local Grafana instance
+
+To install and test the plugin in a local Grafana instance (outside of Docker):
+
+1. Clone the repository and follow the build instructions above:
+
+   ```bash
+   git clone https://github.com/grafana/prometheus-alerting
+   cd prometheus-alerting
+   npm install
+   npm run dev
+   ```
+
+2. Configure Grafana to load plugins from your local directory. In your Grafana configuration file (e.g., `custom.ini` or `grafana.ini`), add:
+
+   ```ini
+   [paths]
+   plugins = /Users/your-username/grafana-plugins
+   ```
+
+3. Create a symlink from your Grafana plugins directory to the cloned repository:
+
+   ```bash
+   ln -s /path/to/prometheus-alerting /path/to/grafana-plugins/grafana-prometheusalerting-app
+   ```
+
+4. Restart the Grafana backend
+
+5. Enable the plugin in the Grafana UI:
+   - Navigate to **Administration > Plugins > Prometheus Alerting**
+   - Click **Enable**
+   - Access the plugin via **More apps > Prometheus Alerting**
+
+**Note:** You must have at least one external Alertmanager configured as a data source to use this plugin.
+
 # Distributing your plugin
 
 When distributing a Grafana plugin either within the community or privately the plugin must be signed so the Grafana application can verify its authenticity. This can be done with the `@grafana/sign-plugin` package.

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState, useTransition } from 'react';
-import { useUnmount } from 'react-use';
+import { useUnmountEffect } from '@react-hookz/web';
 
 import { bufferCountOrTime, tap } from 'ix/asynciterable/operators';
 
@@ -113,7 +113,7 @@ function FilterViewResults({ filterState }: FilterViewProps) {
   }, []);
 
   /* When we unmount the component we make sure to abort all iterables and stop making HTTP requests */
-  useUnmount(() => {
+  useUnmountEffect(() => {
     cancelSearch();
   });
 

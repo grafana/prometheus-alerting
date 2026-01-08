@@ -1,62 +1,50 @@
 import React from 'react';
 import { t } from '@grafana/i18n';
-import { Alert, Stack, Text, Button } from '@grafana/ui';
+import { Alert, Stack, Text, Button, IconButton, Icon } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
-import { extractIntegrationsFromReceiver } from '../utils/integrationIcons';
+import { extractIntegrationsFromReceiver, getIntegrationIcon } from '../utils/integrationIcons';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { deleteReceiverAction } from '../../../reducers/alertmanager/receivers';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
+import { filterAndTransformConfigEntries } from '../utils/receiversUtils';
+import { JsonValue } from 'type-fest';
 
 interface IntegrationItemProps {
   type: string;
-  config: Record<string, unknown>;
+  config: Record<string, JsonValue>;
 }
 
 function IntegrationItem({ type, config }: IntegrationItemProps) {
   // Extract http_config if it exists
-  const httpConfig = config.http_config as Record<string, unknown> | undefined;
+  const httpConfig = (config.http_config as Record<string, JsonValue>) ?? {};
 
-  // Filter out empty/null values
-  const displayEntries = Object.entries(config)
-    .filter(([key, value]) => {
-      // Skip internal, empty fields, and http_config (handled separately)
-      if (key.startsWith('_') || value === undefined || value === null || key === 'http_config') {
-        return false;
-      }
-      return true;
-    })
-    .map(([key, value]) => {
-      return { label: key, value: value as string | number | boolean | undefined | null };
-    });
+  // Filter and transform main config entries (excluding http_config which is handled separately)
+  const displayEntries = filterAndTransformConfigEntries(config, {
+    excludeKeys: ['http_config'],
+  });
 
-  // Process http_config entries if present
-  const httpConfigEntries = httpConfig
-    ? Object.entries(httpConfig)
-        .filter(([key, value]) => {
-          if (key.startsWith('_') || value === undefined || value === null) {
-            return false;
-          }
-          // Skip nested objects that are empty
-          if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
-            return false;
-          }
-          return true;
-        })
-        .map(([key, value]) => {
-          // Pass nested objects directly - KeyValueList will handle the rendering
-          return { label: key, value: value as string | number | boolean | Record<string, unknown> | undefined | null };
-        })
-    : [];
+  // Filter and transform http_config entries with empty object exclusion
+  const httpConfigEntries = filterAndTransformConfigEntries(httpConfig, {
+    excludeEmptyObjects: true,
+  });
 
   const hasMainConfig = displayEntries.length > 0;
   const hasHttpConfig = httpConfigEntries.length > 0;
 
+  const iconName = getIntegrationIcon(type);
+  const titleWithIcon = (
+    <Stack direction="row" gap={1} alignItems="center">
+      <Icon name={iconName} />
+      <span>{type}</span>
+    </Stack>
+  );
+
   if (!hasMainConfig && !hasHttpConfig) {
     return (
-      <Section title={type}>
+      <Section title={titleWithIcon}>
         <Alert title={t('receivers.integration.no-config', 'No configuration')} severity="info">
           {t('receivers.integration.no-config-desc', 'This integration has no visible configuration.')}
         </Alert>
@@ -67,7 +55,7 @@ function IntegrationItem({ type, config }: IntegrationItemProps) {
   return (
     <Stack direction="column" gap={2}>
       {hasMainConfig && (
-        <Section title={type}>
+        <Section title={titleWithIcon}>
           <KeyValueList items={displayEntries} />
         </Section>
       )}
@@ -108,9 +96,10 @@ function ReceiverIntegrations({ receiver }: ReceiverIntegrationsProps) {
 interface ReceiverDrawerProps {
   receiver: Receiver | null;
   onClose: () => void;
+  showBackButton?: boolean;
 }
 
-export function ReceiverDrawer({ receiver, onClose }: ReceiverDrawerProps) {
+export function ReceiverDrawer({ receiver, onClose, showBackButton = false }: ReceiverDrawerProps) {
   const [produceNewConfig, { error: deleteError, isLoading: isDeleting }] = useProduceNewAlertmanagerConfiguration();
   const hasConfigurationAPI = useHasConfigurationAPI();
 
@@ -128,16 +117,28 @@ export function ReceiverDrawer({ receiver, onClose }: ReceiverDrawerProps) {
     onClose();
   };
 
-  const hasActions = hasConfigurationAPI;
+  const hasActions = hasConfigurationAPI && !showBackButton;
 
   return (
     <DrawerWithFooter
       title={
-        <Stack direction="column" gap={0}>
-          <Text variant="bodySmall" color="secondary">
-            {t('receivers.drawer.title', 'Receiver')}
-          </Text>
-          <Text variant="h2">{receiver.name}</Text>
+        <Stack direction="row" gap={1} alignItems="center">
+          {showBackButton && (
+            <IconButton
+              name="arrow-left"
+              size="lg"
+              variant="secondary"
+              onClick={onClose}
+              tooltip={t('receivers.drawer.back', 'Back to route')}
+              aria-label={t('receivers.drawer.back', 'Back to route')}
+            />
+          )}
+          <Stack direction="column" gap={0}>
+            <Text variant="bodySmall" color="secondary">
+              {t('receivers.drawer.title', 'Receiver')}
+            </Text>
+            <Text variant="h2">{receiver.name}</Text>
+          </Stack>
         </Stack>
       }
       onClose={onClose}

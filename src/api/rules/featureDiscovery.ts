@@ -1,7 +1,7 @@
 import { getBackendSrv, getDataSourceSrv } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 
-import { DataSourceFeatures, PromBuildInfoResponse } from '../types/rules';
+import { DataSourceFeatures, PromBuildInfoResponse } from '../../types/rules';
 
 export type { DataSourceFeatures };
 
