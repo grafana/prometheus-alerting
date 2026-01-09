@@ -35,6 +35,25 @@ function RuleDetails() {
     window.location.href = cloneUrl;
   };
 
+  const pageNav = useMemo(() => {
+    if (!promRule) {
+      return undefined;
+    }
+    return {
+      text: promRule.name,
+      parentItem: {
+        text: meta.groupName,
+        parentItem: {
+          text: meta.namespace,
+          parentItem: {
+            text: t('alerting.rule-editor.rules', 'Rules'),
+            url: '/a/grafana-prometheusalerting-app/rules',
+          },
+        },
+      },
+    };
+  }, [promRule, meta.groupName, meta.namespace]);
+
   if (loading) {
     return (
       <PluginPage>
@@ -101,13 +120,7 @@ function RuleDetails() {
 
   return (
     <>
-      <PluginPage
-        pageNav={{
-          text: promRule.name,
-        }}
-        subTitle={subTitle}
-        actions={actions}
-      >
+      <PluginPage pageNav={pageNav} subTitle={subTitle} actions={actions}>
         <RuleDetailsView
           promRule={promRule}
           rulerRule={rulerRule}
