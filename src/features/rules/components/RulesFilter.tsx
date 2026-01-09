@@ -7,7 +7,6 @@ import { Trans, t } from '@grafana/i18n';
 import {
   Box,
   Button,
-  Combobox,
   FilterInput,
   Input,
   Label,
@@ -17,16 +16,17 @@ import {
   useStyles2,
 } from '@grafana/ui';
 
+import { PopupCard } from '../../../components/PopupCard';
 import { RulesFilter as RulesFilterType } from '../search/rulesSearchParser';
 import { useRulesFilter } from '../hooks/useRulesFilter';
-import { useDataSourceOptions, useLabelOptions, useNamespaceAndGroupOptions } from '../hooks/useRuleFilterOptions';
+import { useDataSourceOptions, useLabelOptions } from '../hooks/useRuleFilterOptions';
 
 const radioGroupCompactClass = css({ width: 'max-content' });
 
 interface AdvancedFilters {
   dataSourceNames: string[];
-  namespace: string | null;
-  groupName: string | null;
+  namespace: string;
+  groupName: string;
   ruleName: string;
   labels: string[];
   ruleState: string | null;
@@ -35,8 +35,8 @@ interface AdvancedFilters {
 
 const emptyAdvancedFilters: AdvancedFilters = {
   dataSourceNames: [],
-  namespace: null,
-  groupName: null,
+  namespace: '',
+  groupName: '',
   ruleName: '',
   labels: [],
   ruleState: null,
@@ -46,8 +46,8 @@ const emptyAdvancedFilters: AdvancedFilters = {
 function filterStateToAdvancedFilters(filterState: RulesFilterType): AdvancedFilters {
   return {
     dataSourceNames: filterState.dataSourceNames || [],
-    namespace: filterState.namespace || null,
-    groupName: filterState.groupName || null,
+    namespace: filterState.namespace || '',
+    groupName: filterState.groupName || '',
     ruleName: filterState.ruleName || '',
     labels: filterState.labels || [],
     ruleState: filterState.ruleState || null,
@@ -71,7 +71,6 @@ export function RulesFilter() {
   const styles = useStyles2(getStyles);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const { searchQuery, updateFilters, setSearchQuery, filterState } = useRulesFilter();
-  const popupRef = useRef<HTMLDivElement>(null);
 
   const { control, setValue, handleSubmit } = useForm<{ query: string }>({
     defaultValues: {
@@ -103,33 +102,6 @@ export function RulesFilter() {
   const handleOnToggle = () => {
     setIsPopupOpen(!isPopupOpen);
   };
-
-  // Handle outside clicks to close the popup
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isPopupOpen && popupRef.current && event.target instanceof Node && !popupRef.current.contains(event.target)) {
-        // Check if click is on a portal element (combobox dropdown)
-        if (event.target instanceof Element) {
-          const isPortalClick =
-            event.target.closest('[data-popper-placement]') || event.target.closest('[role="listbox"]');
-
-          if (!isPortalClick) {
-            setIsPopupOpen(false);
-          }
-        } else {
-          setIsPopupOpen(false);
-        }
-      }
-    };
-
-    if (isPopupOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isPopupOpen]);
 
   const filterButtonLabel = t('alerting.rules-filter.filter-label', 'Filter');
 
@@ -163,24 +135,39 @@ export function RulesFilter() {
           />
         </form>
       </Box>
-      {isPopupOpen && (
-        <div
-          ref={popupRef}
-          className={styles.popup}
-          role="dialog"
-          aria-label={t('alerting.rules-filter.filter-options-label', 'Filter options')}
-        >
-          <FilterOptions
-            onSubmit={handleAdvancedFilters}
-            onClear={handleClearFilters}
-            filterState={filterState}
-            onClose={() => setIsPopupOpen(false)}
-          />
-        </div>
-      )}
-      <Button name="filter" icon="filter" variant="secondary" aria-label={filterButtonLabel} onClick={handleOnToggle}>
-        {filterButtonLabel}
-      </Button>
+      <PopupCard
+        showOn="click"
+        placement="auto"
+        disableBlur={true}
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        onToggle={handleOnToggle}
+        content={
+          <div
+            className={styles.content}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.stopPropagation();
+              }
+            }}
+            role="dialog"
+            aria-label={t('alerting.rules-filter.filter-options-label', 'Filter options')}
+            tabIndex={-1}
+          >
+            <FilterOptions
+              onSubmit={handleAdvancedFilters}
+              onClear={handleClearFilters}
+              filterState={filterState}
+              onClose={() => setIsPopupOpen(false)}
+            />
+          </div>
+        }
+      >
+        <Button name="filter" icon="filter" variant="secondary" aria-label={filterButtonLabel}>
+          {filterButtonLabel}
+        </Button>
+      </PopupCard>
     </Stack>
   );
 }
@@ -198,7 +185,6 @@ function FilterOptions({ onSubmit, onClear, filterState, onClose }: FilterOption
 
   const defaultValues = filterStateToAdvancedFilters(filterState);
   const dataSourceOptions = useDataSourceOptions();
-  const { namespaceOptions, groupOptions } = useNamespaceAndGroupOptions();
   const { labelOptions } = useLabelOptions();
 
   const methods = useForm<AdvancedFilters>({
@@ -232,8 +218,8 @@ function FilterOptions({ onSubmit, onClear, filterState, onClose }: FilterOption
         <Stack direction="column" alignItems="end" gap={2}>
           <div className={styles.grid}>
             <DataSourceField dataSourceOptions={dataSourceOptions} />
-            <NamespaceField namespaceOptions={namespaceOptions} />
-            <GroupField groupOptions={groupOptions} />
+            <NamespaceField />
+            <GroupField />
             <RuleNameField />
             <LabelsField labelOptions={labelOptions} />
             <RuleStateField />
@@ -272,6 +258,7 @@ function DataSourceField({ dataSourceOptions }: { dataSourceOptions: Array<{ lab
             value={field.value}
             onChange={(selections) => field.onChange(selections.map((s) => s.value))}
             placeholder={t('alerting.rules-filter.data-source-placeholder', 'Select data sources')}
+            portalContainer={document.body}
             width="auto"
             minWidth={40}
             maxWidth={80}
@@ -282,62 +269,26 @@ function DataSourceField({ dataSourceOptions }: { dataSourceOptions: Array<{ lab
   );
 }
 
-function NamespaceField({
-  namespaceOptions,
-}: {
-  namespaceOptions: (inputValue: string) => Promise<Array<{ label: string; value: string }>>;
-}) {
-  const { control } = useFormContext<AdvancedFilters>();
+function NamespaceField() {
+  const { register } = useFormContext<AdvancedFilters>();
   return (
     <>
       <Label>
         <Trans i18nKey="alerting.rules-filter.namespace-label">Namespace</Trans>
       </Label>
-      <Controller
-        name="namespace"
-        control={control}
-        render={({ field }) => {
-          return (
-            <Combobox<string>
-              placeholder={t('alerting.rules-filter.namespace-placeholder', 'Select namespace')}
-              options={namespaceOptions}
-              onChange={(option) => field.onChange(option?.value || null)}
-              value={field.value}
-              isClearable
-            />
-          );
-        }}
-      />
+      <Input {...register('namespace')} data-testid="namespace-input" />
     </>
   );
 }
 
-function GroupField({
-  groupOptions,
-}: {
-  groupOptions: (inputValue: string) => Promise<Array<{ label: string; value: string }>>;
-}) {
-  const { control } = useFormContext<AdvancedFilters>();
+function GroupField() {
+  const { register } = useFormContext<AdvancedFilters>();
   return (
     <>
       <Label>
-        <Trans i18nKey="alerting.rules-filter.group-label">Evaluation group</Trans>
+        <Trans i18nKey="alerting.rules-filter.group-label">Group</Trans>
       </Label>
-      <Controller
-        name="groupName"
-        control={control}
-        render={({ field }) => {
-          return (
-            <Combobox<string>
-              placeholder={t('alerting.rules-filter.group-placeholder', 'Select group')}
-              options={groupOptions}
-              onChange={(option) => field.onChange(option?.value || null)}
-              value={field.value}
-              isClearable
-            />
-          );
-        }}
-      />
+      <Input {...register('groupName')} data-testid="group-input" />
     </>
   );
 }
@@ -443,17 +394,8 @@ function RuleTypeField() {
 
 function getStyles(theme: GrafanaTheme2) {
   return {
-    popup: css({
-      position: 'absolute',
-      right: 0,
-      top: '100%',
-      marginTop: theme.spacing(1),
-      zIndex: theme.zIndex.dropdown,
-      backgroundColor: theme.colors.background.primary,
-      border: `1px solid ${theme.colors.border.weak}`,
-      borderRadius: theme.shape.radius.default,
-      boxShadow: theme.shadows.z3,
-      padding: theme.spacing(2),
+    content: css({
+      padding: theme.spacing(1),
       minWidth: '400px',
     }),
     grid: css({

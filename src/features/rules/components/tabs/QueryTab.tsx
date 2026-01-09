@@ -22,10 +22,9 @@ export function QueryTab({ query, dataSourceUid }: Props) {
   const language = dataSourceType === 'loki' ? 'logql' : 'promql';
 
   return (
-    // <div className={styles.container}>
     <Highlight prism={Prism} code={query} language={language}>
-      {({ className, style, tokens, getLineProps, getTokenProps }) => (
-        <pre className={` ${className}`} style={style}>
+      {({ className, tokens, getLineProps, getTokenProps }) => (
+        <pre className={`${styles.codeBlock} ${className}`}>
           {tokens.map((line, i) => (
             <div key={i} {...getLineProps({ line })}>
               {line.map((token, key) => (
@@ -36,19 +35,10 @@ export function QueryTab({ query, dataSourceUid }: Props) {
         </pre>
       )}
     </Highlight>
-    // </div>
   );
 }
 
 const getStyles = (theme: GrafanaTheme2) => ({
-  container: css({
-    border: `1px solid ${theme.colors.border.medium}`,
-    borderRadius: theme.shape.radius.default,
-    backgroundColor: theme.colors.background.primary,
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-  }),
   codeBlock: css({
     margin: 0,
     padding: theme.spacing(1.5),
@@ -58,6 +48,10 @@ const getStyles = (theme: GrafanaTheme2) => ({
     overflow: 'auto',
     whiteSpace: 'pre',
     flex: 1,
+    minHeight: 0,
+    border: `1px solid ${theme.colors.border.medium}`,
+    borderRadius: theme.shape.radius.default,
+    backgroundColor: theme.colors.background.primary,
 
     // Grafana's Prism syntax highlighting colors (from slate.ts)
     // Comments
