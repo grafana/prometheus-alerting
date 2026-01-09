@@ -1,36 +1,55 @@
 import React, { useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { parseIdentifier, DataSourceRuleIdentifier, isCloudRuleIdentifier } from '@grafana/external-rules';
+import { parseIdentifier, isCloudRuleIdentifier, CloudRuleIdentifier, getRuleName } from '@grafana/external-rules';
+import type { NavModelItem } from '@grafana/data';
 
 import { t } from '@grafana/i18n';
 import { PluginPage } from '@grafana/runtime';
-import { Alert, Button, Stack } from '@grafana/ui';
+import { Alert } from '@grafana/ui';
 
 import { RuleForm } from '../rule-editor/components/RuleForm';
 import { translateRouteParamToRuleType } from '../rule-editor/formDefaults';
 import { rulerRuleToFormValues } from '../rule-editor/formTransform';
 import { useRuleDetails } from '../hooks/useRuleDetails';
 import { RuleFormValues, RuleFormType } from '../rule-editor/types';
+import { generateCopiedName } from '../utils/duplicate';
 
-// TODO: Add access control checks
+export default function RuleEditor() {
+  const { ruleIdentifier } = useParams<{ ruleIdentifier?: string }>();
+  const [searchParams] = useSearchParams();
+  const copyFromParam = searchParams.get('copyFrom');
 
-/**
- * RuleFormSkeleton - Loading skeleton for the rule form
- */
-function RuleFormSkeleton() {
-  return (
-    <Stack direction="column" gap={3}>
-      {/* Simplified loading state - just show informative message */}
-      <Alert severity="info" title={t('alerting.rule-editor.loading-sections', 'Loading form sections...')}>
-        {t('alerting.rule-editor.loading-sections-desc', 'Preparing the rule editor form...')}
-      </Alert>
-    </Stack>
-  );
+  const { copyFromIdentifier, editRuleIdentifier } = useMemo(() => {
+    return {
+      copyFromIdentifier: copyFromParam ? parseIdentifier(copyFromParam, true) : null,
+      editRuleIdentifier: ruleIdentifier ? parseIdentifier(ruleIdentifier, true) : null,
+    };
+  }, [copyFromParam, ruleIdentifier]);
+
+  // Determine mode and render appropriate component
+  if (copyFromParam) {
+    if (!copyFromIdentifier) {
+      return <InvalidIdentifierPage title={t('alerting.rule-editor.clone-rule', 'Clone rule')} />;
+    }
+    if (!isCloudRuleIdentifier(copyFromIdentifier)) {
+      return <UnsupportedRuleTypePage title={t('alerting.rule-editor.clone-rule', 'Clone rule')} action="cloned" />;
+    }
+    return <CloneRuleEditor identifier={copyFromIdentifier} />;
+  }
+
+  if (ruleIdentifier) {
+    if (!editRuleIdentifier) {
+      return <InvalidIdentifierPage title={t('alerting.rule-editor.edit-rule', 'Edit rule')} />;
+    }
+    if (!isCloudRuleIdentifier(editRuleIdentifier)) {
+      return <UnsupportedRuleTypePage title={t('alerting.rule-editor.edit-rule', 'Edit rule')} action="edited" />;
+    }
+    return <EditRuleEditor identifier={editRuleIdentifier} />;
+  }
+
+  return <NewRuleEditor />;
 }
 
-/**
- * NewRuleEditor - Creates a new rule from scratch
- */
 function NewRuleEditor() {
   const [searchParams] = useSearchParams();
   const typeParam = searchParams.get('type') || 'alerting';
@@ -42,50 +61,13 @@ function NewRuleEditor() {
       : t('alerting.rule-editor.new-alert-rule', 'New alert rule');
 
   return (
-    <PluginPage
-      pageNav={{
-        text: pageTitle,
-      }}
-    >
+    <PluginPage pageNav={{ text: pageTitle }}>
       <RuleForm ruleType={ruleType} />
     </PluginPage>
   );
 }
 
-/**
- * EditRuleEditor - Edits an existing rule
- */
-function EditRuleEditor({ ruleIdentifier }: { ruleIdentifier: string }) {
-  const identifier = useMemo(() => {
-    try {
-      return parseIdentifier(ruleIdentifier, true);
-    } catch (error) {
-      console.error('Failed to parse rule identifier:', error);
-      return null;
-    }
-  }, [ruleIdentifier]);
-
-  if (!identifier) {
-    return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.edit-rule', 'Edit rule'),
-        }}
-      >
-        <Alert severity="error" title={t('alerting.rule-editor.invalid-identifier', 'Invalid rule identifier')}>
-          {t('alerting.rule-editor.invalid-identifier-message', 'The rule identifier format is invalid.')}
-        </Alert>
-      </PluginPage>
-    );
-  }
-
-  return <EditRuleEditorWithIdentifier identifier={identifier} />;
-}
-
-function EditRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRuleIdentifier }) {
-  // Check if this is a cloud rule - do this before hooks
-  const isCloudRule = isCloudRuleIdentifier(identifier);
-
+function EditRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
   const { promRule, rulerRule, loading, error, ...meta } = useRuleDetails(identifier);
 
   const ruleType = rulerRule
@@ -98,6 +80,14 @@ function EditRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRu
     rulerRule && 'alert' in rulerRule
       ? t('alerting.rule-editor.edit-alert-rule', 'Edit alert rule')
       : t('alerting.rule-editor.edit-recording-rule', 'Edit recording rule');
+
+  const pageNav = useMemo(
+    () => ({
+      text: pageTitle,
+      ...buildRuleNavigation(identifier),
+    }),
+    [pageTitle, identifier]
+  );
 
   const prefill = useMemo((): Partial<RuleFormValues> | undefined => {
     if (!rulerRule) {
@@ -112,60 +102,21 @@ function EditRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRu
     }
   }, [rulerRule, meta]);
 
-  // Only cloud rules can be edited
-  if (!isCloudRule) {
-    return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.edit-rule', 'Edit rule'),
-        }}
-      >
-        <Alert severity="error" title={t('alerting.rule-editor.unsupported-rule-type', 'Unsupported rule type')}>
-          {t(
-            'alerting.rule-editor.only-cloud-rules-editable',
-            'Only data source managed rules can be edited in this plugin.'
-          )}
-        </Alert>
-      </PluginPage>
-    );
-  }
-
   if (loading) {
     return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.edit-rule', 'Edit rule'),
-        }}
-      >
-        <Stack direction="column" gap={2}>
-          <Alert severity="info" title={t('alerting.rule-editor.loading-rule', 'Loading rule...')}>
-            {t('alerting.rule-editor.loading-description', 'Fetching rule details and configuration...')}
-          </Alert>
-          <RuleFormSkeleton />
-        </Stack>
+      <PluginPage pageNav={pageNav}>
+        <Alert severity="info" title={t('alerting.rule-editor.loading-rule', 'Loading rule...')}>
+          {t('alerting.rule-editor.loading-description', 'Fetching rule details and configuration...')}
+        </Alert>
       </PluginPage>
     );
   }
 
   if (error) {
     return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.edit-rule', 'Edit rule'),
-        }}
-      >
+      <PluginPage pageNav={pageNav}>
         <Alert severity="error" title={t('alerting.rule-editor.failed-to-load', 'Failed to load rule')}>
-          <Stack direction="column" gap={2}>
-            <div>{String(error)}</div>
-            <Stack direction="row" gap={1}>
-              <Button variant="secondary" size="sm" onClick={() => window.location.reload()} icon="sync">
-                {t('alerting.rule-editor.retry', 'Retry')}
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => window.history.back()} icon="arrow-left">
-                {t('alerting.rule-editor.go-back', 'Go back')}
-              </Button>
-            </Stack>
-          </Stack>
+          {JSON.stringify(error)}
         </Alert>
       </PluginPage>
     );
@@ -173,11 +124,7 @@ function EditRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRu
 
   if (!rulerRule) {
     return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.edit-rule', 'Edit rule'),
-        }}
-      >
+      <PluginPage pageNav={pageNav}>
         <Alert severity="warning" title={t('alerting.rule-editor.rule-not-found', 'Rule not found')}>
           {t(
             'alerting.rule-editor.rule-not-found-edit-message',
@@ -189,21 +136,7 @@ function EditRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRu
   }
 
   return (
-    <PluginPage
-      pageNav={{
-        text: pageTitle,
-        parentItem: {
-          text: meta.groupName,
-          parentItem: {
-            text: meta.namespace,
-            parentItem: {
-              text: t('alerting.rule-editor.rules', 'Rules'),
-              url: '/a/grafana-prometheusalerting-app/rules',
-            },
-          },
-        },
-      }}
-    >
+    <PluginPage pageNav={pageNav}>
       <RuleForm ruleType={ruleType} prefill={prefill} existingRuleIdentifier={identifier} />
     </PluginPage>
   );
@@ -212,38 +145,8 @@ function EditRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRu
 /**
  * CloneRuleEditor - Clones an existing rule
  */
-function CloneRuleEditor({ copyFrom }: { copyFrom: string }) {
-  const identifier = useMemo(() => {
-    try {
-      return parseIdentifier(copyFrom, true);
-    } catch (error) {
-      console.error('Failed to parse rule identifier:', error);
-      return null;
-    }
-  }, [copyFrom]);
-
-  if (!identifier) {
-    return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.clone-rule', 'Clone rule'),
-        }}
-      >
-        <Alert severity="error" title={t('alerting.rule-editor.invalid-identifier', 'Invalid rule identifier')}>
-          {t('alerting.rule-editor.invalid-identifier-message', 'The rule identifier format is invalid.')}
-        </Alert>
-      </PluginPage>
-    );
-  }
-
-  return <CloneRuleEditorWithIdentifier identifier={identifier} />;
-}
-
-function CloneRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceRuleIdentifier }) {
-  // Check if this is a cloud rule - do this before hooks
-  const isCloudRule = isCloudRuleIdentifier(identifier);
-
-  const { promRule, rulerRule, loading, error, ...meta } = useRuleDetails(identifier);
+function CloneRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
+  const { promRule, rulerRule, rulerGroup, loading, error, ...meta } = useRuleDetails(identifier);
 
   const ruleType = rulerRule
     ? 'alert' in rulerRule
@@ -256,6 +159,14 @@ function CloneRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceR
       ? t('alerting.rule-editor.clone-alert-rule', 'Clone alert rule')
       : t('alerting.rule-editor.clone-recording-rule', 'Clone recording rule');
 
+  const pageNav = useMemo(
+    () => ({
+      text: pageTitle,
+      ...buildRuleNavigation(identifier),
+    }),
+    [pageTitle, identifier]
+  );
+
   const prefill = useMemo((): Partial<RuleFormValues> | undefined => {
     if (!rulerRule) {
       return undefined;
@@ -263,69 +174,32 @@ function CloneRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceR
 
     try {
       const formValues = rulerRuleToFormValues(meta.dataSourceUid, meta.namespace, meta.groupName, rulerRule);
-      // Append (copy) to the name for cloned rules
-      formValues.name = `${formValues.name} (copy)`;
+      // Append (copy) to the name for cloned rules, avoiding duplicates in the same group
+      const existingNames = rulerGroup?.rules.map(getRuleName) ?? [];
+      formValues.name = generateCopiedName(formValues.name, existingNames);
+
       return formValues;
     } catch (error) {
       console.error('Failed to convert rule to form values:', error);
       return undefined;
     }
-  }, [rulerRule, meta]);
-
-  // Only cloud rules can be cloned
-  if (!isCloudRule) {
-    return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.clone-rule', 'Clone rule'),
-        }}
-      >
-        <Alert severity="error" title={t('alerting.rule-editor.unsupported-rule-type', 'Unsupported rule type')}>
-          {t(
-            'alerting.rule-editor.only-cloud-rules-cloneable',
-            'Only data source managed rules can be cloned in this plugin.'
-          )}
-        </Alert>
-      </PluginPage>
-    );
-  }
+  }, [rulerRule, rulerGroup, meta]);
 
   if (loading) {
     return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.clone-rule', 'Clone rule'),
-        }}
-      >
-        <Stack direction="column" gap={2}>
-          <Alert severity="info" title={t('alerting.rule-editor.loading-rule', 'Loading rule...')}>
-            {t('alerting.rule-editor.loading-description', 'Fetching rule details and configuration...')}
-          </Alert>
-          <RuleFormSkeleton />
-        </Stack>
+      <PluginPage pageNav={pageNav}>
+        <Alert severity="info" title={t('alerting.rule-editor.loading-rule', 'Loading rule...')}>
+          {t('alerting.rule-editor.loading-description', 'Fetching rule details and configuration...')}
+        </Alert>
       </PluginPage>
     );
   }
 
   if (error) {
     return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.clone-rule', 'Clone rule'),
-        }}
-      >
+      <PluginPage pageNav={pageNav}>
         <Alert severity="error" title={t('alerting.rule-editor.failed-to-load', 'Failed to load rule')}>
-          <Stack direction="column" gap={2}>
-            <div>{String(error)}</div>
-            <Stack direction="row" gap={1}>
-              <Button variant="secondary" size="sm" onClick={() => window.location.reload()} icon="sync">
-                {t('alerting.rule-editor.retry', 'Retry')}
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => window.history.back()} icon="arrow-left">
-                {t('alerting.rule-editor.go-back', 'Go back')}
-              </Button>
-            </Stack>
-          </Stack>
+          {JSON.stringify(error)}
         </Alert>
       </PluginPage>
     );
@@ -333,11 +207,7 @@ function CloneRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceR
 
   if (!rulerRule) {
     return (
-      <PluginPage
-        pageNav={{
-          text: t('alerting.rule-editor.clone-rule', 'Clone rule'),
-        }}
-      >
+      <PluginPage pageNav={pageNav}>
         <Alert severity="warning" title={t('alerting.rule-editor.rule-not-found', 'Rule not found')}>
           {t(
             'alerting.rule-editor.rule-not-found-clone-message',
@@ -349,44 +219,54 @@ function CloneRuleEditorWithIdentifier({ identifier }: { identifier: DataSourceR
   }
 
   return (
-    <PluginPage
-      pageNav={{
-        text: pageTitle,
-        parentItem: {
-          text: meta.groupName,
-          parentItem: {
-            text: meta.namespace,
-            parentItem: {
-              text: t('alerting.rule-editor.rules', 'Rules'),
-              url: '/a/grafana-prometheusalerting-app/rules',
-            },
-          },
-        },
-      }}
-    >
+    <PluginPage pageNav={pageNav}>
       <RuleForm ruleType={ruleType} prefill={prefill} />
     </PluginPage>
   );
 }
 
-/**
- * RuleEditor - Main router component that determines which editor to show
- */
-function RuleEditor() {
-  const { ruleIdentifier } = useParams<{ ruleIdentifier?: string }>();
-  const [searchParams] = useSearchParams();
-  const copyFromParam = searchParams.get('copyFrom');
-
-  // Determine mode and render appropriate component
-  if (copyFromParam) {
-    return <CloneRuleEditor copyFrom={copyFromParam} />;
-  }
-
-  if (ruleIdentifier) {
-    return <EditRuleEditor ruleIdentifier={ruleIdentifier} />;
-  }
-
-  return <NewRuleEditor />;
+function InvalidIdentifierPage({ title }: { title: string }) {
+  return (
+    <PluginPage pageNav={{ text: title }}>
+      <Alert severity="error" title={t('alerting.rule-editor.invalid-identifier', 'Invalid rule identifier')}>
+        {t('alerting.rule-editor.invalid-identifier-message', 'The rule identifier format is invalid.')}
+      </Alert>
+    </PluginPage>
+  );
 }
 
-export default RuleEditor;
+function UnsupportedRuleTypePage({ title, action }: { title: string; action: 'edited' | 'cloned' }) {
+  const message =
+    action === 'edited'
+      ? t(
+          'alerting.rule-editor.only-cloud-rules-editable',
+          'Editing rules is only available for data sources with Ruler API.'
+        )
+      : t(
+          'alerting.rule-editor.only-cloud-rules-cloneable',
+          'Cloning rules is only available for data sources with Ruler API.'
+        );
+
+  return (
+    <PluginPage pageNav={{ text: title }}>
+      <Alert severity="error" title={t('alerting.rule-editor.unsupported-rule-type', 'Unsupported rule type')}>
+        {message}
+      </Alert>
+    </PluginPage>
+  );
+}
+
+function buildRuleNavigation(identifier: CloudRuleIdentifier): Partial<NavModelItem> {
+  return {
+    parentItem: {
+      text: identifier.groupName,
+      parentItem: {
+        text: identifier.namespace,
+        parentItem: {
+          text: t('alerting.rule-editor.rules', 'Rules'),
+          url: '/a/grafana-prometheusalerting-app/rules',
+        },
+      },
+    },
+  };
+}
