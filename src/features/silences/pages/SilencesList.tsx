@@ -6,6 +6,7 @@ import { testIds } from '../../../components/testIds';
 import { InteractiveTable, EmptyState, LinkButton, Stack } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { useSilences } from '../hooks/useSilences';
+import { useSilencesFilters } from '../hooks/useSilencesFilters';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
@@ -14,14 +15,18 @@ import { ROUTES, DEFAULT_PAGE_SIZE } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
 import { SilenceDrawer } from '../components/SilenceDrawer';
+import { SilencesFilters } from '../components/SilencesFilters';
 
 function SilencesPage() {
   const { data: silences = [], isLoading, error } = useSilences();
+  const { filters, actions, applyFilters } = useSilencesFilters();
   const [selectedSilence, setSelectedSilence] = useState<GettableSilence | null>(null);
 
   const clickableCellStyles = css({
     cursor: 'pointer',
   });
+
+  const filteredSilences = applyFilters(silences);
 
   const columns = [
     {
@@ -70,11 +75,12 @@ function SilencesPage() {
     <AlertmanagerPage subTitle={t('pages.silences.subtitle', 'Stop notifications from one or more alerting rules')}>
       <div data-testid={testIds.silences.container}>
         <Stack direction="column" gap={2}>
-          <div>
+          <Stack direction="row" gap={2} alignItems="center">
             <LinkButton icon="plus" href={prefixRoute(ROUTES.CreateSilence)}>
               {t('silences.create-button', 'Create Silence')}
             </LinkButton>
-          </div>
+            <SilencesFilters filters={filters} actions={actions} />
+          </Stack>
 
           {isLoading && (
             <div>
@@ -85,17 +91,21 @@ function SilencesPage() {
           {error && (
             <DataSourceError error={error} title={t('silences.error-loading-title', 'Error loading silences')} />
           )}
-          {!isLoading && silences.length > 0 && !error && (
+          {!isLoading && filteredSilences.length > 0 && !error && (
             <InteractiveTable
               columns={columns}
-              data={silences}
+              data={filteredSilences}
               getRowId={(silence) => silence.id}
               pageSize={DEFAULT_PAGE_SIZE}
             />
           )}
-          {!isLoading && silences.length === 0 && !error && (
+          {!isLoading && filteredSilences.length === 0 && !error && (
             <EmptyState
-              message={t('silences.no-silences-message', 'No silences are currently configured in the Alertmanager.')}
+              message={
+                silences.length === 0
+                  ? t('silences.no-silences-message', 'No silences are currently configured in the Alertmanager.')
+                  : t('silences.no-active-silences-message', 'No active silences found.')
+              }
               variant={'call-to-action'}
             />
           )}
