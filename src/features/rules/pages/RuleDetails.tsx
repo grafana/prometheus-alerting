@@ -9,7 +9,7 @@ import { useRuleDetails } from '../hooks/useRuleDetails';
 import { RuleDetailsView } from '../components/RuleDetailsView';
 import { RuleActionsButtons } from '../list/components/RuleActionsButtons';
 import { useDeleteRuleModal } from '../list/components/DeleteRuleModal';
-import { rules as rulesNav } from '../../../utils/navigation';
+import { rules as rulesNav, groups as groupsNav } from '../../../utils/navigation';
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 
 function RuleDetails() {
@@ -43,6 +43,7 @@ function RuleDetails() {
       text: promRule.name,
       parentItem: {
         text: meta.groupName,
+        url: groupsNav.detailsPageLink(meta.dataSourceUid, meta.namespace, meta.groupName),
         parentItem: {
           text: meta.namespace,
           parentItem: {
@@ -52,7 +53,7 @@ function RuleDetails() {
         },
       },
     };
-  }, [promRule, meta.groupName, meta.namespace]);
+  }, [promRule, meta.groupName, meta.namespace, meta.dataSourceUid]);
 
   if (loading) {
     return (
