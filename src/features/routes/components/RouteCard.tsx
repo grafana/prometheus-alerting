@@ -14,7 +14,6 @@ import {
   normalizeMatchers,
   ObjectMatcher,
   stringifyObjectMatcher,
-  Route,
 } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { MetaText } from 'features/rules/list/components/MetaText';
@@ -26,7 +25,8 @@ interface Props {
   numberOfMatchingInstances: number;
   currentRoute: RouteWithID;
   isDefaultPolicy?: boolean;
-  onRouteClick?: (route: Route) => void;
+  onRouteClick?: (route: RouteWithID) => void;
+  focussedRouteID?: string;
 }
 
 const RouteCard = (props: Props) => {
@@ -35,6 +35,7 @@ const RouteCard = (props: Props) => {
     currentRoute,
     isDefaultPolicy = false,
     onRouteClick,
+    focussedRouteID
   } = props;
 
   const styles = useStyles2(getStyles);
@@ -68,10 +69,12 @@ const RouteCard = (props: Props) => {
   const moreCount = childPoliciesToRender.length - pageOfChildren.length;
   const showMore = moreCount > 0;
 
+  const hasFocus = Boolean(focussedRouteID) && String(currentRoute.id) === String(focussedRouteID);
+
   return (
     <Stack direction="column" gap={1.5}>
       <div
-        className={styles.policyWrapper(false, Boolean(onRouteClick))}
+        className={styles.policyWrapper(hasFocus)}
         data-testid={isDefaultPolicy ? 'am-root-route-container' : 'am-route-container'}
         onClick={() => onRouteClick?.(currentRoute)}
       >
@@ -140,6 +143,7 @@ const RouteCard = (props: Props) => {
                 currentRoute={child}
                 numberOfMatchingInstances={0}
                 onRouteClick={onRouteClick}
+                focussedRouteID={focussedRouteID}
               />
             ))}
             {showMore && (
@@ -429,23 +433,17 @@ const getStyles = (theme: GrafanaTheme2) => ({
   policyItemWrapper: css({
     padding: theme.spacing(1.5),
   }),
-  policyWrapper: (hasFocus = false, isClickable = false) =>
+  policyWrapper: (hasFocus = false) =>
     css({
       flex: 1,
       position: 'relative',
       background: theme.colors.background.secondary,
       borderRadius: theme.shape.radius.default,
       border: `solid 1px ${theme.colors.border.weak}`,
+      cursor: 'pointer',
       ...(hasFocus && {
         borderColor: theme.colors.primary.border,
         background: theme.colors.primary.transparent,
-      }),
-      ...(isClickable && {
-        cursor: 'pointer',
-        '&:hover': {
-          background: theme.colors.background.elevated,
-          borderColor: theme.colors.border.medium,
-        },
       }),
     }),
   metadata: css({
@@ -485,7 +483,7 @@ const RouteCardSkeleton: FC<{ count?: number }> = ({ count = 1 }) => {
   return (
     <Stack direction="column" gap={1.5}>
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className={styles.policyWrapper(false, false)}>
+        <div key={index} className={styles.policyWrapper(false)}>
           <div className={styles.policyItemWrapper}>
             <Stack direction="column" gap={1}>
               <Skeleton height={24} width="10%" />

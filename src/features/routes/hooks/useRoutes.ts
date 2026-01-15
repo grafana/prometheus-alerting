@@ -1,3 +1,4 @@
+import { Route } from '@grafana/external-alertmanager/vanilla';
 import { alertmanagerApi } from '../../../api/alertmanager/alertmanager.endpoints';
 import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
@@ -36,6 +37,6 @@ export function useRoutes() {
 
   return {
     ...queryResult,
-    route: queryResult.data?.alertmanager_config?.route,
+    route: queryResult.data?.alertmanager_config?.route as Route,
   };
 }

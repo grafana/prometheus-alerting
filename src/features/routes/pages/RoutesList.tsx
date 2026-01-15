@@ -10,13 +10,13 @@ import { computeInheritedTree } from '@grafana/alerting/unstable';
 import { RouteCard } from '../components/RouteCard';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { RouteDrawer } from '../components/RouteDrawer';
-import { Route } from '@grafana/external-alertmanager/vanilla';
 import { ReceiverDrawer } from '../../receivers/components/ReceiverDrawer';
 import { useReceivers } from '../../receivers/hooks/useReceivers';
+import { addUniqueIdentifier } from '../utils';
 
 function RoutesPage() {
   const { route, isLoading, error } = useRoutes();
-  const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<RouteWithID | null>(null);
   const [selectedReceiverName, setSelectedReceiverName] = useState<string | null>(null);
   const [triggerFetchReceivers, { receivers }] = useReceivers();
 
@@ -30,8 +30,8 @@ function RoutesPage() {
     if (!route) {
       return undefined;
     }
-    // @ts-expect-error - Type mismatch between Route and computeInheritedTree expected type, but they're compatible at runtime
-    return computeInheritedTree(route) as any as RouteWithID;
+
+    return addUniqueIdentifier(computeInheritedTree(route));
   }, [route]);
 
   // Find the selected receiver
@@ -67,6 +67,7 @@ function RoutesPage() {
               numberOfMatchingInstances={0}
               isDefaultPolicy={true}
               onRouteClick={setSelectedRoute}
+              focussedRouteID={selectedRoute?.id}
             />
           </div>
         )}
