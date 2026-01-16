@@ -12,8 +12,10 @@ import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.en
 import { useGetRulerRuleGroupQuery } from '../../../api/rules/mimir.endpoints';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
+import { groups } from '../../../utils/navigation';
 import { DataSourceGroupLoader } from '../list/DataSourceGroupLoader';
 import { GroupDetailsTitle } from '../components/GroupDetailsTitle';
+import { GroupDetailsActions } from '../components/GroupDetailsActions';
 
 type GroupPageRouteParams = {
   dataSourceUid?: string;
@@ -148,6 +150,8 @@ function GroupDetails() {
     );
   }
 
+  const editPageLink = groups.editPageLink(dataSourceUid, namespace, groupName);
+
   return (
     <PluginPage
       pageNav={pageNav}
@@ -157,6 +161,7 @@ function GroupDetails() {
         { label: t('alerting.group-details.namespace', 'Namespace'), value: namespace },
         { label: t('alerting.group-details.interval', 'Interval'), value: groupInterval },
       ]}
+      actions={<GroupDetailsActions editLink={editPageLink} canEdit={dsFeatures?.rulerApiEnabled ?? false} />}
     >
       <ul role="tree">
         <DataSourceGroupLoader

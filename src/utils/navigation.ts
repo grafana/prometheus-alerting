@@ -14,6 +14,15 @@ export const groups = {
       groupName
     )}`;
   },
+
+  /**
+   * Generate a link to edit a rule group
+   */
+  editPageLink(dataSourceUid: string, namespace: string, groupName: string): string {
+    return `${PLUGIN_BASE_URL}/groups/${dataSourceUid}/${encodeURIComponent(namespace)}/${encodeURIComponent(
+      groupName
+    )}/edit`;
+  },
 };
 
 export const rules = {

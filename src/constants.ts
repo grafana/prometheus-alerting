@@ -15,6 +15,7 @@ export enum ROUTES {
   RuleEdit = 'rules/:ruleIdentifier/edit',
   RuleNew = 'rules/new',
   GroupView = 'groups/:dataSourceUid/:namespace/:groupName',
+  GroupEdit = 'groups/:dataSourceUid/:namespace/:groupName/edit',
   Routes = 'routes',
   Receivers = 'receivers',
   Templates = 'templates',

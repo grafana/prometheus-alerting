@@ -12,6 +12,7 @@ const Rules = React.lazy(() => import('../../features/rules/pages/RulesList'));
 const RuleDetails = React.lazy(() => import('../../features/rules/pages/RuleDetails'));
 const RuleEditor = React.lazy(() => import('../../features/rules/pages/RuleEditor'));
 const GroupDetails = React.lazy(() => import('../../features/rules/pages/GroupDetails'));
+const GroupEditPage = React.lazy(() => import('../../features/rules/pages/GroupEditPage'));
 const RouteTree = React.lazy(() => import('../../features/routes/pages/RoutesList'));
 const Receivers = React.lazy(() => import('../../features/receivers/pages/ReceiversList'));
 const ReceiverDetail = React.lazy(() => import('../../features/receivers/pages/ReceiverDetail'));
@@ -39,6 +40,7 @@ function App(_props: AppRootProps) {
           <Route path={ROUTES.RuleEdit} element={<RuleEditor />} />
           <Route path={ROUTES.RuleNew} element={<RuleEditor />} />
           <Route path={ROUTES.GroupView} element={<GroupDetails />} />
+          <Route path={ROUTES.GroupEdit} element={<GroupEditPage />} />
           <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
           <Route path={ROUTES.Receivers} element={<Receivers />} />
           <Route path={ROUTES.Templates} element={<Templates />} />
