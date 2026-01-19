@@ -26,12 +26,22 @@ function RoutesPage() {
   }, [triggerFetchReceivers]);
 
   // Compute the inherited tree to show all properties including inherited ones
-  const routeTree = useMemo(() => {
+  const routeTree = useMemo((): RouteWithID | undefined => {
     if (!route) {
       return undefined;
     }
 
-    return addUniqueIdentifier(computeInheritedTree(route));
+    // Ensure route has required properties for computeInheritedTree
+    // Type assertion needed due to package type differences between
+    // @grafana/external-alertmanager and @grafana/alerting
+    const normalizedRoute = {
+      ...route,
+      continue: route.continue ?? false,
+    } as Parameters<typeof computeInheritedTree>[0];
+
+    // computeInheritedTree returns AlertingRouteWithID which needs to be
+    // cast to the external-alertmanager RouteWithID type for RouteCard
+    return addUniqueIdentifier(computeInheritedTree(normalizedRoute)) as unknown as RouteWithID;
   }, [route]);
 
   // Find the selected receiver

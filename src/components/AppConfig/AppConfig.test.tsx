@@ -1,13 +1,19 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { PluginType } from '@grafana/data';
+
 import AppConfig, { AppConfigProps } from './AppConfig';
+
+// Mock AlertmanagerPicker to avoid Combobox canvas issues
+jest.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
+  AlertmanagerPicker: () => <div data-testid="alertmanager-picker">Alertmanager Picker</div>,
+}));
 
 describe('Components/AppConfig', () => {
   let props: AppConfigProps;
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    jest.clearAllMocks();
 
     props = {
       plugin: {
@@ -23,13 +29,21 @@ describe('Components/AppConfig', () => {
     } as unknown as AppConfigProps;
   });
 
-  test('renders the "API Settings" fieldset with API key, API url inputs and button', () => {
+  test('renders the Alertmanager selection fieldset', () => {
     const plugin = { meta: { ...props.plugin.meta, enabled: false } };
 
     // @ts-ignore - We don't need to provide `addConfigPage()` and `setChannelSupport()` for these tests
     render(<AppConfig plugin={plugin} query={props.query} />);
 
-    expect(screen.queryByRole('group', { name: /api settings/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /save api settings/i })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: /alertmanager/i })).toBeInTheDocument();
+    expect(screen.getByTestId('alertmanager-picker')).toBeInTheDocument();
+  });
+
+  test('shows warning when no alertmanager is configured', () => {
+    // @ts-ignore
+    render(<AppConfig plugin={props.plugin} query={props.query} />);
+
+    // When no alertmanager is selected, should show the warning
+    expect(screen.getByText(/no alertmanager configured/i)).toBeInTheDocument();
   });
 });

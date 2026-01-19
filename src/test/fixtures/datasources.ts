@@ -2,7 +2,7 @@
  * Mock datasource configurations for tests.
  */
 
-import { DataSourceInstanceSettings } from '@grafana/data';
+import { DataSourceInstanceSettings, PluginType } from '@grafana/data';
 
 /**
  * A mock Prometheus datasource
@@ -14,7 +14,7 @@ export const mockPrometheusDs: Partial<DataSourceInstanceSettings> = {
   meta: {
     id: 'prometheus',
     name: 'Prometheus',
-    type: 'datasource',
+    type: PluginType.datasource,
     info: {
       author: { name: 'Grafana Labs' },
       description: 'Prometheus datasource',
@@ -40,7 +40,7 @@ export const mockMimirDs: Partial<DataSourceInstanceSettings> = {
   meta: {
     id: 'prometheus',
     name: 'Prometheus',
-    type: 'datasource',
+    type: PluginType.datasource,
     info: {
       author: { name: 'Grafana Labs' },
       description: 'Mimir datasource',
@@ -68,7 +68,7 @@ export const mockAlertmanagerDs: Partial<DataSourceInstanceSettings> = {
   meta: {
     id: 'alertmanager',
     name: 'Alertmanager',
-    type: 'datasource',
+    type: PluginType.datasource,
     info: {
       author: { name: 'Grafana Labs' },
       description: 'Alertmanager datasource',
