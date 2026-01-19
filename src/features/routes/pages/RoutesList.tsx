@@ -12,10 +12,13 @@ import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { RouteDrawer } from '../components/RouteDrawer';
 import { ReceiverDrawer } from '../../receivers/components/ReceiverDrawer';
 import { useReceivers } from '../../receivers/hooks/useReceivers';
+import { useAlertGroups } from '../hooks/useAlertGroups';
+import { useRouteMatching, getRouteMatchCount } from '../hooks/useRouteMatching';
 import { addUniqueIdentifier } from '../utils';
 
 function RoutesPage() {
   const { route, isLoading, error } = useRoutes();
+  const { alertGroups, isLoading: isLoadingAlerts } = useAlertGroups();
   const [selectedRoute, setSelectedRoute] = useState<RouteWithID | null>(null);
   const [selectedReceiverName, setSelectedReceiverName] = useState<string | null>(null);
   const [triggerFetchReceivers, { receivers }] = useReceivers();
@@ -43,6 +46,13 @@ function RoutesPage() {
     // cast to the external-alertmanager RouteWithID type for RouteCard
     return addUniqueIdentifier(computeInheritedTree(normalizedRoute)) as unknown as RouteWithID;
   }, [route]);
+
+  // Compute matching counts for each route in the tree
+  // Type assertion needed for the same package type differences
+  const matchingCounts = useRouteMatching(
+    routeTree as Parameters<typeof useRouteMatching>[0],
+    alertGroups
+  );
 
   // Find the selected receiver
   const selectedReceiver = useMemo(() => {
@@ -74,7 +84,8 @@ function RoutesPage() {
           <div>
             <RouteCard
               currentRoute={routeTree}
-              numberOfMatchingInstances={0}
+              numberOfMatchingInstances={isLoadingAlerts ? undefined : getRouteMatchCount(matchingCounts, routeTree.id)}
+              matchingCounts={isLoadingAlerts ? undefined : matchingCounts}
               isDefaultPolicy={true}
               onRouteClick={setSelectedRoute}
               focussedRouteID={selectedRoute?.id}

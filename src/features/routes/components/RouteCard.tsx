@@ -18,15 +18,17 @@ import {
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { MetaText } from 'features/rules/list/components/MetaText';
 import { AlertLabel } from '@grafana/alerting';
+import { RouteMatchingCounts, getRouteMatchCount } from '../hooks/useRouteMatching';
 
 const ROUTES_PER_PAGE = 20;
 
 interface Props {
-  numberOfMatchingInstances: number;
+  numberOfMatchingInstances?: number;
   currentRoute: RouteWithID;
   isDefaultPolicy?: boolean;
   onRouteClick?: (route: RouteWithID) => void;
   focussedRouteID?: string;
+  matchingCounts?: RouteMatchingCounts;
 }
 
 const RouteCard = (props: Props) => {
@@ -35,7 +37,8 @@ const RouteCard = (props: Props) => {
     currentRoute,
     isDefaultPolicy = false,
     onRouteClick,
-    focussedRouteID
+    focussedRouteID,
+    matchingCounts,
   } = props;
 
   const styles = useStyles2(getStyles);
@@ -141,7 +144,8 @@ const RouteCard = (props: Props) => {
               <RouteCard
                 key={child.id}
                 currentRoute={child}
-                numberOfMatchingInstances={0}
+                numberOfMatchingInstances={matchingCounts ? getRouteMatchCount(matchingCounts, child.id) : undefined}
+                matchingCounts={matchingCounts}
                 onRouteClick={onRouteClick}
                 focussedRouteID={focussedRouteID}
               />
