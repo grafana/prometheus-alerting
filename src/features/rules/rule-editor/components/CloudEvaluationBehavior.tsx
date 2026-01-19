@@ -4,6 +4,7 @@ import { Controller, useFormContext } from 'react-hook-form';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
+import { getDataSourceSrv } from '@grafana/runtime';
 import { Field, Input, Select, useStyles2 } from '@grafana/ui';
 
 import { RuleFormType, RuleFormValues } from '../types';
@@ -23,9 +24,10 @@ export const CloudEvaluationBehavior = () => {
   const type = watch('type');
   const dataSourceName = watch('dataSourceName');
 
-  // Get data source UID from name - we'll need a helper for this
-  // For now, just pass the name and let the component handle it
-  const dataSourceUid = dataSourceName;
+  // Get data source UID from the name
+  const dataSourceUid = dataSourceName
+    ? getDataSourceSrv().getInstanceSettings(dataSourceName)?.uid ?? null
+    : null;
 
   return (
     <RuleEditorSection
@@ -43,16 +45,18 @@ export const CloudEvaluationBehavior = () => {
           <Field invalid={!!errors.forTime?.message} error={errors.forTime?.message} className={styles.inlineField}>
             <Input
               {...register('forTime', {
-                pattern: {
-                  value: /^\d+$/,
+                valueAsNumber: true,
+                min: {
+                  value: 0,
                   message: t(
-                    'alerting.cloud-evaluation-behavior.message.must-be-a-positive-integer',
-                    'Must be a positive integer.'
+                    'alerting.cloud-evaluation-behavior.message.must-be-positive',
+                    'Must be a positive number.'
                   ),
                 },
               })}
               width={8}
               type="number"
+              min={0}
             />
           </Field>
           <Controller

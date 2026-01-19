@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { useLazyGetAllRulesQuery, RulerRulesConfigDTO } from '../../../../api/rules/mimir.endpoints';
 
@@ -10,7 +10,7 @@ export function useNamespacesAndGroups(dataSourceUid: string | null) {
   const [fetchRules, { data: rulerRules, isLoading }] = useLazyGetAllRulesQuery();
 
   // Fetch rules when data source changes
-  useMemo(() => {
+  useEffect(() => {
     if (dataSourceUid) {
       fetchRules({ dataSourceUid });
     }
