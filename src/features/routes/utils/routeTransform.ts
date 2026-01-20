@@ -1,6 +1,7 @@
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
-import { FormAmRoute, MatcherFieldValue, MatcherOperator, emptyRoute } from '../types';
+import { FormAmRoute, InsertPosition, MatcherFieldValue, MatcherOperator, emptyRoute } from '../types';
+import { isValidPrometheusDuration } from '../../../utils/time.utils';
 
 /**
  * Parse a matcher string like "severity=critical" or "team=~platform.*"
@@ -101,7 +102,7 @@ export function formAmRouteToAmRoute(formAmRoute: Partial<FormAmRoute>): Route {
     .map(({ name, operator, value }) => `${name}${operator}${value}`);
 
   const amRoute: Route = {
-    continue: formAmRoute.continue,
+    continue: formAmRoute.continue ?? false,
     group_by,
     matchers,
     group_wait,
@@ -157,14 +158,15 @@ export function mergeRouteIntoTree(
 
 /**
  * Validate a Prometheus duration string (e.g., "5m", "1h30m")
+ * Empty strings are valid (inherits from parent)
+ * 
+ * Re-exported from time.utils for convenience
  */
 export function isValidPromDuration(duration: string): boolean {
   if (!duration || duration.length === 0) {
     return true; // Empty is valid (inherits from parent)
   }
-  // Match patterns like "30s", "5m", "1h", "1h30m", "1d"
-  const regex = /^(\d+[smhdwy])+$/;
-  return regex.test(duration);
+  return isValidPrometheusDuration(duration);
 }
 
 /**
@@ -182,4 +184,101 @@ export function repeatIntervalValidator(repeatInterval: string, groupInterval = 
   // If both are set, repeat should be >= group interval
   // For simplicity, we just validate format here
   return true;
+}
+
+/**
+ * Add a new route to the tree relative to a reference route.
+ *
+ * @param routeTree - The current route tree
+ * @param referenceRouteId - The ID of the route to add relative to
+ * @param newRoute - The new route data from the form
+ * @param position - Where to insert: 'above', 'below', or 'child'
+ */
+export function addRouteToTree(
+  routeTree: Route,
+  referenceRouteId: string,
+  newRoute: Partial<FormAmRoute>,
+  position: InsertPosition
+): Route {
+  const routeToAdd = formAmRouteToAmRoute(newRoute);
+
+  function findAndInsert(route: Route, parentIndex = '0'): { route: Route; found: boolean } {
+    const currentId = 'id' in route ? (route as RouteWithID).id : parentIndex;
+
+    // Check if current route is the reference route
+    if (currentId === referenceRouteId) {
+      if (position === 'child') {
+        // Add as a child of the reference route
+        return {
+          route: {
+            ...route,
+            routes: [...(route.routes ?? []), routeToAdd],
+          },
+          found: true,
+        };
+      }
+      // For 'above' and 'below', we need to handle at parent level
+      return { route, found: true };
+    }
+
+    // Recurse into child routes
+    if (route.routes) {
+      const newRoutes: Route[] = [];
+      let found = false;
+
+      for (let i = 0; i < route.routes.length; i++) {
+        const child = route.routes[i];
+        const childId = 'id' in child ? (child as RouteWithID).id : `${parentIndex}-${i}`;
+
+        if (childId === referenceRouteId && position !== 'child') {
+          // Insert above or below this child
+          if (position === 'above') {
+            newRoutes.push(routeToAdd);
+            newRoutes.push(child);
+          } else {
+            // position === 'below'
+            newRoutes.push(child);
+            newRoutes.push(routeToAdd);
+          }
+          found = true;
+        } else {
+          // Recurse into this child
+          const result = findAndInsert(child, `${parentIndex}-${i}`);
+          newRoutes.push(result.route);
+          if (result.found) {
+            found = true;
+          }
+        }
+      }
+
+      return {
+        route: { ...route, routes: newRoutes },
+        found,
+      };
+    }
+
+    return { route, found: false };
+  }
+
+  const result = findAndInsert(routeTree);
+
+  if (!result.found) {
+    throw new Error(`Could not find reference route "${referenceRouteId}" in tree`);
+  }
+
+  return result.route;
+}
+
+/**
+ * Strip IDs from a route tree before saving to Alertmanager.
+ * Alertmanager doesn't understand IDs, so we need to remove them.
+ */
+export function stripRouteIds(route: Route | RouteWithID): Route {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id, ...routeWithoutId } = route as RouteWithID;
+
+  return {
+    ...routeWithoutId,
+    routes: routeWithoutId.routes?.map(stripRouteIds),
+  };
 }

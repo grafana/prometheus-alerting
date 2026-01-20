@@ -89,3 +89,54 @@ export function stringifyFetchError(error: ErrorLike): string {
   // Return fallback
   return 'Unknown error occurred';
 }
+
+/**
+ * Extract a human-readable error message from any error type.
+ * More generic than stringifyFetchError - handles Error objects, strings, and unknown types.
+ * 
+ * Use this when you don't know the error type (e.g., in catch blocks with unknown errors).
+ * Use stringifyFetchError when you specifically have an RTK Query error.
+ */
+export function extractErrorMessage(err: unknown): string {
+  if (err instanceof Error) {
+    return err.message;
+  }
+
+  if (typeof err === 'string') {
+    return err;
+  }
+
+  if (typeof err === 'object' && err !== null) {
+    // RTK Query error format: { data: { message: "..." } } or { data: "..." }
+    const errorObj = err as Record<string, unknown>;
+
+    if (errorObj.data) {
+      if (typeof errorObj.data === 'string') {
+        return errorObj.data;
+      }
+      if (typeof errorObj.data === 'object' && errorObj.data !== null) {
+        const dataObj = errorObj.data as Record<string, unknown>;
+        if (typeof dataObj.message === 'string') {
+          return dataObj.message;
+        }
+        if (typeof dataObj.error === 'string') {
+          return dataObj.error;
+        }
+      }
+    }
+
+    // Direct message property
+    if (typeof errorObj.message === 'string') {
+      return errorObj.message;
+    }
+
+    // Try JSON stringifying as last resort
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return 'An unknown error occurred';
+    }
+  }
+
+  return 'An unknown error occurred';
+}

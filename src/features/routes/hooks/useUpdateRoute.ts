@@ -7,57 +7,10 @@ import { getAppEvents } from '@grafana/runtime';
 
 import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
+import { extractErrorMessage } from '../../../utils/errors';
 import { FormAmRoute } from '../types';
 import { mergeRouteIntoTree } from '../utils/routeTransform';
 import { useRoutes } from './useRoutes';
-
-/**
- * Extract a human-readable error message from various error formats.
- * RTK Query errors can be objects with nested data/message properties.
- */
-function extractErrorMessage(err: unknown): string {
-  if (err instanceof Error) {
-    return err.message;
-  }
-  
-  if (typeof err === 'string') {
-    return err;
-  }
-  
-  if (typeof err === 'object' && err !== null) {
-    // RTK Query error format: { data: { message: "..." } } or { data: "..." }
-    const errorObj = err as Record<string, unknown>;
-    
-    if (errorObj.data) {
-      if (typeof errorObj.data === 'string') {
-        return errorObj.data;
-      }
-      if (typeof errorObj.data === 'object' && errorObj.data !== null) {
-        const dataObj = errorObj.data as Record<string, unknown>;
-        if (typeof dataObj.message === 'string') {
-          return dataObj.message;
-        }
-        if (typeof dataObj.error === 'string') {
-          return dataObj.error;
-        }
-      }
-    }
-    
-    // Direct message property
-    if (typeof errorObj.message === 'string') {
-      return errorObj.message;
-    }
-    
-    // Try JSON stringifying as last resort
-    try {
-      return JSON.stringify(err);
-    } catch {
-      return 'An unknown error occurred';
-    }
-  }
-  
-  return 'An unknown error occurred';
-}
 
 interface UseUpdateRouteResult {
   /** Updates a route. Returns true on success, false on failure. */
@@ -67,7 +20,7 @@ interface UseUpdateRouteResult {
 }
 
 /**
- * Hook for updating a notification policy route.
+ * Hook for updating an existing route in the routing tree.
  * 
  * This hook:
  * 1. Fetches the current Alertmanager configuration
@@ -127,7 +80,7 @@ export function useUpdateRoute(): UseUpdateRouteResult {
         // Show success notification
         getAppEvents().publish({
           type: AppEvents.alertSuccess.name,
-          payload: [t('routes.update.success', 'Successfully updated notification policy')],
+          payload: [t('routes.update.success', 'Successfully updated route')],
         });
 
         return true;
@@ -139,7 +92,7 @@ export function useUpdateRoute(): UseUpdateRouteResult {
         
         getAppEvents().publish({
           type: AppEvents.alertError.name,
-          payload: [t('routes.update.error', 'Failed to update notification policy'), errorMessage],
+          payload: [t('routes.update.error', 'Failed to update route'), errorMessage],
         });
         
         return false;

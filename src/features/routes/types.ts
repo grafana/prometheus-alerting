@@ -58,6 +58,11 @@ export const commonGroupByOptions = [
 ];
 
 /**
+ * Position where a new route should be inserted relative to a reference route
+ */
+export type InsertPosition = 'above' | 'below' | 'child';
+
+/**
  * Default empty route form values
  */
 export const emptyRoute: FormAmRoute = {

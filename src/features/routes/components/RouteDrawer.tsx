@@ -11,16 +11,18 @@ import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
 import { PolicyEditForm } from './PolicyEditForm';
 import { useUpdateRoute } from '../hooks/useUpdateRoute';
-import { FormAmRoute } from '../types';
+import { useAddRoute } from '../hooks/useAddRoute';
+import { emptyRoute, FormAmRoute, InsertPosition } from '../types';
 
 enum ActiveTab {
   Configuration = 'configuration',
   Instances = 'instances',
 }
 
-enum DrawerMode {
+export enum DrawerMode {
   View = 'view',
   Edit = 'edit',
+  Add = 'add',
 }
 
 interface RouteDetailsProps {
@@ -102,22 +104,43 @@ function RouteDetails({ route, onReceiverClick }: RouteDetailsProps) {
 }
 
 interface RouteDrawerProps {
+  /** The route to view/edit (null for add mode) */
   route: RouteWithID | null;
   onClose: () => void;
   onReceiverClick?: (receiverName: string) => void;
   canEdit?: boolean;
+  mode?: DrawerMode;
+  referenceRouteId?: string;
+  insertPosition?: InsertPosition;
 }
 
-export function RouteDrawer({ route, onClose, onReceiverClick, canEdit = false }: RouteDrawerProps) {
+export function RouteDrawer({
+  route,
+  onClose,
+  onReceiverClick,
+  canEdit = false,
+  mode: initialMode = DrawerMode.View,
+  referenceRouteId,
+  insertPosition = 'child',
+}: RouteDrawerProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.Configuration);
-  const [mode, setMode] = useState<DrawerMode>(DrawerMode.View);
+  const [mode, setMode] = useState<DrawerMode>(initialMode);
   const { updateRoute, isUpdating } = useUpdateRoute();
+  const { addRoute, isAdding } = useAddRoute();
 
-  if (!route) {
+  const isAddMode = mode === DrawerMode.Add;
+  const isEditMode = mode === DrawerMode.Edit;
+  const isViewMode = mode === DrawerMode.View;
+
+  // For add mode, we don't need a route
+  if (!route && !isAddMode) {
     return null;
   }
 
-  const getRouteTitle = (route: Route) => {
+  const getRouteTitle = (route: Route | null) => {
+    if (!route) {
+      return t('routes.new-route', 'New route');
+    }
     if (route.matchers && route.matchers.length > 0) {
       return route.matchers.join(', ');
     }
@@ -127,24 +150,44 @@ export function RouteDrawer({ route, onClose, onReceiverClick, canEdit = false }
     return t('routes.route-label', 'Route');
   };
 
+  const getDrawerSubtitle = () => {
+    if (isAddMode) {
+      return <Trans i18nKey="routes.drawer.adding">New Route</Trans>;
+    }
+    if (isEditMode) {
+      return <Trans i18nKey="routes.drawer.editing">Editing Route</Trans>;
+    }
+    return <Trans i18nKey="routes.detail.title">Route</Trans>;
+  };
+
   const handleEdit = () => {
     setMode(DrawerMode.Edit);
   };
 
   const handleCancelEdit = () => {
-    setMode(DrawerMode.View);
+    if (isAddMode) {
+      // In add mode, cancel closes the drawer
+      onClose();
+    } else {
+      setMode(DrawerMode.View);
+    }
   };
 
   const handleSave = async (values: Partial<FormAmRoute>) => {
-    const success = await updateRoute(route.id, values);
-    if (success) {
-      setMode(DrawerMode.View);
+    if (isAddMode && referenceRouteId) {
+      const success = await addRoute(referenceRouteId, values, insertPosition);
+      if (success) {
+        onClose();
+      }
+    } else if (route) {
+      const success = await updateRoute(route.id, values);
+      if (success) {
+        setMode(DrawerMode.View);
+      }
     }
-    // On failure, user stays in edit mode to fix and retry
-    // Error notification is shown by the hook
   };
 
-  const drawerTabs = mode === DrawerMode.View ? (
+  const drawerTabs = isViewMode ? (
     <TabsBar>
       <Tab
         label={t('routes.drawer.tabs.configuration', 'Configuration')}
@@ -159,32 +202,31 @@ export function RouteDrawer({ route, onClose, onReceiverClick, canEdit = false }
     </TabsBar>
   ) : undefined;
 
-  const drawerFooter = mode === DrawerMode.View && canEdit ? (
+  const drawerFooter = isViewMode && canEdit ? (
     <Button variant="secondary" icon="pen" onClick={handleEdit}>
       <Trans i18nKey="routes.drawer.edit">Edit</Trans>
     </Button>
   ) : undefined;
+
+  // For add mode, use a blank route as template
+  const routeForForm = isAddMode ? ({ ...emptyRoute, id: '' } as RouteWithID) : route!;
 
   return (
     <DrawerWithFooter
       title={
         <Stack direction="column" gap={0}>
           <Text variant="bodySmall" color="secondary">
-            {mode === DrawerMode.Edit ? (
-              <Trans i18nKey="routes.drawer.editing">Editing Route</Trans>
-            ) : (
-              <Trans i18nKey="routes.detail.title">Route</Trans>
-            )}
+            {getDrawerSubtitle()}
           </Text>
           <Text variant="h2">{getRouteTitle(route)}</Text>
         </Stack>
       }
       onClose={onClose}
-      size={mode === DrawerMode.Edit ? 'md' : 'sm'}
+      size={isViewMode ? 'sm' : 'md'}
       tabs={drawerTabs}
       footer={drawerFooter}
     >
-      {mode === DrawerMode.View ? (
+      {isViewMode && route ? (
         <TabContent>
           {activeTab === ActiveTab.Configuration && <RouteDetails route={route} onReceiverClick={onReceiverClick} />}
           {activeTab === ActiveTab.Instances && (
@@ -194,10 +236,10 @@ export function RouteDrawer({ route, onClose, onReceiverClick, canEdit = false }
         </TabContent>
       ) : (
         <PolicyEditForm
-          route={route}
+          route={routeForForm}
           onSubmit={handleSave}
           onCancel={handleCancelEdit}
-          isSubmitting={isUpdating}
+          isSubmitting={isUpdating || isAdding}
         />
       )}
     </DrawerWithFooter>

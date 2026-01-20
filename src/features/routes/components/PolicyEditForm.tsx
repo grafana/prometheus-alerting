@@ -82,7 +82,7 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
               icon="exclamation-triangle"
               text={t(
                 'routes.edit.no-matchers-warning',
-                'If no matchers are specified, this policy will handle all alert instances.'
+                'If no matchers are specified, this route will handle all alert instances.'
               )}
             />
           )}

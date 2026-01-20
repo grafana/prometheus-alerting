@@ -7,7 +7,7 @@ import Skeleton from 'react-loading-skeleton';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
-import { Button, Icon, IconButton, Stack, Text, Tooltip, getTagColorsFromName, useStyles2 } from '@grafana/ui';
+import { Button, Dropdown, Icon, IconButton, Menu, Stack, Text, Tooltip, getTagColorsFromName, useStyles2 } from '@grafana/ui';
 import { attachSkeleton } from '@grafana/ui/unstable';
 
 import {
@@ -19,6 +19,7 @@ import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { MetaText } from 'features/rules/list/components/MetaText';
 import { AlertLabel } from '@grafana/alerting';
 import { RouteMatchingCounts, getRouteMatchCount } from '../hooks/useRouteMatching';
+import { InsertPosition } from '../types';
 
 const ROUTES_PER_PAGE = 20;
 
@@ -29,6 +30,8 @@ interface Props {
   onRouteClick?: (route: RouteWithID) => void;
   focussedRouteID?: string;
   matchingCounts?: RouteMatchingCounts;
+  onAddPolicy?: (referenceRoute: RouteWithID, position: InsertPosition) => void;
+  readOnly?: boolean;
 }
 
 const RouteCard = (props: Props) => {
@@ -39,6 +42,8 @@ const RouteCard = (props: Props) => {
     onRouteClick,
     focussedRouteID,
     matchingCounts,
+    onAddPolicy,
+    readOnly = false,
   } = props;
 
   const styles = useStyles2(getStyles);
@@ -89,34 +94,82 @@ const RouteCard = (props: Props) => {
           <Stack direction="column" gap={1}>
             {/* Matchers and actions */}
             <div>
-              <Stack direction="row" alignItems="center" gap={1}>
-                {hasChildPolicies ? (
-                  <IconButton
-                    name={showPolicyChildren ? 'angle-down' : 'angle-right'}
-                    onClick={togglePolicyChildren}
-                    aria-label={
-                      showPolicyChildren
-                        ? t('alerting.policies.aria-label-collapse', 'Collapse')
-                        : t('alerting.policies.aria-label-expand', 'Expand')
-                    }
-                  />
-                ) : null}
-                {isDefaultPolicy && <DefaultPolicyIndicator />}
-                {!isDefaultPolicy && (
-                  <>
-                    {hasMatchers ? (
-                      <>
-                        {/* @TODO we should use the "key" as the "colorBy" here but we can't because we stringify the entire matcher :( */}
-                        {matchers.map((matcher, index) => (
-                          <AlertLabel key={index} value={stringifyObjectMatcher(matcher)} colorBy="value" size="sm" />
-                        ))}
-                      </>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+                <Stack direction="row" alignItems="center" gap={1}>
+                  {hasChildPolicies ? (
+                    <IconButton
+                      name={showPolicyChildren ? 'angle-down' : 'angle-right'}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePolicyChildren();
+                      }}
+                      aria-label={
+                        showPolicyChildren
+                          ? t('alerting.policies.aria-label-collapse', 'Collapse')
+                          : t('alerting.policies.aria-label-expand', 'Expand')
+                      }
+                    />
+                  ) : null}
+                  {isDefaultPolicy && <DefaultPolicyIndicator />}
+                  {!isDefaultPolicy && (
+                    <>
+                      {hasMatchers ? (
+                        <>
+                          {/* @TODO we should use the "key" as the "colorBy" here but we can't because we stringify the entire matcher :( */}
+                          {matchers.map((matcher, index) => (
+                            <AlertLabel key={index} value={stringifyObjectMatcher(matcher)} colorBy="value" size="sm" />
+                          ))}
+                        </>
+                      ) : (
+                        <span className={styles.metadata}>
+                          <Trans i18nKey="alerting.policies.no-matchers">No matchers</Trans>
+                        </span>
+                      )}
+                    </>
+                  )}
+                </Stack>
+
+                {/* Add policy actions */}
+                {!readOnly && onAddPolicy && (
+                  <div onClick={(e) => e.stopPropagation()}>
+                    {isDefaultPolicy ? (
+                      <Button
+                        size="sm"
+                        icon="plus"
+                        variant="secondary"
+                        onClick={() => onAddPolicy(currentRoute, 'child')}
+                      >
+                        <Trans i18nKey="alerting.policies.new-child">New child route</Trans>
+                      </Button>
                     ) : (
-                      <span className={styles.metadata}>
-                        <Trans i18nKey="alerting.policies.no-matchers">No matchers</Trans>
-                      </span>
+                      <Dropdown
+                        overlay={
+                          <Menu>
+                            <Menu.Item
+                              label={t('alerting.policy.label-new-sibling-above', 'New sibling above')}
+                              icon="arrow-up"
+                              onClick={() => onAddPolicy(currentRoute, 'above')}
+                            />
+                            <Menu.Item
+                              label={t('alerting.policy.label-new-sibling-below', 'New sibling below')}
+                              icon="arrow-down"
+                              onClick={() => onAddPolicy(currentRoute, 'below')}
+                            />
+                            <Menu.Divider />
+                            <Menu.Item
+                              label={t('alerting.policy.label-new-child-route', 'New child route')}
+                              icon="plus"
+                              onClick={() => onAddPolicy(currentRoute, 'child')}
+                            />
+                          </Menu>
+                        }
+                      >
+                        <Button size="sm" icon="plus" variant="secondary">
+                          <Trans i18nKey="alerting.policies.add-route">Add</Trans>
+                        </Button>
+                      </Dropdown>
                     )}
-                  </>
+                  </div>
                 )}
               </Stack>
             </div>
@@ -148,6 +201,8 @@ const RouteCard = (props: Props) => {
                 matchingCounts={matchingCounts}
                 onRouteClick={onRouteClick}
                 focussedRouteID={focussedRouteID}
+                onAddPolicy={onAddPolicy}
+                readOnly={readOnly}
               />
             ))}
             {showMore && (
@@ -158,8 +213,8 @@ const RouteCard = (props: Props) => {
                 className={styles.moreButtons}
                 onClick={() => setVisibleChildPolicies(visibleChildPolicies + ROUTES_PER_PAGE)}
               >
-                <Trans i18nKey="alerting.policies.n-more-policies" count={moreCount}>
-                  {{ count: moreCount }} additional policies
+                <Trans i18nKey="alerting.routes.n-more-routes" count={moreCount}>
+                  {{ count: moreCount }} additional routes
                 </Trans>
               </Button>
             )}
@@ -269,8 +324,8 @@ const ContinueMatchingIndicator: FC = () => {
     <Tooltip
       placement="top"
       content={t(
-        'alerting.continue-matching-indicator.content-route-continue-matching-other-policies',
-        'This route will continue matching other policies'
+        'alerting.continue-matching-indicator.content-route-continue-matching-other-routes',
+        'This route will continue matching other routes'
       )}
     >
       <div className={styles.gutterIcon} data-testid="continue-matching">
@@ -287,8 +342,8 @@ const AllMatchesIndicator: FC = () => {
     <Tooltip
       placement="top"
       content={t(
-        'alerting.all-matches-indicator.content-this-policy-matches-all-labels',
-        'This policy matches all labels'
+        'alerting.all-matches-indicator.content-this-route-matches-all-labels',
+        'This route matches all labels'
       )}
     >
       <div className={styles.gutterIcon} data-testid="matches-all">
@@ -303,11 +358,11 @@ export function DefaultPolicyIndicator() {
   return (
     <>
       <Text element="h2" variant="body" weight="medium">
-        <Trans i18nKey="alerting.policies.default-policy.title">Default policy</Trans>
+        <Trans i18nKey="alerting.policies.default-route.title">Default route</Trans>
       </Text>
       <span className={styles.metadata}>
-        <Trans i18nKey="alerting.policies.default-policy.description">
-          All alert instances will be handled by the default policy if no other matching policies are found.
+        <Trans i18nKey="alerting.policies.default-route.description">
+          All alert instances will be handled by the default route if no other matching routes are found.
         </Trans>
       </span>
     </>
