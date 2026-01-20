@@ -43,7 +43,7 @@ const RouteCard = (props: Props) => {
 
   const styles = useStyles2(getStyles);
 
-  const contactPoint = currentRoute.receiver;
+  const receiver = currentRoute.receiver;
   const continueMatching = currentRoute.continue ?? false;
 
   const matchers = normalizeMatchers(currentRoute);
@@ -124,7 +124,7 @@ const RouteCard = (props: Props) => {
             {/* Metadata row */}
             <MetadataRow
               numberOfAlertInstances={mumberOfMatchingInstances}
-              contactPoint={contactPoint ?? undefined}
+              receiver={receiver ?? undefined}
               groupBy={groupBy}
               muteTimings={muteTimings}
               activeTimings={activeTimings}
@@ -172,7 +172,7 @@ const RouteCard = (props: Props) => {
 
 interface MetadataRowProps {
   numberOfAlertInstances?: number;
-  contactPoint?: string;
+  receiver?: string;
   groupBy?: string[];
   muteTimings?: string[];
   activeTimings?: string[];
@@ -192,7 +192,7 @@ function MetadataRow({
   groupBy,
   muteTimings = [],
   activeTimings = [],
-  contactPoint,
+  receiver,
 }: MetadataRowProps) {
   const noGrouping = isArray(groupBy) && groupBy[0] === '...';
   const customGrouping = !noGrouping && isArray(groupBy) && groupBy.length > 0;
@@ -211,12 +211,12 @@ function MetadataRow({
           </Trans>
         </span>
       </MetaText>
-      {contactPoint && (
-        <MetaText icon="at" data-testid="contact-point">
+      {receiver && (
+        <MetaText icon="at" data-testid="receiver">
           <span>
             <Trans i18nKey="alerting.policies.metadata.delivered-to">Delivered to</Trans>{' '}
           </span>
-          <Text color="primary">{contactPoint}</Text>
+          <Text color="primary">{receiver}</Text>
         </MetaText>
       )}
       {customGrouping && (

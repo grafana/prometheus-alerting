@@ -2,16 +2,25 @@ import { css } from '@emotion/css';
 import React, { useState } from 'react';
 import { GrafanaTheme2 } from '@grafana/data';
 import { t, Trans } from '@grafana/i18n';
-import { Alert, Stack, useStyles2, Text, Tab, TabsBar, TabContent, TextLink } from '@grafana/ui';
+import { Alert, Button, Stack, useStyles2, Text, Tab, TabsBar, TabContent, TextLink } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { Route } from '@grafana/external-alertmanager/vanilla';
+import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
+import { PolicyEditForm } from './PolicyEditForm';
+import { useUpdateRoute } from '../hooks/useUpdateRoute';
+import { FormAmRoute } from '../types';
 
 enum ActiveTab {
   Configuration = 'configuration',
   Instances = 'instances',
+}
+
+enum DrawerMode {
+  View = 'view',
+  Edit = 'edit',
 }
 
 interface RouteDetailsProps {
@@ -93,13 +102,16 @@ function RouteDetails({ route, onReceiverClick }: RouteDetailsProps) {
 }
 
 interface RouteDrawerProps {
-  route: Route | null;
+  route: RouteWithID | null;
   onClose: () => void;
   onReceiverClick?: (receiverName: string) => void;
+  canEdit?: boolean;
 }
 
-export function RouteDrawer({ route, onClose, onReceiverClick }: RouteDrawerProps) {
+export function RouteDrawer({ route, onClose, onReceiverClick, canEdit = false }: RouteDrawerProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.Configuration);
+  const [mode, setMode] = useState<DrawerMode>(DrawerMode.View);
+  const { updateRoute, isUpdating } = useUpdateRoute();
 
   if (!route) {
     return null;
@@ -115,7 +127,24 @@ export function RouteDrawer({ route, onClose, onReceiverClick }: RouteDrawerProp
     return t('routes.route-label', 'Route');
   };
 
-  const drawerTabs = (
+  const handleEdit = () => {
+    setMode(DrawerMode.Edit);
+  };
+
+  const handleCancelEdit = () => {
+    setMode(DrawerMode.View);
+  };
+
+  const handleSave = async (values: Partial<FormAmRoute>) => {
+    const success = await updateRoute(route.id, values);
+    if (success) {
+      setMode(DrawerMode.View);
+    }
+    // On failure, user stays in edit mode to fix and retry
+    // Error notification is shown by the hook
+  };
+
+  const drawerTabs = mode === DrawerMode.View ? (
     <TabsBar>
       <Tab
         label={t('routes.drawer.tabs.configuration', 'Configuration')}
@@ -128,29 +157,49 @@ export function RouteDrawer({ route, onClose, onReceiverClick }: RouteDrawerProp
         onChangeTab={() => setActiveTab(ActiveTab.Instances)}
       />
     </TabsBar>
-  );
+  ) : undefined;
+
+  const drawerFooter = mode === DrawerMode.View && canEdit ? (
+    <Button variant="secondary" icon="pen" onClick={handleEdit}>
+      <Trans i18nKey="routes.drawer.edit">Edit</Trans>
+    </Button>
+  ) : undefined;
 
   return (
     <DrawerWithFooter
       title={
         <Stack direction="column" gap={0}>
           <Text variant="bodySmall" color="secondary">
-            <Trans i18nKey="routes.detail.title">Route</Trans>
+            {mode === DrawerMode.Edit ? (
+              <Trans i18nKey="routes.drawer.editing">Editing Route</Trans>
+            ) : (
+              <Trans i18nKey="routes.detail.title">Route</Trans>
+            )}
           </Text>
           <Text variant="h2">{getRouteTitle(route)}</Text>
         </Stack>
       }
       onClose={onClose}
-      width={400}
+      size={mode === DrawerMode.Edit ? 'md' : 'sm'}
       tabs={drawerTabs}
+      footer={drawerFooter}
     >
-      <TabContent>
-        {activeTab === ActiveTab.Configuration && <RouteDetails route={route} onReceiverClick={onReceiverClick} />}
-        {activeTab === ActiveTab.Instances && (
-          // eslint-disable-next-line @grafana/i18n/no-untranslated-strings
-          <>Instances</>
-        )}
-      </TabContent>
+      {mode === DrawerMode.View ? (
+        <TabContent>
+          {activeTab === ActiveTab.Configuration && <RouteDetails route={route} onReceiverClick={onReceiverClick} />}
+          {activeTab === ActiveTab.Instances && (
+            // eslint-disable-next-line @grafana/i18n/no-untranslated-strings
+            <>Instances</>
+          )}
+        </TabContent>
+      ) : (
+        <PolicyEditForm
+          route={route}
+          onSubmit={handleSave}
+          onCancel={handleCancelEdit}
+          isSubmitting={isUpdating}
+        />
+      )}
     </DrawerWithFooter>
   );
 }

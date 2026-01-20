@@ -14,14 +14,20 @@ import { ReceiverDrawer } from '../../receivers/components/ReceiverDrawer';
 import { useReceivers } from '../../receivers/hooks/useReceivers';
 import { useAlertGroups } from '../hooks/useAlertGroups';
 import { useRouteMatching, getRouteMatchCount } from '../hooks/useRouteMatching';
+import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { addUniqueIdentifier } from '../utils';
 
 function RoutesPage() {
   const { route, isLoading, error } = useRoutes();
   const { alertGroups, isLoading: isLoadingAlerts } = useAlertGroups();
+  const { settings } = useAlertmanager();
   const [selectedRoute, setSelectedRoute] = useState<RouteWithID | null>(null);
   const [selectedReceiverName, setSelectedReceiverName] = useState<string | null>(null);
   const [triggerFetchReceivers, { receivers }] = useReceivers();
+
+  // Check if the Alertmanager supports editing (Mimir implementation)
+  const isMimir = settings?.jsonData?.implementation === 'mimir';
+  const canEdit = isMimir;
 
   // Fetch receivers when component mounts
   useEffect(() => {
@@ -76,7 +82,7 @@ function RoutesPage() {
   };
 
   return (
-    <AlertmanagerPage subTitle={t('routes.page-subtitle', 'Determine how alerts are routed to contact points')}>
+    <AlertmanagerPage subTitle={t('routes.page-subtitle', 'Determine how alerts are routed to receivers')}>
       <div data-testid={testIds.routes.container}>
         {isLoading && <RouteCard.Skeleton count={3} />}
         {error && <DataSourceError error={error} title={t('routes.error-loading-title', 'Error loading routes')} />}
@@ -100,7 +106,12 @@ function RoutesPage() {
         )}
       </div>
       {selectedRoute && (
-        <RouteDrawer route={selectedRoute} onClose={handleRouteDrawerClose} onReceiverClick={handleReceiverClick} />
+        <RouteDrawer
+          route={selectedRoute}
+          onClose={handleRouteDrawerClose}
+          onReceiverClick={handleReceiverClick}
+          canEdit={canEdit}
+        />
       )}
       {selectedReceiverName && (
         <ReceiverDrawer receiver={selectedReceiver} onClose={handleReceiverDrawerClose} showBackButton={true} />
