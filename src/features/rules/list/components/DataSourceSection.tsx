@@ -3,6 +3,7 @@ import React, { PropsWithChildren, ReactNode, useState } from 'react';
 import { css } from '@emotion/css';
 
 import { GrafanaTheme2 } from '@grafana/data';
+import { t, Trans } from '@grafana/i18n';
 import { Button, IconButton, LinkButton, Stack, Text, Toggletip, useStyles2 } from '@grafana/ui';
 
 import { RulesSourceApplication } from '../../../../types/rules';
@@ -45,7 +46,7 @@ export const DataSourceSection = ({
                 <IconButton
                   name={isCollapsed ? 'angle-right' : 'angle-down'}
                   onClick={() => setIsCollapsed(!isCollapsed)}
-                  aria-label="Collapse"
+                  aria-label={t('rules.datasource-section.collapse', 'Collapse')}
                   disabled={Boolean(error)}
                 />
                 {application && <DataSourceIcon application={application} />}
@@ -63,18 +64,18 @@ export const DataSourceSection = ({
 
                 {Boolean(error) && (
                   <Toggletip
-                    title="Cannot load rules for this datasource"
+                    title={t('rules.datasource-section.error-title', 'Cannot load rules for this datasource')}
                     content={<Text color="error">{String(error)}</Text>}
                   >
                     <Button variant="destructive" fill="text" size="sm" icon="exclamation-circle">
-                      Error
+                      <Trans i18nKey="rules.datasource-section.error">Error</Trans>
                     </Button>
                   </Toggletip>
                 )}
 
                 {configureLink && (
                   <LinkButton variant="secondary" fill="text" size="sm" href={configureLink}>
-                    Configure
+                    <Trans i18nKey="rules.datasource-section.configure">Configure</Trans>
                   </LinkButton>
                 )}
               </Stack>

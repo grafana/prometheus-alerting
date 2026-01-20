@@ -15,11 +15,7 @@ import { useRoutes } from './useRoutes';
 
 interface UseAddRouteResult {
   /** Adds a new route. Returns true on success, false on failure. */
-  addRoute: (
-    referenceRouteId: string,
-    newRoute: Partial<FormAmRoute>,
-    position: InsertPosition
-  ) => Promise<boolean>;
+  addRoute: (referenceRouteId: string, newRoute: Partial<FormAmRoute>, position: InsertPosition) => Promise<boolean>;
   isAdding: boolean;
   error: Error | null;
 }
@@ -43,11 +39,7 @@ export function useAddRoute(): UseAddRouteResult {
   const [error, setError] = useState<Error | null>(null);
 
   const addRoute = useCallback(
-    async (
-      referenceRouteId: string,
-      newRoute: Partial<FormAmRoute>,
-      position: InsertPosition
-    ): Promise<boolean> => {
+    async (referenceRouteId: string, newRoute: Partial<FormAmRoute>, position: InsertPosition): Promise<boolean> => {
       setIsAdding(true);
       setError(null);
 
@@ -69,12 +61,7 @@ export function useAddRoute(): UseAddRouteResult {
         const routeTreeWithIds = addUniqueIdentifier(currentRouteTree);
 
         // 3. Add the new route to the tree
-        const updatedRouteTree = addRouteToTree(
-          routeTreeWithIds,
-          referenceRouteId,
-          newRoute,
-          position
-        );
+        const updatedRouteTree = addRouteToTree(routeTreeWithIds, referenceRouteId, newRoute, position);
 
         // 4. Strip IDs before saving (Alertmanager doesn't need them)
         const cleanRouteTree = stripRouteIds(updatedRouteTree);

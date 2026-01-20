@@ -6,7 +6,7 @@ import AppConfig, { AppConfigProps } from './AppConfig';
 
 // Mock AlertmanagerPicker to avoid Combobox canvas issues
 jest.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
-  AlertmanagerPicker: () => <div data-testid="alertmanager-picker">Alertmanager Picker</div>,
+  AlertmanagerPicker: () => <div data-testid="alertmanager-picker" />,
 }));
 
 describe('Components/AppConfig', () => {

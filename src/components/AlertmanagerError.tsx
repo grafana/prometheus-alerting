@@ -23,9 +23,12 @@ export function DataSourceError({ error, title }: DataSourceErrorProps) {
     <Alert title={title} severity="error">
       {errorMessage}
       {dataSourceName && (
-        <><br /><Text variant='bodySmall' color='secondary'>
-          {t('alertmanager.error.data-source', 'Data source: {{name}}', { name: dataSourceName })}
-        </Text></>
+        <>
+          <br />
+          <Text variant="bodySmall" color="secondary">
+            {t('alertmanager.error.data-source', 'Data source: {{name}}', { name: dataSourceName })}
+          </Text>
+        </>
       )}
     </Alert>
   );

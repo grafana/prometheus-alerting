@@ -18,8 +18,6 @@ export interface AppConfigProps extends PluginConfigPageProps<AppPluginMeta<AppP
 const AppConfigStatusContent = () => {
   const alertmanager = useAlertmanagerSafe();
 
-  // eslint detects a false positive here
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
   const {
     data: status,
     isLoading,

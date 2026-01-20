@@ -7,14 +7,21 @@ import Skeleton from 'react-loading-skeleton';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
-import { Button, Dropdown, Icon, IconButton, Menu, Stack, Text, Tooltip, getTagColorsFromName, useStyles2 } from '@grafana/ui';
+import {
+  Button,
+  Dropdown,
+  Icon,
+  IconButton,
+  Menu,
+  Stack,
+  Text,
+  Tooltip,
+  getTagColorsFromName,
+  useStyles2,
+} from '@grafana/ui';
 import { attachSkeleton } from '@grafana/ui/unstable';
 
-import {
-  normalizeMatchers,
-  ObjectMatcher,
-  stringifyObjectMatcher,
-} from '@grafana/external-alertmanager/vanilla';
+import { normalizeMatchers, ObjectMatcher, stringifyObjectMatcher } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { MetaText } from 'features/rules/list/components/MetaText';
 import { AlertLabel } from '@grafana/alerting';

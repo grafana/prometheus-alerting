@@ -8,9 +8,11 @@ import { config, locationService } from '@grafana/runtime';
  * This hook provides a safe way to obtain the `returnTo` URL from the query string parameter
  * It validates the origin and protocol to ensure the URL is within the Grafana app
  */
+/* eslint-disable no-redeclare -- TypeScript function overloads require multiple declarations */
 export function useReturnTo(): { returnTo: string | undefined };
 export function useReturnTo(fallback: string): { returnTo: string };
 export function useReturnTo(fallback?: string): { returnTo: string | undefined } {
+  /* eslint-enable no-redeclare */
   const [searchParams] = useSearchParams();
 
   return useMemo(() => {

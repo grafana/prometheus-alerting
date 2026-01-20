@@ -124,7 +124,7 @@ export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: In
         </Stack>
       }
       onClose={onClose}
-      width={400}
+      size="sm"
       footer={
         hasActions ? (
           <Stack gap={2} justifyContent="flex-end">

@@ -3,6 +3,7 @@ import React, { PropsWithChildren, ReactNode, useState } from 'react';
 import { css } from '@emotion/css';
 
 import { GrafanaTheme2 } from '@grafana/data';
+import { t } from '@grafana/i18n';
 import { IconButton, Stack, Text, TextLink, useStyles2 } from '@grafana/ui';
 
 interface GroupProps extends PropsWithChildren {
@@ -59,7 +60,11 @@ const GroupHeader = (props: GroupHeaderProps) => {
     <div className={styles.headerWrapper}>
       <Stack direction="row" alignItems="center" gap={1}>
         <Stack alignItems="center" gap={0.5}>
-          <IconButton name={isOpen ? 'angle-down' : 'angle-right'} onClick={onToggle} aria-label="Collapse" />
+          <IconButton
+            name={isOpen ? 'angle-down' : 'angle-right'}
+            onClick={onToggle}
+            aria-label={t('rules.list-group.collapse', 'Collapse')}
+          />
           {href ? (
             <TextLink href={href} color="primary" inline={false}>
               {name}

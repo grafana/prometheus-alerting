@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { t } from '@grafana/i18n';
 import { Button } from '@grafana/ui';
 
 interface LoadMoreButtonProps {
@@ -11,14 +12,14 @@ export function LoadMoreButton({ onClick, loading = false }: LoadMoreButtonProps
   return (
     <Button
       data-testid="load-more-rule-groups"
-      aria-label="Show more…"
+      aria-label={t('rules.load-more.aria-label', 'Show more…')}
       fill="text"
       size="sm"
       variant="secondary"
       onClick={onClick}
       disabled={loading}
     >
-      {loading ? 'Loading more groups…' : 'Show more…'}
+      {loading ? t('rules.load-more.loading', 'Loading more groups…') : t('rules.load-more.show-more', 'Show more…')}
     </Button>
   );
 }

@@ -102,10 +102,7 @@ function GroupEditPage() {
   if (dsFeatures && !dsFeatures.rulerApiEnabled) {
     return (
       <PluginPage pageNav={pageNav}>
-        <Alert
-          severity="warning"
-          title={t('alerting.group-edit.not-editable', 'This group cannot be edited')}
-        >
+        <Alert severity="warning" title={t('alerting.group-edit.not-editable', 'This group cannot be edited')}>
           <Trans i18nKey="alerting.group-edit.not-editable-description">
             This data source does not support editing rule groups.
           </Trans>
@@ -158,12 +155,7 @@ interface GroupEditFormProps {
   rulerGroup: RulerRuleGroupDTO;
 }
 
-function GroupEditForm({
-  dataSourceUid,
-  originalNamespace,
-  originalGroupName,
-  rulerGroup,
-}: GroupEditFormProps) {
+function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, rulerGroup }: GroupEditFormProps) {
   const styles = useStyles2(getStyles);
   const { returnTo } = useReturnTo(groups.detailsPageLink(dataSourceUid, originalNamespace, originalGroupName));
 
@@ -324,11 +316,7 @@ function GroupEditForm({
           label={t('alerting.group-edit.rules-label', 'Alerting and recording rules')}
           description={t('alerting.group-edit.rules-description', 'Drag rules to reorder their evaluation order')}
         >
-          <DraggableRulesTable
-            rules={rulerGroup.rules}
-            groupInterval={currentInterval}
-            onSwap={onSwap}
-          />
+          <DraggableRulesTable rules={rulerGroup.rules} groupInterval={currentInterval} onSwap={onSwap} />
         </Field>
 
         <Stack gap={2}>
@@ -342,12 +330,7 @@ function GroupEditForm({
       </form>
 
       <div className={styles.deleteSection}>
-        <Button
-          type="button"
-          variant="destructive"
-          onClick={() => setConfirmDeleteOpen(true)}
-          disabled={isProcessing}
-        >
+        <Button type="button" variant="destructive" onClick={() => setConfirmDeleteOpen(true)} disabled={isProcessing}>
           <Trans i18nKey="alerting.group-edit.delete">Delete group</Trans>
         </Button>
       </div>

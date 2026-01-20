@@ -68,13 +68,13 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
       <input type="hidden" {...register('id')} />
-      
+
       <Stack direction="column" gap={2}>
         <div>
           <div className={styles.sectionLabel}>
             <Trans i18nKey="routes.edit.matching-labels">Matching labels</Trans>
           </div>
-          
+
           {fields.length === 0 && (
             <Badge
               color="orange"
@@ -86,7 +86,7 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
               )}
             />
           )}
-          
+
           {fields.length > 0 && (
             <div className={styles.matchersContainer}>
               {fields.map((field, index) => (
@@ -103,7 +103,7 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
                       placeholder={t('routes.edit.label-placeholder', 'label')}
                     />
                   </Field>
-                  
+
                   <Field label={t('routes.edit.operator', 'Operator')}>
                     <Controller
                       render={({ field: { onChange, value } }) => {
@@ -121,7 +121,7 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
                       name={`object_matchers.${index}.operator`}
                     />
                   </Field>
-                  
+
                   <Field
                     label={t('routes.edit.value', 'Value')}
                     invalid={!!errors.object_matchers?.[index]?.value}
@@ -132,7 +132,7 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
                       placeholder={t('routes.edit.value-placeholder', 'value')}
                     />
                   </Field>
-                  
+
                   <IconButton
                     tooltip={t('routes.edit.remove-matcher', 'Remove matcher')}
                     name="trash-alt"
@@ -143,7 +143,7 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
               ))}
             </div>
           )}
-          
+
           <Button
             className={styles.addMatcherBtn}
             icon="plus"
@@ -185,7 +185,7 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
         <Field label={t('routes.edit.override-grouping', 'Override grouping')}>
           <Switch id="override-grouping-toggle" {...register('overrideGrouping')} />
         </Field>
-        
+
         {watch('overrideGrouping') && (
           <Field
             label={t('routes.edit.group-by', 'Group by')}
@@ -218,7 +218,7 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
         <Field label={t('routes.edit.override-timings', 'Override general timings')}>
           <Switch id="override-timings-toggle" {...register('overrideTimings')} />
         </Field>
-        
+
         {watch('overrideTimings') && (
           <>
             <Field
@@ -232,12 +232,13 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
             >
               <Input
                 {...register('groupWaitValue', {
-                  validate: (v) => !v || isValidPromDuration(v) || 'Invalid duration format',
+                  validate: (v) =>
+                    !v || isValidPromDuration(v) || t('routes.edit.invalid-duration', 'Invalid duration format'),
                 })}
-                placeholder="30s"
+                placeholder={t('routes.edit.group-wait-placeholder', '30s')}
               />
             </Field>
-            
+
             <Field
               label={t('routes.edit.group-interval', 'Group interval')}
               description={t(
@@ -249,12 +250,13 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
             >
               <Input
                 {...register('groupIntervalValue', {
-                  validate: (v) => !v || isValidPromDuration(v) || 'Invalid duration format',
+                  validate: (v) =>
+                    !v || isValidPromDuration(v) || t('routes.edit.invalid-duration', 'Invalid duration format'),
                 })}
-                placeholder="5m"
+                placeholder={t('routes.edit.group-interval-placeholder', '5m')}
               />
             </Field>
-            
+
             <Field
               label={t('routes.edit.repeat-interval', 'Repeat interval')}
               description={t(
@@ -266,9 +268,10 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
             >
               <Input
                 {...register('repeatIntervalValue', {
-                  validate: (v) => !v || isValidPromDuration(v) || 'Invalid duration format',
+                  validate: (v) =>
+                    !v || isValidPromDuration(v) || t('routes.edit.invalid-duration', 'Invalid duration format'),
                 })}
-                placeholder="4h"
+                placeholder={t('routes.edit.repeat-interval-placeholder', '4h')}
               />
             </Field>
           </>

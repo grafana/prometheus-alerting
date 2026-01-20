@@ -66,10 +66,7 @@ function RoutesPage() {
 
   // Compute matching counts for each route in the tree
   // Type assertion needed for the same package type differences
-  const matchingCounts = useRouteMatching(
-    routeTree as Parameters<typeof useRouteMatching>[0],
-    alertGroups
-  );
+  const matchingCounts = useRouteMatching(routeTree as Parameters<typeof useRouteMatching>[0], alertGroups);
 
   // Find the selected receiver
   const selectedReceiver = useMemo(() => {

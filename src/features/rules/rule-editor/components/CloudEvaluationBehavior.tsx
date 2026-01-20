@@ -25,9 +25,7 @@ export const CloudEvaluationBehavior = () => {
   const dataSourceName = watch('dataSourceName');
 
   // Get data source UID from the name
-  const dataSourceUid = dataSourceName
-    ? getDataSourceSrv().getInstanceSettings(dataSourceName)?.uid ?? null
-    : null;
+  const dataSourceUid = dataSourceName ? getDataSourceSrv().getInstanceSettings(dataSourceName)?.uid ?? null : null;
 
   return (
     <RuleEditorSection

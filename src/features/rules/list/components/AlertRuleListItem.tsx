@@ -5,6 +5,7 @@ import pluralize from 'pluralize';
 
 import { AlertLabels, StateIcon } from '@grafana/alerting/unstable';
 import { GrafanaTheme2 } from '@grafana/data';
+import { Trans } from '@grafana/i18n';
 import { Icon, Stack, Text, TextLink, Tooltip, useStyles2 } from '@grafana/ui';
 
 import { normalizeHealth, normalizeState, RulesSourceApplication } from '../../../../types/rules';
@@ -115,7 +116,7 @@ export function AlertRuleListItem({
       )}
       {error && (
         <Text variant="bodySmall" color="error">
-          Error: {error}
+          <Trans i18nKey="rules.list-item.error">Error:</Trans> {error}
         </Text>
       )}
     </>
@@ -182,7 +183,7 @@ export function RecordingRuleListItem({
 
   const description = error ? (
     <Text variant="bodySmall" color="error">
-      Error: {error}
+      <Trans i18nKey="rules.list-item.error">Error:</Trans> {error}
     </Text>
   ) : undefined;
 
@@ -209,7 +210,7 @@ export function UnknownRuleListItem({ ruleName }: UnknownRuleListItemProps) {
         {ruleName}
       </Text>
       <Text variant="bodySmall" color="warning">
-        (Unknown rule type)
+        <Trans i18nKey="rules.list-item.unknown-type">(Unknown rule type)</Trans>
       </Text>
     </Stack>
   );

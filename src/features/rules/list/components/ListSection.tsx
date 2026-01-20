@@ -4,6 +4,7 @@ import { css } from '@emotion/css';
 import { isEmpty } from 'lodash';
 
 import { GrafanaTheme2 } from '@grafana/data';
+import { t } from '@grafana/i18n';
 import { IconButton, Stack, useStyles2 } from '@grafana/ui';
 
 interface ListSectionProps extends PropsWithChildren {
@@ -31,7 +32,7 @@ export const ListSection = ({
             <IconButton
               name={isCollapsed ? 'angle-right' : 'angle-down'}
               onClick={() => setIsCollapsed(!isCollapsed)}
-              aria-label="Collapse"
+              aria-label={t('rules.list-section.collapse', 'Collapse')}
             />
             {title}
           </Stack>

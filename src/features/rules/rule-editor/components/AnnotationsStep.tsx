@@ -59,7 +59,9 @@ export const AnnotationsStep = () => {
                       className={isUrl ? undefined : styles.textarea}
                       {...register(`annotations.${index}.value`)}
                       placeholder={
-                        isUrl ? 'https://' : t('alerting.annotations-step.placeholder-value', 'Annotation value')
+                        isUrl
+                          ? t('alerting.annotations-step.placeholder-url', 'https://')
+                          : t('alerting.annotations-step.placeholder-value', 'Annotation value')
                       }
                     />
                   </Field>

@@ -42,7 +42,10 @@ function ReceiversPage() {
                   {integrations.map((integration) => (
                     <Tooltip
                       key={integration.type}
-                      content={`${integration.type}${integration.count > 1 ? ` (${integration.count})` : ''}`}
+                      content={t('receivers.tooltip.integration-count', '{{type}}{{count}}', {
+                        type: integration.type,
+                        count: integration.count > 1 ? ` (${integration.count})` : '',
+                      })}
                     >
                       <Icon name={getIntegrationIcon(integration.type)} />
                     </Tooltip>
@@ -67,9 +70,7 @@ function ReceiversPage() {
   ];
 
   return (
-    <AlertmanagerPage
-      subTitle={t('receivers.page-subtitle', 'Configure how and where to send alert notifications')}
-    >
+    <AlertmanagerPage subTitle={t('receivers.page-subtitle', 'Configure how and where to send alert notifications')}>
       <div data-testid={testIds.receivers.container}>
         {isLoading && <Skeleton height={24} count={5} />}
         {error && (

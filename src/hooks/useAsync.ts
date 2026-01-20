@@ -57,15 +57,6 @@ export type UseAsyncMeta<Result, Args extends unknown[] = unknown[]> = {
   lastArgs: Args | undefined;
 };
 
-export function useAsync<Result, Args extends unknown[] = unknown[]>(
-  asyncFn: (...params: Args) => Promise<Result>,
-  initialValue: Result
-): [UseAsyncActions<Result, Args>, AsyncState<Result>, UseAsyncMeta<Result, Args>];
-export function useAsync<Result, Args extends unknown[] = unknown[]>(
-  asyncFn: (...params: Args) => Promise<Result>,
-  initialValue?: Result
-): [UseAsyncActions<Result, Args>, AsyncState<Result | undefined>, UseAsyncMeta<Result, Args>];
-
 /**
  * Tracks the result and errors of the provided async function and provides handles to control its execution.
  *

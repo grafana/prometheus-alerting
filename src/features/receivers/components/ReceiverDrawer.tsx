@@ -142,7 +142,7 @@ export function ReceiverDrawer({ receiver, onClose, showBackButton = false }: Re
         </Stack>
       }
       onClose={onClose}
-      width={400}
+      size="sm"
       footer={
         hasActions ? (
           <Stack gap={2} justifyContent="flex-end">

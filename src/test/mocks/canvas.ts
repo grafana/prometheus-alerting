@@ -29,6 +29,6 @@ export function mockCanvasContext() {
         fill: jest.fn(),
         rect: jest.fn(),
         clip: jest.fn(),
-      }) as unknown as CanvasRenderingContext2D
+      } as unknown as CanvasRenderingContext2D)
   ) as unknown as typeof HTMLCanvasElement.prototype.getContext;
 }

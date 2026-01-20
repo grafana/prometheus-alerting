@@ -34,6 +34,8 @@ export default defineConfig([
       'playwright/.auth/',
       '**/.idea',
       '**/.eslintcache',
+      // Internal packages have their own tsconfig
+      'packages/**',
     ],
   },
   {

@@ -202,11 +202,12 @@ export function RouteDrawer({
     </TabsBar>
   ) : undefined;
 
-  const drawerFooter = isViewMode && canEdit ? (
-    <Button variant="secondary" icon="pen" onClick={handleEdit}>
-      <Trans i18nKey="routes.drawer.edit">Edit</Trans>
-    </Button>
-  ) : undefined;
+  const drawerFooter =
+    isViewMode && canEdit ? (
+      <Button variant="secondary" icon="pen" onClick={handleEdit}>
+        <Trans i18nKey="routes.drawer.edit">Edit</Trans>
+      </Button>
+    ) : undefined;
 
   // For add mode, use a blank route as template
   const routeForForm = isAddMode ? ({ ...emptyRoute, id: '' } as RouteWithID) : route!;

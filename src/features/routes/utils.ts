@@ -15,8 +15,6 @@ export function addUniqueIdentifier(route: Route, parentId = '0'): RouteWithID {
   return {
     id: parentId,
     ...route,
-    routes: route.routes?.map((child, index) =>
-      addUniqueIdentifier(child, `${parentId}.${index}`)
-    ) ?? [],
+    routes: route.routes?.map((child, index) => addUniqueIdentifier(child, `${parentId}.${index}`)) ?? [],
   };
 }

@@ -87,9 +87,7 @@ function InhibitRulesPage() {
   ];
 
   return (
-    <AlertmanagerPage
-      subTitle={t('inhibit-rules.page-subtitle', 'Suppress alerts based on other active alerts')}
-    >
+    <AlertmanagerPage subTitle={t('inhibit-rules.page-subtitle', 'Suppress alerts based on other active alerts')}>
       <div data-testid={testIds.inhibitRules.container}>
         {isLoading && (
           <div>

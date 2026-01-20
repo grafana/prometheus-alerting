@@ -21,7 +21,7 @@ interface UseUpdateRouteResult {
 
 /**
  * Hook for updating an existing route in the routing tree.
- * 
+ *
  * This hook:
  * 1. Fetches the current Alertmanager configuration
  * 2. Merges the updated route into the route tree
@@ -30,10 +30,10 @@ interface UseUpdateRouteResult {
 export function useUpdateRoute(): UseUpdateRouteResult {
   const { uid: dataSourceUID } = useAlertmanager();
   const { refetch: refetchRoutes } = useRoutes();
-  
+
   const [getUserConfiguration] = mimirAlertmanagerApi.endpoints.getUserConfiguration.useLazyQuery();
   const [updateUserConfiguration] = mimirAlertmanagerApi.endpoints.updateUserConfiguration.useMutation();
-  
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -45,7 +45,7 @@ export function useUpdateRoute(): UseUpdateRouteResult {
       try {
         // 1. Fetch current configuration
         const configResult = await getUserConfiguration({ dataSourceUID });
-        
+
         if (configResult.error) {
           throw new Error('Failed to fetch current configuration');
         }
@@ -89,12 +89,12 @@ export function useUpdateRoute(): UseUpdateRouteResult {
         const errorMessage = extractErrorMessage(err);
         const error = new Error(errorMessage);
         setError(error);
-        
+
         getAppEvents().publish({
           type: AppEvents.alertError.name,
           payload: [t('routes.update.error', 'Failed to update route'), errorMessage],
         });
-        
+
         return false;
       } finally {
         setIsUpdating(false);

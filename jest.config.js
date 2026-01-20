@@ -32,8 +32,7 @@ module.exports = {
       '<rootDir>/node_modules/@mswjs/interceptors/lib/node/interceptors/ClientRequest/index.js',
     '^@mswjs/interceptors/XMLHttpRequest$':
       '<rootDir>/node_modules/@mswjs/interceptors/lib/browser/interceptors/XMLHttpRequest/index.js',
-    '^@mswjs/interceptors/fetch$':
-      '<rootDir>/node_modules/@mswjs/interceptors/lib/node/interceptors/fetch/index.js',
+    '^@mswjs/interceptors/fetch$': '<rootDir>/node_modules/@mswjs/interceptors/lib/node/interceptors/fetch/index.js',
     '^@mswjs/interceptors$': '<rootDir>/node_modules/@mswjs/interceptors/lib/node/index.js',
   },
 };

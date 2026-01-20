@@ -42,7 +42,7 @@ export function TimeIntervalDrawer({ timeInterval, onClose }: TimeIntervalDrawer
         </Stack>
       }
       onClose={onClose}
-      width={400}
+      size="sm"
     >
       {isEditMode ? (
         <TimeIntervalDrawerEdit timeInterval={timeInterval} onCancel={handleCancelEdit} onSuccess={handleEditSuccess} />

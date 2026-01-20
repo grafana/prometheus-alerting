@@ -19,7 +19,7 @@ import { formValuesToRulerRuleDTO } from '../formTransform';
 import { isCloudAlertingRuleByType } from '../ruleTypeHelpers';
 import { useProduceNewRuleGroup } from '../hooks/useProduceNewRuleGroup';
 import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
-import { ruleFormSchema } from '../validation';
+import { createRuleFormSchema } from '../validation';
 import { addRuleAction, updateRuleAction } from '../ruleGroupReducer';
 
 import { RuleDefinitionSection } from './RuleDefinitionSection';
@@ -54,6 +54,9 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
     }
     return defaults;
   }, [ruleType, prefill]);
+
+  // Create the schema at runtime to ensure i18n translations are loaded
+  const ruleFormSchema = useMemo(() => createRuleFormSchema(), []);
 
   const formAPI = useForm<RuleFormValues>({
     mode: 'onSubmit',

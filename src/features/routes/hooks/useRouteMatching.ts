@@ -20,10 +20,7 @@ export type RouteMatchingCounts = Map<string, number>;
  * @param alertGroups - Alert groups from the Alertmanager API
  * @returns A map from route ID to count of matching instances
  */
-export function useRouteMatching(
-  routeTree: RouteWithID | undefined,
-  alertGroups: AlertGroup[]
-): RouteMatchingCounts {
+export function useRouteMatching(routeTree: RouteWithID | undefined, alertGroups: AlertGroup[]): RouteMatchingCounts {
   return useMemo(() => {
     const counts: RouteMatchingCounts = new Map();
 

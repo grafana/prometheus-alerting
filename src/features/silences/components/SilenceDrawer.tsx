@@ -69,7 +69,7 @@ export function SilenceDrawer({ silence, onClose }: SilenceDrawerProps) {
         </Stack>
       }
       onClose={onClose}
-      width={600}
+      size="md"
       tabs={drawerTabs}
     >
       {isEditMode ? (

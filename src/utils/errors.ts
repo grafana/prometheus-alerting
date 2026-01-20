@@ -70,7 +70,9 @@ export function stringifyFetchError(error: ErrorLike): string {
     }
 
     // Fallback for any other status values
-    return `${String(statusCode)} • ${'error' in error && typeof error.error === 'string' ? error.error : 'Unknown error'}`;
+    return `${String(statusCode)} • ${
+      'error' in error && typeof error.error === 'string' ? error.error : 'Unknown error'
+    }`;
   }
 
   // Handle SerializedError
@@ -93,7 +95,7 @@ export function stringifyFetchError(error: ErrorLike): string {
 /**
  * Extract a human-readable error message from any error type.
  * More generic than stringifyFetchError - handles Error objects, strings, and unknown types.
- * 
+ *
  * Use this when you don't know the error type (e.g., in catch blocks with unknown errors).
  * Use stringifyFetchError when you specifically have an RTK Query error.
  */

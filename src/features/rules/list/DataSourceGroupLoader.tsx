@@ -3,6 +3,7 @@ import Skeleton from 'react-loading-skeleton';
 
 import { skipToken } from '@reduxjs/toolkit/query';
 
+import { t } from '@grafana/i18n';
 import { Alert } from '@grafana/ui';
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
@@ -86,7 +87,15 @@ export function DataSourceGroupLoader({
   }
 
   if (isPromError || (shouldFetchRuler && isRulerError)) {
-    return <Alert title={`Failed to load rules from group ${groupName} in ${namespaceName}`} severity="error" />;
+    return (
+      <Alert
+        title={t('rules.group-loader.error', 'Failed to load rules from group {{groupName}} in {{namespaceName}}', {
+          groupName,
+          namespaceName,
+        })}
+        severity="error"
+      />
+    );
   }
 
   // There should be always only one group in the response but some Prometheus-compatible data sources
@@ -117,5 +126,13 @@ export function DataSourceGroupLoader({
   }
 
   // This should never happen
-  return <Alert title={`Failed to load rules from group ${groupName} in ${namespaceName}`} severity="warning" />;
+  return (
+    <Alert
+      title={t('rules.group-loader.not-found', 'Failed to load rules from group {{groupName}} in {{namespaceName}}', {
+        groupName,
+        namespaceName,
+      })}
+      severity="warning"
+    />
+  );
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { t, Trans } from '@grafana/i18n';
 import { Alert, ErrorBoundary, ErrorWithStack, Text } from '@grafana/ui';
 
 import { DataSourceRulesSourceIdentifier } from '../../../../types/datasources';
@@ -25,12 +26,16 @@ export function DataSourceErrorBoundary({
           const { uid, name } = rulesSourceIdentifier;
           return (
             <DataSourceSection uid={uid} name={name}>
-              <Alert title="Unable to load rules from this data source">
-                <Text>Check the data source configuration. Does the data source support Prometheus API?</Text>
+              <Alert title={t('rules.error-boundary.title', 'Unable to load rules from this data source')}>
+                <Text>
+                  <Trans i18nKey="rules.error-boundary.message">
+                    Check the data source configuration. Does the data source support Prometheus API?
+                  </Trans>
+                </Text>
                 <ErrorWithStack
                   error={error}
                   errorInfo={errorInfo}
-                  title="Unable to load rules from this data source"
+                  title={t('rules.error-boundary.stack-title', 'Unable to load rules from this data source')}
                 />
               </Alert>
             </DataSourceSection>

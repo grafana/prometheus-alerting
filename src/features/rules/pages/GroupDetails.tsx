@@ -123,10 +123,7 @@ function GroupDetails() {
   if (hasError) {
     return (
       <PluginPage pageNav={pageNav}>
-        <Alert
-          severity="error"
-          title={t('alerting.group-details.error', 'Error loading group')}
-        >
+        <Alert severity="error" title={t('alerting.group-details.error', 'Error loading group')}>
           {String(dsFeaturesError || promError || rulerError)}
         </Alert>
       </PluginPage>
@@ -136,10 +133,7 @@ function GroupDetails() {
   if (!promGroup && !rulerGroup) {
     return (
       <PluginPage pageNav={pageNav}>
-        <Alert
-          severity="warning"
-          title={t('alerting.group-details.not-found', 'Group not found')}
-        >
+        <Alert severity="warning" title={t('alerting.group-details.not-found', 'Group not found')}>
           {t(
             'alerting.group-details.not-found-message',
             'The group "{{groupName}}" in namespace "{{namespace}}" could not be found.',

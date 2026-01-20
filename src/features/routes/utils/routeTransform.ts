@@ -51,8 +51,7 @@ export function amRouteToFormAmRoute(route: RouteWithID | Route | undefined): Fo
   });
 
   // Convert string matchers to form field format
-  const matchers: MatcherFieldValue[] =
-    route.matchers?.map(parseMatcherString) ?? [];
+  const matchers: MatcherFieldValue[] = route.matchers?.map(parseMatcherString) ?? [];
 
   return {
     id,
@@ -120,11 +119,7 @@ export function formAmRouteToAmRoute(formAmRoute: Partial<FormAmRoute>): Route {
 /**
  * Merge an updated route into an existing route tree
  */
-export function mergeRouteIntoTree(
-  routeTree: Route,
-  routeId: string,
-  updatedRoute: Partial<FormAmRoute>
-): Route {
+export function mergeRouteIntoTree(routeTree: Route, routeId: string, updatedRoute: Partial<FormAmRoute>): Route {
   const mergedRoute = formAmRouteToAmRoute(updatedRoute);
 
   function findAndReplace(route: Route, parentIndex = '0'): Route {
@@ -144,9 +139,7 @@ export function mergeRouteIntoTree(
     if (route.routes) {
       return {
         ...route,
-        routes: route.routes.map((child, index) =>
-          findAndReplace(child, `${parentIndex}-${index}`)
-        ),
+        routes: route.routes.map((child, index) => findAndReplace(child, `${parentIndex}-${index}`)),
       };
     }
 
@@ -159,7 +152,7 @@ export function mergeRouteIntoTree(
 /**
  * Validate a Prometheus duration string (e.g., "5m", "1h30m")
  * Empty strings are valid (inherits from parent)
- * 
+ *
  * Re-exported from time.utils for convenience
  */
 export function isValidPromDuration(duration: string): boolean {
@@ -274,7 +267,6 @@ export function addRouteToTree(
  * Alertmanager doesn't understand IDs, so we need to remove them.
  */
 export function stripRouteIds(route: Route | RouteWithID): Route {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, ...routeWithoutId } = route as RouteWithID;
 
   return {

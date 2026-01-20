@@ -5,7 +5,7 @@ import { useFormContext } from 'react-hook-form';
  * Hook to warn users about unsaved changes when navigating away
  * Integrates with react-hook-form to detect dirty state
  */
-export function useUnsavedChanges(enabled: boolean = true) {
+export function useUnsavedChanges(enabled = true) {
   const formContext = useFormContext();
   const isDirty = formContext?.formState.isDirty ?? false;
 

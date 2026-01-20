@@ -3,6 +3,7 @@ import React from 'react';
 import { css } from '@emotion/css';
 
 import { GrafanaTheme2 } from '@grafana/data';
+import { Trans } from '@grafana/i18n';
 import { Text, useStyles2 } from '@grafana/ui';
 
 export const NoRulesFound = () => {
@@ -10,7 +11,9 @@ export const NoRulesFound = () => {
 
   return (
     <div className={styles.noRules}>
-      <Text color="secondary">No rules found</Text>
+      <Text color="secondary">
+        <Trans i18nKey="rules.no-rules-found">No rules found</Trans>
+      </Text>
     </div>
   );
 };

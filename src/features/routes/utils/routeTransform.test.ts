@@ -2,12 +2,7 @@ import { Route } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 
 import { MatcherOperator, FormAmRoute } from '../types';
-import {
-  amRouteToFormAmRoute,
-  formAmRouteToAmRoute,
-  mergeRouteIntoTree,
-  isValidPromDuration,
-} from './routeTransform';
+import { amRouteToFormAmRoute, formAmRouteToAmRoute, mergeRouteIntoTree, isValidPromDuration } from './routeTransform';
 
 describe('amRouteToFormAmRoute', () => {
   it('returns empty route for undefined input', () => {
@@ -80,10 +75,7 @@ describe('amRouteToFormAmRoute', () => {
   it('converts child routes recursively', () => {
     const route: Route = {
       receiver: 'default',
-      routes: [
-        { receiver: 'child-1' },
-        { receiver: 'child-2' },
-      ],
+      routes: [{ receiver: 'child-1' }, { receiver: 'child-2' }],
     };
 
     const result = amRouteToFormAmRoute(route);

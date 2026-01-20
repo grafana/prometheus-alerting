@@ -167,9 +167,7 @@ function ReceiverDetail() {
     >
       <div data-testid={testIds.receivers.detail} className={styles.wrapper}>
         {isLoading && <Skeleton height={24} count={10} />}
-        {error && (
-          <DataSourceError error={error} title={t('receivers.detail.not-found-title', 'Receiver not found')} />
-        )}
+        {error && <DataSourceError error={error} title={t('receivers.detail.not-found-title', 'Receiver not found')} />}
         {notFound && (
           <EmptyState variant="not-found" message={t('receivers.error-loading-title', 'Error loading receivers')}>
             {t('receivers.detail.not-found-message', 'The receiver "{{name}}" does not exist.', { name })}

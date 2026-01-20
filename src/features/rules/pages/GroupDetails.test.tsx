@@ -24,7 +24,7 @@ jest.mock('@grafana/runtime', () => ({
 
 // Mock DataSourceGroupLoader to avoid complex setup
 jest.mock('../list/DataSourceGroupLoader', () => ({
-  DataSourceGroupLoader: () => <div data-testid="group-loader">Rules List</div>,
+  DataSourceGroupLoader: () => <div data-testid="group-loader" />,
 }));
 
 // Mock all API hooks that use RTK Query
