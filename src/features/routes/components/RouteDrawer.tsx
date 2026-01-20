@@ -2,7 +2,7 @@ import { css } from '@emotion/css';
 import React, { useState } from 'react';
 import { GrafanaTheme2 } from '@grafana/data';
 import { t, Trans } from '@grafana/i18n';
-import { Alert, Button, Stack, useStyles2, Text, Tab, TabsBar, TabContent, TextLink } from '@grafana/ui';
+import { Alert, Button, ConfirmModal, Stack, useStyles2, Text, Tab, TabsBar, TabContent, TextLink } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
@@ -12,6 +12,7 @@ import { Section } from '../../../components/KeyValueList/Section';
 import { PolicyEditForm } from './PolicyEditForm';
 import { useUpdateRoute } from '../hooks/useUpdateRoute';
 import { useAddRoute } from '../hooks/useAddRoute';
+import { useDeleteRoute } from '../hooks/useDeleteRoute';
 import { emptyRoute, FormAmRoute, InsertPosition } from '../types';
 
 enum ActiveTab {
@@ -109,6 +110,7 @@ interface RouteDrawerProps {
   onClose: () => void;
   onReceiverClick?: (receiverName: string) => void;
   canEdit?: boolean;
+  canDelete?: boolean;
   mode?: DrawerMode;
   referenceRouteId?: string;
   insertPosition?: InsertPosition;
@@ -119,14 +121,17 @@ export function RouteDrawer({
   onClose,
   onReceiverClick,
   canEdit = false,
+  canDelete = false,
   mode: initialMode = DrawerMode.View,
   referenceRouteId,
   insertPosition = 'child',
 }: RouteDrawerProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.Configuration);
   const [mode, setMode] = useState<DrawerMode>(initialMode);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { updateRoute, isUpdating } = useUpdateRoute();
   const { addRoute, isAdding } = useAddRoute();
+  const { deleteRoute, isDeleting } = useDeleteRoute();
 
   const isAddMode = mode === DrawerMode.Add;
   const isEditMode = mode === DrawerMode.Edit;
@@ -187,6 +192,18 @@ export function RouteDrawer({
     }
   };
 
+  const handleDelete = async () => {
+    if (route) {
+      const success = await deleteRoute(route.id);
+      if (success) {
+        setShowDeleteConfirm(false);
+        onClose();
+      }
+    }
+  };
+
+  const hasChildRoutes = route?.routes && route.routes.length > 0;
+
   const drawerTabs = isViewMode ? (
     <TabsBar>
       <Tab
@@ -203,10 +220,19 @@ export function RouteDrawer({
   ) : undefined;
 
   const drawerFooter =
-    isViewMode && canEdit ? (
-      <Button variant="secondary" icon="pen" onClick={handleEdit}>
-        <Trans i18nKey="routes.drawer.edit">Edit</Trans>
-      </Button>
+    isViewMode && (canEdit || canDelete) ? (
+      <Stack direction="row" gap={2}>
+        {canEdit && (
+          <Button variant="secondary" icon="pen" onClick={handleEdit}>
+            <Trans i18nKey="routes.drawer.edit">Edit</Trans>
+          </Button>
+        )}
+        {canDelete && (
+          <Button variant="destructive" icon="trash-alt" onClick={() => setShowDeleteConfirm(true)}>
+            <Trans i18nKey="routes.drawer.delete">Delete</Trans>
+          </Button>
+        )}
+      </Stack>
     ) : undefined;
 
   // For add mode, use a blank route as template
@@ -243,6 +269,25 @@ export function RouteDrawer({
           isSubmitting={isUpdating || isAdding}
         />
       )}
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title={t('routes.delete.confirm-title', 'Delete Route')}
+        body={
+          hasChildRoutes
+            ? t(
+                'routes.delete.confirm-body-with-children',
+                'Are you sure you want to delete this route? This will also delete all {{count}} child route(s).',
+                { count: route?.routes?.length ?? 0 }
+              )
+            : t('routes.delete.confirm-body', 'Are you sure you want to delete this route?')
+        }
+        confirmText={t('routes.delete.confirm-button', 'Delete')}
+        onConfirm={handleDelete}
+        onDismiss={() => setShowDeleteConfirm(false)}
+        confirmButtonVariant="destructive"
+        disabled={isDeleting}
+      />
     </DrawerWithFooter>
   );
 }

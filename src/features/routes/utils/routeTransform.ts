@@ -274,3 +274,58 @@ export function stripRouteIds(route: Route | RouteWithID): Route {
     routes: routeWithoutId.routes?.map(stripRouteIds),
   };
 }
+
+/**
+ * Remove a route (and all its sub-routes) from the tree.
+ *
+ * @param routeTree - The current route tree
+ * @param routeId - The ID of the route to remove
+ * @returns The updated tree without the route
+ * @throws Error if trying to delete the root route or if route not found
+ */
+export function removeRouteFromTree(routeTree: Route, routeId: string): Route {
+  // Cannot delete root route
+  if (routeId === '0') {
+    throw new Error('Cannot delete the root route');
+  }
+
+  function findAndRemove(route: Route, parentIndex = '0'): { route: Route; found: boolean } {
+    // If this route has no children, nothing to remove
+    if (!route.routes || route.routes.length === 0) {
+      return { route, found: false };
+    }
+
+    const newRoutes: Route[] = [];
+    let found = false;
+
+    for (let i = 0; i < route.routes.length; i++) {
+      const child = route.routes[i];
+      const childId = 'id' in child ? (child as RouteWithID).id : `${parentIndex}.${i}`;
+
+      if (childId === routeId) {
+        // Found the route to delete - skip it (don't add to newRoutes)
+        found = true;
+      } else {
+        // Recurse into this child to look for the route
+        const result = findAndRemove(child, childId);
+        newRoutes.push(result.route);
+        if (result.found) {
+          found = true;
+        }
+      }
+    }
+
+    return {
+      route: { ...route, routes: newRoutes.length > 0 ? newRoutes : undefined },
+      found,
+    };
+  }
+
+  const result = findAndRemove(routeTree);
+
+  if (!result.found) {
+    throw new Error(`Could not find route "${routeId}" in tree`);
+  }
+
+  return result.route;
+}

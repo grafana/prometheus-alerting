@@ -38,6 +38,7 @@ interface Props {
   focussedRouteID?: string;
   matchingCounts?: RouteMatchingCounts;
   onAddPolicy?: (referenceRoute: RouteWithID, position: InsertPosition) => void;
+  onDeletePolicy?: (route: RouteWithID) => void;
   readOnly?: boolean;
 }
 
@@ -50,6 +51,7 @@ const RouteCard = (props: Props) => {
     focussedRouteID,
     matchingCounts,
     onAddPolicy,
+    onDeletePolicy,
     readOnly = false,
   } = props;
 
@@ -168,6 +170,17 @@ const RouteCard = (props: Props) => {
                               icon="plus"
                               onClick={() => onAddPolicy(currentRoute, 'child')}
                             />
+                            {onDeletePolicy && (
+                              <>
+                                <Menu.Divider />
+                                <Menu.Item
+                                  label={t('alerting.policy.label-delete-route', 'Delete route')}
+                                  icon="trash-alt"
+                                  destructive
+                                  onClick={() => onDeletePolicy(currentRoute)}
+                                />
+                              </>
+                            )}
                           </Menu>
                         }
                       >
@@ -209,6 +222,7 @@ const RouteCard = (props: Props) => {
                 onRouteClick={onRouteClick}
                 focussedRouteID={focussedRouteID}
                 onAddPolicy={onAddPolicy}
+                onDeletePolicy={onDeletePolicy}
                 readOnly={readOnly}
               />
             ))}

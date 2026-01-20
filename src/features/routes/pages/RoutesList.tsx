@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../../components/testIds';
-import { EmptyState } from '@grafana/ui';
+import { ConfirmModal, EmptyState } from '@grafana/ui';
 import { useRoutes } from '../hooks/useRoutes';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { DataSourceError } from '../../../components/AlertmanagerError';
@@ -16,6 +16,7 @@ import { useReceivers } from '../../receivers/hooks/useReceivers';
 import { useAlertGroups } from '../hooks/useAlertGroups';
 import { useRouteMatching, getRouteMatchCount } from '../hooks/useRouteMatching';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
+import { useDeleteRoute } from '../hooks/useDeleteRoute';
 import { addUniqueIdentifier } from '../utils';
 import { InsertPosition } from '../types';
 
@@ -31,6 +32,10 @@ function RoutesPage() {
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
   const [referenceRouteId, setReferenceRouteId] = useState<string | undefined>(undefined);
   const [insertPosition, setInsertPosition] = useState<InsertPosition>('child');
+
+  // State for delete confirmation from RouteCard
+  const [routeToDelete, setRouteToDelete] = useState<RouteWithID | null>(null);
+  const { deleteRoute, isDeleting } = useDeleteRoute();
 
   // Check if the Alertmanager supports editing (Mimir implementation)
   const isMimir = settings?.jsonData?.implementation === 'mimir';
@@ -105,6 +110,29 @@ function RoutesPage() {
     setDrawerMode(DrawerMode.Add);
   }, []);
 
+  // Handle deleting a policy (from RouteCard menu)
+  const handleDeletePolicy = useCallback((route: RouteWithID) => {
+    setRouteToDelete(route);
+  }, []);
+
+  // Confirm deletion
+  const handleConfirmDelete = useCallback(async () => {
+    if (routeToDelete) {
+      const success = await deleteRoute(routeToDelete.id);
+      if (success) {
+        setRouteToDelete(null);
+        // Close drawer if the deleted route was selected
+        if (selectedRoute?.id === routeToDelete.id) {
+          setSelectedRoute(null);
+        }
+      }
+    }
+  }, [routeToDelete, deleteRoute, selectedRoute]);
+
+  // Check if the currently selected route can be deleted (not the root route)
+  const canDeleteSelectedRoute = Boolean(selectedRoute && selectedRoute.id !== '0');
+  const routeToDeleteHasChildren = routeToDelete?.routes && routeToDelete.routes.length > 0;
+
   return (
     <AlertmanagerPage subTitle={t('routes.page-subtitle', 'Determine how alerts are routed to receivers')}>
       <div data-testid={testIds.routes.container}>
@@ -120,6 +148,7 @@ function RoutesPage() {
               onRouteClick={handleRouteClick}
               focussedRouteID={selectedRoute?.id}
               onAddPolicy={canEdit ? handleAddPolicy : undefined}
+              onDeletePolicy={canEdit ? handleDeletePolicy : undefined}
               readOnly={!canEdit}
             />
           </div>
@@ -138,6 +167,7 @@ function RoutesPage() {
           onClose={handleRouteDrawerClose}
           onReceiverClick={handleReceiverClick}
           canEdit={canEdit}
+          canDelete={canEdit && canDeleteSelectedRoute}
           mode={drawerMode}
           referenceRouteId={referenceRouteId}
           insertPosition={insertPosition}
@@ -146,6 +176,26 @@ function RoutesPage() {
       {selectedReceiverName && (
         <ReceiverDrawer receiver={selectedReceiver} onClose={handleReceiverDrawerClose} showBackButton={true} />
       )}
+
+      {/* Delete confirmation modal (from RouteCard menu) */}
+      <ConfirmModal
+        isOpen={routeToDelete !== null}
+        title={t('routes.delete.confirm-title', 'Delete Route')}
+        body={
+          routeToDeleteHasChildren
+            ? t(
+                'routes.delete.confirm-body-with-children',
+                'Are you sure you want to delete this route? This will also delete all {{count}} child route(s).',
+                { count: routeToDelete?.routes?.length ?? 0 }
+              )
+            : t('routes.delete.confirm-body', 'Are you sure you want to delete this route?')
+        }
+        confirmText={t('routes.delete.confirm-button', 'Delete')}
+        onConfirm={handleConfirmDelete}
+        onDismiss={() => setRouteToDelete(null)}
+        confirmButtonVariant="destructive"
+        disabled={isDeleting}
+      />
     </AlertmanagerPage>
   );
 }

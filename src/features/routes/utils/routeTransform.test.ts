@@ -2,7 +2,13 @@ import { Route } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 
 import { MatcherOperator, FormAmRoute } from '../types';
-import { amRouteToFormAmRoute, formAmRouteToAmRoute, mergeRouteIntoTree, isValidPromDuration } from './routeTransform';
+import {
+  amRouteToFormAmRoute,
+  formAmRouteToAmRoute,
+  mergeRouteIntoTree,
+  isValidPromDuration,
+  removeRouteFromTree,
+} from './routeTransform';
 
 describe('amRouteToFormAmRoute', () => {
   it('returns empty route for undefined input', () => {
@@ -234,5 +240,105 @@ describe('isValidPromDuration', () => {
     expect(isValidPromDuration('30')).toBe(false);
     expect(isValidPromDuration('m5')).toBe(false);
     expect(isValidPromDuration('5 m')).toBe(false);
+  });
+});
+
+describe('removeRouteFromTree', () => {
+  it('removes a child route from a flat tree', () => {
+    const tree: RouteWithID = {
+      id: '0',
+      receiver: 'default',
+      routes: [
+        { id: '0.0', receiver: 'slack' } as RouteWithID,
+        { id: '0.1', receiver: 'email' } as RouteWithID,
+        { id: '0.2', receiver: 'webhook' } as RouteWithID,
+      ],
+    };
+
+    const result = removeRouteFromTree(tree, '0.1');
+
+    expect(result.routes).toHaveLength(2);
+    expect((result.routes![0] as RouteWithID).id).toBe('0.0');
+    expect((result.routes![1] as RouteWithID).id).toBe('0.2');
+  });
+
+  it('removes a nested child route', () => {
+    const tree: RouteWithID = {
+      id: '0',
+      receiver: 'default',
+      routes: [
+        {
+          id: '0.0',
+          receiver: 'team-a',
+          routes: [
+            { id: '0.0.0', receiver: 'team-a-critical' } as RouteWithID,
+            { id: '0.0.1', receiver: 'team-a-warning' } as RouteWithID,
+          ],
+        } as RouteWithID,
+        { id: '0.1', receiver: 'team-b' } as RouteWithID,
+      ],
+    };
+
+    const result = removeRouteFromTree(tree, '0.0.0');
+
+    // Team A route should still exist with only one child
+    const teamARoute = result.routes![0] as RouteWithID;
+    expect(teamARoute.routes).toHaveLength(1);
+    expect((teamARoute.routes![0] as RouteWithID).id).toBe('0.0.1');
+  });
+
+  it('removes a route with all its children', () => {
+    const tree: RouteWithID = {
+      id: '0',
+      receiver: 'default',
+      routes: [
+        {
+          id: '0.0',
+          receiver: 'team-a',
+          routes: [
+            { id: '0.0.0', receiver: 'team-a-critical' } as RouteWithID,
+            { id: '0.0.1', receiver: 'team-a-warning' } as RouteWithID,
+          ],
+        } as RouteWithID,
+        { id: '0.1', receiver: 'team-b' } as RouteWithID,
+      ],
+    };
+
+    // Remove the entire team-a route (and its children)
+    const result = removeRouteFromTree(tree, '0.0');
+
+    expect(result.routes).toHaveLength(1);
+    expect((result.routes![0] as RouteWithID).id).toBe('0.1');
+  });
+
+  it('throws error when trying to delete root route', () => {
+    const tree: RouteWithID = {
+      id: '0',
+      receiver: 'default',
+    };
+
+    expect(() => removeRouteFromTree(tree, '0')).toThrow('Cannot delete the root route');
+  });
+
+  it('throws error when route not found', () => {
+    const tree: RouteWithID = {
+      id: '0',
+      receiver: 'default',
+      routes: [{ id: '0.0', receiver: 'slack' } as RouteWithID],
+    };
+
+    expect(() => removeRouteFromTree(tree, 'nonexistent')).toThrow('Could not find route "nonexistent" in tree');
+  });
+
+  it('sets routes to undefined when last child is removed', () => {
+    const tree: RouteWithID = {
+      id: '0',
+      receiver: 'default',
+      routes: [{ id: '0.0', receiver: 'slack' } as RouteWithID],
+    };
+
+    const result = removeRouteFromTree(tree, '0.0');
+
+    expect(result.routes).toBeUndefined();
   });
 });
