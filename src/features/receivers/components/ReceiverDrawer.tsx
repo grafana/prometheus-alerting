@@ -9,7 +9,11 @@ import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
 import { extractIntegrationsFromReceiver, getIntegrationIcon } from '../utils/integrationIcons';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
-import { addReceiverAction, deleteReceiverAction, updateReceiverAction } from '../../../reducers/alertmanager/receivers';
+import {
+  addReceiverAction,
+  deleteReceiverAction,
+  updateReceiverAction,
+} from '../../../reducers/alertmanager/receivers';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { filterAndTransformConfigEntries } from '../utils/receiversUtils';
 import { JsonValue } from 'type-fest';
@@ -297,9 +301,7 @@ export function ReceiverDrawer({
           {Boolean(configError) && (
             <Alert title={t('receivers.error-title', 'Error')} severity="error">
               {String(
-                configError instanceof Error
-                  ? configError.message
-                  : t('receivers.error-message', 'An error occurred')
+                configError instanceof Error ? configError.message : t('receivers.error-message', 'An error occurred')
               )}
             </Alert>
           )}
@@ -327,15 +329,10 @@ export function ReceiverDrawer({
         body={
           <Stack direction="column" gap={2}>
             {isInUse && (
-              <Alert
-                title={t('receivers.delete.in-use-warning-title', 'Receiver is in use')}
-                severity="warning"
-              >
-                <Trans
-                  i18nKey="receivers.delete.in-use-warning"
-                  values={{ count: usageCount }}
-                >
-                  This receiver is currently used by {'{{count}}'} route(s). Deleting it may cause alerts to not be delivered.
+              <Alert title={t('receivers.delete.in-use-warning-title', 'Receiver is in use')} severity="warning">
+                <Trans i18nKey="receivers.delete.in-use-warning" values={{ count: usageCount }}>
+                  This receiver is currently used by {'{{count}}'} route(s). Deleting it may cause alerts to not be
+                  delivered.
                 </Trans>
               </Alert>
             )}

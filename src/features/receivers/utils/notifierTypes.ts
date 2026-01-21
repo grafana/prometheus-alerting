@@ -7,7 +7,15 @@ export interface NotificationChannelOption {
   propertyName: string;
   label: string;
   description: string;
-  element?: 'input' | 'textarea' | 'checkbox' | 'select' | 'subform' | 'subform_array' | 'string_array' | 'key_value_map';
+  element?:
+    | 'input'
+    | 'textarea'
+    | 'checkbox'
+    | 'select'
+    | 'subform'
+    | 'subform_array'
+    | 'string_array'
+    | 'key_value_map';
   inputType?: string;
   placeholder?: string;
   required?: boolean;
@@ -47,10 +55,7 @@ const basicAuthOption: NotificationChannelOption = option(
   'Sets the Authorization header with the configured username and password.',
   {
     element: 'subform',
-    subformOptions: [
-      option('username', 'Username', ''),
-      option('password', 'Password', ''),
-    ],
+    subformOptions: [option('username', 'Username', ''), option('password', 'Password', '')],
   }
 );
 
@@ -205,9 +210,14 @@ export const cloudNotifierTypes: NotifierDTO[] = [
       option('title', 'Title', 'Templated title of the message', {
         placeholder: '{{ template "discord.default.title" . }}',
       }),
-      option('message', 'Message Content', 'Mention a group using @ or a user using <@ID> when notifying in a channel', {
-        placeholder: '{{ template "discord.default.message" . }}',
-      }),
+      option(
+        'message',
+        'Message Content',
+        'Mention a group using @ or a user using <@ID> when notifying in a channel',
+        {
+          placeholder: '{{ template "discord.default.message" . }}',
+        }
+      ),
       option('webhook_url', 'Webhook URL', '', { placeholder: 'Discord webhook URL', required: true }),
       httpConfigOption,
     ],
@@ -301,7 +311,11 @@ export const cloudNotifierTypes: NotifierDTO[] = [
     heading: 'Amazon SNS settings',
     options: [
       option('api_url', 'API URL', 'The Amazon SNS API URL'),
-      option('topic_arn', 'SNS topic ARN', 'If you don\'t specify this value, you must specify phone_number or target_arn'),
+      option(
+        'topic_arn',
+        'SNS topic ARN',
+        "If you don't specify this value, you must specify phone_number or target_arn"
+      ),
       option('phone_number', 'Phone number', 'Phone number for SMS delivery in E.164 format'),
       option('target_arn', 'Target ARN', 'The mobile platform endpoint ARN for mobile notifications'),
       option('subject', 'Subject', 'Subject line when the message is delivered', {

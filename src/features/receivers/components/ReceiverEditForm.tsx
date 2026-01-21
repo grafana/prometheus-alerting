@@ -140,12 +140,7 @@ export function ReceiverEditForm({
             />
           ))}
 
-          <Button
-            type="button"
-            variant="secondary"
-            icon="plus"
-            onClick={handleAddIntegration}
-          >
+          <Button type="button" variant="secondary" icon="plus" onClick={handleAddIntegration}>
             <Trans i18nKey="receivers.form.add-integration">Add integration</Trans>
           </Button>
 
@@ -202,10 +197,7 @@ function IntegrationEditor({
     <Stack direction="column" gap={2}>
       {/* Header with type selector and remove button */}
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-        <Field
-          label={t('receivers.form.integration-type', 'Integration type')}
-          style={{ flex: 1, marginRight: 16 }}
-        >
+        <Field label={t('receivers.form.integration-type', 'Integration type')} style={{ flex: 1, marginRight: 16 }}>
           <Controller
             name={`integrations.${index}.type`}
             control={control}
@@ -245,17 +237,8 @@ function IntegrationEditor({
 
       {/* Settings box - only the actual integration settings are boxed */}
       {notifier && (
-        <Box
-          padding={2}
-          borderColor="weak"
-          borderStyle="solid"
-        >
-          <IntegrationFields
-            notifier={notifier}
-            index={index}
-            control={control}
-            register={register}
-          />
+        <Box padding={2} borderColor="weak" borderStyle="solid">
+          <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         </Box>
       )}
     </Stack>
