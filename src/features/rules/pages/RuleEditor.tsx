@@ -12,7 +12,7 @@ import { translateRouteParamToRuleType } from '../rule-editor/formDefaults';
 import { rulerRuleToFormValues } from '../rule-editor/formTransform';
 import { useRuleDetails } from '../hooks/useRuleDetails';
 import { RuleFormValues, RuleFormType } from '../rule-editor/types';
-import { generateCopiedName } from '../utils/duplicate';
+import { generateCopiedName } from '../rule-editor/duplicate';
 
 export default function RuleEditor() {
   const { ruleIdentifier } = useParams<{ ruleIdentifier?: string }>();
@@ -174,7 +174,8 @@ function CloneRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
 
     try {
       const formValues = rulerRuleToFormValues(meta.dataSourceUid, meta.namespace, meta.groupName, rulerRule);
-      // Append (copy) to the name for cloned rules, avoiding duplicates in the same group
+      
+      // Generate a unique name for the cloned rule
       const existingNames = rulerGroup?.rules.map(getRuleName) ?? [];
       formValues.name = generateCopiedName(formValues.name, existingNames);
 

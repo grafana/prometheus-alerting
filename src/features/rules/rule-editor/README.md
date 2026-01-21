@@ -59,13 +59,13 @@ The RuleEditor page will render the RuleForm with:
 
 Navigate to `/rules/{ruleIdentifier}/edit`
 
-TODO: Implement fetching the existing rule and passing as prefill to RuleForm.
+The `EditRuleEditor` component fetches the existing rule using `useRuleDetails` hook and converts it to form values using `rulerRuleToFormValues`, then passes it as `prefill` to `RuleForm` along with `existingRuleIdentifier` to indicate edit mode.
 
 ### Cloning a Rule
 
 Navigate to `/rules/new?copyFrom={ruleIdentifier}`
 
-TODO: Implement fetching the rule to clone and passing through cloneRuleDefinition().
+The `CloneRuleEditor` component fetches the rule to clone using `useRuleDetails` hook, converts it to form values, generates a unique name using `generateCopiedName` from `./duplicate`, and passes the modified values as `prefill` to `RuleForm` (without `existingRuleIdentifier` to indicate new rule mode).
 
 ## API Integration
 
@@ -123,8 +123,8 @@ The mutation POSTs to `/api/ruler/{uid}/api/v1/rules/{namespace}` with the rule 
 
 ### High Priority
 
-1. Implement fetching existing rules for edit mode
-2. Implement fetching rules for clone mode
+1. ~~Implement fetching existing rules for edit mode~~ ✅ Done
+2. ~~Implement fetching rules for clone mode~~ ✅ Done
 3. Add access control checks (canCreateRules, canEditRules)
 4. Integrate rich QueryEditor component from data sources
 5. Add query preview/testing functionality

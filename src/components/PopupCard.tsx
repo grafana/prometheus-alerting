@@ -1,6 +1,5 @@
-import { css } from '@emotion/css';
+import { css, cx } from '@emotion/css';
 import { Placement } from '@popperjs/core';
-import classnames from 'classnames';
 import React, { ReactElement, ReactNode, cloneElement, useRef } from 'react';
 
 import { GrafanaTheme2 } from '@grafana/data';
@@ -100,7 +99,7 @@ export function PopupCard({
                 {...popperProps}
                 show={shouldShow}
                 {...rest}
-                wrapperClassName={classnames(styles.popover, wrapperClassName)}
+                wrapperClassName={cx(styles.popover, wrapperClassName)}
                 referenceElement={popoverRef.current}
                 renderArrow={arrow}
                 // @TODO

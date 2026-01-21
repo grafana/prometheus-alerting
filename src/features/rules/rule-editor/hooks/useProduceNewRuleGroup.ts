@@ -1,7 +1,9 @@
 import { Action } from '@reduxjs/toolkit';
-import { useLazyGetRuleGroupQuery } from '../../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../../api/rules/mimir.endpoints';
 import { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { ruleGroupReducer, addRuleAction } from '../ruleGroupReducer';
+
+const { useLazyGetRuleGroupQuery } = rulerApi;
 
 const DEFAULT_GROUP_EVALUATION_INTERVAL = '1m';
 

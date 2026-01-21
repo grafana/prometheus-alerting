@@ -4,9 +4,12 @@ import { DataSourceRuleIdentifier, isCloudRuleIdentifier } from '@grafana/extern
 import { PromRuleDTO, PromRuleGroupDTO, RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
-import { useGetGroupsQuery } from '../../../api/rules/prometheus.endpoints';
-import { useGetRuleGroupQuery } from '../../../api/rules/mimir.endpoints';
+import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
+import { rulerApi } from '../../../api/rules/mimir.endpoints';
 import { getMatchingPromRule, matchPromRuleById, matchRulerRuleById } from '@grafana/external-rules/matching';
+
+const { useGetGroupsQuery } = prometheusApi;
+const { useGetRuleGroupQuery } = rulerApi;
 
 export interface RuleDetailsResult {
   promRule?: PromRuleDTO;

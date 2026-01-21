@@ -35,7 +35,10 @@ const mockUseGetRulerRuleGroupQuery = jest.fn();
 
 jest.mock('../../../api/rules/prometheus.endpoints', () => ({
   ...jest.requireActual('../../../api/rules/prometheus.endpoints'),
-  useGetGroupsQuery: () => mockUseGetGroupsQuery(),
+  prometheusApi: {
+    ...jest.requireActual('../../../api/rules/prometheus.endpoints').prometheusApi,
+    useGetGroupsQuery: () => mockUseGetGroupsQuery(),
+  },
 }));
 
 jest.mock('../../../api/rules/featureDiscovery.endpoints', () => ({
@@ -45,7 +48,10 @@ jest.mock('../../../api/rules/featureDiscovery.endpoints', () => ({
 
 jest.mock('../../../api/rules/mimir.endpoints', () => ({
   ...jest.requireActual('../../../api/rules/mimir.endpoints'),
-  useGetRulerRuleGroupQuery: () => mockUseGetRulerRuleGroupQuery(),
+  rulerApi: {
+    ...jest.requireActual('../../../api/rules/mimir.endpoints').rulerApi,
+    useGetRuleGroupQuery: () => mockUseGetRulerRuleGroupQuery(),
+  },
 }));
 
 function renderGroupDetails(path = '/groups/prometheus-1/my-namespace/my-group') {

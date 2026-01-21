@@ -1,6 +1,8 @@
 import { useEffect, useMemo } from 'react';
 
-import { useLazyGetAllRulesQuery, RulerRulesConfigDTO } from '../../../../api/rules/mimir.endpoints';
+import { rulerApi, RulerRulesConfigDTO } from '../../../../api/rules/mimir.endpoints';
+
+const { useLazyGetAllRulesQuery } = rulerApi;
 
 /**
  * Hook to fetch namespaces and groups from a data source

@@ -78,16 +78,3 @@ export const rulerApi = createApi({
     }),
   }),
 });
-
-export const {
-  useGetRuleGroupQuery,
-  useLazyGetRuleGroupQuery,
-  useDeleteRuleGroupMutation,
-  useUpsertRuleGroupMutation,
-  useGetAllRulesQuery,
-  useLazyGetAllRulesQuery,
-} = rulerApi;
-
-// Export aliases for backward compatibility with existing code
-export const useGetRulerRuleGroupQuery = useGetRuleGroupQuery;
-export const useLazyGetRulerRuleGroupQuery = useLazyGetRuleGroupQuery;

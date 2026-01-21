@@ -12,7 +12,10 @@ import { Button, Stack, useStyles2 } from '@grafana/ui';
 import type { RulerRuleDTO } from '@grafana/external-rules/vanilla';
 import type { CloudRuleIdentifier } from '@grafana/external-rules';
 
-import { useUpsertRuleGroupMutation } from '../../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../../api/rules/mimir.endpoints';
+
+const { useUpsertRuleGroupMutation } = rulerApi;
+
 import { RuleFormValues, RuleFormType } from '../types';
 import { defaultFormValuesForRuleType } from '../formDefaults';
 import { formValuesToRulerRuleDTO } from '../formTransform';

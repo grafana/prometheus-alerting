@@ -3,8 +3,10 @@ import React, { memo, useMemo } from 'react';
 import { skipToken } from '@reduxjs/toolkit/query';
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
-import { useGetRulerRuleGroupQuery } from '../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../api/rules/mimir.endpoints';
 import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
+
+const { useGetRuleGroupQuery } = rulerApi;
 import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { getMatchingRulerRule } from '@grafana/external-rules/matching';
 import { rules as rulesNav } from '../../../utils/navigation';
@@ -43,7 +45,7 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
 
   // Fetch ruler rule group if Ruler API is supported
   // Skip the query if Ruler API is not enabled
-  const { data: rulerRuleGroup, isLoading: isLoadingRulerGroup } = useGetRulerRuleGroupQuery(
+  const { data: rulerRuleGroup, isLoading: isLoadingRulerGroup } = useGetRuleGroupQuery(
     rulerApiEnabled
       ? {
           dataSourceUid: rulesSource.uid,

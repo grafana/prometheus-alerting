@@ -8,8 +8,10 @@ import { Alert } from '@grafana/ui';
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
-import { useGetRulerRuleGroupQuery } from '../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../api/rules/mimir.endpoints';
 import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../types/rules';
+
+const { useGetRuleGroupQuery } = rulerApi;
 import { hashRule } from '@grafana/external-rules/hashing';
 import { getMatchingRulerRule } from '@grafana/external-rules/matching';
 
@@ -62,7 +64,7 @@ export function DataSourceGroupLoader({
     data: rulerRuleGroup,
     isLoading: isRulerLoading,
     isError: isRulerError,
-  } = useGetRulerRuleGroupQuery(
+  } = useGetRuleGroupQuery(
     shouldFetchRuler
       ? {
           dataSourceUid: groupIdentifier.rulesSource.uid,

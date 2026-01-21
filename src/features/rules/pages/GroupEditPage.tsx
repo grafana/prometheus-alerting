@@ -20,12 +20,10 @@ import {
 } from '@grafana/ui';
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
-import {
-  useDeleteRuleGroupMutation,
-  useGetRulerRuleGroupQuery,
-  useUpsertRuleGroupMutation,
-} from '../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../api/rules/mimir.endpoints';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
+
+const { useGetRuleGroupQuery, useDeleteRuleGroupMutation, useUpsertRuleGroupMutation } = rulerApi;
 import { useReturnTo } from '../../../hooks/useReturnTo';
 import { groups } from '../../../utils/navigation';
 
@@ -59,7 +57,7 @@ function GroupEditPage() {
     data: rulerGroup,
     isLoading: isRulerLoading,
     error: rulerError,
-  } = useGetRulerRuleGroupQuery(
+  } = useGetRuleGroupQuery(
     dsFeatures?.rulerApiEnabled
       ? {
           dataSourceUid: dataSourceUid,

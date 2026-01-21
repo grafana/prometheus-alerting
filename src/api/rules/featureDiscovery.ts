@@ -62,7 +62,7 @@ export async function discoverDataSourceFeatures(uid: string): Promise<DataSourc
  * Attempt to fetch buildinfo from the data source
  * Returns undefined if the endpoint doesn't exist (404) or if there's an error
  */
-export async function fetchBuildInfo(uid: string): Promise<PromBuildInfoResponse | undefined> {
+async function fetchBuildInfo(uid: string): Promise<PromBuildInfoResponse | undefined> {
   try {
     const response = await lastValueFrom(
       getBackendSrv().fetch<PromBuildInfoResponse>({

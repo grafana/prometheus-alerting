@@ -7,15 +7,19 @@ import { t } from '@grafana/i18n';
 import { getDataSourceSrv, PluginPage } from '@grafana/runtime';
 import { Alert, LoadingPlaceholder } from '@grafana/ui';
 
-import { useGetGroupsQuery } from '../../../api/rules/prometheus.endpoints';
+import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
-import { useGetRulerRuleGroupQuery } from '../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../api/rules/mimir.endpoints';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
+
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 import { groups } from '../../../utils/navigation';
 import { DataSourceGroupLoader } from '../list/DataSourceGroupLoader';
 import { GroupDetailsTitle } from '../components/GroupDetailsTitle';
 import { GroupDetailsActions } from '../components/GroupDetailsActions';
+
+const { useGetGroupsQuery } = prometheusApi;
+const { useGetRuleGroupQuery } = rulerApi;
 
 type GroupPageRouteParams = {
   dataSourceUid?: string;
@@ -52,7 +56,7 @@ function GroupDetails() {
     data: rulerGroup,
     isLoading: isRulerLoading,
     error: rulerError,
-  } = useGetRulerRuleGroupQuery(
+  } = useGetRuleGroupQuery(
     dsFeatures?.rulerApiEnabled
       ? {
           dataSourceUid: dataSourceUid,
