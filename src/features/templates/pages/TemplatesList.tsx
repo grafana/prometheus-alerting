@@ -1,36 +1,92 @@
-import React from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Skeleton from 'react-loading-skeleton';
+import { css } from '@emotion/css';
 
 import { testIds } from '../../../components/testIds';
-import { InteractiveTable, EmptyState } from '@grafana/ui';
-import { useTemplates } from '../hooks/useTemplates';
-import { t } from '@grafana/i18n';
+import { InteractiveTable, EmptyState, Button } from '@grafana/ui';
+import { useTemplates, Template } from '../hooks/useTemplates';
+import { t, Trans } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { DataSourceError } from '../../../components/AlertmanagerError';
-
-interface TemplateRow {
-  path: string;
-}
+import { TemplateDrawer, DrawerMode } from '../components/TemplateDrawer';
+import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 
 function TemplatesPage() {
-  const { templates, isLoading, error } = useTemplates();
+  const { templates, isLoading, error, refetch } = useTemplates();
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
+  const hasConfigurationAPI = useHasConfigurationAPI();
 
-  // Convert string array to object array for InteractiveTable
-  const templateRows: TemplateRow[] = templates.map((template) => ({ path: template }));
+  const existingTemplateNames = useMemo(() => templates.map((t) => t.name), [templates]);
+
+  const handleTemplateClick = useCallback((template: Template) => {
+    setSelectedTemplate(template);
+    setDrawerMode(DrawerMode.View);
+  }, []);
+
+  const handleCreateTemplate = useCallback(() => {
+    setSelectedTemplate(null);
+    setDrawerMode(DrawerMode.Add);
+  }, []);
+
+  const handleDrawerClose = useCallback(() => {
+    setSelectedTemplate(null);
+    setDrawerMode(DrawerMode.View);
+  }, []);
+
+  const handleSaved = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  const clickableCellStyles = css({
+    cursor: 'pointer',
+  });
 
   const columns = [
     {
-      id: 'path',
-      header: t('templates.column.path', 'Template Path'),
-      cell: ({ row: { original } }: { row: { original: TemplateRow } }) => (
-        <code style={{ padding: '4px 8px' }}>{original.path}</code>
+      id: 'name',
+      header: t('templates.column.name', 'Template Name'),
+      cell: ({ row: { original } }: { row: { original: Template } }) => (
+        <div className={clickableCellStyles} onClick={() => handleTemplateClick(original)}>
+          <code style={{ padding: '4px 8px' }}>{original.name}</code>
+        </div>
       ),
+    },
+    {
+      id: 'preview',
+      header: t('templates.column.preview', 'Preview'),
+      cell: ({ row: { original } }: { row: { original: Template } }) => {
+        // Show first line or truncated content as preview
+        const preview = original.content
+          ? original.content.split('\n')[0].substring(0, 60) + (original.content.length > 60 ? '...' : '')
+          : '—';
+        return (
+          <div
+            className={clickableCellStyles}
+            onClick={() => handleTemplateClick(original)}
+            style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '12px' }}
+          >
+            {preview}
+          </div>
+        );
+      },
     },
   ];
 
+  const isDrawerOpen = selectedTemplate !== null || drawerMode === DrawerMode.Add;
+
   return (
-    <AlertmanagerPage subTitle={t('templates.page-subtitle', 'Customize notification message templates')}>
+    <AlertmanagerPage
+      subTitle={t('templates.page-subtitle', 'Customize notification message templates')}
+      actions={
+        hasConfigurationAPI && (
+          <Button icon="plus" onClick={handleCreateTemplate}>
+            <Trans i18nKey="templates.create-button">Create template</Trans>
+          </Button>
+        )
+      }
+    >
       <div data-testid={testIds.templates.container}>
         {isLoading && (
           <div>
@@ -44,8 +100,8 @@ function TemplatesPage() {
         {!isLoading && templates.length > 0 && !error && (
           <InteractiveTable
             columns={columns}
-            data={templateRows}
-            getRowId={(row) => row.path}
+            data={templates}
+            getRowId={(row) => row.name}
             pageSize={DEFAULT_PAGE_SIZE}
           />
         )}
@@ -53,9 +109,26 @@ function TemplatesPage() {
           <EmptyState
             message={t('templates.no-templates-message', 'No templates are configured in the Alertmanager.')}
             variant="call-to-action"
+            button={
+              hasConfigurationAPI && (
+                <Button icon="plus" onClick={handleCreateTemplate}>
+                  <Trans i18nKey="templates.create-button">Create template</Trans>
+                </Button>
+              )
+            }
           />
         )}
       </div>
+
+      {isDrawerOpen && (
+        <TemplateDrawer
+          template={selectedTemplate}
+          existingTemplateNames={existingTemplateNames}
+          onClose={handleDrawerClose}
+          onSaved={handleSaved}
+          initialMode={drawerMode}
+        />
+      )}
     </AlertmanagerPage>
   );
 }
