@@ -2,7 +2,7 @@
   "name": "@grafana/external-alertmanager",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.ts",
+  "main": "src/common/index.ts",
   "scripts": {
     "test": "false;"
   },
