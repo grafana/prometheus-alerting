@@ -214,7 +214,5 @@ export function getNotifierForType(type: string): NotifierDTO | undefined {
  * Validate that a receiver name is not a duplicate
  */
 export function isReceiverNameUnique(name: string, existingReceivers: Receiver[], originalName?: string): boolean {
-  return !existingReceivers.some(
-    (r) => r.name.toLowerCase() === name.toLowerCase() && r.name !== originalName
-  );
+  return !existingReceivers.some((r) => r.name.toLowerCase() === name.toLowerCase() && r.name !== originalName);
 }
