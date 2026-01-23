@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -34,15 +34,35 @@ interface MatcherFormData {
 
 function SilenceForm() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const isEditMode = Boolean(id);
 
+  // Check for recreateFrom query param
+  const recreateFromId = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('recreateFrom');
+  }, [location.search]);
+
+  const isRecreateMode = Boolean(recreateFromId) && !isEditMode;
+
+  // Fetch silence for edit mode
   const {
     data: existingSilence,
-    isLoading: isLoadingSilence,
+    isLoading: isLoadingEditSilence,
     error: loadError,
   } = useSilence(id || '', {
     skip: !isEditMode,
   });
+
+  // Fetch silence for recreate mode
+  const {
+    data: recreateSilence,
+    isLoading: isLoadingRecreateSilence,
+  } = useSilence(recreateFromId || '', {
+    skip: !isRecreateMode,
+  });
+
+  const isLoadingSilence = isLoadingEditSilence || isLoadingRecreateSilence;
 
   const operatorOptions: ComboboxOption[] = [
     { label: t('silences.create.operator-equal', '= (Equal)'), value: 'equal' },
@@ -105,6 +125,32 @@ function SilenceForm() {
       });
     }
   }, [isEditMode, existingSilence, reset]);
+
+  // Populate form when recreating from an existing silence
+  useEffect(() => {
+    if (isRecreateMode && recreateSilence) {
+      // Calculate original duration for convenience
+      const originalStart = new Date(recreateSilence.startsAt);
+      const originalEnd = new Date(recreateSilence.endsAt);
+      const durationMs = originalEnd.getTime() - originalStart.getTime();
+      const durationHours = Math.round(durationMs / (1000 * 60 * 60));
+      const duration = durationHours >= 24 ? `${Math.round(durationHours / 24)}d` : `${durationHours}h`;
+
+      // Create fresh dates for the form defaults
+      const currentTime = new Date();
+      const oneHourFromNow = new Date(currentTime.getTime() + 60 * 60 * 1000);
+
+      reset({
+        matchers: recreateSilence.matchers || [{ name: '', value: '', isRegex: false, isEqual: true }],
+        timeMode: 'relative',
+        duration: duration || '2h',
+        startsAt: formatDateTimeLocal(currentTime),
+        endsAt: formatDateTimeLocal(oneHourFromNow),
+        createdBy: recreateSilence.createdBy,
+        comment: recreateSilence.comment,
+      });
+    }
+  }, [isRecreateMode, recreateSilence, reset]);
 
   const matchers = watch('matchers');
   const timeMode = watch('timeMode');
@@ -178,6 +224,8 @@ function SilenceForm() {
             <h2>
               {isEditMode
                 ? t('silences.edit.page-title', 'Edit Silence')
+                : isRecreateMode
+                ? t('silences.recreate.page-title', 'Recreate Silence')
                 : t('silences.create.page-title', 'Create Silence')}
             </h2>
 

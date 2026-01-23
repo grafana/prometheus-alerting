@@ -1,14 +1,18 @@
 import { css } from '@emotion/css';
 import React, { useState } from 'react';
 import { GrafanaTheme2 } from '@grafana/data';
-import { t } from '@grafana/i18n';
+import { t, Trans } from '@grafana/i18n';
 import { Alert, Stack, useStyles2, Text, Button, ConfirmModal, TabContent } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
+import { locationService } from '@grafana/runtime';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
 import { useDeleteSilence } from '../hooks/useSilences';
 import { formatMatchers, formatDateTime } from '../utils/silences.utils';
+import { AffectedAlertsList } from './AffectedAlertsList';
+import { prefixRoute } from '../../../utils/utils.routing';
+import { ROUTES } from '../../../constants';
 
 interface SilenceDetailsProps {
   silence: GettableSilence;
@@ -76,6 +80,14 @@ export function SilenceDrawerView({ silence, activeTab, onEdit, onClose }: Silen
     setIsConfirmModalOpen(true);
   };
 
+  const handleRecreate = () => {
+    // Navigate to create silence page with pre-populated data
+    const params = new URLSearchParams();
+    params.set('recreateFrom', silence.id);
+    locationService.push(`${prefixRoute(ROUTES.CreateSilence)}?${params.toString()}`);
+    onClose();
+  };
+
   const handleConfirmExpire = async () => {
     try {
       await expireSilence(silence.id);
@@ -93,7 +105,7 @@ export function SilenceDrawerView({ silence, activeTab, onEdit, onClose }: Silen
   };
 
   const isExpired = silence.status.state === 'expired';
-  const hasActions = !isExpired;
+  const canExpire = !isExpired;
 
   return (
     <>
@@ -107,23 +119,28 @@ export function SilenceDrawerView({ silence, activeTab, onEdit, onClose }: Silen
 
       <TabContent>
         {activeTab === 'configuration' && <SilenceDetails silence={silence} />}
-        {activeTab === 'affected-alerts' && (
-          <Stack direction="column" gap={2}>
-            {/* Placeholder for affected alerts - to be implemented */}
-          </Stack>
-        )}
+        {activeTab === 'affected-alerts' && <AffectedAlertsList silence={silence} />}
       </TabContent>
 
-      {hasActions && activeTab === 'configuration' && (
+      {activeTab === 'configuration' && (
         <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
           <Stack gap={2} justifyContent="space-between">
-            <Button variant="secondary" onClick={onEdit}>
-              {t('silences.drawer.edit', 'Edit')}
-            </Button>
+            <Stack gap={1}>
+              {canExpire && (
+                <Button variant="secondary" onClick={onEdit}>
+                  <Trans i18nKey="silences.drawer.edit">Edit</Trans>
+                </Button>
+              )}
+              <Button variant="secondary" icon="copy" onClick={handleRecreate}>
+                <Trans i18nKey="silences.drawer.recreate">Recreate</Trans>
+              </Button>
+            </Stack>
             <div style={{ flex: 1 }} />
-            <Button variant="destructive" onClick={handleExpire} disabled={isExpiring}>
-              {isExpiring ? t('silences.drawer.expiring', 'Expiring...') : t('silences.drawer.expire', 'Expire')}
-            </Button>
+            {canExpire && (
+              <Button variant="destructive" onClick={handleExpire} disabled={isExpiring}>
+                {isExpiring ? t('silences.drawer.expiring', 'Expiring...') : t('silences.drawer.expire', 'Expire')}
+              </Button>
+            )}
           </Stack>
         </div>
       )}
