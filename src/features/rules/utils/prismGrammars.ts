@@ -9,8 +9,7 @@
  * Licensed under AGPL-3.0
  */
 
-import { Prism } from 'prism-react-renderer';
-import type { Grammar } from 'prismjs';
+import Prism, { Grammar } from 'prismjs';
 
 // PromQL operators and function names
 const PROMQL_OPERATORS = ['by', 'group_left', 'group_right', 'ignoring', 'on', 'offset', 'without'];

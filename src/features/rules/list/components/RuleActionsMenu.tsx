@@ -32,7 +32,7 @@ export function RuleActionsMenu({
   onDelete,
   onDuplicate,
   buttonSize = 'md',
-  fill = 'text',
+  fill,
 }: Props) {
   // Use Cloud Rule Identifier (cri) if we have a ruler rule, otherwise Prometheus Rule Identifier (pri)
   const identifier = rule ? fromRulerRuleAndGroup(rule, groupIdentifier) : fromRuleAndGroup(promRule, groupIdentifier);

@@ -1,5 +1,7 @@
 import { PLUGIN_BASE_URL } from '../constants';
 import { DataSourceRuleIdentifier, stringifyIdentifier } from '@grafana/external-rules/identifiers';
+import { config } from '@grafana/runtime';
+import { urlUtil } from '@grafana/data';
 
 /**
  * Navigation utilities for rule-related pages
@@ -58,3 +60,13 @@ export const rules = {
     return `${window.location.origin}${detailsLink}`;
   },
 };
+
+export function createExploreLink(dataSourceUid: string, query: string, dataSourceType = 'prometheus'): string {
+  return urlUtil.renderUrl(`${config.appSubUrl}/explore`, {
+    left: JSON.stringify({
+      datasource: dataSourceUid,
+      queries: [{ refId: 'A', datasource: { uid: dataSourceUid, type: dataSourceType }, expr: query }],
+      range: { from: 'now-1h', to: 'now' },
+    }),
+  });
+}

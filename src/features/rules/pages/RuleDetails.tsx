@@ -1,12 +1,16 @@
 import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { parseIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules';
-import { Alert, LoadingPlaceholder } from '@grafana/ui';
+import type { PromRuleDTO } from '@grafana/external-rules/vanilla';
+import { Alert, LoadingPlaceholder, Text } from '@grafana/ui';
 import { PluginPage } from '@grafana/runtime';
 import { t } from '@grafana/i18n';
+import { AlertLabels } from '@grafana/alerting/unstable';
 
 import { useRuleDetails } from '../hooks/useRuleDetails';
 import { RuleDetailsView } from '../components/RuleDetailsView';
+import { RuleDetailsTitle } from '../components/RuleDetailsTitle';
+import { RuleDetailsSubtitle } from '../components/RuleDetailsSubtitle';
 import { RuleActionsButtons } from '../list/components/RuleActionsButtons';
 import { useDeleteRuleModal } from '../list/components/DeleteRuleModal';
 import { rules as rulesNav, groups as groupsNav } from '../../../utils/navigation';
@@ -39,6 +43,7 @@ function RuleDetails() {
     if (!promRule) {
       return undefined;
     }
+
     return {
       text: promRule.name,
       parentItem: {
@@ -101,11 +106,24 @@ function RuleDetails() {
     groupOrigin: 'datasource',
   };
 
-  // Prepare subTitle with state badge
-  const subTitle =
-    promRule.type === 'alerting'
-      ? `State: ${promRule.state}${promRule.health ? ` (${promRule.health})` : ''}`
-      : 'Recording Rule';
+  // Calculate interval
+  const interval = rulerGroup?.interval ?? (promGroup ? `${promGroup.interval}s` : undefined);
+
+  // Prepare renderTitle with state badge
+  const renderTitle = (title: string) => (
+    <RuleDetailsTitle
+      name={title}
+      type={promRule.type}
+      state={promRule.type === 'alerting' ? promRule.state : undefined}
+      health={promRule.health}
+    />
+  );
+
+  // Prepare subTitle with error alert
+  const subTitle = <RuleDetailsSubtitle health={promRule.health} lastError={promRule.lastError} />;
+
+  // Prepare metadata info
+  const info = createMetadata(promRule, interval);
 
   // Prepare actions
   const actions = (
@@ -121,7 +139,7 @@ function RuleDetails() {
 
   return (
     <>
-      <PluginPage pageNav={pageNav} subTitle={subTitle} actions={actions}>
+      <PluginPage pageNav={pageNav} renderTitle={renderTitle} subTitle={subTitle} info={info} actions={actions}>
         <RuleDetailsView
           promRule={promRule}
           rulerRule={rulerRule}
@@ -133,6 +151,40 @@ function RuleDetails() {
       {deleteModal}
     </>
   );
+}
+
+// Helper functions
+
+interface PageInfoItem {
+  label: string;
+  value: React.ReactNode;
+}
+
+function createMetadata(promRule: PromRuleDTO, interval?: string): PageInfoItem[] {
+  const metadata: PageInfoItem[] = [];
+
+  // Add evaluation interval
+  if (interval) {
+    metadata.push({
+      label: t('rule-details.metadata.interval', 'Evaluation interval'),
+      value: (
+        <Text color="primary">
+          {t('rule-details.metadata.interval-value', 'Every {{interval}}', { interval })}
+        </Text>
+      ),
+    });
+  }
+
+  // Add labels if present (labels are already in promRule)
+  const hasLabels = promRule.labels && Object.keys(promRule.labels).length > 0;
+  if (hasLabels && promRule.labels) {
+    metadata.push({
+      label: t('rule-details.metadata.labels', 'Labels'),
+      value: <AlertLabels labels={promRule.labels} size="sm" />,
+    });
+  }
+
+  return metadata;
 }
 
 export default RuleDetails;

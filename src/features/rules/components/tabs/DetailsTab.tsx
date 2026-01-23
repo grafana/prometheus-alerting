@@ -16,9 +16,6 @@ interface Props {
 export function DetailsTab({ promRule, rulerRule, promGroup, rulerGroup, hasRulerApi }: Props) {
   const styles = useStyles2(getStyles);
 
-  // Get interval from ruler group or prom group
-  const interval = rulerGroup?.interval ?? (promGroup ? `${promGroup.interval}s` : undefined);
-
   // Get for/duration - prefer ruler (string format), fallback to prom (number in seconds)
   const forDuration = (() => {
     // Try ruler first (it's a duration string like "5m")
@@ -59,12 +56,6 @@ export function DetailsTab({ promRule, rulerRule, promGroup, rulerGroup, hasRule
           </Box>
 
           <div className={styles.detailsGrid}>
-            {interval && (
-              <DetailField label={t('rule-details.field.interval', 'Evaluation Interval')}>
-                {t('rule-details.field.interval-value', 'Every {{interval}}', { interval })}
-              </DetailField>
-            )}
-
             {forDuration && (
               <DetailField label={t('rule-details.field.for', 'Pending Period')}>{forDuration}</DetailField>
             )}

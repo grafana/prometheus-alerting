@@ -41,8 +41,8 @@ export function RuleActionsButtons({
     const editUrl = rulesNav.editPageLink(identifier);
 
     return (
-      <Stack gap={0} alignItems="center" wrap="nowrap">
-        <LinkButton size={buttonSize} variant="secondary" fill="text" href={editUrl}>
+      <Stack gap={1} alignItems="center" wrap="nowrap">
+        <LinkButton size={buttonSize} variant="secondary" icon="pen" href={editUrl}>
           <Trans i18nKey="alerting.rule-actions.edit">Edit</Trans>
         </LinkButton>
         <RuleActionsMenu
@@ -53,7 +53,6 @@ export function RuleActionsButtons({
           onDelete={onDelete}
           onDuplicate={onDuplicate}
           buttonSize={buttonSize}
-          fill="text"
         />
       </Stack>
     );
