@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { t } from '@grafana/i18n';
 import { Combobox, ComboboxOption } from '@grafana/ui';
+import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 
 import { useReceivers } from '../../receivers/hooks/useReceivers';
 
@@ -25,7 +26,7 @@ export function ReceiverSelector({ value, onChange, disabled }: ReceiverSelector
 
   const options: Array<ComboboxOption<string>> = useMemo(
     () =>
-      receivers.map((receiver) => ({
+      receivers.map((receiver: Receiver) => ({
         label: receiver.name,
         value: receiver.name,
       })),

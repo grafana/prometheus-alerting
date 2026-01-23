@@ -12,6 +12,7 @@ import { t, Trans } from '@grafana/i18n';
 import { locationService } from '@grafana/runtime';
 import { z } from 'zod';
 import { useTimeIntervals, useAddTimeInterval, useUpdateTimeInterval } from '../hooks/useTimeIntervals';
+import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 
 const TimeIntervalFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -38,7 +39,7 @@ function TimeIntervalForm() {
   const mutationError = addError || updateError;
   const isSuccess = isAddSuccess || isUpdateSuccess;
 
-  const existingTimeInterval = isEditMode ? timeIntervals.find((ti) => ti.name === name) : undefined;
+  const existingTimeInterval = isEditMode ? timeIntervals.find((ti: TimeInterval) => ti.name === name) : undefined;
 
   const {
     register,

@@ -68,7 +68,7 @@ export function useAffectedAlerts(silence: GettableSilence | null): UseAffectedA
       return [];
     }
 
-    return allAlerts.filter((alert) => alertMatchesSilence(alert, silence));
+    return allAlerts.filter((alert: GettableAlert) => alertMatchesSilence(alert, silence));
   }, [allAlerts, silence]);
 
   return {

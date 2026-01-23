@@ -18,7 +18,7 @@ function TemplatesPage() {
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
   const hasConfigurationAPI = useHasConfigurationAPI();
 
-  const existingTemplateNames = useMemo(() => templates.map((t) => t.name), [templates]);
+  const existingTemplateNames = useMemo(() => templates.map((t: Template) => t.name), [templates]);
 
   const handleTemplateClick = useCallback((template: Template) => {
     setSelectedTemplate(template);

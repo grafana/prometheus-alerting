@@ -10,6 +10,7 @@ import { StoreProvider } from '../StoreProvider/StoreProvider';
 import { sharedStore } from '../../store/store';
 import { AlertmanagerPicker } from '../AlertmanagerPicker/AlertmanagerPicker';
 import { ClusterStatus } from './ClusterStatus';
+import type { PeerStatus } from '@grafana/external-alertmanager/vanilla';
 
 type AppPluginSettings = {};
 
@@ -63,7 +64,7 @@ const AppConfigStatusContent = () => {
 
   const statusItems = [{ label: t('app-config.status.uptime', 'Uptime'), value: status.uptime }];
 
-  const peers = (status.cluster.peers ?? []).map((peer, idx) => ({
+  const peers = (status.cluster.peers ?? []).map((peer: PeerStatus, idx: number) => ({
     label: t('app-config.cluster.peer', `Peer ${idx + 1}`),
     value: `${peer.name} (${peer.address})`,
   }));

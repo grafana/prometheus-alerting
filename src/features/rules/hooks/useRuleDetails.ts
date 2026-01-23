@@ -59,7 +59,7 @@ export function useRuleDetails(identifier: DataSourceRuleIdentifier): RuleDetail
   const { promRule, promGroup, rulerRule, rulerGroup } = useMemo(() => {
     // Get Prometheus group - must match namespace and groupName from identifier
     const promGroups = promQuery.data?.data.groups ?? [];
-    const promGroup = promGroups.find((g) => g.file === namespace && g.name === groupName);
+    const promGroup = promGroups.find((g: PromRuleGroupDTO) => g.file === namespace && g.name === groupName);
 
     // Get Ruler group (only for CRI)
     const rulerGroup = isCloudRule ? rulerQuery.data ?? undefined : undefined;
