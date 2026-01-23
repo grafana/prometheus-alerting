@@ -1,31 +1,33 @@
-import { css } from '@emotion/css';
 import React from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 
-import { DataSourceInstanceSettings, GrafanaTheme2 } from '@grafana/data';
+import { DataSourceInstanceSettings } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { Field, Input, TextArea, useStyles2, Stack } from '@grafana/ui';
+import { Field, Input, Stack, Alert } from '@grafana/ui';
 
 import { RuleFormValues } from '../types';
 import { RuleEditorSection } from './RuleEditorSection';
 import { CloudRulesSourcePicker } from './CloudRulesSourcePicker';
 import { isCloudRecordingRuleByType } from '../ruleTypeHelpers';
+import { ExpressionQueryEditor } from './ExpressionQueryEditor';
 
 export interface RuleDefinitionSectionProps {
   onChangeCloudDatasource: (datasourceUid: string) => void;
 }
 
 export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitionSectionProps) => {
-  const styles = useStyles2(getStyles);
   const {
     register,
     control,
-    watch,
     setValue,
     formState: { errors },
   } = useFormContext<RuleFormValues>();
 
-  const type = watch('type');
+  // Use useWatch for better performance - single subscription instead of multiple
+  const [type, dataSourceName] = useWatch<RuleFormValues, ['type', 'dataSourceName']>({
+    control,
+    name: ['type', 'dataSourceName'],
+  });
 
   const isRecording = isCloudRecordingRuleByType(type);
 
@@ -111,22 +113,28 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
           invalid={!!errors.expression}
           required
         >
-          <TextArea
-            {...register('expression', {
+          <Controller
+            name="expression"
+            control={control}
+            rules={{
               required: t('alerting.expression-editor.message.expression-required', 'Expression is required.'),
-            })}
-            rows={10}
-            className={styles.textarea}
+            }}
+            render={({ field: { value, onChange } }) => {
+              if (!dataSourceName) {
+                return (
+                  <Alert severity="info" title={t('alerting.expression-editor.select-datasource', 'Select a data source')}>
+                    {t(
+                      'alerting.expression-editor.select-datasource-message',
+                      'Please select a data source above to load the query editor.'
+                    )}
+                  </Alert>
+                );
+              }
+              return <ExpressionQueryEditor value={value} onChange={onChange} dataSourceName={dataSourceName} />;
+            }}
           />
         </Field>
       </Stack>
     </RuleEditorSection>
   );
 };
-
-const getStyles = (theme: GrafanaTheme2) => ({
-  textarea: css({
-    fontFamily: theme.typography.fontFamilyMonospace,
-    fontSize: theme.typography.fontSize,
-  }),
-});

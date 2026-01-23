@@ -26,6 +26,17 @@ npm run test:ci      # Run all tests once and exit
 npm run e2e          # Run E2E tests with Playwright (requires npm run server first)
 ```
 
+**E2E Testing Setup:**
+
+- Framework: Playwright with `@grafana/plugin-e2e` (Grafana's plugin testing library)
+- Test location: `tests/` directory (`*.spec.ts` files)
+- Configuration: `playwright.config.ts`
+- Test environment: Grafana runs in Docker via `docker-compose.yaml`
+- Two-stage flow: Auth project authenticates first, then test project runs with saved session
+- Custom fixtures in `tests/fixtures.ts` provide `appConfigPage` and `gotoPage` helpers
+- CI integration: Tests run against multiple Grafana versions, reports published to GitHub Pages
+- Test patterns: Use role-based selectors (`page.getByRole()`), custom page objects, and `@grafana/plugin-e2e` fixtures
+
 ### Development Server
 
 ```bash
@@ -58,6 +69,29 @@ npm run i18n-extract # Extract translation strings after adding t() or <Trans />
 - Use `t()` function from `@grafana/i18n` for all user-facing text
 - Use `<Trans />` component for JSX content that needs translation
 - Run `npm run i18n-extract` whenever new translations are added
+
+### Layout and Styling
+
+- Prefer `@grafana/ui` layout components for positioning and layout over custom CSS styles
+- Use custom CSS styles with `@emotion/css` only when layout components cannot achieve the desired result
+- Layout components provide consistent spacing, responsive behavior, and accessibility out of the box
+
+**Available Layout Components:**
+
+- `Stack` - Flexbox container for vertical or horizontal stacking with consistent spacing
+- `Box` - General-purpose container with padding, margin, and other layout props
+- `Grid` - CSS Grid layout container
+- `Space` - Adds spacing between elements
+- `HorizontalGroup` / `VerticalGroup` - Legacy layout components for grouping elements
+- `Container` - Legacy container component
+- `InlineField` - Field component for inline form layouts
+- `InlineFieldRow` - Row container for inline fields
+- `InlineLabel` - Label component for inline layouts
+- `InlineSegmentGroup` - Group component for inline segments
+- `Field` - Standard form field wrapper with label and validation
+- `FieldSet` - Groups related form fields
+- `Divider` - Visual separator between sections
+- `ScrollContainer` - Container with custom scrollbar styling
 
 ## Architecture
 
