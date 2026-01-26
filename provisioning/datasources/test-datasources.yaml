@@ -1,0 +1,30 @@
+apiVersion: 1
+
+datasources:
+  # Main test Prometheus instance - vanilla Prometheus (no Ruler API)
+  - name: Test Prometheus
+    type: prometheus
+    uid: test-prometheus
+    url: http://prometheus:9090
+    access: proxy
+    isDefault: true
+    editable: false
+    jsonData:
+      # Configure as alerting data source
+      manageAlerts: true
+      prometheusType: Prometheus
+      prometheusVersion: 2.40.0
+      implementation: prometheus
+    version: 1
+
+  # Alertmanager data source
+  - name: Test Alertmanager
+    type: alertmanager
+    uid: test-alertmanager
+    url: http://alertmanager:9093
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      implementation: prometheus
+    version: 1

@@ -180,7 +180,11 @@ function createMetadata(promRule: PromRuleDTO, interval?: string): PageInfoItem[
   if (hasLabels && promRule.labels) {
     metadata.push({
       label: t('rule-details.metadata.labels', 'Labels'),
-      value: <AlertLabels labels={promRule.labels} size="sm" />,
+      value: (
+        <div aria-label={t('rule-details.metadata.labels-aria', 'Rule labels')}>
+          <AlertLabels labels={promRule.labels} size="sm" />
+        </div>
+      ),
     });
   }
 

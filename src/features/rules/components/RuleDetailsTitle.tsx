@@ -13,15 +13,41 @@ export function RuleDetailsTitle({ name, type, state, health }: RuleDetailsTitle
   const normalizedState = normalizeState(state);
   const normalizedHealth = normalizeHealth(health);
 
+  // Build accessible label for state/health badge
+  const getStateLabel = () => {
+    if (normalizedHealth === 'error') {
+      return 'Rule health: Error';
+    }
+    if (normalizedHealth === 'nodata') {
+      return 'Rule health: No data';
+    }
+    if (normalizedState === 'firing') {
+      return 'Rule state: Firing';
+    }
+    if (normalizedState === 'pending') {
+      return 'Rule state: Pending';
+    }
+    if (normalizedState === 'normal') {
+      return 'Rule state: Normal';
+    }
+    return 'Rule state: Unknown';
+  };
+
   return (
     <Stack direction="row" gap={1} alignItems="center">
-      <Text variant="h1" truncate>
+      <Text variant="h1" element="h1" truncate>
         {name}
       </Text>
       {type === 'alerting' && (
-        <StateText type="alerting" state={normalizedState} health={normalizedHealth} />
+        <span aria-label={getStateLabel()}>
+          <StateText type="alerting" state={normalizedState} health={normalizedHealth} />
+        </span>
       )}
-      {type === 'recording' && <StateText type="recording" health={normalizedHealth} />}
+      {type === 'recording' && (
+        <span aria-label={normalizedHealth === 'error' ? 'Rule health: Recording error' : 'Rule state: Recording'}>
+          <StateText type="recording" health={normalizedHealth} />
+        </span>
+      )}
     </Stack>
   );
 }

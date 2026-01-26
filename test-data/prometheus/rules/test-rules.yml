@@ -1,0 +1,55 @@
+groups:
+  - name: test-group
+    interval: 30s
+    rules:
+      # Alerting rule - will be firing since condition is always true
+      - alert: HighErrorRate
+        expr: vector(1) > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: High error rate detected
+          description: Error rate is above threshold
+
+      # Recording rule
+      - record: test:request_rate:sum
+        expr: sum(rate(prometheus_http_requests_total[5m]))
+        labels:
+          environment: test
+
+  - name: another-group
+    interval: 60s
+    rules:
+      # Rule for delete testing
+      - alert: RuleToDelete
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Service is down
+
+      # Rule for duplicate testing
+      - alert: RuleToDuplicate
+        expr: up == 1
+        labels:
+          severity: info
+
+  - name: state-test-group
+    interval: 30s
+    rules:
+      # Pending rule (for < 1m, will be pending)
+      - alert: PendingRule
+        expr: vector(1) > 0
+        for: 10m
+        labels:
+          severity: warning
+
+      # Inactive rule (condition false)
+      - alert: InactiveRule
+        expr: vector(0) > 1
+        for: 1m
+        labels:
+          severity: info
