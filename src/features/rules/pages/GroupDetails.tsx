@@ -10,6 +10,7 @@ import { Alert, LoadingPlaceholder } from '@grafana/ui';
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
 import { rulerApi } from '../../../api/rules/mimir.endpoints';
+import type { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
@@ -70,7 +71,7 @@ function GroupDetails() {
 
   // Find the group from Prometheus response
   const promGroup = useMemo(() => {
-    return promResponse?.data.groups.find((g) => g.file === namespace && g.name === groupName);
+    return promResponse?.data.groups.find((g: PromRuleGroupDTO) => g.file === namespace && g.name === groupName);
   }, [promResponse, namespace, groupName]);
 
   // Format the group interval for display

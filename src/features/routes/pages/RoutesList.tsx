@@ -8,7 +8,7 @@ import { DataSourceError } from '../../../components/AlertmanagerError';
 import { t } from '@grafana/i18n';
 import { computeInheritedTree } from '@grafana/alerting/unstable';
 import { RouteCard } from '../components/RouteCard';
-import { Route } from '@grafana/external-alertmanager/vanilla';
+import { Route, Receiver } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { RouteDrawer, DrawerMode } from '../components/RouteDrawer';
 import { ReceiverDrawer } from '../../receivers/components/ReceiverDrawer';
@@ -78,7 +78,7 @@ function RoutesPage() {
     if (!selectedReceiverName) {
       return null;
     }
-    return receivers.find((r) => r.name === selectedReceiverName) || null;
+    return receivers.find((r: Receiver) => r.name === selectedReceiverName) || null;
   }, [selectedReceiverName, receivers]);
 
   const handleReceiverClick = (receiverName: string) => {

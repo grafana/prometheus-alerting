@@ -112,7 +112,7 @@ function TimeIntervalDetail() {
     refetch();
   }, [refetch]);
 
-  const timeInterval = timeIntervals.find((ti) => ti.name === name);
+  const timeInterval = timeIntervals.find((ti: TimeInterval) => ti.name === name);
 
   // If loading is complete and time interval not found, show error
   const notFound = !isLoading && !timeInterval && !error;

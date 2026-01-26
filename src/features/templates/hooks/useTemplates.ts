@@ -44,7 +44,7 @@ export function useTemplates() {
   const templateFiles = queryResult.data?.template_files ?? {};
 
   // Combine names and content into Template objects
-  const templates: Template[] = templateNames.map((name) => ({
+  const templates: Template[] = templateNames.map((name: string) => ({
     name,
     content: templateFiles[name] ?? '',
   }));

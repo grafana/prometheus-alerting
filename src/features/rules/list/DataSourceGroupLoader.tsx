@@ -14,6 +14,7 @@ import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../
 const { useGetRuleGroupQuery } = rulerApi;
 import { hashRule } from '@grafana/external-rules/hashing';
 import { getMatchingRulerRule } from '@grafana/external-rules/matching';
+import type { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vanilla';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 
@@ -102,12 +103,12 @@ export function DataSourceGroupLoader({
 
   // There should be always only one group in the response but some Prometheus-compatible data sources
   // implement different filter parameters
-  const promGroup = promResponse?.data.groups.find((g) => g.file === namespaceName && g.name === groupName);
+  const promGroup = promResponse?.data.groups.find((g: PromRuleGroupDTO) => g.file === namespaceName && g.name === groupName);
 
   if (promGroup) {
     return (
       <>
-        {promGroup.rules.map((rule) => {
+        {promGroup.rules.map((rule: PromRuleDTO) => {
           // Match the prometheus rule with its corresponding ruler rule if available
           const rulerRule =
             rulerRuleGroup && shouldFetchRuler ? getMatchingRulerRule(rulerRuleGroup.rules, rule) : undefined;
