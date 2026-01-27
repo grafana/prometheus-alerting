@@ -137,7 +137,7 @@ jobs:
         uses: grafana/plugin-actions/e2e-version@main # zizmor: ignore[unpinned-uses] provided by grafana
         with:
           version-resolver-type: plugin-grafana-dependency
-          skip-grafana-dev-image: true
+          skip-grafana-react-19-preview-image: true
 
   playwright-tests:
     needs: [resolve-versions, build]
