@@ -15,6 +15,7 @@ export default defineConfig({
     exclude: [
       'tests/**/*.spec.ts', // Exclude Playwright E2E tests
     ],
+    pool: 'threads',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
