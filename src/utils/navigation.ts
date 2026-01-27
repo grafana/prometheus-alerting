@@ -67,7 +67,7 @@ export const rules = {
  *
  * @param values - Array of [key, value] pairs for filter parameters
  * @returns URL string with search query parameters
-
+ 
  */
 export function createListFilterLink(values: Array<[string, string]>): string {
   const searchQuery = values.map(([key, value]) => `${key}:"${value}"`).join(' ');
