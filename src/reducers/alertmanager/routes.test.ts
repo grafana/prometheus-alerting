@@ -2,7 +2,12 @@ import { produce } from 'immer';
 
 import { addRouteAction, deleteRouteAction, routesReducer, updateRouteAction } from './routes';
 import { Route } from '@grafana/external-alertmanager/vanilla';
-import { addUniqueIdentifierToRoute, ParsedUserConfiguration, RouteWithID } from '@grafana/external-alertmanager/mimir';
+import {
+  addUniqueIdentifierToRoute,
+  initialAlertmanagerConfiguration,
+  PostableParsedUserConfiguration,
+  RouteWithID,
+} from '@grafana/external-alertmanager/mimir';
 
 describe('routes', () => {
   const defaultRoute: Route = {
@@ -37,8 +42,9 @@ describe('routes', () => {
   const ROOT_identifier = rootRouteWithIdentifiers.id;
   const A_identifier = rootRouteWithIdentifiers.routes![0].id;
 
-  const initialConfig: ParsedUserConfiguration = {
+  const initialConfig: PostableParsedUserConfiguration = {
     alertmanager_config: {
+      ...initialAlertmanagerConfiguration.alertmanager_config,
       time_intervals: [],
       mute_time_intervals: [],
       route: defaultRoute,

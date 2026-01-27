@@ -1,37 +1,32 @@
 import { createAction, createReducer } from '@reduxjs/toolkit';
 import { remove } from 'lodash';
 
-import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 
 import { removeTimeIntervalFromRoute, renameTimeInterval } from './utils/muteTimings.utils';
+import { initialAlertmanagerConfiguration } from '@grafana/external-alertmanager/mimir';
 
-export const addMuteTimingAction = createAction<{ interval: TimeInterval }>('muteTiming/add');
-export const updateMuteTimingAction = createAction<{
+export const addTimeInterval = createAction<{ interval: TimeInterval }>('muteTiming/add');
+export const updateTimeInterval = createAction<{
   interval: TimeInterval;
   originalName: string;
 }>('muteTiming/update');
-export const deleteMuteTimingAction = createAction<{ name: string }>('muteTiming/delete');
-
-const initialState: ParsedUserConfiguration = {
-  alertmanager_config: {},
-  template_files: {},
-};
+export const deleteTimeInterval = createAction<{ name: string }>('muteTiming/delete');
 
 /**
  * This reducer will manage action related to mute timings and make sure all operations on the alertmanager
  * configuration happen immutably and only mutate what they need.
  */
-export const muteTimingsReducer = createReducer(initialState, (builder) => {
+export const timeIntervalsReducer = createReducer(initialAlertmanagerConfiguration, (builder) => {
   builder
     // add a mute timing to the alertmanager configuration
-    .addCase(addMuteTimingAction, (draft, { payload }) => {
+    .addCase(addTimeInterval, (draft, { payload }) => {
       const { interval } = payload;
       draft.alertmanager_config.time_intervals = (draft.alertmanager_config.time_intervals ?? []).concat(interval);
     })
     // add a mute timing to the alertmanager configuration
     // make sure we update the mute timing in either the deprecated or the new time intervals property
-    .addCase(updateMuteTimingAction, (draft, { payload }) => {
+    .addCase(updateTimeInterval, (draft, { payload }) => {
       const { interval, originalName } = payload;
       const nameHasChanged = interval.name !== originalName;
 
@@ -58,7 +53,7 @@ export const muteTimingsReducer = createReducer(initialState, (builder) => {
     })
     // delete a mute timing from the alertmanager configuration, since the configuration might be using the "deprecated" mute_time_intervals
     // let's also check there
-    .addCase(deleteMuteTimingAction, (draft, { payload }) => {
+    .addCase(deleteTimeInterval, (draft, { payload }) => {
       const { name } = payload;
       const { alertmanager_config } = draft;
       const { time_intervals = [], mute_time_intervals = [] } = alertmanager_config;

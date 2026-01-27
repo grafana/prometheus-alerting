@@ -1,15 +1,11 @@
-import { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
-import {
-  addMuteTimingAction,
-  deleteMuteTimingAction,
-  muteTimingsReducer,
-  updateMuteTimingAction,
-} from './timeIntervals';
+import { initialAlertmanagerConfiguration, PostableParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
+import { addTimeInterval, deleteTimeInterval, timeIntervalsReducer, updateTimeInterval } from './timeIntervals';
 import { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 
 describe('mute timings', () => {
-  const initialConfig: ParsedUserConfiguration = {
+  const initialConfig: PostableParsedUserConfiguration = {
     alertmanager_config: {
+      ...initialAlertmanagerConfiguration.alertmanager_config,
       time_intervals: [mockTimeInterval({ name: 'default time interval' })],
       mute_time_intervals: [mockTimeInterval({ name: 'default legacy time interval' })],
       route: {
@@ -28,34 +24,34 @@ describe('mute timings', () => {
 
   it('should be able to add a new mute timing', () => {
     const newMuteTiming = mockTimeInterval({ name: 'new mute time interval' });
-    const action = addMuteTimingAction({ interval: newMuteTiming });
+    const action = addTimeInterval({ interval: newMuteTiming });
 
-    expect(muteTimingsReducer(initialConfig, action)).toMatchSnapshot();
+    expect(timeIntervalsReducer(initialConfig, action)).toMatchSnapshot();
   });
 
   it('should be able to remove a mute timing', () => {
     const legacyMuteTimingName = initialConfig.alertmanager_config.mute_time_intervals![0].name;
-    const deleteFromLegacyKey = deleteMuteTimingAction({ name: legacyMuteTimingName });
-    expect(muteTimingsReducer(initialConfig, deleteFromLegacyKey)).toMatchSnapshot();
+    const deleteFromLegacyKey = deleteTimeInterval({ name: legacyMuteTimingName });
+    expect(timeIntervalsReducer(initialConfig, deleteFromLegacyKey)).toMatchSnapshot();
 
     const muteTimingName = initialConfig.alertmanager_config.time_intervals![0].name;
-    const deleteMuteTiming = deleteMuteTimingAction({ name: muteTimingName });
-    expect(muteTimingsReducer(initialConfig, deleteMuteTiming)).toMatchSnapshot();
+    const deleteMuteTiming = deleteTimeInterval({ name: muteTimingName });
+    expect(timeIntervalsReducer(initialConfig, deleteMuteTiming)).toMatchSnapshot();
   });
 
   it('should be able to update a time interval', () => {
     const newMuteTiming = mockTimeInterval({ name: 'new mute time interval' });
 
     const legacyMuteTimingName = initialConfig.alertmanager_config.mute_time_intervals![0].name;
-    const updateLegacyMuteTiming = updateMuteTimingAction({
+    const updateLegacyMuteTiming = updateTimeInterval({
       originalName: legacyMuteTimingName,
       interval: newMuteTiming,
     });
-    expect(muteTimingsReducer(initialConfig, updateLegacyMuteTiming)).toMatchSnapshot();
+    expect(timeIntervalsReducer(initialConfig, updateLegacyMuteTiming)).toMatchSnapshot();
 
     const muteTimingName = initialConfig.alertmanager_config.time_intervals![0].name;
-    const updateMuteTiming = updateMuteTimingAction({ originalName: muteTimingName, interval: newMuteTiming });
-    expect(muteTimingsReducer(initialConfig, updateMuteTiming)).toMatchSnapshot();
+    const updateMuteTiming = updateTimeInterval({ originalName: muteTimingName, interval: newMuteTiming });
+    expect(timeIntervalsReducer(initialConfig, updateMuteTiming)).toMatchSnapshot();
   });
 });
 

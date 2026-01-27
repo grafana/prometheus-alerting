@@ -5,44 +5,38 @@ import {
 } from '@grafana/external-alertmanager/mimir';
 import { baseAlertmanagerApi } from './alertmanager.endpoints';
 import { WithDataSourceInformation } from './alertmanager.types';
-import { getDataSourceSrv } from '@grafana/runtime';
-import { AlertManagerDataSourceJsonData } from 'types/datasources';
-import z from 'zod';
-
-/**
- * Validates that the data source is configured for Mimir implementation.
- * Throws an error if the data source is not using Mimir.
- */
-function validateMimirDataSource(dataSourceUID: string): void {
-  const dsSettings = getDataSourceSrv().getInstanceSettings(dataSourceUID);
-  const jsonData = dsSettings?.jsonData as AlertManagerDataSourceJsonData;
-  const implementation = jsonData?.implementation ?? 'prometheus';
-
-  if (implementation !== 'mimir') {
-    throw new Error(
-      `Mimir API endpoints can only be used with Mimir data sources. Data source ${dataSourceUID} is configured as '${implementation}'.`
-    );
-  }
-}
+import {
+  validateMimirDataSource,
+  parseUserConfigurationResponse,
+  fetchMimirUserConfigurationWithRetry,
+} from './mimir.utils';
 
 // Inject Mimir-specific endpoints
 export const mimirAlertmanagerApi = baseAlertmanagerApi.injectEndpoints({
   overrideExisting: 'throw',
   endpoints: (build) => ({
+    /**
+     * ⚠️ Mimir is a bit weird with its user configuration for several reasons;
+     * 1. You fetch the configuration with the /api/v1/alerts endpoint which doesn't actually return any alerts
+     * 2. The user configuration is lazily intialized – the first time you fetch it, if the tenant is not initialized yet,
+     *    you will receive a lazy initialization error. You have to "wake up" the tenant by calling another endpoint first.
+     * 3. The configuration is returned as a YAML string, which then needs to be parsed into the ParsedUserConfiguration format.
+     */
     getUserConfiguration: build.query<ParsedUserConfiguration, WithDataSourceInformation>({
-      query: ({ dataSourceUID }) => {
+      queryFn: async ({ dataSourceUID }, api, _extraOptions, baseQuery) => {
+        // double check if we're not calling this endpoint with a vanilla Alertmanager data source
         validateMimirDataSource(dataSourceUID);
-        return {
-          url: `/${dataSourceUID}/api/v1/alerts`,
-          responseHandler: 'text',
-        };
+
+        const response = await fetchMimirUserConfigurationWithRetry(dataSourceUID, api, baseQuery);
+        if (response.error) {
+          return { error: response.error };
+        }
+
+        // Parse and validate the YAML response
+        return parseUserConfigurationResponse(response.data);
       },
-      transformResponse: (response: string): ParsedUserConfiguration => {
-        // Use the codec to decode the YAML response into ParsedUserConfiguration
-        return YamlToParsedUserConfiguration.decode(response);
-      },
-      providesTags: (_result, _error, { dataSourceUID }) => [{ type: 'Configuration', id: dataSourceUID }],
-      rawResponseSchema: z.string(),
+      providesTags: ['Configuration'],
+      // Validate the final output from queryFn against the schema
       responseSchema: ParsedUserConfigurationSchema,
     }),
     updateUserConfiguration: build.mutation<UpdateAlertmanagerConfigApiResponse, UpdateAlertmanagerConfigApiArg>({
@@ -57,7 +51,7 @@ export const mimirAlertmanagerApi = baseAlertmanagerApi.injectEndpoints({
           body: YamlToParsedUserConfiguration.encode(configuration),
         };
       },
-      invalidatesTags: (_result, _error, { dataSourceUID }) => [{ type: 'Configuration', id: dataSourceUID }],
+      invalidatesTags: ['Configuration'],
     }),
   }),
 });

@@ -98,6 +98,7 @@
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "object-hash": "^3.0.0",
+    "p-retry": "^7.1.0",
     "pluralize": "^8.0.0",
     "prismjs": "^1.30.0",
     "react": "18.2.0",
@@ -116,5 +117,8 @@
   "packageManager": "npm@11.4.2",
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "volta": {
+    "node": "22.21.1"
+  }
 }

@@ -1,23 +1,18 @@
 import { createAction, createReducer } from '@reduxjs/toolkit';
 import { remove } from 'lodash';
 
-import { type ParsedUserConfiguration, renameReceiverInRoute } from '@grafana/external-alertmanager/mimir';
+import { renameReceiverInRoute, initialAlertmanagerConfiguration } from '@grafana/external-alertmanager/mimir';
 import { type Receiver } from '@grafana/external-alertmanager/vanilla';
 
 export const addReceiverAction = createAction<Receiver>('receiver/add');
 export const updateReceiverAction = createAction<{ name: string; receiver: Receiver }>('receiver/update');
 export const deleteReceiverAction = createAction<string>('receiver/delete');
 
-const initialState: ParsedUserConfiguration = {
-  alertmanager_config: {},
-  template_files: {},
-};
-
 /**
  * This reducer will manage action related to receiver (Contact points) and make sure all operations on the alertmanager
  * configuration happen immutably and only mutate what they need.
  */
-export const receiversReducer = createReducer(initialState, (builder) => {
+export const receiversReducer = createReducer(initialAlertmanagerConfiguration, (builder) => {
   builder
     // add a new receiver
     .addCase(addReceiverAction, (draft, { payload: newReceiver }) => {

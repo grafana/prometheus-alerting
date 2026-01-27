@@ -1,17 +1,18 @@
-import { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
+import { initialAlertmanagerConfiguration, PostableParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 import { Receiver } from '@grafana/external-alertmanager/vanilla';
 
 import { addReceiverAction, deleteReceiverAction, receiversReducer, updateReceiverAction } from './receivers';
 
 describe('receivers', () => {
-  const initialConfig: ParsedUserConfiguration = {
-    alertmanager_config: {},
+  const initialConfig: PostableParsedUserConfiguration = {
+    ...initialAlertmanagerConfiguration,
     template_files: {},
   };
 
   it('should delete a receiver', () => {
-    const config: ParsedUserConfiguration = {
+    const config: PostableParsedUserConfiguration = {
       alertmanager_config: {
+        ...initialAlertmanagerConfiguration.alertmanager_config,
         receivers: [{ name: 'my receiver' }, { name: 'another receiver' }],
       },
       template_files: {},
@@ -43,8 +44,9 @@ describe('receivers', () => {
     });
 
     it('should throw if we add a receiver with duplicate name', () => {
-      const config: ParsedUserConfiguration = {
+      const config: PostableParsedUserConfiguration = {
         alertmanager_config: {
+          ...initialAlertmanagerConfiguration.alertmanager_config,
           receivers: [{ name: 'my receiver' }],
         },
         template_files: {},
@@ -61,8 +63,9 @@ describe('receivers', () => {
 
   describe('updating receivers', () => {
     it('should throw if updating a receiver that does not exist', () => {
-      const config: ParsedUserConfiguration = {
+      const config: PostableParsedUserConfiguration = {
         alertmanager_config: {
+          ...initialAlertmanagerConfiguration.alertmanager_config,
           receivers: [{ name: 'my receiver' }],
         },
         template_files: {},
@@ -77,8 +80,9 @@ describe('receivers', () => {
     });
 
     it('should throw if renaming a receiver to an existing name', () => {
-      const config: ParsedUserConfiguration = {
+      const config: PostableParsedUserConfiguration = {
         alertmanager_config: {
+          ...initialAlertmanagerConfiguration.alertmanager_config,
           receivers: [{ name: 'receiver 1' }, { name: 'receiver 2' }],
         },
         template_files: {},
@@ -93,8 +97,9 @@ describe('receivers', () => {
     });
 
     it('should allow renaming a receiver and update routes', () => {
-      const config: ParsedUserConfiguration = {
+      const config: PostableParsedUserConfiguration = {
         alertmanager_config: {
+          ...initialAlertmanagerConfiguration.alertmanager_config,
           receivers: [{ name: 'receiver 1' }],
           route: {
             receiver: 'receiver 1',
@@ -116,8 +121,9 @@ describe('receivers', () => {
         email_configs: [{ to: 'address@domain.com' }],
       };
 
-      const config: ParsedUserConfiguration = {
+      const config: PostableParsedUserConfiguration = {
         alertmanager_config: {
+          ...initialAlertmanagerConfiguration.alertmanager_config,
           receivers: [existingReceiver],
         },
         template_files: {},

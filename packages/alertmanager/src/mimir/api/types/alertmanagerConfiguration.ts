@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 
 import { ParsedAlertmanagerConfigSchema } from '../../../vanilla';
+import { initialAlertmanagerConfiguration } from '../../constants';
 
 export const UserConfigurationSchema = z.object({
   template_files: z.record(z.string(), z.string()),
@@ -14,6 +15,16 @@ export const ParsedUserConfigurationSchema = z.object({
   alertmanager_config: ParsedAlertmanagerConfigSchema,
 });
 export type ParsedUserConfiguration = z.infer<typeof ParsedUserConfigurationSchema>;
+
+export const PostableParsedUserConfigurationSchema = z.object({
+  template_files: z.record(z.string(), z.string()),
+  // ⚠️ when posting a Mimir configuration, receivers and route are NOT optional!
+  alertmanager_config: ParsedAlertmanagerConfigSchema.required({
+    receivers: true,
+    route: true,
+  }),
+});
+export type PostableParsedUserConfiguration = z.infer<typeof PostableParsedUserConfigurationSchema>;
 
 /**
  * This codec will translate the Mimir configuration (after having YAML parsed) to a completely parsed user configuration.
@@ -57,7 +68,12 @@ export const YamlToParsedUserConfiguration = z.codec(z.string(), ParsedUserConfi
     const parsedJSON = parseYaml(string);
     const userConfiguration = UserConfigurationSchema.parse(parsedJSON);
 
-    return UserConfigurationSchemaCodec.decode(userConfiguration);
+    if (userConfiguration.alertmanager_config === '') {
+      return initialAlertmanagerConfiguration;
+    }
+
+    const decodedConfig = UserConfigurationSchemaCodec.decode(userConfiguration);
+    return decodedConfig;
   },
   encode: (userConfiguration) => {
     const encodedAlertmanagerConfig = UserConfigurationSchemaCodec.encode(userConfiguration);

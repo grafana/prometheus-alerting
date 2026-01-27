@@ -1,7 +1,6 @@
 import { createAction, createReducer } from '@reduxjs/toolkit';
 
 import {
-  type ParsedUserConfiguration,
   addUniqueIdentifierToRoute,
   addRouteToReferenceRoute,
   cleanRouteIDs,
@@ -9,6 +8,7 @@ import {
   omitRouteFromRouteTree,
   InsertPosition,
   RouteWithID,
+  initialAlertmanagerConfiguration,
 } from '@grafana/external-alertmanager/mimir';
 
 export const updateRouteAction = createAction<{ update: Partial<RouteWithID> }>('routes/update');
@@ -19,16 +19,11 @@ export const addRouteAction = createAction<{
   insertPosition: InsertPosition;
 }>('routes/add');
 
-const initialState: ParsedUserConfiguration = {
-  alertmanager_config: {},
-  template_files: {},
-};
-
 /**
  * This reducer will manage action related to routes and make sure all operations on the alertmanager
  * configuration happen immutably and only mutate what they need.
  */
-export const routesReducer = createReducer(initialState, (builder) => {
+export const routesReducer = createReducer(initialAlertmanagerConfiguration, (builder) => {
   builder
     // update an existing route
     .addCase(updateRouteAction, (draft, { payload }) => {
