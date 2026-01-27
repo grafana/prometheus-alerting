@@ -75,6 +75,46 @@ export function createListFilterLink(values: Array<[string, string]>): string {
   return `${PLUGIN_BASE_URL}/${ROUTES.Rules}?${params.toString()}`;
 }
 
+/**
+ * Matcher format for silence creation
+ */
+export interface SilenceMatcher {
+  name: string;
+  value: string;
+  isRegex?: boolean;
+  isEqual?: boolean;
+}
+
+export const silences = {
+  /**
+   * Generate a link to create a new silence with pre-filled matchers
+   */
+  createPageLink(matchers?: SilenceMatcher[]): string {
+    if (!matchers || matchers.length === 0) {
+      return `${PLUGIN_BASE_URL}/${ROUTES.CreateSilence}`;
+    }
+    const params = new URLSearchParams({
+      matchers: JSON.stringify(matchers),
+    });
+    return `${PLUGIN_BASE_URL}/${ROUTES.CreateSilence}?${params.toString()}`;
+  },
+
+  /**
+   * Generate a link to create a silence for a specific rule by alertname
+   */
+  createForRuleLink(alertName: string, additionalLabels?: Record<string, string>): string {
+    const matchers: SilenceMatcher[] = [{ name: 'alertname', value: alertName, isRegex: false, isEqual: true }];
+
+    if (additionalLabels) {
+      Object.entries(additionalLabels).forEach(([name, value]) => {
+        matchers.push({ name, value, isRegex: false, isEqual: true });
+      });
+    }
+
+    return silences.createPageLink(matchers);
+  },
+};
+
 export function createExploreLink(dataSourceUid: string, query: string, dataSourceType = 'prometheus'): string {
   return urlUtil.renderUrl(`${config.appSubUrl}/explore`, {
     left: JSON.stringify({

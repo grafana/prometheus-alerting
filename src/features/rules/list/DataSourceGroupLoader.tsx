@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import Skeleton from 'react-loading-skeleton';
 
 import { skipToken } from '@reduxjs/toolkit/query';
@@ -10,6 +10,8 @@ import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.en
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { rulerApi } from '../../../api/rules/mimir.endpoints';
 import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../types/rules';
+import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
+import { rules as rulesNav } from '../../../utils/navigation';
 
 const { useGetRuleGroupQuery } = rulerApi;
 import { hashRule } from '@grafana/external-rules/hashing';
@@ -17,6 +19,8 @@ import { getMatchingRulerRule } from '@grafana/external-rules/matching';
 import type { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vanilla';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
+import { RuleActionsButtons } from './components/RuleActionsButtons';
+import { useDeleteRuleModal } from './components/DeleteRuleModal';
 
 const { useGetGroupsQuery } = prometheusApi;
 
@@ -41,6 +45,13 @@ export function DataSourceGroupLoader({
 }: DataSourceGroupLoaderProps) {
   const { namespace, groupName } = groupIdentifier;
   const namespaceName = namespace.name;
+
+  const [deleteModal, showDeleteModal] = useDeleteRuleModal();
+
+  const handleDuplicate = useCallback((identifier: DataSourceRuleIdentifier) => {
+    const cloneUrl = rulesNav.clonePageLink(identifier);
+    window.location.href = cloneUrl;
+  }, []);
 
   // Fetch Prometheus rules
   const {
@@ -108,12 +119,26 @@ export function DataSourceGroupLoader({
   );
 
   if (promGroup) {
+    const actualRulerApiEnabled = shouldFetchRuler && dsFeatures?.rulerApiEnabled;
+
     return (
       <>
         {promGroup.rules.map((rule: PromRuleDTO) => {
           // Match the prometheus rule with its corresponding ruler rule if available
           const rulerRule =
             rulerRuleGroup && shouldFetchRuler ? getMatchingRulerRule(rulerRuleGroup.rules, rule) : undefined;
+
+          const actions = (
+            <RuleActionsButtons
+              rule={rulerRule}
+              promRule={rule}
+              groupIdentifier={groupIdentifier}
+              rulerApiEnabled={actualRulerApiEnabled ?? false}
+              onDelete={showDeleteModal}
+              onDuplicate={handleDuplicate}
+              compact
+            />
+          );
 
           return (
             <DataSourceRuleListItem
@@ -123,9 +148,11 @@ export function DataSourceGroupLoader({
               groupIdentifier={groupIdentifier}
               application={application}
               showLocation={false}
+              actions={actions}
             />
           );
         })}
+        {deleteModal}
       </>
     );
   }

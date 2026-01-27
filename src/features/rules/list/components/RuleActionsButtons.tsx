@@ -19,6 +19,7 @@ interface Props {
   rulerApiEnabled: boolean;
   onDelete: (identifier: DataSourceRuleIdentifier) => void;
   onDuplicate: (identifier: DataSourceRuleIdentifier) => void;
+  onSilence?: (identifier: DataSourceRuleIdentifier, ruleName: string) => void;
   compact?: boolean;
 }
 
@@ -29,6 +30,7 @@ export function RuleActionsButtons({
   rulerApiEnabled,
   onDelete,
   onDuplicate,
+  onSilence,
   compact = false,
 }: Props) {
   // Use Cloud Rule Identifier (cri) if we have a ruler rule, otherwise Prometheus Rule Identifier (pri)
@@ -52,6 +54,7 @@ export function RuleActionsButtons({
           rulerApiEnabled={rulerApiEnabled}
           onDelete={onDelete}
           onDuplicate={onDuplicate}
+          onSilence={onSilence}
           buttonSize={buttonSize}
         />
       </Stack>
@@ -67,6 +70,7 @@ export function RuleActionsButtons({
       rulerApiEnabled={rulerApiEnabled}
       onDelete={onDelete}
       onDuplicate={onDuplicate}
+      onSilence={onSilence}
       buttonSize={buttonSize}
       fill="text"
     />
