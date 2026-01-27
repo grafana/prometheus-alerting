@@ -1,8 +1,9 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`mute timings should be able to add a new mute timing 1`] = `
+exports[`mute timings > should be able to add a new mute timing 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "mute_time_intervals": [
       {
         "name": "default legacy time interval",
@@ -25,6 +26,11 @@ exports[`mute timings should be able to add a new mute timing 1`] = `
         ],
       },
     ],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
     "route": {
       "routes": [
         {
@@ -39,6 +45,7 @@ exports[`mute timings should be able to add a new mute timing 1`] = `
         },
       ],
     },
+    "templates": [],
     "time_intervals": [
       {
         "name": "default time interval",
@@ -86,10 +93,16 @@ exports[`mute timings should be able to add a new mute timing 1`] = `
 }
 `;
 
-exports[`mute timings should be able to remove a mute timing 1`] = `
+exports[`mute timings > should be able to remove a mute timing 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "mute_time_intervals": [],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
     "route": {
       "routes": [
         {
@@ -102,6 +115,7 @@ exports[`mute timings should be able to remove a mute timing 1`] = `
         },
       ],
     },
+    "templates": [],
     "time_intervals": [
       {
         "name": "default time interval",
@@ -129,9 +143,10 @@ exports[`mute timings should be able to remove a mute timing 1`] = `
 }
 `;
 
-exports[`mute timings should be able to remove a mute timing 2`] = `
+exports[`mute timings > should be able to remove a mute timing 2`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "mute_time_intervals": [
       {
         "name": "default legacy time interval",
@@ -154,6 +169,11 @@ exports[`mute timings should be able to remove a mute timing 2`] = `
         ],
       },
     ],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
     "route": {
       "routes": [
         {
@@ -166,15 +186,17 @@ exports[`mute timings should be able to remove a mute timing 2`] = `
         },
       ],
     },
+    "templates": [],
     "time_intervals": [],
   },
   "template_files": {},
 }
 `;
 
-exports[`mute timings should be able to update a time interval 1`] = `
+exports[`mute timings > should be able to update a time interval 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "mute_time_intervals": [
       {
         "name": "new mute time interval",
@@ -197,6 +219,11 @@ exports[`mute timings should be able to update a time interval 1`] = `
         ],
       },
     ],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
     "route": {
       "routes": [
         {
@@ -211,6 +238,7 @@ exports[`mute timings should be able to update a time interval 1`] = `
         },
       ],
     },
+    "templates": [],
     "time_intervals": [
       {
         "name": "default time interval",
@@ -238,9 +266,10 @@ exports[`mute timings should be able to update a time interval 1`] = `
 }
 `;
 
-exports[`mute timings should be able to update a time interval 2`] = `
+exports[`mute timings > should be able to update a time interval 2`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "mute_time_intervals": [
       {
         "name": "default legacy time interval",
@@ -263,6 +292,11 @@ exports[`mute timings should be able to update a time interval 2`] = `
         ],
       },
     ],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
     "route": {
       "routes": [
         {
@@ -277,6 +311,7 @@ exports[`mute timings should be able to update a time interval 2`] = `
         },
       ],
     },
+    "templates": [],
     "time_intervals": [
       {
         "name": "new mute time interval",

@@ -2,6 +2,7 @@ import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRootProps, PluginType } from '@grafana/data';
 import { render, screen, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 
 import App from './App';
 import { testIds } from '../testIds';
@@ -10,7 +11,7 @@ describe('Components/App', () => {
   let props: AppRootProps;
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
 
     props = {
       basename: 'a/sample-app',
@@ -23,13 +24,13 @@ describe('Components/App', () => {
       },
       query: {},
       path: '',
-      onNavChanged: jest.fn(),
+      onNavChanged: vi.fn(),
     } as unknown as AppRootProps;
   });
 
   test('renders the landing page by default', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <App {...props} />
       </MemoryRouter>
     );

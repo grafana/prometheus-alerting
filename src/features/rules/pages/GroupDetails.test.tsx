@@ -1,14 +1,15 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { vi } from 'vitest';
 
 import GroupDetails from './GroupDetails';
 
 // Mock ResizeObserver which is not available in jsdom
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
 }));
 
 // Mock PluginPage component (not an HTTP request, so we mock it directly)
@@ -48,8 +49,8 @@ function renderBreadcrumbs(pageNav: PageNavItem | undefined): React.ReactNode {
   );
 }
 
-jest.mock('@grafana/runtime', () => ({
-  ...jest.requireActual('@grafana/runtime'),
+vi.mock('@grafana/runtime', async () => ({
+  ...(await vi.importActual('@grafana/runtime')),
   PluginPage: ({ children, pageNav }: { children: React.ReactNode; pageNav?: PageNavItem }) => (
     <div data-testid="plugin-page">
       {renderBreadcrumbs(pageNav)}
@@ -60,40 +61,55 @@ jest.mock('@grafana/runtime', () => ({
 }));
 
 // Mock DataSourceGroupLoader to avoid complex setup
-jest.mock('../list/DataSourceGroupLoader', () => ({
+vi.mock('../list/DataSourceGroupLoader', () => ({
   DataSourceGroupLoader: () => <div data-testid="group-loader" />,
 }));
 
 // Mock all API hooks that use RTK Query
 // Note: In the future, we can migrate these to use MSW + getBackendSrv mocks
-const mockUseGetGroupsQuery = jest.fn();
-const mockUseDiscoverFeaturesQuery = jest.fn();
-const mockUseGetRulerRuleGroupQuery = jest.fn();
+const mockUseGetGroupsQuery = vi.fn();
+const mockUseDiscoverFeaturesQuery = vi.fn();
+const mockUseGetRulerRuleGroupQuery = vi.fn();
 
-jest.mock('../../../api/rules/prometheus.endpoints', () => ({
-  ...jest.requireActual('../../../api/rules/prometheus.endpoints'),
-  prometheusApi: {
-    ...jest.requireActual('../../../api/rules/prometheus.endpoints').prometheusApi,
-    useGetGroupsQuery: () => mockUseGetGroupsQuery(),
-  },
-}));
+vi.mock('../../../api/rules/prometheus.endpoints', async () => {
+  const actual = await vi.importActual<typeof import('../../../api/rules/prometheus.endpoints')>(
+    '../../../api/rules/prometheus.endpoints'
+  );
+  return {
+    ...actual,
+    prometheusApi: {
+      ...actual.prometheusApi,
+      useGetGroupsQuery: () => mockUseGetGroupsQuery(),
+    },
+  };
+});
 
-jest.mock('../../../api/rules/featureDiscovery.endpoints', () => ({
-  ...jest.requireActual('../../../api/rules/featureDiscovery.endpoints'),
-  useDiscoverFeaturesQuery: () => mockUseDiscoverFeaturesQuery(),
-}));
+vi.mock('../../../api/rules/featureDiscovery.endpoints', async () => {
+  const actual = await vi.importActual<typeof import('../../../api/rules/featureDiscovery.endpoints')>(
+    '../../../api/rules/featureDiscovery.endpoints'
+  );
+  return {
+    ...actual,
+    useDiscoverFeaturesQuery: () => mockUseDiscoverFeaturesQuery(),
+  };
+});
 
-jest.mock('../../../api/rules/mimir.endpoints', () => ({
-  ...jest.requireActual('../../../api/rules/mimir.endpoints'),
-  rulerApi: {
-    ...jest.requireActual('../../../api/rules/mimir.endpoints').rulerApi,
-    useGetRuleGroupQuery: () => mockUseGetRulerRuleGroupQuery(),
-  },
-}));
+vi.mock('../../../api/rules/mimir.endpoints', async () => {
+  const actual = await vi.importActual<typeof import('../../../api/rules/mimir.endpoints')>(
+    '../../../api/rules/mimir.endpoints'
+  );
+  return {
+    ...actual,
+    rulerApi: {
+      ...actual.rulerApi,
+      useGetRuleGroupQuery: () => mockUseGetRulerRuleGroupQuery(),
+    },
+  };
+});
 
 function renderGroupDetails(path = '/groups/prometheus-1/my-namespace/my-group') {
   return render(
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter initialEntries={[path]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/groups/:dataSourceUid/:namespace/:groupName" element={<GroupDetails />} />
       </Routes>
@@ -103,7 +119,7 @@ function renderGroupDetails(path = '/groups/prometheus-1/my-namespace/my-group')
 
 describe('GroupDetails', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Default mock implementations
     mockUseDiscoverFeaturesQuery.mockReturnValue({

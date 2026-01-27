@@ -203,13 +203,13 @@ export function parsePromQLStyleMatcherLoose(matcher: string): Matcher[] {
   const parts = matcher.replace(/^\{/, '').replace(/\}$/, '').trim().split(commaUnlessQuoted);
 
   return parts
+    .filter((part) => part.trim().length > 0) // Filter out empty strings before parsing
     .flatMap(parseMatcher)
     .map((matcher) => ({
       ...matcher,
       name: unquoteWithUnescape(matcher.name),
       value: unquoteWithUnescape(matcher.value),
-    }))
-    .filter(Boolean);
+    }));
 }
 
 /**

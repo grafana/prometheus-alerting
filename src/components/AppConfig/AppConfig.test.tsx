@@ -1,11 +1,12 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { PluginType } from '@grafana/data';
+import { vi } from 'vitest';
 
 import AppConfig, { AppConfigProps } from './AppConfig';
 
 // Mock AlertmanagerPicker to avoid Combobox canvas issues
-jest.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
+vi.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
   AlertmanagerPicker: () => <div data-testid="alertmanager-picker" />,
 }));
 
@@ -13,7 +14,7 @@ describe('Components/AppConfig', () => {
   let props: AppConfigProps;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     props = {
       plugin: {

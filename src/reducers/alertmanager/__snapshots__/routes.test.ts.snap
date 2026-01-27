@@ -1,9 +1,15 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`routes Should add a new route with receiver E as a child of default route 1`] = `
+exports[`routes > Should add a new route with receiver E as a child of default route 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "mute_time_intervals": [],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
     "route": {
       "group_by": [
         "grafana_folder",
@@ -47,16 +53,23 @@ exports[`routes Should add a new route with receiver E as a child of default rou
         },
       ],
     },
+    "templates": [],
     "time_intervals": [],
   },
   "template_files": {},
 }
 `;
 
-exports[`routes Should delete route 1`] = `
+exports[`routes > Should delete route 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "mute_time_intervals": [],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
     "route": {
       "group_by": [
         "grafana_folder",
@@ -74,16 +87,23 @@ exports[`routes Should delete route 1`] = `
         },
       ],
     },
+    "templates": [],
     "time_intervals": [],
   },
   "template_files": {},
 }
 `;
 
-exports[`routes Should update an existing route A with receiver B 1`] = `
+exports[`routes > Should update an existing route A with receiver B 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "mute_time_intervals": [],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
     "route": {
       "group_by": [
         "grafana_folder",
@@ -123,6 +143,7 @@ exports[`routes Should update an existing route A with receiver B 1`] = `
         },
       ],
     },
+    "templates": [],
     "time_intervals": [],
   },
   "template_files": {},
