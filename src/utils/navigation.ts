@@ -1,4 +1,4 @@
-import { PLUGIN_BASE_URL } from '../constants';
+import { PLUGIN_BASE_URL, ROUTES } from '../constants';
 import { DataSourceRuleIdentifier, stringifyIdentifier } from '@grafana/external-rules/identifiers';
 import { config } from '@grafana/runtime';
 import { urlUtil } from '@grafana/data';
@@ -60,6 +60,20 @@ export const rules = {
     return `${window.location.origin}${detailsLink}`;
   },
 };
+
+/**
+ * Creates a link to the rules list with search filters applied.
+ * Follows the same pattern as Grafana core's createListFilterLink.
+ *
+ * @param values - Array of [key, value] pairs for filter parameters
+ * @returns URL string with search query parameters
+
+ */
+export function createListFilterLink(values: Array<[string, string]>): string {
+  const searchQuery = values.map(([key, value]) => `${key}:"${value}"`).join(' ');
+  const params = new URLSearchParams({ search: searchQuery });
+  return `${PLUGIN_BASE_URL}/${ROUTES.Rules}?${params.toString()}`;
+}
 
 export function createExploreLink(dataSourceUid: string, query: string, dataSourceType = 'prometheus'): string {
   return urlUtil.renderUrl(`${config.appSubUrl}/explore`, {

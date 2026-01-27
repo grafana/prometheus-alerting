@@ -14,7 +14,7 @@ import type { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
-import { groups } from '../../../utils/navigation';
+import { groups, createListFilterLink } from '../../../utils/navigation';
 import { DataSourceGroupLoader } from '../list/DataSourceGroupLoader';
 import { GroupDetailsTitle } from '../components/GroupDetailsTitle';
 import { GroupDetailsActions } from '../components/GroupDetailsActions';
@@ -92,6 +92,7 @@ function GroupDetails() {
       text: groupName,
       parentItem: {
         text: namespace,
+        url: createListFilterLink([['namespace', namespace]]),
         parentItem: {
           text: t('alerting.group-details.rules', 'Rules'),
           url: `${PLUGIN_BASE_URL}/${ROUTES.Rules}`,

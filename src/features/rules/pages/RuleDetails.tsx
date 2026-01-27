@@ -13,7 +13,7 @@ import { RuleDetailsTitle } from '../components/RuleDetailsTitle';
 import { RuleDetailsSubtitle } from '../components/RuleDetailsSubtitle';
 import { RuleActionsButtons } from '../list/components/RuleActionsButtons';
 import { useDeleteRuleModal } from '../list/components/DeleteRuleModal';
-import { rules as rulesNav, groups as groupsNav } from '../../../utils/navigation';
+import { rules as rulesNav, groups as groupsNav, createListFilterLink } from '../../../utils/navigation';
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 
 function RuleDetails() {
@@ -51,6 +51,7 @@ function RuleDetails() {
         url: groupsNav.detailsPageLink(meta.dataSourceUid, meta.namespace, meta.groupName),
         parentItem: {
           text: meta.namespace,
+          url: createListFilterLink([['namespace', meta.namespace]]),
           parentItem: {
             text: t('alerting.rule-editor.rules', 'Rules'),
             url: '/a/grafana-prometheusalerting-app/rules',

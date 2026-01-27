@@ -12,10 +12,47 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 }));
 
 // Mock PluginPage component (not an HTTP request, so we mock it directly)
+// Recursively render breadcrumb items with their URLs
+interface PageNavItem {
+  text: string;
+  url?: string;
+  parentItem?: PageNavItem;
+}
+
+function renderBreadcrumbs(pageNav: PageNavItem | undefined): React.ReactNode {
+  if (!pageNav) {
+    return null;
+  }
+
+  const items: Array<{ text: string; url?: string }> = [];
+  let current: PageNavItem | undefined = pageNav;
+  while (current) {
+    items.unshift({ text: current.text, url: current.url });
+    current = current.parentItem;
+  }
+
+  return (
+    <nav data-testid="breadcrumbs">
+      {items.map((item, index) => (
+        <span key={index} data-testid={`breadcrumb-${index}`}>
+          {item.url ? (
+            <a href={item.url} data-testid={`breadcrumb-link-${index}`}>
+              {item.text}
+            </a>
+          ) : (
+            <span>{item.text}</span>
+          )}
+        </span>
+      ))}
+    </nav>
+  );
+}
+
 jest.mock('@grafana/runtime', () => ({
   ...jest.requireActual('@grafana/runtime'),
-  PluginPage: ({ children, pageNav }: { children: React.ReactNode; pageNav?: { text: string } }) => (
+  PluginPage: ({ children, pageNav }: { children: React.ReactNode; pageNav?: PageNavItem }) => (
     <div data-testid="plugin-page">
+      {renderBreadcrumbs(pageNav)}
       {pageNav && <div data-testid="page-title">{pageNav.text}</div>}
       {children}
     </div>
@@ -171,6 +208,91 @@ describe('GroupDetails', () => {
       renderGroupDetails();
 
       expect(screen.getByTestId('page-title')).toHaveTextContent('my-group');
+    });
+  });
+
+  describe('breadcrumb navigation', () => {
+    beforeEach(() => {
+      mockUseGetGroupsQuery.mockReturnValue({
+        data: {
+          data: {
+            groups: [
+              {
+                name: 'my-group',
+                file: 'my-namespace',
+                interval: 60,
+                rules: [{ name: 'rule-1', type: 'alerting', state: 'firing' }],
+              },
+            ],
+          },
+        },
+        isLoading: false,
+        error: null,
+      });
+    });
+
+    it('renders breadcrumb with correct hierarchy: Rules > Namespace > Group', () => {
+      renderGroupDetails();
+
+      const breadcrumbs = screen.getByTestId('breadcrumbs');
+      expect(breadcrumbs).toBeInTheDocument();
+
+      // Check breadcrumb order: Rules (0) > Namespace (1) > Group (2)
+      expect(screen.getByTestId('breadcrumb-0')).toHaveTextContent('Rules');
+      expect(screen.getByTestId('breadcrumb-1')).toHaveTextContent('my-namespace');
+      expect(screen.getByTestId('breadcrumb-2')).toHaveTextContent('my-group');
+    });
+
+    it('namespace breadcrumb links to rules list filtered by namespace', () => {
+      renderGroupDetails();
+
+      const namespaceLink = screen.getByTestId('breadcrumb-link-1');
+      expect(namespaceLink).toHaveAttribute(
+        'href',
+        expect.stringContaining('/a/grafana-prometheusalerting-app/rules')
+      );
+      expect(namespaceLink).toHaveAttribute('href', expect.stringContaining('search=namespace'));
+      expect(namespaceLink).toHaveAttribute('href', expect.stringContaining('my-namespace'));
+    });
+
+    it('Rules breadcrumb links to the rules list page', () => {
+      renderGroupDetails();
+
+      const rulesLink = screen.getByTestId('breadcrumb-link-0');
+      expect(rulesLink).toHaveAttribute('href', '/a/grafana-prometheusalerting-app/rules');
+    });
+
+    it('current page (group) breadcrumb has no link', () => {
+      renderGroupDetails();
+
+      // The current page should not be a link
+      const groupBreadcrumb = screen.getByTestId('breadcrumb-2');
+      expect(groupBreadcrumb.querySelector('a')).not.toBeInTheDocument();
+    });
+
+    it('encodes namespace with special characters in the URL', () => {
+      mockUseGetGroupsQuery.mockReturnValue({
+        data: {
+          data: {
+            groups: [
+              {
+                name: 'my-group',
+                file: 'namespace with spaces',
+                interval: 60,
+                rules: [],
+              },
+            ],
+          },
+        },
+        isLoading: false,
+        error: null,
+      });
+
+      renderGroupDetails('/groups/prometheus-1/namespace%20with%20spaces/my-group');
+
+      const namespaceLink = screen.getByTestId('breadcrumb-link-1');
+      // URL should contain the encoded namespace in the search parameter
+      expect(namespaceLink).toHaveAttribute('href', expect.stringContaining('namespace'));
     });
   });
 });
