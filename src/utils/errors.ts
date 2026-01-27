@@ -93,6 +93,33 @@ export function stringifyFetchError(error: ErrorLike): string {
 }
 
 /**
+ * Type guard to check if an error is a 404 (Not Found) error from RTK Query.
+ * Handles both FetchBaseQueryError and SerializedError formats.
+ */
+export function isNotFoundError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const err = error as Partial<ErrorLike>;
+
+  // Check for FetchBaseQueryError with numeric status
+  if ('status' in err && err.status === 404) {
+    return true;
+  }
+
+  // Check for nested data.status (some APIs return error details in data)
+  if ('data' in err && err.data && typeof err.data === 'object') {
+    const data = err.data as Record<string, unknown>;
+    if (data.status === 404) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * Extract a human-readable error message from any error type.
  * More generic than stringifyFetchError - handles Error objects, strings, and unknown types.
  *
