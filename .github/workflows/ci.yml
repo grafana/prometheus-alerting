@@ -135,6 +135,9 @@ jobs:
       - name: Resolve Grafana E2E versions
         id: resolve-versions
         uses: grafana/plugin-actions/e2e-version@main # zizmor: ignore[unpinned-uses] provided by grafana
+        with:
+          version-resolver-type: plugin-grafana-dependency
+          skip-grafana-dev-image: true
 
   playwright-tests:
     needs: [resolve-versions, build]
