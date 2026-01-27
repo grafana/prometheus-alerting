@@ -169,9 +169,7 @@ function createMetadata(promRule: PromRuleDTO, interval?: string): PageInfoItem[
     metadata.push({
       label: t('rule-details.metadata.interval', 'Evaluation interval'),
       value: (
-        <Text color="primary">
-          {t('rule-details.metadata.interval-value', 'Every {{interval}}', { interval })}
-        </Text>
+        <Text color="primary">{t('rule-details.metadata.interval-value', 'Every {{interval}}', { interval })}</Text>
       ),
     });
   }

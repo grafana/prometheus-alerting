@@ -88,9 +88,7 @@ export class RuleBuilder {
   /**
    * Create a Prometheus alerting rule
    */
-  static createPromAlertingRule(
-    overrides: Partial<PromAlertingRuleDTO> & { name: string }
-  ): PromAlertingRuleDTO {
+  static createPromAlertingRule(overrides: Partial<PromAlertingRuleDTO> & { name: string }): PromAlertingRuleDTO {
     return {
       type: 'alerting',
       name: overrides.name,
@@ -110,9 +108,7 @@ export class RuleBuilder {
   /**
    * Create a Prometheus recording rule
    */
-  static createPromRecordingRule(
-    overrides: Partial<PromRecordingRuleDTO> & { name: string }
-  ): PromRecordingRuleDTO {
+  static createPromRecordingRule(overrides: Partial<PromRecordingRuleDTO> & { name: string }): PromRecordingRuleDTO {
     return {
       type: 'recording',
       name: overrides.name,

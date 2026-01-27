@@ -174,7 +174,7 @@ function CloneRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
 
     try {
       const formValues = rulerRuleToFormValues(meta.dataSourceUid, meta.namespace, meta.groupName, rulerRule);
-      
+
       // Generate a unique name for the cloned rule
       const existingNames = rulerGroup?.rules.map(getRuleName) ?? [];
       formValues.name = generateCopiedName(formValues.name, existingNames);

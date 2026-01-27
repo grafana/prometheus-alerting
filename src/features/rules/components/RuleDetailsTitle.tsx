@@ -1,4 +1,5 @@
 import React from 'react';
+import { t } from '@grafana/i18n';
 import { Stack, Text } from '@grafana/ui';
 import { StateText } from '@grafana/alerting/unstable';
 
@@ -44,7 +45,13 @@ export function RuleDetailsTitle({ name, type, state, health }: RuleDetailsTitle
         </span>
       )}
       {type === 'recording' && (
-        <span aria-label={normalizedHealth === 'error' ? 'Rule health: Recording error' : 'Rule state: Recording'}>
+        <span
+          aria-label={
+            normalizedHealth === 'error'
+              ? t('alerting.rule-details.recording-error', 'Rule health: Recording error')
+              : t('alerting.rule-details.recording', 'Rule state: Recording')
+          }
+        >
           <StateText type="recording" health={normalizedHealth} />
         </span>
       )}

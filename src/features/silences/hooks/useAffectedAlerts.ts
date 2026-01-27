@@ -50,7 +50,11 @@ export function useAffectedAlerts(silence: GettableSilence | null): UseAffectedA
   const { uid: dataSourceUID } = useAlertmanager();
 
   // Fetch all silenced alerts
-  const { data: allAlerts = [], isLoading, error } = alertmanagerApi.endpoints.getAlerts.useQuery(
+  const {
+    data: allAlerts = [],
+    isLoading,
+    error,
+  } = alertmanagerApi.endpoints.getAlerts.useQuery(
     {
       dataSourceUID,
       silenced: true,

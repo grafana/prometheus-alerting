@@ -247,10 +247,7 @@ describe('GroupDetails', () => {
       renderGroupDetails();
 
       const namespaceLink = screen.getByTestId('breadcrumb-link-1');
-      expect(namespaceLink).toHaveAttribute(
-        'href',
-        expect.stringContaining('/a/grafana-prometheusalerting-app/rules')
-      );
+      expect(namespaceLink).toHaveAttribute('href', expect.stringContaining('/a/grafana-prometheusalerting-app/rules'));
       expect(namespaceLink).toHaveAttribute('href', expect.stringContaining('search=namespace'));
       expect(namespaceLink).toHaveAttribute('href', expect.stringContaining('my-namespace'));
     });

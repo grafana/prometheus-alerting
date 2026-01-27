@@ -4,7 +4,7 @@ global:
 
 # Load alerting rules
 rule_files:
-  - "/etc/prometheus/rules/*.yml"
+  - '/etc/prometheus/rules/*.yml'
 
 # Scrape Prometheus itself
 scrape_configs:

@@ -103,7 +103,9 @@ export function DataSourceGroupLoader({
 
   // There should be always only one group in the response but some Prometheus-compatible data sources
   // implement different filter parameters
-  const promGroup = promResponse?.data.groups.find((g: PromRuleGroupDTO) => g.file === namespaceName && g.name === groupName);
+  const promGroup = promResponse?.data.groups.find(
+    (g: PromRuleGroupDTO) => g.file === namespaceName && g.name === groupName
+  );
 
   if (promGroup) {
     return (

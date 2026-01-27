@@ -67,7 +67,7 @@ export function ExpressionQueryEditor({ value, onChange, dataSourceName }: Expre
   // Error state - datasource failed to load or doesn't have QueryEditor
   if (error || !dataSource || !dataSource?.components?.QueryEditor || !dsi) {
     const errorMessage = error?.message || 'Data source plugin does not export a Query Editor component';
-    
+
     return (
       <div className={styles.error}>
         <Trans i18nKey="alerting.expression-editor.could-not-load-editor">

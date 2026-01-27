@@ -55,10 +55,7 @@ function SilenceForm() {
   });
 
   // Fetch silence for recreate mode
-  const {
-    data: recreateSilence,
-    isLoading: isLoadingRecreateSilence,
-  } = useSilence(recreateFromId || '', {
+  const { data: recreateSilence, isLoading: isLoadingRecreateSilence } = useSilence(recreateFromId || '', {
     skip: !isRecreateMode,
   });
 
