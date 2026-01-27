@@ -1,4 +1,8 @@
-import { initialAlertmanagerConfiguration, type PostableParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
+import {
+  initialAlertmanagerConfiguration,
+  type PostableParsedUserConfiguration,
+  PostableParsedUserConfigurationSchema,
+} from '@grafana/external-alertmanager/mimir';
 
 import {
   addNotificationTemplateAction,
@@ -20,7 +24,9 @@ describe('notification templates', () => {
     };
 
     const action = addNotificationTemplateAction({ template: newNotificationTemplate });
-    expect(notificationTemplatesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = notificationTemplatesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 
   it('should not add a new notification template if the name already exists', () => {
@@ -53,7 +59,9 @@ describe('notification templates', () => {
     };
 
     const action = updateNotificationTemplateAction({ name, template: { title: name, content: 'update me, please' } });
-    expect(notificationTemplatesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = notificationTemplatesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 
   it('should not update if target does not exist', () => {
@@ -101,7 +109,9 @@ describe('notification templates', () => {
       name,
       template: { title: 'rename-me-copy', content: 'rename me, please' },
     });
-    expect(notificationTemplatesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = notificationTemplatesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 
   it('should remove a notification template', () => {
@@ -117,6 +127,8 @@ describe('notification templates', () => {
     };
 
     const action = deleteNotificationTemplateAction({ name });
-    expect(notificationTemplatesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = notificationTemplatesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 });

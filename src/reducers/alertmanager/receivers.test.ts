@@ -1,4 +1,8 @@
-import { initialAlertmanagerConfiguration, PostableParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
+import {
+  initialAlertmanagerConfiguration,
+  PostableParsedUserConfiguration,
+  PostableParsedUserConfigurationSchema,
+} from '@grafana/external-alertmanager/mimir';
 import { Receiver } from '@grafana/external-alertmanager/vanilla';
 
 import { addReceiverAction, deleteReceiverAction, receiversReducer, updateReceiverAction } from './receivers';
@@ -19,7 +23,9 @@ describe('receivers', () => {
     };
 
     const action = deleteReceiverAction('my receiver');
-    expect(receiversReducer(config, action)).toMatchSnapshot();
+    const result = receiversReducer(config, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 
   describe('adding receivers', () => {
@@ -30,7 +36,9 @@ describe('receivers', () => {
       };
 
       const action = addReceiverAction(newReceiver);
-      expect(receiversReducer(initialConfig, action)).toMatchSnapshot();
+      const result = receiversReducer(initialConfig, action);
+      expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+      expect(result).toMatchSnapshot();
     });
 
     it('should be able to add a new Grafana Alertmanager receiver', () => {
@@ -40,7 +48,9 @@ describe('receivers', () => {
       };
 
       const action = addReceiverAction(newReceiver);
-      expect(receiversReducer(initialConfig, action)).toMatchSnapshot();
+      const result = receiversReducer(initialConfig, action);
+      expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+      expect(result).toMatchSnapshot();
     });
 
     it('should throw if we add a receiver with duplicate name', () => {
@@ -112,7 +122,9 @@ describe('receivers', () => {
       const updatedReceiver: Receiver = { name: 'receiver 2' };
       const action = updateReceiverAction({ name: 'receiver 1', receiver: updatedReceiver });
 
-      expect(receiversReducer(config, action)).toMatchSnapshot();
+      const result = receiversReducer(config, action);
+      expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+      expect(result).toMatchSnapshot();
     });
 
     it('should allow updating an existing receiver', () => {
@@ -135,7 +147,9 @@ describe('receivers', () => {
       };
       const action = updateReceiverAction({ name: 'existing receiver', receiver: updatedReceiver });
 
-      expect(receiversReducer(config, action)).toMatchSnapshot();
+      const result = receiversReducer(config, action);
+      expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+      expect(result).toMatchSnapshot();
     });
   });
 });

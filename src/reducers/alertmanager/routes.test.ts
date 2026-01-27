@@ -6,6 +6,7 @@ import {
   addUniqueIdentifierToRoute,
   initialAlertmanagerConfiguration,
   PostableParsedUserConfiguration,
+  PostableParsedUserConfigurationSchema,
   RouteWithID,
 } from '@grafana/external-alertmanager/mimir';
 
@@ -77,6 +78,7 @@ describe('routes', () => {
     });
 
     // assert the rest of the configuration
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
     expect(result).toMatchSnapshot();
   });
 
@@ -112,7 +114,9 @@ describe('routes', () => {
       update: newRoute,
     });
 
-    expect(routesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = routesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 
   it('Should not update route if config has been updated by another user', () => {
@@ -137,6 +141,8 @@ describe('routes', () => {
     const action = deleteRouteAction({
       id: A_identifier,
     });
-    expect(routesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = routesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 });
