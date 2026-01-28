@@ -10,6 +10,7 @@ import { useSilencesFilters } from '../hooks/useSilencesFilters';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { ViewState } from '../../../components/ViewState';
 import { DataSourceError } from '../../../components/AlertmanagerError';
 import { ROUTES, DEFAULT_PAGE_SIZE } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
@@ -82,33 +83,38 @@ function SilencesPage() {
             <SilencesFilters filters={filters} actions={actions} />
           </Stack>
 
-          {isLoading && (
-            <div>
-              <Skeleton height={50} style={{ marginBottom: '10px' }} />
-              <Skeleton height={40} count={5} style={{ marginBottom: '5px' }} />
-            </div>
-          )}
-          {error && (
-            <DataSourceError error={error} title={t('silences.error-loading-title', 'Error loading silences')} />
-          )}
-          {!isLoading && isSuccess && Boolean(filteredSilences.length) && !error && (
+          <ViewState
+            isLoading={isLoading}
+            isSuccess={isSuccess}
+            error={error}
+            isEmpty={filteredSilences.length === 0}
+            loading={
+              <div>
+                <Skeleton height={50} style={{ marginBottom: '10px' }} />
+                <Skeleton height={40} count={5} style={{ marginBottom: '5px' }} />
+              </div>
+            }
+            renderError={
+              <DataSourceError error={error} title={t('silences.error-loading-title', 'Error loading silences')} />
+            }
+            empty={
+              <EmptyState
+                message={
+                  silences.length === 0
+                    ? t('silences.no-silences-message', 'No silences are currently configured in the Alertmanager.')
+                    : t('silences.no-active-silences-message', 'No active silences found.')
+                }
+                variant={'call-to-action'}
+              />
+            }
+          >
             <InteractiveTable
               columns={columns}
               data={filteredSilences}
               getRowId={(silence) => silence.id}
               pageSize={DEFAULT_PAGE_SIZE}
             />
-          )}
-          {!isLoading && isSuccess && filteredSilences.length === 0 && !error && (
-            <EmptyState
-              message={
-                silences.length === 0
-                  ? t('silences.no-silences-message', 'No silences are currently configured in the Alertmanager.')
-                  : t('silences.no-active-silences-message', 'No active silences found.')
-              }
-              variant={'call-to-action'}
-            />
-          )}
+          </ViewState>
         </Stack>
       </div>
 

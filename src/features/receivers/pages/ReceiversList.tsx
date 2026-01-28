@@ -8,6 +8,7 @@ import { type Receiver } from '@grafana/external-alertmanager/vanilla';
 
 import { useReceivers } from '../hooks/useReceivers';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { ViewState } from '../../../components/ViewState';
 import { DataSourceError } from '../../../components/AlertmanagerError';
 import { getContactPointDescription, getReceiverIntegrations } from '../utils/receiversUtils';
 import { getIntegrationIcon } from '../utils/integrationIcons';
@@ -106,31 +107,36 @@ function ReceiversPage() {
       }
     >
       <div data-testid={testIds.receivers.container}>
-        {isLoading && <Skeleton height={24} count={5} />}
-        {error && (
-          <DataSourceError error={error} title={t('receivers.error-loading-title', 'Error loading receivers')} />
-        )}
-        {!isLoading && isSuccess && Boolean(receivers.length) && !error && (
+        <ViewState
+          isLoading={isLoading}
+          isSuccess={isSuccess}
+          error={error}
+          isEmpty={receivers.length === 0}
+          loading={<Skeleton height={24} count={5} />}
+          renderError={
+            <DataSourceError error={error} title={t('receivers.error-loading-title', 'Error loading receivers')} />
+          }
+          empty={
+            <EmptyState
+              message={t('receivers.no-receivers-message', 'No receivers are configured in the Alertmanager.')}
+              variant="call-to-action"
+              button={
+                hasConfigurationAPI && (
+                  <Button icon="plus" onClick={handleCreateReceiver}>
+                    <Trans i18nKey="receivers.create-button">Create receiver</Trans>
+                  </Button>
+                )
+              }
+            />
+          }
+        >
           <InteractiveTable
             columns={columns}
             data={receivers}
             getRowId={(receiver) => receiver.name}
             pageSize={DEFAULT_PAGE_SIZE}
           />
-        )}
-        {!isLoading && isSuccess && receivers.length === 0 && !error && (
-          <EmptyState
-            message={t('receivers.no-receivers-message', 'No receivers are configured in the Alertmanager.')}
-            variant="call-to-action"
-            button={
-              hasConfigurationAPI && (
-                <Button icon="plus" onClick={handleCreateReceiver}>
-                  <Trans i18nKey="receivers.create-button">Create receiver</Trans>
-                </Button>
-              )
-            }
-          />
-        )}
+        </ViewState>
       </div>
       {isDrawerOpen && (
         <ReceiverDrawer

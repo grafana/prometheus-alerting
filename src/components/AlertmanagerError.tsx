@@ -5,8 +5,26 @@ import { useAlertmanagerSafe } from '../hooks/useAlertmanager';
 import { stringifyFetchError, ErrorLike } from '../utils/errors';
 
 interface DataSourceErrorProps {
-  error: ErrorLike;
+  error: unknown;
   title: string;
+}
+
+function isErrorLike(error: unknown): error is ErrorLike {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  // Check for FetchBaseQueryError (has 'status' property)
+  if ('status' in error) {
+    return true;
+  }
+
+  // Check for SerializedError (has 'message' or 'code' property)
+  if ('message' in error || 'code' in error) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -16,7 +34,9 @@ interface DataSourceErrorProps {
 export function DataSourceError({ error, title }: DataSourceErrorProps) {
   const alertmanager = useAlertmanagerSafe();
 
-  const errorMessage = stringifyFetchError(error);
+  const errorMessage = isErrorLike(error)
+    ? stringifyFetchError(error)
+    : String(error);
   const dataSourceName = alertmanager?.settings.name;
 
   return (

@@ -9,6 +9,7 @@ import { t } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE, ROUTES } from '../../../constants';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { ViewState } from '../../../components/ViewState';
 import { DataSourceError } from '../../../components/AlertmanagerError';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
@@ -101,36 +102,40 @@ function TimeIntervalsPage() {
         </LinkButton>
       )}
       <div data-testid={testIds.timeIntervals.container}>
-        {isLoading && (
-          <div>
-            <Skeleton height={50} style={{ marginBottom: '10px' }} />
-            <Skeleton height={120} count={3} style={{ marginBottom: '5px' }} />
-          </div>
-        )}
-        {error && (
-          <DataSourceError
-            error={error}
-            title={t('time-intervals.error-loading-title', 'Error loading time intervals')}
-          />
-        )}
-
-        {!isLoading && isSuccess && Boolean(timeIntervals.length) && !error && (
+        <ViewState
+          isLoading={isLoading}
+          isSuccess={isSuccess}
+          error={error}
+          isEmpty={timeIntervals.length === 0}
+          loading={
+            <div>
+              <Skeleton height={50} style={{ marginBottom: '10px' }} />
+              <Skeleton height={120} count={3} style={{ marginBottom: '5px' }} />
+            </div>
+          }
+          renderError={
+            <DataSourceError
+              error={error}
+              title={t('time-intervals.error-loading-title', 'Error loading time intervals')}
+            />
+          }
+          empty={
+            <EmptyState
+              message={t(
+                'time-intervals.no-time-intervals-message',
+                'No time intervals are configured in the Alertmanager.'
+              )}
+              variant="call-to-action"
+            />
+          }
+        >
           <InteractiveTable
             columns={columns}
             data={timeIntervals}
             getRowId={(interval) => interval.name}
             pageSize={DEFAULT_PAGE_SIZE}
           />
-        )}
-        {!isLoading && isSuccess && timeIntervals.length === 0 && !error && (
-          <EmptyState
-            message={t(
-              'time-intervals.no-time-intervals-message',
-              'No time intervals are configured in the Alertmanager.'
-            )}
-            variant="call-to-action"
-          />
-        )}
+        </ViewState>
       </div>
       {selectedTimeInterval && (
         <TimeIntervalDrawer
