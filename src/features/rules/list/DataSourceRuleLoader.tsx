@@ -7,14 +7,12 @@ import { rulerApi } from '../../../api/rules/mimir.endpoints';
 import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
 
 const { useGetRuleGroupQuery } = rulerApi;
-import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { getMatchingRulerRule } from '@grafana/external-rules/matching';
-import { rules as rulesNav } from '../../../utils/navigation';
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 import { RuleActionsButtons } from './components/RuleActionsButtons';
-import { useDeleteRuleModal } from './components/DeleteRuleModal';
 import { SkeletonListItem } from './components/ListItem';
+import { useRuleActions } from './hooks/useRuleActions';
 
 interface DataSourceRuleLoaderProps {
   rule: Rule;
@@ -64,13 +62,7 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
     return getMatchingRulerRule(rulerRuleGroup.rules, rule);
   }, [rulerRuleGroup, rule, rulerApiEnabled]);
 
-  const [deleteModal, showDeleteModal] = useDeleteRuleModal();
-
-  const handleDuplicate = (identifier: DataSourceRuleIdentifier) => {
-    // Navigate to rule editor with copyFrom parameter for cloning
-    const cloneUrl = rulesNav.clonePageLink(identifier);
-    window.location.href = cloneUrl;
-  };
+  const { handleDuplicate, handleSilence, handleDelete, deleteModal } = useRuleActions();
 
   const actions = useMemo(() => {
     if (featuresLoading || isLoadingRulerGroup) {
@@ -89,12 +81,23 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
         promRule={rule} // Pass the PromRuleDTO
         groupIdentifier={groupIdentifier}
         rulerApiEnabled={rulerApiEnabled}
-        onDelete={showDeleteModal}
+        onDelete={handleDelete}
         onDuplicate={handleDuplicate}
+        onSilence={handleSilence}
         compact
       />
     );
-  }, [featuresLoading, isLoadingRulerGroup, rulerRule, rule, groupIdentifier, rulerApiEnabled, showDeleteModal]);
+  }, [
+    featuresLoading,
+    isLoadingRulerGroup,
+    rulerRule,
+    rule,
+    groupIdentifier,
+    rulerApiEnabled,
+    handleDelete,
+    handleDuplicate,
+    handleSilence,
+  ]);
 
   if (featuresLoading || isLoadingRulerGroup) {
     return <SkeletonListItem />;

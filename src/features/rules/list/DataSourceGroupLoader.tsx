@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 
 import { skipToken } from '@reduxjs/toolkit/query';
@@ -10,8 +10,6 @@ import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.en
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { rulerApi } from '../../../api/rules/mimir.endpoints';
 import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../types/rules';
-import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
-import { rules as rulesNav } from '../../../utils/navigation';
 
 const { useGetRuleGroupQuery } = rulerApi;
 import { hashRule } from '@grafana/external-rules/hashing';
@@ -20,7 +18,7 @@ import type { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vani
 
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 import { RuleActionsButtons } from './components/RuleActionsButtons';
-import { useDeleteRuleModal } from './components/DeleteRuleModal';
+import { useRuleActions } from './hooks/useRuleActions';
 
 const { useGetGroupsQuery } = prometheusApi;
 
@@ -46,12 +44,7 @@ export function DataSourceGroupLoader({
   const { namespace, groupName } = groupIdentifier;
   const namespaceName = namespace.name;
 
-  const [deleteModal, showDeleteModal] = useDeleteRuleModal();
-
-  const handleDuplicate = useCallback((identifier: DataSourceRuleIdentifier) => {
-    const cloneUrl = rulesNav.clonePageLink(identifier);
-    window.location.href = cloneUrl;
-  }, []);
+  const { handleDuplicate, handleSilence, handleDelete, deleteModal } = useRuleActions();
 
   // Fetch Prometheus rules
   const {
@@ -134,8 +127,9 @@ export function DataSourceGroupLoader({
               promRule={rule}
               groupIdentifier={groupIdentifier}
               rulerApiEnabled={actualRulerApiEnabled ?? false}
-              onDelete={showDeleteModal}
+              onDelete={handleDelete}
               onDuplicate={handleDuplicate}
+              onSilence={handleSilence}
               compact
             />
           );

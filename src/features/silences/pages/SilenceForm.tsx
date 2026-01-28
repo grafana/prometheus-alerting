@@ -43,7 +43,31 @@ function SilenceForm() {
     return params.get('recreateFrom');
   }, [location.search]);
 
+  // Check for pre-filled matchers from URL (e.g., when silencing from rule actions)
+  const prefillMatchers = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const matchersParam = params.get('matchers');
+    if (matchersParam) {
+      try {
+        const parsed = JSON.parse(matchersParam);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((m: { name?: string; value?: string; isRegex?: boolean; isEqual?: boolean }) => ({
+            name: m.name || '',
+            value: m.value || '',
+            isRegex: m.isRegex ?? false,
+            isEqual: m.isEqual ?? true,
+          }));
+        }
+      } catch {
+        // Invalid JSON in matchers param - fallback to empty form
+        // This can happen with malformed URLs or encoding issues
+      }
+    }
+    return null;
+  }, [location.search]);
+
   const isRecreateMode = Boolean(recreateFromId) && !isEditMode;
+  const isPrefillMode = Boolean(prefillMatchers) && !isEditMode && !isRecreateMode;
 
   // Fetch silence for edit mode
   const {
@@ -148,6 +172,24 @@ function SilenceForm() {
       });
     }
   }, [isRecreateMode, recreateSilence, reset]);
+
+  // Populate form when pre-filling matchers from URL (e.g., silencing from rule actions)
+  useEffect(() => {
+    if (isPrefillMode && prefillMatchers) {
+      const currentTime = new Date();
+      const oneHourFromNow = new Date(currentTime.getTime() + 60 * 60 * 1000);
+
+      reset({
+        matchers: prefillMatchers,
+        timeMode: 'relative',
+        duration: '2h',
+        startsAt: formatDateTimeLocal(currentTime),
+        endsAt: formatDateTimeLocal(oneHourFromNow),
+        createdBy: '',
+        comment: '',
+      });
+    }
+  }, [isPrefillMode, prefillMatchers, reset]);
 
   const matchers = watch('matchers');
   const timeMode = watch('timeMode');
