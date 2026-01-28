@@ -18,7 +18,7 @@ import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { t, Trans } from '@grafana/i18n';
 
 function ReceiversPage() {
-  const [triggerFetch, { receivers = [], isLoading, error }] = useReceivers();
+  const [triggerFetch, { receivers = [], isLoading, error, isSuccess }] = useReceivers();
   const [selectedReceiver, setSelectedReceiver] = useState<Receiver | null>(null);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
   const hasConfigurationAPI = useHasConfigurationAPI();
@@ -110,7 +110,7 @@ function ReceiversPage() {
         {error && (
           <DataSourceError error={error} title={t('receivers.error-loading-title', 'Error loading receivers')} />
         )}
-        {!isLoading && receivers.length > 0 && !error && (
+        {!isLoading && isSuccess && Boolean(receivers.length) && !error && (
           <InteractiveTable
             columns={columns}
             data={receivers}
@@ -118,7 +118,7 @@ function ReceiversPage() {
             pageSize={DEFAULT_PAGE_SIZE}
           />
         )}
-        {!isLoading && receivers.length === 0 && !error && (
+        {!isLoading && isSuccess && receivers.length === 0 && !error && (
           <EmptyState
             message={t('receivers.no-receivers-message', 'No receivers are configured in the Alertmanager.')}
             variant="call-to-action"

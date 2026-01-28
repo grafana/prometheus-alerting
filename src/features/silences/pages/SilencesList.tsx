@@ -18,7 +18,7 @@ import { SilenceDrawer } from '../components/SilenceDrawer';
 import { SilencesFilters } from '../components/SilencesFilters';
 
 function SilencesPage() {
-  const { data: silences = [], isLoading, error } = useSilences();
+  const { data: silences = [], isLoading, error, isSuccess } = useSilences();
   const { filters, actions, applyFilters } = useSilencesFilters();
   const [selectedSilence, setSelectedSilence] = useState<GettableSilence | null>(null);
 
@@ -91,7 +91,7 @@ function SilencesPage() {
           {error && (
             <DataSourceError error={error} title={t('silences.error-loading-title', 'Error loading silences')} />
           )}
-          {!isLoading && filteredSilences.length > 0 && !error && (
+          {!isLoading && isSuccess && Boolean(filteredSilences.length) && !error && (
             <InteractiveTable
               columns={columns}
               data={filteredSilences}
@@ -99,7 +99,7 @@ function SilencesPage() {
               pageSize={DEFAULT_PAGE_SIZE}
             />
           )}
-          {!isLoading && filteredSilences.length === 0 && !error && (
+          {!isLoading && isSuccess && filteredSilences.length === 0 && !error && (
             <EmptyState
               message={
                 silences.length === 0

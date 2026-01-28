@@ -13,7 +13,7 @@ import { TemplateDrawer, DrawerMode } from '../components/TemplateDrawer';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 
 function TemplatesPage() {
-  const { templates, isLoading, error, refetch } = useTemplates();
+  const { templates, isLoading, error, refetch, isSuccess } = useTemplates();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
   const hasConfigurationAPI = useHasConfigurationAPI();
@@ -97,7 +97,7 @@ function TemplatesPage() {
         {error && (
           <DataSourceError error={error} title={t('templates.error-loading-title', 'Error loading templates')} />
         )}
-        {!isLoading && templates.length > 0 && !error && (
+        {!isLoading && isSuccess && Boolean(templates.length) && !error && (
           <InteractiveTable
             columns={columns}
             data={templates}
@@ -105,7 +105,7 @@ function TemplatesPage() {
             pageSize={DEFAULT_PAGE_SIZE}
           />
         )}
-        {!isLoading && templates.length === 0 && !error && (
+        {!isLoading && isSuccess && templates.length === 0 && !error && (
           <EmptyState
             message={t('templates.no-templates-message', 'No templates are configured in the Alertmanager.')}
             variant="call-to-action"

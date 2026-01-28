@@ -35,7 +35,7 @@ const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
 };
 
 function InhibitRulesPage() {
-  const { inhibitRules, isLoading, error } = useInhibitRules();
+  const { inhibitRules, isLoading, error, isSuccess } = useInhibitRules();
   const [selectedInhibitRule, setSelectedInhibitRule] = useState<NormalizedInhibitRule | null>(null);
   const [selectedInhibitRuleIndex, setSelectedInhibitRuleIndex] = useState<number | null>(null);
 
@@ -101,7 +101,7 @@ function InhibitRulesPage() {
             title={t('inhibit-rules.error-loading-title', 'Error loading inhibit rules')}
           />
         )}
-        {!isLoading && inhibitRules.length > 0 && !error && (
+        {!isLoading && isSuccess && Boolean(inhibitRules.length) && !error && (
           <InteractiveTable
             columns={columns}
             data={inhibitRules}
@@ -109,7 +109,7 @@ function InhibitRulesPage() {
             pageSize={DEFAULT_PAGE_SIZE}
           />
         )}
-        {!isLoading && inhibitRules.length === 0 && !error && (
+        {!isLoading && isSuccess && inhibitRules.length === 0 && !error && (
           <EmptyState
             message={t('inhibit-rules.no-rules-message', 'No inhibit rules are configured in the Alertmanager.')}
             variant="call-to-action"

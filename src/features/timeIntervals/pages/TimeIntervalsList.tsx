@@ -15,7 +15,7 @@ import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { TimeIntervalDrawer } from '../components/TimeIntervalDrawer';
 
 function TimeIntervalsPage() {
-  const { timeIntervals, isLoading, error } = useTimeIntervals();
+  const { timeIntervals, isLoading, error, isSuccess } = useTimeIntervals();
   const hasConfigurationAPI = useHasConfigurationAPI();
 
   const [selectedTimeInterval, setSelectedTimeInterval] = useState<TimeInterval | null>(null);
@@ -114,7 +114,7 @@ function TimeIntervalsPage() {
           />
         )}
 
-        {!isLoading && timeIntervals.length > 0 && !error && (
+        {!isLoading && isSuccess && Boolean(timeIntervals.length) && !error && (
           <InteractiveTable
             columns={columns}
             data={timeIntervals}
@@ -122,7 +122,7 @@ function TimeIntervalsPage() {
             pageSize={DEFAULT_PAGE_SIZE}
           />
         )}
-        {!isLoading && timeIntervals.length === 0 && !error && (
+        {!isLoading && isSuccess && timeIntervals.length === 0 && !error && (
           <EmptyState
             message={t(
               'time-intervals.no-time-intervals-message',

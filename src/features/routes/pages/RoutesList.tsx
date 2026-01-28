@@ -21,12 +21,12 @@ import { addUniqueIdentifier } from '../utils';
 import { InsertPosition } from '../types';
 
 function RoutesPage() {
-  const { route, isLoading, error } = useRoutes();
+  const { route, isLoading, error, isSuccess } = useRoutes();
   const { alertGroups, isLoading: isLoadingAlerts } = useAlertGroups();
   const { settings } = useAlertmanager();
   const [selectedRoute, setSelectedRoute] = useState<RouteWithID | null>(null);
   const [selectedReceiverName, setSelectedReceiverName] = useState<string | null>(null);
-  const [triggerFetchReceivers, { receivers }] = useReceivers();
+  const [triggerFetchReceivers, { receivers = [] }] = useReceivers();
 
   // State for add mode
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
@@ -138,7 +138,7 @@ function RoutesPage() {
       <div data-testid={testIds.routes.container}>
         {isLoading && <RouteCard.Skeleton count={3} />}
         {error && <DataSourceError error={error} title={t('routes.error-loading-title', 'Error loading routes')} />}
-        {!isLoading && routeTree && !error && (
+        {!isLoading && isSuccess && Boolean(routeTree) && !error && (
           <div>
             <RouteCard
               currentRoute={routeTree}
@@ -153,7 +153,7 @@ function RoutesPage() {
             />
           </div>
         )}
-        {!isLoading && !route && !error && (
+        {!isLoading && isSuccess && !route && !error && (
           <EmptyState
             message={t('routes.no-routes-message', 'No routing configuration is available in the Alertmanager.')}
             variant="call-to-action"
