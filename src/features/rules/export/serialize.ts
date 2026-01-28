@@ -27,7 +27,7 @@ export function serializeRule(rule: RulerRuleDTO, format: ExportFormat): string 
 /**
  * Generates a filename for the exported rule.
  */
-export function generateExportFilename(ruleName: string, format: ExportFormat): string {
+export function generateExportFilename(ruleName: string): string {
   // Sanitize the rule name for use in a filename
   const sanitized = ruleName
     .replace(/[^a-zA-Z0-9-_]/g, '_')
@@ -36,5 +36,5 @@ export function generateExportFilename(ruleName: string, format: ExportFormat): 
     .toLowerCase();
 
   const timestamp = Date.now();
-  return `${sanitized}-${timestamp}.${format}`;
+  return `${sanitized}-${timestamp}`;
 }

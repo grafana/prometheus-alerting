@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { saveAs } from 'file-saver';
+import { fileSave } from 'browser-fs-access';
 import React, { useCallback, useMemo } from 'react';
 
 import { GrafanaTheme2 } from '@grafana/data';
@@ -27,12 +27,16 @@ export function RuleExportPreview({ rule, ruleName, format, onClose }: RuleExpor
     return provider.formatter ? provider.formatter(raw) : raw;
   }, [rule, format, provider]);
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
     const blob = new Blob([serializedRule], {
       type: `${provider.mimeType};charset=utf-8`,
     });
-    const filename = generateExportFilename(ruleName, format);
-    saveAs(blob, filename);
+    const filename = generateExportFilename(ruleName);
+
+    await fileSave(blob, {
+      fileName: filename,
+      extensions: [`.${format}`],
+    });
   }, [serializedRule, ruleName, format, provider.mimeType]);
 
   return (
