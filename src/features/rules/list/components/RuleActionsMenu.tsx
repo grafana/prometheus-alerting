@@ -21,6 +21,7 @@ interface Props {
   onDelete: (identifier: DataSourceRuleIdentifier) => void;
   onDuplicate: (identifier: DataSourceRuleIdentifier) => void;
   onSilence?: (identifier: DataSourceRuleIdentifier, ruleName: string) => void;
+  onExport?: (rule: RulerRuleDTO) => void;
   buttonSize?: ComponentProps<typeof Button>['size'];
   fill?: ComponentProps<typeof Button>['fill'];
 }
@@ -33,6 +34,7 @@ export function RuleActionsMenu({
   onDelete,
   onDuplicate,
   onSilence,
+  onExport,
   buttonSize = 'md',
   fill,
 }: Props) {
@@ -78,15 +80,14 @@ export function RuleActionsMenu({
       )}
       <Menu.Divider />
       <Menu.Item label={t('alerting.rule-actions.copy-link', 'Copy link')} icon="share-alt" onClick={handleCopyLink} />
-      {/* Export - placeholder for future implementation */}
-      <Menu.Item
-        label={t('alerting.rule-actions.export', 'Export')}
-        icon="download-alt"
-        disabled
-        onClick={() => {
-          // TODO: Implement export functionality
-        }}
-      />
+      {/* Export - only shown when we have the ruler rule */}
+      {rulerApiEnabled && rule && onExport && (
+        <Menu.Item
+          label={t('alerting.rule-actions.export', 'Export')}
+          icon="download-alt"
+          onClick={() => onExport(rule)}
+        />
+      )}
       {/* Delete - only with Ruler API */}
       {rulerApiEnabled && rule && (
         <>
