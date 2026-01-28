@@ -138,7 +138,7 @@ function RoutesPage() {
       <div data-testid={testIds.routes.container}>
         {isLoading && <RouteCard.Skeleton count={3} />}
         {error && <DataSourceError error={error} title={t('routes.error-loading-title', 'Error loading routes')} />}
-        {!isLoading && isSuccess && Boolean(routeTree) && !error && (
+        {!isLoading && isSuccess && routeTree !== undefined && !error && (
           <div>
             <RouteCard
               currentRoute={routeTree}
