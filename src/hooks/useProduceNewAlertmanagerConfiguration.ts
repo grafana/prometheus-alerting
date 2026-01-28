@@ -7,7 +7,10 @@ import { notificationTemplatesReducer } from '../reducers/alertmanager/templates
 import { receiversReducer } from '../reducers/alertmanager/receivers';
 import { useAlertmanager } from './useAlertmanager';
 import { mimirAlertmanagerApi } from '../api/alertmanager/mimir.endpoints';
-import { PostableParsedUserConfiguration, initialAlertmanagerConfiguration } from '@grafana/external-alertmanager/mimir';
+import {
+  PostableParsedUserConfiguration,
+  initialAlertmanagerConfiguration,
+} from '@grafana/external-alertmanager/mimir';
 
 const ERR_NO_ACTIVE_AM = new Error('no active Alertmanager');
 

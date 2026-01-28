@@ -1,7 +1,4 @@
-import {
-  ParsedUserConfiguration,
-  YamlToParsedUserConfiguration,
-} from '@grafana/external-alertmanager/mimir';
+import { ParsedUserConfiguration, YamlToParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 import { alertmanagerApi } from './alertmanager.endpoints';
 import { getDataSourceSrv } from '@grafana/runtime';
 import { AlertManagerDataSourceJsonData } from 'types/datasources';

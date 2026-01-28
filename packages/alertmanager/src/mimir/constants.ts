@@ -21,9 +21,11 @@ export const initialAlertmanagerConfiguration: PostableParsedUserConfiguration =
       group_interval: '5m',
       repeat_interval: '4h',
     },
-    receivers: [{
-      name: 'empty-receiver',
-    }],
+    receivers: [
+      {
+        name: 'empty-receiver',
+      },
+    ],
     time_intervals: [],
     inhibit_rules: [],
     templates: [],

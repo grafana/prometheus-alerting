@@ -25,9 +25,6 @@ export default defineConfig({
   ssr: {
     // Don't externalize these packages in SSR context (test environment)
     // This handles ESM-only packages that need to be transformed by Vitest
-    noExternal: [
-      /@grafana\/.*/,
-      /rxjs/,
-    ],
+    noExternal: [/@grafana\/.*/, /rxjs/],
   },
 });
