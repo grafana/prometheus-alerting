@@ -6,6 +6,7 @@ services:
     depends_on:
       - prometheus
       - alertmanager
+      - mimir
 
   prometheus:
     image: quay.io/prometheus/prometheus:v3.0.0
@@ -29,3 +30,19 @@ services:
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
+
+  mimir:
+    image: grafana/mimir:latest
+    container_name: mimir-test
+    ports:
+      - "9009:9009"
+    volumes:
+      - ./test-data/mimir:/etc/mimir
+      - ./test-data/mimir/rules:/data/rules
+      - mimir-data:/data
+    command:
+      - '-config.file=/etc/mimir/mimir.yaml'
+      - '-target=all'
+
+volumes:
+  mimir-data:

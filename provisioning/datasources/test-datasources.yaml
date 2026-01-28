@@ -28,3 +28,21 @@ datasources:
     jsonData:
       implementation: prometheus
     version: 1
+
+  # Mimir with Ruler API - for testing rule creation/editing
+  - name: Test Mimir
+    type: prometheus
+    uid: test-mimir
+    url: http://mimir:9009/prometheus
+    access: proxy
+    isDefault: false
+    editable: true
+    jsonData:
+      manageAlerts: true
+      prometheusType: Mimir
+      prometheusVersion: 2.40.0
+      implementation: mimir
+      httpMethod: POST
+      customQueryParameters: ''
+      disableRecordingRules: false
+    version: 1

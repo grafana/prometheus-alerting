@@ -13,7 +13,7 @@ export interface RuleFormValues {
   // Common fields
   name: string;
   type: RuleFormType; // Required for validation
-  dataSourceName: string | null;
+  dataSourceUid: string | null;
   group: string;
   labels: Array<{ key: string; value: string }>;
   annotations: Array<{ key: string; value: string }>;

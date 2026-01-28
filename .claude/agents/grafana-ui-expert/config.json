@@ -1,0 +1,34 @@
+{
+  "name": "grafana-ui-expert",
+  "displayName": "@grafana/ui Expert",
+  "description": "Expert in @grafana/ui component library. Helps with component selection, layout design, accessibility patterns, responsive design, and best practices for Grafana plugins.",
+  "icon": "layout-grid",
+  "tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "WebSearch",
+    "WebFetch"
+  ],
+  "keywords": [
+    "grafana/ui",
+    "components",
+    "layout",
+    "forms",
+    "accessibility",
+    "responsive",
+    "design"
+  ],
+  "triggers": {
+    "keywords": [
+      "@grafana/ui",
+      "Stack",
+      "Box",
+      "Grid",
+      "Field",
+      "layout component",
+      "component props",
+      "component API"
+    ]
+  }
+}

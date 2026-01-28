@@ -32,7 +32,7 @@ export function formValuesToRulerRuleDTO(values: RuleFormValues): RulerRuleDTO {
 
 // Convert RulerRuleDTO to form values for editing
 export function rulerRuleToFormValues(
-  ruleSourceName: string,
+  ruleSourceUid: string,
   namespace: string,
   groupName: string,
   rule: RulerRuleDTO
@@ -47,7 +47,7 @@ export function rulerRuleToFormValues(
       ...defaultFormValues,
       name: rule.alert,
       type: RuleFormType.cloudAlerting,
-      dataSourceName: ruleSourceName,
+      dataSourceUid: ruleSourceUid,
       group: groupName,
       namespace,
       expression: rule.expr,
@@ -64,7 +64,7 @@ export function rulerRuleToFormValues(
       ...defaultFormValues,
       name: rule.record,
       type: RuleFormType.cloudRecording,
-      dataSourceName: ruleSourceName,
+      dataSourceUid: ruleSourceUid,
       group: groupName,
       namespace,
       expression: rule.expr,

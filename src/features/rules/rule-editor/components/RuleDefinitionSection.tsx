@@ -24,9 +24,9 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
   } = useFormContext<RuleFormValues>();
 
   // Use useWatch for better performance - single subscription instead of multiple
-  const [type, dataSourceName] = useWatch<RuleFormValues, ['type', 'dataSourceName']>({
+  const [type, dataSourceUid] = useWatch<RuleFormValues, ['type', 'dataSourceUid']>({
     control,
-    name: ['type', 'dataSourceName'],
+    name: ['type', 'dataSourceUid'],
   });
 
   const isRecording = isCloudRecordingRuleByType(type);
@@ -76,8 +76,8 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
         {/* Data Source Selector */}
         <Field
           label={t('alerting.cloud-data-source-selector.label', 'Data source')}
-          error={errors.dataSourceName?.message}
-          invalid={!!errors.dataSourceName?.message}
+          error={errors.dataSourceUid?.message}
+          invalid={!!errors.dataSourceUid?.message}
           required
         >
           <Controller
@@ -87,12 +87,12 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
                 onChange={(ds: DataSourceInstanceSettings) => {
                   // Reset expression when changing data sources
                   setValue('expression', '');
-                  onChange(ds?.name ?? null);
+                  onChange(ds?.uid ?? null);
                   onChangeCloudDatasource(ds?.uid ?? '');
                 }}
               />
             )}
-            name="dataSourceName"
+            name="dataSourceUid"
             control={control}
             rules={{
               required: {
@@ -120,7 +120,7 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
               required: t('alerting.expression-editor.message.expression-required', 'Expression is required.'),
             }}
             render={({ field: { value, onChange } }) => {
-              if (!dataSourceName) {
+              if (!dataSourceUid) {
                 return (
                   <Alert severity="info" title={t('alerting.expression-editor.select-datasource', 'Select a data source')}>
                     {t(
@@ -130,7 +130,7 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
                   </Alert>
                 );
               }
-              return <ExpressionQueryEditor value={value} onChange={onChange} dataSourceName={dataSourceName} />;
+              return <ExpressionQueryEditor value={value} onChange={onChange} dataSourceUid={dataSourceUid} />;
             }}
           />
         </Field>

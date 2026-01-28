@@ -4,7 +4,6 @@ import { Controller, useFormContext } from 'react-hook-form';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { getDataSourceSrv } from '@grafana/runtime';
 import { Field, Input, Select, useStyles2 } from '@grafana/ui';
 
 import { RuleFormType, RuleFormValues } from '../types';
@@ -22,10 +21,7 @@ export const CloudEvaluationBehavior = () => {
   } = useFormContext<RuleFormValues>();
 
   const type = watch('type');
-  const dataSourceName = watch('dataSourceName');
-
-  // Get data source UID from the name
-  const dataSourceUid = dataSourceName ? getDataSourceSrv().getInstanceSettings(dataSourceName)?.uid ?? null : null;
+  const dataSourceUid = watch('dataSourceUid');
 
   return (
     <RuleEditorSection

@@ -22,6 +22,7 @@ import { hashRule, hashRulerRule } from '@grafana/external-rules/hashing';
  */
 export const TEST_DATASOURCE_UID = 'test-prometheus';
 export const TEST_NAMESPACE = '/etc/prometheus/rules/test-rules.yml';
+export const TEST_MIMIR_DATASOURCE_UID = 'test-mimir';
 
 /**
  * Helper class for building test data for rule tests
@@ -306,5 +307,92 @@ export class RuleBuilder {
       ruleName: 'InactiveRule',
       ruleHash: hashRule(rule),
     };
+  }
+
+  /**
+   * Create a Mimir rule identifier with custom rule expression
+   */
+  static createMimirRuleIdentifier(
+    namespace: string,
+    groupName: string,
+    ruleName: string,
+    ruleExpr: string
+  ): CloudRuleIdentifier {
+    const rule: RulerAlertingRuleDTO = {
+      alert: ruleName,
+      expr: ruleExpr,
+    };
+
+    const rulerRuleHash = hashRulerRule(rule);
+
+    return {
+      type: 'cloud',
+      uid: TEST_MIMIR_DATASOURCE_UID,
+      namespace,
+      groupName,
+      ruleName,
+      rulerRuleHash,
+    };
+  }
+
+  /**
+   * Get the URL for creating a new rule
+   */
+  static getRuleEditorUrl(type: 'alerting' | 'recording'): string {
+    return `/rules/new?type=${type}`;
+  }
+
+  /**
+   * Get the URL for editing a rule
+   */
+  static getRuleEditUrl(identifier: CloudRuleIdentifier): string {
+    const encodedId = encodeURIComponent(stringifyIdentifier(identifier));
+    return `/rules/${encodedId}/edit`;
+  }
+
+  /**
+   * Get the URL for cloning a rule
+   */
+  static getRuleCloneUrl(identifier: CloudRuleIdentifier): string {
+    const encodedId = encodeURIComponent(stringifyIdentifier(identifier));
+    return `/rules/new?copyFrom=${encodedId}`;
+  }
+
+  /**
+   * Create identifier for the TestEditRule (pre-provisioned in Mimir)
+   * This rule exists in test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml
+   */
+  static createTestEditRuleIdentifier(): CloudRuleIdentifier {
+    return this.createMimirRuleIdentifier(
+      'e2e-test-namespace',
+      'e2e-test-group',
+      'TestEditRule',
+      'up == 0'
+    );
+  }
+
+  /**
+   * Create identifier for the TestCloneRule (pre-provisioned in Mimir)
+   * This rule exists in test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml
+   */
+  static createTestCloneRuleIdentifier(): CloudRuleIdentifier {
+    return this.createMimirRuleIdentifier(
+      'e2e-test-namespace',
+      'e2e-test-group',
+      'TestCloneRule',
+      'vector(1) > 0'
+    );
+  }
+
+  /**
+   * Create identifier for the test recording rule (pre-provisioned in Mimir)
+   */
+  static createTestRecordingRuleIdentifier(): CloudRuleIdentifier {
+    return this.createMimirRuleIdentifier(
+      'e2e-test-namespace',
+      'e2e-test-group',
+      'test:recording:rule',
+      'sum(up)'
+    );
   }
 }

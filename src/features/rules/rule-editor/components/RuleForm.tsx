@@ -44,8 +44,8 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
   const [upsertRuleGroup, { isLoading: isSaving }] = useUpsertRuleGroupMutation();
   const [produceNewRuleGroup] = useProduceNewRuleGroup();
 
-  // Initialize data source UID from existing rule identifier (when editing)
-  const initialUid = existingRuleIdentifier?.uid ?? null;
+  // Initialize data source UID from existing rule identifier (when editing) or prefill (when cloning)
+  const initialUid = existingRuleIdentifier?.uid ?? prefill?.dataSourceUid ?? null;
 
   const [currentDataSourceUid, setCurrentDataSourceUid] = useState<string | null>(initialUid);
 

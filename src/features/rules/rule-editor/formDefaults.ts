@@ -8,7 +8,7 @@ export function defaultFormValuesForRuleType(type: RuleFormType): RuleFormValues
   return Object.freeze({
     name: '',
     type,
-    dataSourceName: null,
+    dataSourceUid: null,
     group: '',
     labels: [{ key: '', value: '' }],
     annotations: [],

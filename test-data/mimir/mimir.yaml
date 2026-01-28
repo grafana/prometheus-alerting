@@ -1,0 +1,44 @@
+multitenancy_enabled: false
+
+server:
+  http_listen_port: 9009
+  grpc_listen_port: 9095
+  log_level: info
+
+blocks_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/blocks
+
+ruler_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/rules
+
+ruler:
+  enable_api: true
+  rule_path: /data/rules-tmp
+  alertmanager_url: http://alertmanager:9093
+
+limits:
+  max_global_series_per_user: 100000
+  ruler_max_rules_per_rule_group: 100
+  ruler_max_rule_groups_per_tenant: 100
+
+# Single-instance mode ring configuration
+ingester:
+  ring:
+    replication_factor: 1
+
+store_gateway:
+  sharding_ring:
+    replication_factor: 1
+
+compactor:
+  sharding_ring:
+    wait_stability_min_duration: 0s
+
+# Use memberlist for ring coordination
+memberlist:
+  join_members:
+    - mimir-test:7946

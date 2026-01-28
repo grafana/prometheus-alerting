@@ -16,7 +16,7 @@ export function createRuleFormSchema() {
 
     type: z.enum([RuleFormType.cloudAlerting, RuleFormType.cloudRecording]),
 
-    dataSourceName: z
+    dataSourceUid: z
       .string()
       .nullable()
       .refine((val) => val !== null && val.length > 0, {

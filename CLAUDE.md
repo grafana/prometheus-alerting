@@ -93,6 +93,30 @@ npm run i18n-extract # Extract translation strings after adding t() or <Trans />
 - `Divider` - Visual separator between sections
 - `ScrollContainer` - Container with custom scrollbar styling
 
+## Custom Agents
+
+This project has specialized agents available for specific tasks:
+
+### grafana-ui-expert
+
+**When to use:** Working with @grafana/ui components, layout design, accessibility, or responsive design.
+
+**Invoke with:** `/grafana-ui-expert`
+
+**Examples:**
+- `/grafana-ui-expert Review this component and suggest layout improvements`
+- `/grafana-ui-expert Which @grafana/ui component should I use for a form with inline fields?`
+- `/grafana-ui-expert Is this Stack usage following best practices?`
+- `/grafana-ui-expert How can I make this layout responsive?`
+
+**Expertise:**
+- Component selection and API guidance
+- Layout patterns (Stack, Box, Grid)
+- Accessibility best practices
+- Responsive design patterns
+- Performance optimization
+- Theme tokens and styling conventions
+
 ## Architecture
 
 ### Monorepo Structure

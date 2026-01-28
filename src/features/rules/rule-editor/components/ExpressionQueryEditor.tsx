@@ -11,14 +11,14 @@ import { useStyles2 } from '@grafana/ui';
 interface ExpressionQueryEditorProps {
   value: string;
   onChange: (value: string) => void;
-  dataSourceName: string;
+  dataSourceUid: string;
 }
 
 interface PromLokiQuery extends DataQuery {
   expr?: string;
 }
 
-export function ExpressionQueryEditor({ value, onChange, dataSourceName }: ExpressionQueryEditorProps) {
+export function ExpressionQueryEditor({ value, onChange, dataSourceUid }: ExpressionQueryEditorProps) {
   const styles = useStyles2(getStyles);
 
   // Load datasource instance
@@ -27,11 +27,11 @@ export function ExpressionQueryEditor({ value, onChange, dataSourceName }: Expre
     loading,
     value: dataSource,
   } = useAsync(async () => {
-    if (!dataSourceName) {
+    if (!dataSourceUid) {
       throw new Error('No datasource name provided');
     }
-    return await getDataSourceSrv().get(dataSourceName);
-  }, [dataSourceName]);
+    return await getDataSourceSrv().get(dataSourceUid);
+  }, [dataSourceUid]);
 
   // Create query model from expression string
   const dataQuery = useMemo((): PromLokiQuery => {
@@ -62,7 +62,7 @@ export function ExpressionQueryEditor({ value, onChange, dataSourceName }: Expre
   }
 
   // Get datasource instance settings
-  const dsi = getDataSourceSrv().getInstanceSettings(dataSourceName);
+  const dsi = getDataSourceSrv().getInstanceSettings(dataSourceUid);
 
   // Error state - datasource failed to load or doesn't have QueryEditor
   if (error || !dataSource || !dataSource?.components?.QueryEditor || !dsi) {
