@@ -5,7 +5,6 @@ groups:
       # Alerting rule - will be firing since condition is always true
       - alert: HighErrorRate
         expr: vector(1) > 0
-        for: 1m
         labels:
           severity: critical
           team: platform

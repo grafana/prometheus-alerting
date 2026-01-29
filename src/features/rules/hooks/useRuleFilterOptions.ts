@@ -4,6 +4,7 @@ import { getExternalRulesSources } from '../../../utils/datasource';
 
 /**
  * Hook to get data source options for the filter
+ * Uses name as value for user-friendly URLs (datasource:mimir-cloud instead of datasource:abc123)
  */
 export function useDataSourceOptions() {
   const dataSources = useMemo(() => getExternalRulesSources(), []);
@@ -11,7 +12,7 @@ export function useDataSourceOptions() {
   const options = useMemo(() => {
     return dataSources.map((ds) => ({
       label: ds.name,
-      value: ds.uid,
+      value: ds.name, // Use name for user-friendly search queries
     }));
   }, [dataSources]);
 

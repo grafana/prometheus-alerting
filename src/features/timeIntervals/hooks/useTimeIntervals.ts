@@ -3,11 +3,7 @@ import { alertmanagerApi } from '../../../api/alertmanager/alertmanager.endpoint
 import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
-import {
-  addMuteTimingAction,
-  updateMuteTimingAction,
-  deleteMuteTimingAction,
-} from '../../../reducers/alertmanager/timeIntervals';
+import { addTimeInterval, updateTimeInterval, deleteTimeInterval } from '../../../reducers/alertmanager/timeIntervals';
 
 /**
  * Hook to fetch time intervals from Alertmanager configuration.
@@ -56,11 +52,11 @@ export function useTimeIntervals() {
 export function useAddTimeInterval() {
   const [produceNewConfig, state] = useProduceNewAlertmanagerConfiguration();
 
-  const addTimeInterval = async (interval: TimeInterval) => {
-    return produceNewConfig(addMuteTimingAction({ interval }));
+  const addTimeIntervalFn = async (interval: TimeInterval) => {
+    return produceNewConfig(addTimeInterval({ interval }));
   };
 
-  return [addTimeInterval, state] as const;
+  return [addTimeIntervalFn, state] as const;
 }
 
 /**
@@ -74,11 +70,11 @@ export function useAddTimeInterval() {
 export function useUpdateTimeInterval() {
   const [produceNewConfig, state] = useProduceNewAlertmanagerConfiguration();
 
-  const updateTimeInterval = async (interval: TimeInterval, originalName: string) => {
-    return produceNewConfig(updateMuteTimingAction({ interval, originalName }));
+  const updateTimeIntervalFn = async (interval: TimeInterval, originalName: string) => {
+    return produceNewConfig(updateTimeInterval({ interval, originalName }));
   };
 
-  return [updateTimeInterval, state] as const;
+  return [updateTimeIntervalFn, state] as const;
 }
 
 /**
@@ -92,9 +88,9 @@ export function useUpdateTimeInterval() {
 export function useDeleteTimeInterval() {
   const [produceNewConfig, state] = useProduceNewAlertmanagerConfiguration();
 
-  const deleteTimeInterval = async (name: string) => {
-    return produceNewConfig(deleteMuteTimingAction({ name }));
+  const deleteTimeIntervalFn = async (name: string) => {
+    return produceNewConfig(deleteTimeInterval({ name }));
   };
 
-  return [deleteTimeInterval, state] as const;
+  return [deleteTimeIntervalFn, state] as const;
 }

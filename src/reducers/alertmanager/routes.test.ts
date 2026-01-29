@@ -2,7 +2,13 @@ import { produce } from 'immer';
 
 import { addRouteAction, deleteRouteAction, routesReducer, updateRouteAction } from './routes';
 import { Route } from '@grafana/external-alertmanager/vanilla';
-import { addUniqueIdentifierToRoute, ParsedUserConfiguration, RouteWithID } from '@grafana/external-alertmanager/mimir';
+import {
+  addUniqueIdentifierToRoute,
+  initialAlertmanagerConfiguration,
+  PostableParsedUserConfiguration,
+  PostableParsedUserConfigurationSchema,
+  RouteWithID,
+} from '@grafana/external-alertmanager/mimir';
 
 describe('routes', () => {
   const defaultRoute: Route = {
@@ -37,8 +43,9 @@ describe('routes', () => {
   const ROOT_identifier = rootRouteWithIdentifiers.id;
   const A_identifier = rootRouteWithIdentifiers.routes![0].id;
 
-  const initialConfig: ParsedUserConfiguration = {
+  const initialConfig: PostableParsedUserConfiguration = {
     alertmanager_config: {
+      ...initialAlertmanagerConfiguration.alertmanager_config,
       time_intervals: [],
       mute_time_intervals: [],
       route: defaultRoute,
@@ -71,6 +78,7 @@ describe('routes', () => {
     });
 
     // assert the rest of the configuration
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
     expect(result).toMatchSnapshot();
   });
 
@@ -106,7 +114,9 @@ describe('routes', () => {
       update: newRoute,
     });
 
-    expect(routesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = routesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 
   it('Should not update route if config has been updated by another user', () => {
@@ -131,6 +141,8 @@ describe('routes', () => {
     const action = deleteRouteAction({
       id: A_identifier,
     });
-    expect(routesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = routesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 });

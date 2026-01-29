@@ -16,7 +16,10 @@ import { hashRule } from '@grafana/external-rules/hashing';
 import { getMatchingRulerRule } from '@grafana/external-rules/matching';
 import type { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vanilla';
 
+import { RuleExporter } from '../export';
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
+import { RuleActionsButtons } from './components/RuleActionsButtons';
+import { useRuleActions } from './hooks/useRuleActions';
 
 const { useGetGroupsQuery } = prometheusApi;
 
@@ -41,6 +44,9 @@ export function DataSourceGroupLoader({
 }: DataSourceGroupLoaderProps) {
   const { namespace, groupName } = groupIdentifier;
   const namespaceName = namespace.name;
+
+  const { handleDuplicate, handleSilence, handleDelete, handleExport, deleteModal, exportingRule, closeExportDrawer } =
+    useRuleActions();
 
   // Fetch Prometheus rules
   const {
@@ -103,15 +109,33 @@ export function DataSourceGroupLoader({
 
   // There should be always only one group in the response but some Prometheus-compatible data sources
   // implement different filter parameters
-  const promGroup = promResponse?.data.groups.find((g: PromRuleGroupDTO) => g.file === namespaceName && g.name === groupName);
+  const promGroup = promResponse?.data.groups.find(
+    (g: PromRuleGroupDTO) => g.file === namespaceName && g.name === groupName
+  );
 
   if (promGroup) {
+    const actualRulerApiEnabled = shouldFetchRuler && dsFeatures?.rulerApiEnabled;
+
     return (
       <>
         {promGroup.rules.map((rule: PromRuleDTO) => {
           // Match the prometheus rule with its corresponding ruler rule if available
           const rulerRule =
             rulerRuleGroup && shouldFetchRuler ? getMatchingRulerRule(rulerRuleGroup.rules, rule) : undefined;
+
+          const actions = (
+            <RuleActionsButtons
+              rule={rulerRule}
+              promRule={rule}
+              groupIdentifier={groupIdentifier}
+              rulerApiEnabled={actualRulerApiEnabled ?? false}
+              onDelete={handleDelete}
+              onDuplicate={handleDuplicate}
+              onSilence={handleSilence}
+              onExport={handleExport}
+              compact
+            />
+          );
 
           return (
             <DataSourceRuleListItem
@@ -121,9 +145,12 @@ export function DataSourceGroupLoader({
               groupIdentifier={groupIdentifier}
               application={application}
               showLocation={false}
+              actions={actions}
             />
           );
         })}
+        {deleteModal}
+        {exportingRule && <RuleExporter rule={exportingRule} onClose={closeExportDrawer} />}
       </>
     );
   }

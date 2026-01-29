@@ -1,4 +1,4 @@
-import { PLUGIN_BASE_URL } from '../constants';
+import { PLUGIN_BASE_URL, ROUTES } from '../constants';
 import { DataSourceRuleIdentifier, stringifyIdentifier } from '@grafana/external-rules/identifiers';
 import { config } from '@grafana/runtime';
 import { urlUtil } from '@grafana/data';
@@ -58,6 +58,60 @@ export const rules = {
   shareLink(identifier: DataSourceRuleIdentifier): string {
     const detailsLink = rules.detailsPageLink(identifier);
     return `${window.location.origin}${detailsLink}`;
+  },
+};
+
+/**
+ * Creates a link to the rules list with search filters applied.
+ * Follows the same pattern as Grafana core's createListFilterLink.
+ *
+ * @param values - Array of [key, value] pairs for filter parameters
+ * @returns URL string with search query parameters
+ 
+ */
+export function createListFilterLink(values: Array<[string, string]>): string {
+  const searchQuery = values.map(([key, value]) => `${key}:"${value}"`).join(' ');
+  const params = new URLSearchParams({ search: searchQuery });
+  return `${PLUGIN_BASE_URL}/${ROUTES.Rules}?${params.toString()}`;
+}
+
+/**
+ * Matcher format for silence creation
+ */
+export interface SilenceMatcher {
+  name: string;
+  value: string;
+  isRegex?: boolean;
+  isEqual?: boolean;
+}
+
+export const silences = {
+  /**
+   * Generate a link to create a new silence with pre-filled matchers
+   */
+  createPageLink(matchers?: SilenceMatcher[]): string {
+    if (!matchers || matchers.length === 0) {
+      return `${PLUGIN_BASE_URL}/${ROUTES.CreateSilence}`;
+    }
+    const params = new URLSearchParams({
+      matchers: JSON.stringify(matchers),
+    });
+    return `${PLUGIN_BASE_URL}/${ROUTES.CreateSilence}?${params.toString()}`;
+  },
+
+  /**
+   * Generate a link to create a silence for a specific rule by alertname
+   */
+  createForRuleLink(alertName: string, additionalLabels?: Record<string, string>): string {
+    const matchers: SilenceMatcher[] = [{ name: 'alertname', value: alertName, isRegex: false, isEqual: true }];
+
+    if (additionalLabels) {
+      Object.entries(additionalLabels).forEach(([name, value]) => {
+        matchers.push({ name, value, isRegex: false, isEqual: true });
+      });
+    }
+
+    return silences.createPageLink(matchers);
   },
 };
 

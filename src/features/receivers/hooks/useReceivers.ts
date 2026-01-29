@@ -34,7 +34,7 @@ export function useReceivers() {
     triggerFn,
     {
       ...result,
-      receivers: result.data?.alertmanager_config?.receivers ?? [],
+      receivers: result.data?.alertmanager_config?.receivers,
     },
   ] as const;
 }

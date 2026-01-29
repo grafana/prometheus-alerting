@@ -122,7 +122,10 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
             render={({ field: { value, onChange } }) => {
               if (!dataSourceUid) {
                 return (
-                  <Alert severity="info" title={t('alerting.expression-editor.select-datasource', 'Select a data source')}>
+                  <Alert
+                    severity="info"
+                    title={t('alerting.expression-editor.select-datasource', 'Select a data source')}
+                  >
                     {t(
                       'alerting.expression-editor.select-datasource-message',
                       'Please select a data source above to load the query editor.'

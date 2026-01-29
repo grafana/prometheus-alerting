@@ -94,7 +94,10 @@ export class RuleDetailsPage {
     await this.switchToTab('query');
     // Look for the query in a code block or pre element within page content
     const pageContent = this.page.locator('#pageContent');
-    const queryElement = pageContent.locator('pre, code').filter({ hasText: /==|sum|rate/ }).first();
+    const queryElement = pageContent
+      .locator('pre, code')
+      .filter({ hasText: /==|sum|rate/ })
+      .first();
     return await queryElement.innerText();
   }
 
@@ -140,7 +143,7 @@ export class RuleDetailsPage {
       const ariaLabel = await labelItems.nth(i).getAttribute('aria-label');
       if (ariaLabel) {
         // aria-label format: "key: value"
-        const [key, value] = ariaLabel.split(':').map(s => s.trim());
+        const [key, value] = ariaLabel.split(':').map((s) => s.trim());
         if (key && value) {
           labels[key] = value;
         }

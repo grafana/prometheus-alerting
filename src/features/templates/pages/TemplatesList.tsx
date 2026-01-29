@@ -8,12 +8,13 @@ import { useTemplates, Template } from '../hooks/useTemplates';
 import { t, Trans } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { ViewState } from '../../../components/ViewState';
 import { DataSourceError } from '../../../components/AlertmanagerError';
 import { TemplateDrawer, DrawerMode } from '../components/TemplateDrawer';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 
 function TemplatesPage() {
-  const { templates, isLoading, error, refetch } = useTemplates();
+  const { templates, isLoading, error, refetch, isSuccess } = useTemplates();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
   const hasConfigurationAPI = useHasConfigurationAPI();
@@ -88,36 +89,41 @@ function TemplatesPage() {
       }
     >
       <div data-testid={testIds.templates.container}>
-        {isLoading && (
-          <div>
-            <Skeleton height={50} style={{ marginBottom: '10px' }} />
-            <Skeleton height={80} count={3} style={{ marginBottom: '5px' }} />
-          </div>
-        )}
-        {error && (
-          <DataSourceError error={error} title={t('templates.error-loading-title', 'Error loading templates')} />
-        )}
-        {!isLoading && templates.length > 0 && !error && (
+        <ViewState
+          isLoading={isLoading}
+          isSuccess={isSuccess}
+          error={error}
+          isEmpty={templates.length === 0}
+          loading={
+            <div>
+              <Skeleton height={50} style={{ marginBottom: '10px' }} />
+              <Skeleton height={80} count={3} style={{ marginBottom: '5px' }} />
+            </div>
+          }
+          renderError={
+            <DataSourceError error={error} title={t('templates.error-loading-title', 'Error loading templates')} />
+          }
+          empty={
+            <EmptyState
+              message={t('templates.no-templates-message', 'No templates are configured in the Alertmanager.')}
+              variant="call-to-action"
+              button={
+                hasConfigurationAPI && (
+                  <Button icon="plus" onClick={handleCreateTemplate}>
+                    <Trans i18nKey="templates.create-button">Create template</Trans>
+                  </Button>
+                )
+              }
+            />
+          }
+        >
           <InteractiveTable
             columns={columns}
             data={templates}
             getRowId={(row) => row.name}
             pageSize={DEFAULT_PAGE_SIZE}
           />
-        )}
-        {!isLoading && templates.length === 0 && !error && (
-          <EmptyState
-            message={t('templates.no-templates-message', 'No templates are configured in the Alertmanager.')}
-            variant="call-to-action"
-            button={
-              hasConfigurationAPI && (
-                <Button icon="plus" onClick={handleCreateTemplate}>
-                  <Trans i18nKey="templates.create-button">Create template</Trans>
-                </Button>
-              )
-            }
-          />
-        )}
+        </ViewState>
       </div>
 
       {isDrawerOpen && (

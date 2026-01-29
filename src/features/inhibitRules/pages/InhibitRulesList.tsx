@@ -13,6 +13,7 @@ import {
 } from '@grafana/external-alertmanager/vanilla';
 import { AlertLabel } from '@grafana/alerting';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { ViewState } from '../../../components/ViewState';
 import { DataSourceError } from '../../../components/AlertmanagerError';
 import { InhibitRuleDrawer } from '../components/InhibitRuleDrawer';
 
@@ -35,7 +36,7 @@ const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
 };
 
 function InhibitRulesPage() {
-  const { inhibitRules, isLoading, error } = useInhibitRules();
+  const { inhibitRules, isLoading, error, isSuccess } = useInhibitRules();
   const [selectedInhibitRule, setSelectedInhibitRule] = useState<NormalizedInhibitRule | null>(null);
   const [selectedInhibitRuleIndex, setSelectedInhibitRuleIndex] = useState<number | null>(null);
 
@@ -89,32 +90,37 @@ function InhibitRulesPage() {
   return (
     <AlertmanagerPage subTitle={t('inhibit-rules.page-subtitle', 'Suppress alerts based on other active alerts')}>
       <div data-testid={testIds.inhibitRules.container}>
-        {isLoading && (
-          <div>
-            <Skeleton height={50} style={{ marginBottom: '10px' }} />
-            <Skeleton height={120} count={3} style={{ marginBottom: '5px' }} />
-          </div>
-        )}
-        {error && (
-          <DataSourceError
-            error={error}
-            title={t('inhibit-rules.error-loading-title', 'Error loading inhibit rules')}
-          />
-        )}
-        {!isLoading && inhibitRules.length > 0 && !error && (
+        <ViewState
+          isLoading={isLoading}
+          isSuccess={isSuccess}
+          error={error}
+          isEmpty={inhibitRules.length === 0}
+          loading={
+            <div>
+              <Skeleton height={50} style={{ marginBottom: '10px' }} />
+              <Skeleton height={120} count={3} style={{ marginBottom: '5px' }} />
+            </div>
+          }
+          renderError={
+            <DataSourceError
+              error={error}
+              title={t('inhibit-rules.error-loading-title', 'Error loading inhibit rules')}
+            />
+          }
+          empty={
+            <EmptyState
+              message={t('inhibit-rules.no-rules-message', 'No inhibit rules are configured in the Alertmanager.')}
+              variant="call-to-action"
+            />
+          }
+        >
           <InteractiveTable
             columns={columns}
             data={inhibitRules}
             getRowId={(rule, index) => `inhibit-rule-${index}`}
             pageSize={DEFAULT_PAGE_SIZE}
           />
-        )}
-        {!isLoading && inhibitRules.length === 0 && !error && (
-          <EmptyState
-            message={t('inhibit-rules.no-rules-message', 'No inhibit rules are configured in the Alertmanager.')}
-            variant="call-to-action"
-          />
-        )}
+        </ViewState>
       </div>
       {selectedInhibitRule && (
         <InhibitRuleDrawer

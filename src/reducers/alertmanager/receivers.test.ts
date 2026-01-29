@@ -1,24 +1,31 @@
-import { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
+import {
+  initialAlertmanagerConfiguration,
+  PostableParsedUserConfiguration,
+  PostableParsedUserConfigurationSchema,
+} from '@grafana/external-alertmanager/mimir';
 import { Receiver } from '@grafana/external-alertmanager/vanilla';
 
 import { addReceiverAction, deleteReceiverAction, receiversReducer, updateReceiverAction } from './receivers';
 
 describe('receivers', () => {
-  const initialConfig: ParsedUserConfiguration = {
-    alertmanager_config: {},
+  const initialConfig: PostableParsedUserConfiguration = {
+    ...initialAlertmanagerConfiguration,
     template_files: {},
   };
 
   it('should delete a receiver', () => {
-    const config: ParsedUserConfiguration = {
+    const config: PostableParsedUserConfiguration = {
       alertmanager_config: {
+        ...initialAlertmanagerConfiguration.alertmanager_config,
         receivers: [{ name: 'my receiver' }, { name: 'another receiver' }],
       },
       template_files: {},
     };
 
     const action = deleteReceiverAction('my receiver');
-    expect(receiversReducer(config, action)).toMatchSnapshot();
+    const result = receiversReducer(config, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 
   describe('adding receivers', () => {
@@ -29,7 +36,9 @@ describe('receivers', () => {
       };
 
       const action = addReceiverAction(newReceiver);
-      expect(receiversReducer(initialConfig, action)).toMatchSnapshot();
+      const result = receiversReducer(initialConfig, action);
+      expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+      expect(result).toMatchSnapshot();
     });
 
     it('should be able to add a new Grafana Alertmanager receiver', () => {
@@ -39,12 +48,15 @@ describe('receivers', () => {
       };
 
       const action = addReceiverAction(newReceiver);
-      expect(receiversReducer(initialConfig, action)).toMatchSnapshot();
+      const result = receiversReducer(initialConfig, action);
+      expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+      expect(result).toMatchSnapshot();
     });
 
     it('should throw if we add a receiver with duplicate name', () => {
-      const config: ParsedUserConfiguration = {
+      const config: PostableParsedUserConfiguration = {
         alertmanager_config: {
+          ...initialAlertmanagerConfiguration.alertmanager_config,
           receivers: [{ name: 'my receiver' }],
         },
         template_files: {},
@@ -61,8 +73,9 @@ describe('receivers', () => {
 
   describe('updating receivers', () => {
     it('should throw if updating a receiver that does not exist', () => {
-      const config: ParsedUserConfiguration = {
+      const config: PostableParsedUserConfiguration = {
         alertmanager_config: {
+          ...initialAlertmanagerConfiguration.alertmanager_config,
           receivers: [{ name: 'my receiver' }],
         },
         template_files: {},
@@ -77,8 +90,9 @@ describe('receivers', () => {
     });
 
     it('should throw if renaming a receiver to an existing name', () => {
-      const config: ParsedUserConfiguration = {
+      const config: PostableParsedUserConfiguration = {
         alertmanager_config: {
+          ...initialAlertmanagerConfiguration.alertmanager_config,
           receivers: [{ name: 'receiver 1' }, { name: 'receiver 2' }],
         },
         template_files: {},
@@ -93,8 +107,9 @@ describe('receivers', () => {
     });
 
     it('should allow renaming a receiver and update routes', () => {
-      const config: ParsedUserConfiguration = {
+      const config: PostableParsedUserConfiguration = {
         alertmanager_config: {
+          ...initialAlertmanagerConfiguration.alertmanager_config,
           receivers: [{ name: 'receiver 1' }],
           route: {
             receiver: 'receiver 1',
@@ -107,7 +122,9 @@ describe('receivers', () => {
       const updatedReceiver: Receiver = { name: 'receiver 2' };
       const action = updateReceiverAction({ name: 'receiver 1', receiver: updatedReceiver });
 
-      expect(receiversReducer(config, action)).toMatchSnapshot();
+      const result = receiversReducer(config, action);
+      expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+      expect(result).toMatchSnapshot();
     });
 
     it('should allow updating an existing receiver', () => {
@@ -116,8 +133,9 @@ describe('receivers', () => {
         email_configs: [{ to: 'address@domain.com' }],
       };
 
-      const config: ParsedUserConfiguration = {
+      const config: PostableParsedUserConfiguration = {
         alertmanager_config: {
+          ...initialAlertmanagerConfiguration.alertmanager_config,
           receivers: [existingReceiver],
         },
         template_files: {},
@@ -129,7 +147,9 @@ describe('receivers', () => {
       };
       const action = updateReceiverAction({ name: 'existing receiver', receiver: updatedReceiver });
 
-      expect(receiversReducer(config, action)).toMatchSnapshot();
+      const result = receiversReducer(config, action);
+      expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+      expect(result).toMatchSnapshot();
     });
   });
 });

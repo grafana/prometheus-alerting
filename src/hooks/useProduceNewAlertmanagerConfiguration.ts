@@ -1,32 +1,24 @@
 import { Action } from '@reduxjs/toolkit';
-import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 import reduceReducers from 'reduce-reducers';
 
-import { muteTimingsReducer } from '../reducers/alertmanager/timeIntervals';
+import { timeIntervalsReducer } from '../reducers/alertmanager/timeIntervals';
 import { routesReducer } from '../reducers/alertmanager/routes';
 import { notificationTemplatesReducer } from '../reducers/alertmanager/templates';
 import { receiversReducer } from '../reducers/alertmanager/receivers';
 import { useAlertmanager } from './useAlertmanager';
 import { mimirAlertmanagerApi } from '../api/alertmanager/mimir.endpoints';
+import {
+  PostableParsedUserConfiguration,
+  initialAlertmanagerConfiguration,
+} from '@grafana/external-alertmanager/mimir';
 
 const ERR_NO_ACTIVE_AM = new Error('no active Alertmanager');
 
 const { getUserConfiguration, updateUserConfiguration } = mimirAlertmanagerApi.endpoints;
 
-export const initialAlertmanagerConfiguration: ParsedUserConfiguration = {
-  alertmanager_config: {
-    receivers: [],
-    route: {},
-    time_intervals: [],
-    inhibit_rules: [],
-    templates: [],
-  },
-  template_files: {},
-};
-
-const configurationReducer = reduceReducers(
+const configurationReducer = reduceReducers<PostableParsedUserConfiguration>(
   initialAlertmanagerConfiguration,
-  muteTimingsReducer,
+  timeIntervalsReducer,
   receiversReducer,
   notificationTemplatesReducer,
   routesReducer
@@ -66,8 +58,15 @@ export function useProduceNewAlertmanagerConfiguration() {
       throw new Error('Failed to fetch current Alertmanager configuration');
     }
 
+    // merge currect config with initial configuration so we can send fields that may not be configured yet but are expected by the API
+    // this may happen for example when a new Mimir configuration is created for a tenant – it will not have any routes defined by requires a route property when posting the configuration
+    const initialConfiguration = {
+      ...currentConfig,
+      ...initialAlertmanagerConfiguration,
+    };
+
     // Apply the reducer to produce the new configuration
-    const newConfig = configurationReducer(currentConfig, action);
+    const newConfig = configurationReducer(initialConfiguration, action);
 
     // Update the Alertmanager with the new configuration
     return updateAlertManagerConfiguration({

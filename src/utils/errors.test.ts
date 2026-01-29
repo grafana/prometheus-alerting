@@ -1,6 +1,6 @@
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { SerializedError } from '@reduxjs/toolkit';
-import { stringifyFetchError } from './errors';
+import { stringifyFetchError, isNotFoundError } from './errors';
 
 describe('stringifyFetchError', () => {
   describe('FetchBaseQueryError with numeric status', () => {
@@ -94,5 +94,35 @@ describe('stringifyFetchError', () => {
       const error: SerializedError = {};
       expect(stringifyFetchError(error)).toBe('Unknown error occurred');
     });
+  });
+});
+
+describe('isNotFoundError', () => {
+  it('should return true for error with status 404', () => {
+    const error: FetchBaseQueryError = {
+      status: 404,
+      data: { message: 'Not found' },
+    };
+    expect(isNotFoundError(error)).toBe(true);
+  });
+
+  it('should return true for error with nested data.status 404', () => {
+    const error = {
+      data: { status: 404 },
+    };
+    expect(isNotFoundError(error)).toBe(true);
+  });
+
+  it('should return false for non-404 errors', () => {
+    const error: FetchBaseQueryError = {
+      status: 500,
+      data: { message: 'Internal server error' },
+    };
+    expect(isNotFoundError(error)).toBe(false);
+  });
+
+  it('should return false for null or undefined', () => {
+    expect(isNotFoundError(null)).toBe(false);
+    expect(isNotFoundError(undefined)).toBe(false);
   });
 });

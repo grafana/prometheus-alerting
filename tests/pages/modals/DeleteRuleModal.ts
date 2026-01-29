@@ -31,7 +31,7 @@ export class DeleteRuleModal {
    * Get the confirmation message text
    */
   async getMessage(): Promise<string> {
-    return await this.message.textContent() ?? '';
+    return (await this.message.textContent()) ?? '';
   }
 
   /**

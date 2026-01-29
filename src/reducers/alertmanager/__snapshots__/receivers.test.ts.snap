@@ -1,68 +1,93 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`receivers adding receivers should be able to add a new Alertmanager receiver 1`] = `
+exports[`receivers > adding receivers > should be able to add a new Alertmanager receiver 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "receivers": [
+      {
+        "name": "empty-receiver",
+      },
       {
         "email_configs": [
           {
             "to": "address@domain.com",
           },
         ],
-        "grafana_managed_receiver_configs": [],
         "name": "new contact point",
       },
     ],
+    "route": {
+      "group_interval": "5m",
+      "group_wait": "30s",
+      "receiver": "empty-receiver",
+      "repeat_interval": "4h",
+    },
+    "templates": [],
+    "time_intervals": [],
   },
   "template_files": {},
 }
 `;
 
-exports[`receivers adding receivers should be able to add a new Grafana Alertmanager receiver 1`] = `
+exports[`receivers > adding receivers > should be able to add a new Grafana Alertmanager receiver 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "receivers": [
       {
-        "email_configs": [],
-        "grafana_managed_receiver_configs": [
+        "name": "empty-receiver",
+      },
+      {
+        "name": "another contact point",
+        "webhook_configs": [
           {
-            "disableResolveMessage": false,
-            "name": "emea-oncall",
-            "settings": {
-              "url": "https://oncall.example.com",
-            },
-            "type": "oncall",
+            "url": "https://oncall.example.com",
           },
         ],
-        "name": "another contact point",
       },
     ],
+    "route": {
+      "group_interval": "5m",
+      "group_wait": "30s",
+      "receiver": "empty-receiver",
+      "repeat_interval": "4h",
+    },
+    "templates": [],
+    "time_intervals": [],
   },
   "template_files": {},
 }
 `;
 
-exports[`receivers should delete a receiver 1`] = `
+exports[`receivers > should delete a receiver 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "receivers": [
       {
         "name": "another receiver",
       },
     ],
+    "route": {
+      "group_interval": "5m",
+      "group_wait": "30s",
+      "receiver": "empty-receiver",
+      "repeat_interval": "4h",
+    },
+    "templates": [],
+    "time_intervals": [],
   },
   "template_files": {},
 }
 `;
 
-exports[`receivers updating receivers should allow renaming a receiver and update routes 1`] = `
+exports[`receivers > updating receivers > should allow renaming a receiver and update routes 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "receivers": [
       {
-        "email_configs": [],
-        "grafana_managed_receiver_configs": [],
         "name": "receiver 2",
       },
     ],
@@ -74,14 +99,17 @@ exports[`receivers updating receivers should allow renaming a receiver and updat
         },
       ],
     },
+    "templates": [],
+    "time_intervals": [],
   },
   "template_files": {},
 }
 `;
 
-exports[`receivers updating receivers should allow updating an existing receiver 1`] = `
+exports[`receivers > updating receivers > should allow updating an existing receiver 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
     "receivers": [
       {
         "email_configs": [
@@ -89,10 +117,17 @@ exports[`receivers updating receivers should allow updating an existing receiver
             "to": "address+1@domain.com",
           },
         ],
-        "grafana_managed_receiver_configs": [],
         "name": "existing receiver",
       },
     ],
+    "route": {
+      "group_interval": "5m",
+      "group_wait": "30s",
+      "receiver": "empty-receiver",
+      "repeat_interval": "4h",
+    },
+    "templates": [],
+    "time_intervals": [],
   },
   "template_files": {},
 }

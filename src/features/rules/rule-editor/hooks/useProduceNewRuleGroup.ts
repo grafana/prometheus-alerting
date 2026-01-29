@@ -2,6 +2,7 @@ import { Action } from '@reduxjs/toolkit';
 import { rulerApi } from '../../../../api/rules/mimir.endpoints';
 import { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { ruleGroupReducer, addRuleAction } from '../ruleGroupReducer';
+import { isNotFoundError } from '../../../../utils/errors';
 
 const { useLazyGetRuleGroupQuery } = rulerApi;
 
@@ -52,9 +53,9 @@ export function useProduceNewRuleGroup() {
       groupName,
     })
       .unwrap()
-      .catch((error: any) => {
+      .catch((error: unknown) => {
         // If group doesn't exist (404), return null to create a new one
-        if (error?.status === 404 || error?.data?.status === 404) {
+        if (isNotFoundError(error)) {
           return null;
         }
         throw error;

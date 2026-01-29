@@ -20,6 +20,8 @@ interface Props {
   rulerApiEnabled: boolean;
   onDelete: (identifier: DataSourceRuleIdentifier) => void;
   onDuplicate: (identifier: DataSourceRuleIdentifier) => void;
+  onSilence?: (identifier: DataSourceRuleIdentifier, ruleName: string) => void;
+  onExport?: (rule: RulerRuleDTO) => void;
   buttonSize?: ComponentProps<typeof Button>['size'];
   fill?: ComponentProps<typeof Button>['fill'];
 }
@@ -31,11 +33,16 @@ export function RuleActionsMenu({
   rulerApiEnabled,
   onDelete,
   onDuplicate,
+  onSilence,
+  onExport,
   buttonSize = 'md',
   fill,
 }: Props) {
   // Use Cloud Rule Identifier (cri) if we have a ruler rule, otherwise Prometheus Rule Identifier (pri)
   const identifier = rule ? fromRulerRuleAndGroup(rule, groupIdentifier) : fromRuleAndGroup(promRule, groupIdentifier);
+
+  // Check if this is an alerting rule (not recording rule) - silence only applies to alerting rules
+  const isAlertingRule = promRule.type === 'alerting';
 
   const handleCopyLink = () => {
     const shareUrl = rulesNav.shareLink(identifier);
@@ -50,14 +57,38 @@ export function RuleActionsMenu({
     onDelete(identifier);
   };
 
+  const handleSilence = () => {
+    if (onSilence) {
+      onSilence(identifier, promRule.name);
+    }
+  };
+
   const menuItems = (
     <>
-      {/* Only show duplicate if we have a ruler rule */}
+      {/* Silence notifications - only for alerting rules */}
+      {isAlertingRule && (
+        <Menu.Item
+          label={t('alerting.rule-actions.silence', 'Silence notifications')}
+          icon="bell-slash"
+          onClick={handleSilence}
+          disabled={!onSilence}
+        />
+      )}
+      {/* Duplicate - only with Ruler API */}
       {rulerApiEnabled && rule && (
         <Menu.Item label={t('alerting.rule-actions.duplicate', 'Duplicate')} icon="copy" onClick={handleDuplicate} />
       )}
+      <Menu.Divider />
       <Menu.Item label={t('alerting.rule-actions.copy-link', 'Copy link')} icon="share-alt" onClick={handleCopyLink} />
-      {/* Only show delete if we have a ruler rule */}
+      {/* Export - only shown when we have the ruler rule */}
+      {rulerApiEnabled && rule && onExport && (
+        <Menu.Item
+          label={t('alerting.rule-actions.export', 'Export')}
+          icon="download-alt"
+          onClick={() => onExport(rule)}
+        />
+      )}
+      {/* Delete - only with Ruler API */}
       {rulerApiEnabled && rule && (
         <>
           <Menu.Divider />

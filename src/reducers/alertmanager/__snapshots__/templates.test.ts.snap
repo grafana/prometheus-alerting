@@ -1,11 +1,24 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`notification templates should add a new notification template 1`] = `
+exports[`notification templates > should add a new notification template 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
+    "route": {
+      "group_interval": "5m",
+      "group_wait": "30s",
+      "receiver": "empty-receiver",
+      "repeat_interval": "4h",
+    },
     "templates": [
       "foo",
     ],
+    "time_intervals": [],
   },
   "template_files": {
     "foo": "{{ define "foo" }}
@@ -15,12 +28,25 @@ exports[`notification templates should add a new notification template 1`] = `
 }
 `;
 
-exports[`notification templates should allow renaming a notification template 1`] = `
+exports[`notification templates > should allow renaming a notification template 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
+    "route": {
+      "group_interval": "5m",
+      "group_wait": "30s",
+      "receiver": "empty-receiver",
+      "repeat_interval": "4h",
+    },
     "templates": [
       "rename-me-copy",
     ],
+    "time_intervals": [],
   },
   "template_files": {
     "rename-me-copy": "{{ define "rename-me-copy" }}
@@ -30,21 +56,47 @@ exports[`notification templates should allow renaming a notification template 1`
 }
 `;
 
-exports[`notification templates should remove a notification template 1`] = `
+exports[`notification templates > should remove a notification template 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
+    "route": {
+      "group_interval": "5m",
+      "group_wait": "30s",
+      "receiver": "empty-receiver",
+      "repeat_interval": "4h",
+    },
     "templates": [],
+    "time_intervals": [],
   },
   "template_files": {},
 }
 `;
 
-exports[`notification templates should update a notification template without renaming 1`] = `
+exports[`notification templates > should update a notification template without renaming 1`] = `
 {
   "alertmanager_config": {
+    "inhibit_rules": [],
+    "receivers": [
+      {
+        "name": "empty-receiver",
+      },
+    ],
+    "route": {
+      "group_interval": "5m",
+      "group_wait": "30s",
+      "receiver": "empty-receiver",
+      "repeat_interval": "4h",
+    },
     "templates": [
       "update-me",
     ],
+    "time_intervals": [],
   },
   "template_files": {
     "update-me": "{{ define "update-me" }}

@@ -1,4 +1,8 @@
-import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
+import {
+  initialAlertmanagerConfiguration,
+  type PostableParsedUserConfiguration,
+  PostableParsedUserConfigurationSchema,
+} from '@grafana/external-alertmanager/mimir';
 
 import {
   addNotificationTemplateAction,
@@ -10,8 +14,8 @@ import { TemplateFormValues } from './utils/templates.utils';
 
 describe('notification templates', () => {
   it('should add a new notification template', () => {
-    const initialConfig: ParsedUserConfiguration = {
-      alertmanager_config: {},
+    const initialConfig: PostableParsedUserConfiguration = {
+      ...initialAlertmanagerConfiguration,
       template_files: {},
     };
     const newNotificationTemplate: TemplateFormValues = {
@@ -20,13 +24,15 @@ describe('notification templates', () => {
     };
 
     const action = addNotificationTemplateAction({ template: newNotificationTemplate });
-    expect(notificationTemplatesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = notificationTemplatesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 
   it('should not add a new notification template if the name already exists', () => {
     const name = 'existing';
-    const initialConfig: ParsedUserConfiguration = {
-      alertmanager_config: { templates: [name] },
+    const initialConfig: PostableParsedUserConfiguration = {
+      alertmanager_config: { ...initialAlertmanagerConfiguration.alertmanager_config, templates: [name] },
       template_files: {
         [name]: 'foo',
       },
@@ -42,8 +48,9 @@ describe('notification templates', () => {
 
   it('should update a notification template without renaming', () => {
     const name = 'update-me';
-    const initialConfig: ParsedUserConfiguration = {
+    const initialConfig: PostableParsedUserConfiguration = {
       alertmanager_config: {
+        ...initialAlertmanagerConfiguration.alertmanager_config,
         templates: [name],
       },
       template_files: {
@@ -52,13 +59,15 @@ describe('notification templates', () => {
     };
 
     const action = updateNotificationTemplateAction({ name, template: { title: name, content: 'update me, please' } });
-    expect(notificationTemplatesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = notificationTemplatesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 
   it('should not update if target does not exist', () => {
     const name = 'update-me';
-    const initialConfig: ParsedUserConfiguration = {
-      alertmanager_config: {},
+    const initialConfig: PostableParsedUserConfiguration = {
+      ...initialAlertmanagerConfiguration,
       template_files: {},
     };
 
@@ -69,8 +78,9 @@ describe('notification templates', () => {
   it('should not update if renaming and new template name exist', () => {
     const name = 'rename-me';
     const name2 = 'rename-me-2';
-    const initialConfig: ParsedUserConfiguration = {
+    const initialConfig: PostableParsedUserConfiguration = {
       alertmanager_config: {
+        ...initialAlertmanagerConfiguration.alertmanager_config,
         templates: [name, name2],
       },
       template_files: {
@@ -85,8 +95,9 @@ describe('notification templates', () => {
 
   it('should allow renaming a notification template', () => {
     const name = 'rename-me';
-    const initialConfig: ParsedUserConfiguration = {
+    const initialConfig: PostableParsedUserConfiguration = {
       alertmanager_config: {
+        ...initialAlertmanagerConfiguration.alertmanager_config,
         templates: [name],
       },
       template_files: {
@@ -98,13 +109,16 @@ describe('notification templates', () => {
       name,
       template: { title: 'rename-me-copy', content: 'rename me, please' },
     });
-    expect(notificationTemplatesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = notificationTemplatesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 
   it('should remove a notification template', () => {
     const name = 'delete-me';
-    const initialConfig: ParsedUserConfiguration = {
+    const initialConfig: PostableParsedUserConfiguration = {
       alertmanager_config: {
+        ...initialAlertmanagerConfiguration.alertmanager_config,
         templates: [name],
       },
       template_files: {
@@ -113,6 +127,8 @@ describe('notification templates', () => {
     };
 
     const action = deleteNotificationTemplateAction({ name });
-    expect(notificationTemplatesReducer(initialConfig, action)).toMatchSnapshot();
+    const result = notificationTemplatesReducer(initialConfig, action);
+    expect(PostableParsedUserConfigurationSchema.parse(result)).toEqual(result);
+    expect(result).toMatchSnapshot();
   });
 });

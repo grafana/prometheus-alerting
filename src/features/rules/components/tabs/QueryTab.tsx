@@ -20,9 +20,8 @@ export function QueryTab({ query, dataSourceUid }: Props) {
   const dsSettings = getDataSourceSrv().getInstanceSettings(dataSourceUid);
   const dataSourceType = dsSettings?.type ?? 'prometheus';
 
-  const language = dataSourceType === 'loki'
-    ? { grammar: lokiGrammar, name: 'logql' }
-    : { grammar: promqlGrammar, name: 'promql' };
+  const language =
+    dataSourceType === 'loki' ? { grammar: lokiGrammar, name: 'logql' } : { grammar: promqlGrammar, name: 'promql' };
 
   const exploreLink = createExploreLink(dataSourceUid, query, dataSourceType);
 

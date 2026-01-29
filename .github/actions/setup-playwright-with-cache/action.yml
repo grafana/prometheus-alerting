@@ -1,0 +1,34 @@
+name: 'Setup Playwright with caching'
+description: 'Installs Playwright browsers with caching for faster CI runs'
+runs:
+  using: 'composite'
+  steps:
+    - name: Get Playwright version
+      id: playwright-version
+      shell: bash
+      run: echo "version=$(npm list @playwright/test --depth=0 --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+
+    - name: Cache Playwright browsers
+      uses: actions/cache@v5
+      id: playwright-cache
+      env:
+        cache-name: cache-playwright-browsers
+      with:
+        path: ~/.cache/ms-playwright
+        # Cache key includes OS, cache name, and Playwright version for precise invalidation
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ steps.playwright-version.outputs.version }}
+        # Restore keys provide fallback hierarchy when exact match not found
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npm exec playwright install chromium --with-deps
+
+    - name: Install Playwright system dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      shell: bash
+      run: npm exec playwright install-deps chromium

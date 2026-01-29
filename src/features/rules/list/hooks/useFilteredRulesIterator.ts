@@ -45,10 +45,10 @@ export function useFilteredRulesIteratorProvider() {
         labels: filterState.labels || [],
       };
 
-      // Filter data sources if dataSourceNames filter is specified
+      // Filter data sources if dataSourceNames filter is specified (matches by name)
       const filteredDataSources =
         normalizedFilterState.dataSourceNames.length > 0
-          ? allExternalRulesSources.filter((ds) => normalizedFilterState.dataSourceNames.includes(ds.uid))
+          ? allExternalRulesSources.filter((ds) => normalizedFilterState.dataSourceNames.includes(ds.name))
           : allExternalRulesSources;
 
       // Create generators for each external data source

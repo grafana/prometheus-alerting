@@ -28,10 +28,7 @@ function AlertItem({ alert }: AlertItemProps) {
           <Text variant="body" weight="medium">
             {alertName}
           </Text>
-          <Badge
-            text={alert.status.state}
-            color={alert.status.state === 'active' ? 'orange' : 'blue'}
-          />
+          <Badge text={alert.status.state} color={alert.status.state === 'active' ? 'orange' : 'blue'} />
         </Stack>
 
         {summary && (
@@ -76,10 +73,7 @@ export function AffectedAlertsList({ silence }: AffectedAlertsListProps) {
 
   if (error) {
     return (
-      <Alert
-        title={t('silences.affected-alerts.error-title', 'Error loading alerts')}
-        severity="error"
-      >
+      <Alert title={t('silences.affected-alerts.error-title', 'Error loading alerts')} severity="error">
         {error instanceof Error
           ? error.message
           : t('silences.affected-alerts.error-message', 'Failed to load affected alerts')}

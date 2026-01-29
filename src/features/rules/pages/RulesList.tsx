@@ -63,7 +63,11 @@ function RulesPage() {
 
           {/* Render appropriate view based on mode */}
           {viewMode === 'grouped' ? (
-            <GroupedView groupFilter={filterState.groupName} namespaceFilter={filterState.namespace} />
+            <GroupedView
+              groupFilter={filterState.groupName}
+              namespaceFilter={filterState.namespace}
+              dataSourceFilter={filterState.dataSourceNames}
+            />
           ) : (
             <FilterView filterState={filterState} />
           )}

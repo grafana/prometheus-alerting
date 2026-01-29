@@ -1,9 +1,8 @@
 import { createAction, createReducer } from '@reduxjs/toolkit';
 import { remove, toArray, unset } from 'lodash';
 
-import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
-
 import { ensureDefine, TemplateFormValues } from './utils/templates.utils';
+import { initialAlertmanagerConfiguration } from '@grafana/external-alertmanager/mimir';
 
 export const addNotificationTemplateAction = createAction<{ template: TemplateFormValues }>('notificationTemplate/add');
 export const updateNotificationTemplateAction = createAction<{
@@ -12,20 +11,15 @@ export const updateNotificationTemplateAction = createAction<{
 }>('notificationTemplate/update');
 export const deleteNotificationTemplateAction = createAction<{ name: string }>('notificationTemplate/delete');
 
-const initialState: ParsedUserConfiguration = {
-  alertmanager_config: {},
-  template_files: {},
-};
-
 /**
  * This reducer will manage action related to notification templates and make sure all operations on the alertmanager
  * configuration happen immutably and only mutate what they need.
  */
-export const notificationTemplatesReducer = createReducer(initialState, (builder) => {
+export const notificationTemplatesReducer = createReducer(initialAlertmanagerConfiguration, (builder) => {
   builder
     .addCase(addNotificationTemplateAction, (draft, { payload }) => {
-      const { alertmanager_config = {}, template_files = {} } = draft;
       const { template } = payload;
+      const { alertmanager_config, template_files = {} } = draft;
 
       const targetTemplateExists = template_files[template.title] !== undefined;
       if (targetTemplateExists) {
@@ -43,8 +37,8 @@ export const notificationTemplatesReducer = createReducer(initialState, (builder
       alertmanager_config.templates = toArray(alertmanager_config.templates).concat(template.title);
     })
     .addCase(updateNotificationTemplateAction, (draft, { payload }) => {
-      const { alertmanager_config = {}, template_files = {} } = draft;
       const { name, template } = payload;
+      const { alertmanager_config, template_files = {} } = draft;
       const renaming = name !== template.title;
 
       const targetExists = template_files[name] !== undefined;
@@ -74,7 +68,7 @@ export const notificationTemplatesReducer = createReducer(initialState, (builder
     })
     .addCase(deleteNotificationTemplateAction, (draft, { payload }) => {
       const { name } = payload;
-      const { alertmanager_config = {}, template_files = {} } = draft;
+      const { alertmanager_config, template_files = {} } = draft;
 
       unset(template_files, name);
       remove(alertmanager_config.templates ?? [], (templateName) => templateName === name);

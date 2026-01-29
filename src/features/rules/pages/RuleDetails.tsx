@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { parseIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules';
-import type { PromRuleDTO } from '@grafana/external-rules/vanilla';
+import type { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
 import { Alert, LoadingPlaceholder, Text } from '@grafana/ui';
 import { PluginPage } from '@grafana/runtime';
 import { t } from '@grafana/i18n';
@@ -13,7 +13,13 @@ import { RuleDetailsTitle } from '../components/RuleDetailsTitle';
 import { RuleDetailsSubtitle } from '../components/RuleDetailsSubtitle';
 import { RuleActionsButtons } from '../list/components/RuleActionsButtons';
 import { useDeleteRuleModal } from '../list/components/DeleteRuleModal';
-import { rules as rulesNav, groups as groupsNav } from '../../../utils/navigation';
+import { RuleExporter } from '../export';
+import {
+  rules as rulesNav,
+  groups as groupsNav,
+  createListFilterLink,
+  silences as silencesNav,
+} from '../../../utils/navigation';
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 
 function RuleDetails() {
@@ -33,11 +39,25 @@ function RuleDetails() {
   const { promRule, rulerRule, promGroup, rulerGroup, loading, error, ...meta } = useRuleDetails(identifier);
 
   const [deleteModal, showDeleteModal] = useDeleteRuleModal();
+  const [exportingRule, setExportingRule] = useState<RulerRuleDTO | null>(null);
 
-  const handleDuplicate = (identifier: DataSourceRuleIdentifier) => {
+  const handleDuplicate = useCallback((identifier: DataSourceRuleIdentifier) => {
     const cloneUrl = rulesNav.clonePageLink(identifier);
     window.location.href = cloneUrl;
-  };
+  }, []);
+
+  const handleSilence = useCallback((_identifier: DataSourceRuleIdentifier, ruleName: string) => {
+    const silenceUrl = silencesNav.createForRuleLink(ruleName);
+    window.location.href = silenceUrl;
+  }, []);
+
+  const handleExport = useCallback((rule: RulerRuleDTO) => {
+    setExportingRule(rule);
+  }, []);
+
+  const closeExportDrawer = useCallback(() => {
+    setExportingRule(null);
+  }, []);
 
   const pageNav = useMemo(() => {
     if (!promRule) {
@@ -51,6 +71,7 @@ function RuleDetails() {
         url: groupsNav.detailsPageLink(meta.dataSourceUid, meta.namespace, meta.groupName),
         parentItem: {
           text: meta.namespace,
+          url: createListFilterLink([['namespace', meta.namespace]]),
           parentItem: {
             text: t('alerting.rule-editor.rules', 'Rules'),
             url: '/a/grafana-prometheusalerting-app/rules',
@@ -134,6 +155,8 @@ function RuleDetails() {
       rulerApiEnabled={meta.hasRulerApi}
       onDelete={showDeleteModal}
       onDuplicate={handleDuplicate}
+      onSilence={handleSilence}
+      onExport={handleExport}
     />
   );
 
@@ -149,6 +172,7 @@ function RuleDetails() {
         />
       </PluginPage>
       {deleteModal}
+      {exportingRule && <RuleExporter rule={exportingRule} onClose={closeExportDrawer} />}
     </>
   );
 }
@@ -168,9 +192,7 @@ function createMetadata(promRule: PromRuleDTO, interval?: string): PageInfoItem[
     metadata.push({
       label: t('rule-details.metadata.interval', 'Evaluation interval'),
       value: (
-        <Text color="primary">
-          {t('rule-details.metadata.interval-value', 'Every {{interval}}', { interval })}
-        </Text>
+        <Text color="primary">{t('rule-details.metadata.interval-value', 'Every {{interval}}', { interval })}</Text>
       ),
     });
   }

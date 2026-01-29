@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import 'react-loading-skeleton/dist/skeleton.css';
 import { testIds } from '../../../components/testIds';
 import { ConfirmModal, EmptyState } from '@grafana/ui';
 import { useRoutes } from '../hooks/useRoutes';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { ViewState } from '../../../components/ViewState';
 import { DataSourceError } from '../../../components/AlertmanagerError';
 import { t } from '@grafana/i18n';
 import { computeInheritedTree } from '@grafana/alerting/unstable';
@@ -21,12 +21,12 @@ import { addUniqueIdentifier } from '../utils';
 import { InsertPosition } from '../types';
 
 function RoutesPage() {
-  const { route, isLoading, error } = useRoutes();
+  const { route, isLoading, error, isSuccess } = useRoutes();
   const { alertGroups, isLoading: isLoadingAlerts } = useAlertGroups();
   const { settings } = useAlertmanager();
   const [selectedRoute, setSelectedRoute] = useState<RouteWithID | null>(null);
   const [selectedReceiverName, setSelectedReceiverName] = useState<string | null>(null);
-  const [triggerFetchReceivers, { receivers }] = useReceivers();
+  const [triggerFetchReceivers, { receivers = [] }] = useReceivers();
 
   // State for add mode
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
@@ -136,13 +136,28 @@ function RoutesPage() {
   return (
     <AlertmanagerPage subTitle={t('routes.page-subtitle', 'Determine how alerts are routed to receivers')}>
       <div data-testid={testIds.routes.container}>
-        {isLoading && <RouteCard.Skeleton count={3} />}
-        {error && <DataSourceError error={error} title={t('routes.error-loading-title', 'Error loading routes')} />}
-        {!isLoading && routeTree && !error && (
+        <ViewState
+          isLoading={isLoading}
+          isSuccess={isSuccess}
+          error={error}
+          isEmpty={!routeTree}
+          loading={<RouteCard.Skeleton count={3} />}
+          renderError={
+            <DataSourceError error={error} title={t('routes.error-loading-title', 'Error loading routes')} />
+          }
+          empty={
+            <EmptyState
+              message={t('routes.no-routes-message', 'No routing configuration is available in the Alertmanager.')}
+              variant="call-to-action"
+            />
+          }
+        >
           <div>
             <RouteCard
-              currentRoute={routeTree}
-              numberOfMatchingInstances={isLoadingAlerts ? undefined : getRouteMatchCount(matchingCounts, routeTree.id)}
+              currentRoute={routeTree!}
+              numberOfMatchingInstances={
+                isLoadingAlerts ? undefined : getRouteMatchCount(matchingCounts, routeTree!.id)
+              }
               matchingCounts={isLoadingAlerts ? undefined : matchingCounts}
               isDefaultPolicy={true}
               onRouteClick={handleRouteClick}
@@ -152,13 +167,7 @@ function RoutesPage() {
               readOnly={!canEdit}
             />
           </div>
-        )}
-        {!isLoading && !route && !error && (
-          <EmptyState
-            message={t('routes.no-routes-message', 'No routing configuration is available in the Alertmanager.')}
-            variant="call-to-action"
-          />
-        )}
+        </ViewState>
       </div>
       {/* Show drawer for viewing/editing selected route OR adding new route */}
       {(selectedRoute || drawerMode === DrawerMode.Add) && (

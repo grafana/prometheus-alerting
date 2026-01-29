@@ -17,7 +17,7 @@ interface ReceiverSelectorProps {
  * Fetches available receivers and displays them in a combobox.
  */
 export function ReceiverSelector({ value, onChange, disabled }: ReceiverSelectorProps) {
-  const [triggerFetchReceivers, { receivers, isLoading }] = useReceivers();
+  const [triggerFetchReceivers, { receivers = [], isLoading }] = useReceivers();
 
   // Fetch receivers on mount
   useEffect(() => {

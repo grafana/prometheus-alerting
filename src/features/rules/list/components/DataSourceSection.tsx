@@ -65,6 +65,7 @@ export const DataSourceSection = ({
                 {Boolean(error) && (
                   <Toggletip
                     title={t('rules.datasource-section.error-title', 'Cannot load rules for this datasource')}
+                    // @TODO proper stringification of this error message
                     content={<Text color="error">{String(error)}</Text>}
                   >
                     <Button variant="destructive" fill="text" size="sm" icon="exclamation-circle">
