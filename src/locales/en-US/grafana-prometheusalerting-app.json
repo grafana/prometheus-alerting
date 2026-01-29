@@ -13,8 +13,7 @@
       "placeholder-key": "Annotation key",
       "placeholder-url": "https://",
       "placeholder-value": "Annotation value",
-      "remove-annotation": "Remove annotation",
-      "remove-annotation-named": "Remove annotation {{key}}"
+      "remove-annotation": "Remove annotation"
     },
     "clipboard": {
       "error": "Failed to copy to clipboard",
@@ -147,7 +146,6 @@
       "placeholder-key": "Label key",
       "placeholder-value": "Label value",
       "remove-label": "Remove label",
-      "remove-label-named": "Remove label {{key}}",
       "title": "Edit labels"
     },
     "labels-field": {

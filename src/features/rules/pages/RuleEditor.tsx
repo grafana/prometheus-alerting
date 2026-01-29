@@ -10,7 +10,7 @@ import { Alert } from '@grafana/ui';
 import { RuleForm } from '../rule-editor/components/RuleForm';
 import { translateRouteParamToRuleType } from '../rule-editor/formDefaults';
 import { rulerRuleToFormValues } from '../rule-editor/formTransform';
-import { useRuleDetails } from '../hooks/useRuleDetails';
+import { useRulerRule } from '../hooks/useRulerRule';
 import { RuleFormValues, RuleFormType } from '../rule-editor/types';
 import { generateCopiedName } from '../rule-editor/duplicate';
 
@@ -68,7 +68,7 @@ function NewRuleEditor() {
 }
 
 function EditRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
-  const { promRule, rulerRule, loading, error, ...meta } = useRuleDetails(identifier);
+  const { rulerRule, loading, error } = useRulerRule(identifier);
 
   const ruleType = rulerRule
     ? 'alert' in rulerRule
@@ -95,12 +95,12 @@ function EditRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
     }
 
     try {
-      return rulerRuleToFormValues(meta.dataSourceUid, meta.namespace, meta.groupName, rulerRule);
+      return rulerRuleToFormValues(identifier.uid, identifier.namespace, identifier.groupName, rulerRule);
     } catch (error) {
       console.error('Failed to convert rule to form values:', error);
       return undefined;
     }
-  }, [rulerRule, meta]);
+  }, [rulerRule, identifier]);
 
   if (loading) {
     return (
@@ -146,7 +146,7 @@ function EditRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
  * CloneRuleEditor - Clones an existing rule
  */
 function CloneRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
-  const { promRule, rulerRule, rulerGroup, loading, error, ...meta } = useRuleDetails(identifier);
+  const { rulerRule, rulerGroup, loading, error } = useRulerRule(identifier);
 
   const ruleType = rulerRule
     ? 'alert' in rulerRule
@@ -173,7 +173,7 @@ function CloneRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
     }
 
     try {
-      const formValues = rulerRuleToFormValues(meta.dataSourceUid, meta.namespace, meta.groupName, rulerRule);
+      const formValues = rulerRuleToFormValues(identifier.uid, identifier.namespace, identifier.groupName, rulerRule);
 
       // Generate a unique name for the cloned rule
       const existingNames = rulerGroup?.rules.map(getRuleName) ?? [];
@@ -184,7 +184,7 @@ function CloneRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
       console.error('Failed to convert rule to form values:', error);
       return undefined;
     }
-  }, [rulerRule, rulerGroup, meta]);
+  }, [rulerRule, rulerGroup, identifier]);
 
   if (loading) {
     return (
