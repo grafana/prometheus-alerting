@@ -20,6 +20,7 @@ import {
   createListFilterLink,
   silences as silencesNav,
 } from '../../../utils/navigation';
+import { extractErrorMessage } from '../../../utils/errors';
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 
 function RuleDetails() {
@@ -93,7 +94,7 @@ function RuleDetails() {
     return (
       <PluginPage>
         <Alert severity="error" title={t('rule-details.error.loading', 'Error loading rule')}>
-          {String(error)}
+          {extractErrorMessage(error)}
         </Alert>
       </PluginPage>
     );

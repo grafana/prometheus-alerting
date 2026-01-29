@@ -7,6 +7,7 @@ import { t, Trans } from '@grafana/i18n';
 import { Button, IconButton, LinkButton, Stack, Text, Toggletip, useStyles2 } from '@grafana/ui';
 
 import { RulesSourceApplication } from '../../../../types/rules';
+import { extractErrorMessage } from '../../../../utils/errors';
 
 import { DataSourceIcon } from './DataSourceIcon';
 
@@ -65,8 +66,7 @@ export const DataSourceSection = ({
                 {Boolean(error) && (
                   <Toggletip
                     title={t('rules.datasource-section.error-title', 'Cannot load rules for this datasource')}
-                    // @TODO proper stringification of this error message
-                    content={<Text color="error">{String(error)}</Text>}
+                    content={<Text color="error">{extractErrorMessage(error)}</Text>}
                   >
                     <Button variant="destructive" fill="text" size="sm" icon="exclamation-circle">
                       <Trans i18nKey="rules.datasource-section.error">Error</Trans>

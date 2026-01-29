@@ -13,6 +13,9 @@ interface GroupedViewProps {
 }
 
 export function GroupedView({ groupFilter, namespaceFilter, dataSourceFilter }: GroupedViewProps) {
+  // Determine if non-datasource filters are active (namespace or group)
+  // When these are active, hide datasources with errors or no matching results
+  const hasContentFilters = Boolean(namespaceFilter || groupFilter);
   const allExternalRuleSources = useMemo(() => getExternalRulesSources(), []);
 
   // Filter datasources if dataSourceFilter is provided (contains names)
@@ -32,6 +35,7 @@ export function GroupedView({ groupFilter, namespaceFilter, dataSourceFilter }: 
             rulesSourceIdentifier={ruleSource}
             groupFilter={groupFilter}
             namespaceFilter={namespaceFilter}
+            hideOnEmptyOrError={hasContentFilters}
           />
         );
       })}
