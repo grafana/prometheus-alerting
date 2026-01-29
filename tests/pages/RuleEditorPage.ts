@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 import { CloudRuleIdentifier, stringifyIdentifier } from '@grafana/external-rules';
 import { LabelsModal } from './modals/LabelsModal';
 
@@ -278,13 +278,15 @@ export class RuleEditorPage {
     // Click add annotation button
     await this.addAnnotationButton.click();
 
-    // Find the annotation key and value inputs by their specific placeholders
-    const keyInput = this.pageContent.getByPlaceholder('Annotation key');
-    const valueInput = this.pageContent.getByPlaceholder('Annotation value');
+    // Find the LAST annotation key and value inputs (the newly added row)
+    const keyInputs = this.pageContent.getByPlaceholder('Annotation key');
+    const valueInputs = this.pageContent.getByPlaceholder('Annotation value');
+
+    const keyInput = keyInputs.last();
+    const valueInput = valueInputs.last();
 
     // Wait for annotation fields to appear
     await keyInput.waitFor({ state: 'visible', timeout: 2000 });
-    await valueInput.waitFor({ state: 'visible', timeout: 2000 });
 
     await keyInput.fill(key);
     await valueInput.fill(value);
@@ -351,5 +353,59 @@ export class RuleEditorPage {
   async getExpression(): Promise<string> {
     const queryField = this.pageContent.getByRole('textbox', { name: /Editor content/i });
     return await queryField.inputValue();
+  }
+
+  /**
+   * Get the number of annotations currently in the form
+   */
+  async getAnnotationCount(): Promise<number> {
+    const keyInputs = this.pageContent.getByPlaceholder('Annotation key');
+    return await keyInputs.count();
+  }
+
+  /**
+   * Edit an existing annotation's value by finding it by key
+   */
+  async editAnnotation(key: string, newValue: string): Promise<void> {
+    const keyInputs = this.pageContent.getByPlaceholder('Annotation key');
+    const valueInputs = this.pageContent.getByPlaceholder('Annotation value');
+
+    const count = await keyInputs.count();
+    
+    // Find the annotation with the matching key
+    for (let i = 0; i < count; i++) {
+      const keyInput = keyInputs.nth(i);
+      const currentKey = await keyInput.inputValue();
+      
+      if (currentKey === key) {
+        // Found the matching annotation, update the value
+        const valueInput = valueInputs.nth(i);
+        await valueInput.clear();
+        await valueInput.fill(newValue);
+        await valueInput.blur();
+        return;
+      }
+    }
+    
+    throw new Error(`Annotation with key "${key}" not found`);
+  }
+
+  /**
+   * Remove an annotation by finding its delete button
+   */
+  async removeAnnotation(key: string): Promise<void> {
+    const initialCount = await this.getAnnotationCount();
+    
+    const deleteButton = this.pageContent.getByRole('button', {
+      name: new RegExp(`Remove annotation ${key}`, 'i'),
+    });
+    await deleteButton.click();
+    
+    // Wait for the annotation row to be removed by checking the button is gone
+    await expect(deleteButton).not.toBeVisible({ timeout: 2000 });
+    
+    // Verify count decreased
+    const newCount = await this.getAnnotationCount();
+    expect(newCount).toBe(initialCount - 1);
   }
 }

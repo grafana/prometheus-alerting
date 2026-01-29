@@ -68,7 +68,13 @@ export const AnnotationsStep = () => {
                   <Button
                     type="button"
                     className={styles.deleteAnnotationButton}
-                    aria-label={t('alerting.annotations-step.aria-label-delete-annotation', 'delete annotation')}
+                    aria-label={
+                      annotations[index]?.key
+                        ? t('alerting.annotations-step.remove-annotation-named', 'Remove annotation {{key}}', {
+                            key: annotations[index].key,
+                          })
+                        : t('alerting.annotations-step.remove-annotation', 'Remove annotation')
+                    }
                     icon="trash-alt"
                     variant="secondary"
                     onClick={() => remove(index)}

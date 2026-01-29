@@ -85,4 +85,63 @@ export class LabelsModal {
   async isSaveDisabled(): Promise<boolean> {
     return await this.saveButton.isDisabled();
   }
+
+  /**
+   * Get the number of label rows in the modal
+   */
+  async getLabelCount(): Promise<number> {
+    const keyInputs = this.modal.getByRole('textbox', { name: /key/i });
+    return await keyInputs.count();
+  }
+
+  /**
+   * Edit an existing label's value by finding it by key
+   */
+  async editLabel(key: string, newValue: string): Promise<void> {
+    const keyInputs = this.modal.getByRole('textbox', { name: /key/i });
+    const valueInputs = this.modal.getByRole('textbox', { name: /value/i });
+
+    const count = await keyInputs.count();
+    
+    // Find the row with the matching key
+    for (let i = 0; i < count; i++) {
+      const keyInput = keyInputs.nth(i);
+      const currentKey = await keyInput.inputValue();
+      
+      if (currentKey === key) {
+        // Found the matching row, update the value
+        const valueInput = valueInputs.nth(i);
+        await valueInput.clear();
+        await valueInput.fill(newValue);
+        return;
+      }
+    }
+    
+    throw new Error(`Label with key "${key}" not found`);
+  }
+
+  /**
+   * Remove a label by finding its delete button
+   */
+  async removeLabel(key: string): Promise<void> {
+    const initialCount = await this.getLabelCount();
+    
+    const deleteButton = this.modal.getByRole('button', {
+      name: new RegExp(`Remove label ${key}`, 'i'),
+    });
+    await deleteButton.click();
+    
+    // Wait for the label row to be removed by checking the button is gone
+    await expect(deleteButton).not.toBeVisible({ timeout: 2000 });
+    
+    // Verify count decreased (unless it was the last label, then an empty one is added)
+    const newCount = await this.getLabelCount();
+    if (initialCount === 1) {
+      // If it was the last label, an empty one is added back
+      expect(newCount).toBe(1);
+    } else {
+      // Otherwise, count should decrease
+      expect(newCount).toBe(initialCount - 1);
+    }
+  }
 }

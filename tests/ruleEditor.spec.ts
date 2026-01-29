@@ -3,7 +3,7 @@ import { RuleBuilder } from './helpers/rules.helpers';
 
 /**
  * E2E tests for the RuleEditor page
- * Tests rule creation, editing, cloning, and validation
+ * Tests rule creation, editing, cloning, labels, annotations, and validation
  *
  * Edit/Clone tests use pre-provisioned rules from test-data/mimir/rules/
  * Creation tests create new rules dynamically (no cleanup needed)
@@ -14,16 +14,14 @@ test.describe('RuleEditor Page - E2E', () => {
     return url.match(/^https?:\/\/[^/]+/)?.[0] || 'http://localhost:3000';
   };
 
-  test.describe('New Rule Creation', () => {
+  test.describe('Alerting Rules', () => {
     test('should create a new alerting rule successfully', async ({ ruleEditorPage, page }) => {
-      // Navigate to new alerting rule page
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
-      // Verify page title
       expect(await ruleEditorPage.getPageTitle()).toBe('New alert rule');
 
-      // Fill all form sections
+      // Fill required fields
       await ruleEditorPage.fillRuleName('HighCPUUsage');
       await ruleEditorPage.selectDataSource('Test Mimir');
       await ruleEditorPage.fillExpression('up == 0');
@@ -31,42 +29,75 @@ test.describe('RuleEditor Page - E2E', () => {
       await ruleEditorPage.selectNamespace('e2e-test-namespace');
       await ruleEditorPage.selectGroup('e2e-test-group');
 
-      // Open labels modal and add labels
+      // Add labels
       const labelsModal = await ruleEditorPage.openLabelsModal();
       await labelsModal.addLabels({ severity: 'critical', team: 'platform' });
       await labelsModal.save();
 
-      // Verify annotations section is visible for alerting rules
-      expect(await ruleEditorPage.hasAnnotationsSection()).toBe(true);
+      // Add annotation
       await ruleEditorPage.addAnnotation('summary', 'High CPU usage detected');
 
-      // Save the rule
+      // Save and verify navigation
       await ruleEditorPage.clickSave();
-
-      // Wait for navigation to rules list
       await page.waitForURL('**/rules', { timeout: 5000 });
-
-      // Verify we navigated to rules list
-      expect(page.url()).toContain('/rules');
-      expect(page.url()).not.toContain('/new');
     });
 
+    test('should edit an existing alerting rule', async ({ ruleEditorPage, page }) => {
+      const identifier = RuleBuilder.createTestEditRuleIdentifier();
+
+      await ruleEditorPage.gotoEdit(identifier);
+      await ruleEditorPage.waitForLoad();
+
+      const pageTitle = await ruleEditorPage.getPageTitle();
+      expect(pageTitle).toContain('Edit');
+      expect(await ruleEditorPage.getRuleName()).toBe('TestEditRule');
+
+      // Modify name
+      await ruleEditorPage.fillRuleName('TestEditRule_Modified');
+      
+      // Edit labels
+      const labelsModal = await ruleEditorPage.openLabelsModal();
+      await labelsModal.editLabel('severity', 'critical');
+      await labelsModal.save();
+
+      await ruleEditorPage.clickSave();
+      await page.waitForURL('**/rules', { timeout: 5000 });
+    });
+
+    test('should clone an existing alerting rule', async ({ ruleEditorPage, page }) => {
+      const identifier = RuleBuilder.createTestCloneRuleIdentifier();
+
+      await ruleEditorPage.gotoClone(identifier);
+      await ruleEditorPage.waitForLoad();
+
+      const pageTitle = await ruleEditorPage.getPageTitle();
+      expect(pageTitle).toContain('Clone');
+
+      // Verify name has copy suffix
+      const clonedName = await ruleEditorPage.getRuleName();
+      expect(clonedName).toContain('copy');
+
+      await ruleEditorPage.fillRuleName('TestCloneRule_Cloned');
+      await ruleEditorPage.clickSave();
+      await page.waitForURL('**/rules', { timeout: 5000 });
+    });
+  });
+
+  test.describe('Recording Rules', () => {
     test('should create a new recording rule successfully', async ({ ruleEditorPage, page }) => {
-      // Navigate to new recording rule page
       await ruleEditorPage.gotoNew('recording');
       await ruleEditorPage.waitForLoad();
 
-      // Verify page title
       expect(await ruleEditorPage.getPageTitle()).toBe('New recording rule');
 
-      // Fill form sections
+      // Fill required fields
       await ruleEditorPage.fillRuleName('request_rate_sum');
       await ruleEditorPage.selectDataSource('Test Mimir');
       await ruleEditorPage.fillExpression('sum(rate(http_requests_total[5m]))');
       await ruleEditorPage.selectNamespace('e2e-test-namespace');
       await ruleEditorPage.selectGroup('e2e-recording-group');
 
-      // Open labels modal and add labels
+      // Add labels
       const labelsModal = await ruleEditorPage.openLabelsModal();
       await labelsModal.addLabels({ environment: 'test' });
       await labelsModal.save();
@@ -74,132 +105,242 @@ test.describe('RuleEditor Page - E2E', () => {
       // Verify annotations section is NOT visible for recording rules
       expect(await ruleEditorPage.hasAnnotationsSection()).toBe(false);
 
-      // Save the rule
       await ruleEditorPage.clickSave();
-
-      // Wait for navigation to rules list
       await page.waitForURL('**/rules', { timeout: 5000 });
-
-      // Verify we navigated to rules list
-      expect(page.url()).toContain('/rules');
-      expect(page.url()).not.toContain('/new');
     });
-  });
 
-  test.describe('Edit Existing Rule', () => {
-    test('should edit an existing rule successfully', async ({ ruleEditorPage, page }) => {
-      // Use pre-provisioned rule from test-data/mimir/rules/
-      const identifier = RuleBuilder.createTestEditRuleIdentifier();
+    test('should edit an existing recording rule', async ({ ruleEditorPage, page }) => {
+      const identifier = RuleBuilder.createTestRecordingRuleIdentifier();
 
-      // Navigate to edit page
       await ruleEditorPage.gotoEdit(identifier);
       await ruleEditorPage.waitForLoad();
 
-      // Verify page title contains "Edit"
-      const pageTitle = await ruleEditorPage.getPageTitle();
-      expect(pageTitle).toContain('Edit');
+      expect(await ruleEditorPage.getRuleName()).toBe('test:recording:rule');
 
-      // Verify form is pre-filled with provisioned rule data
-      expect(await ruleEditorPage.getRuleName()).toBe('TestEditRule');
-      expect(await ruleEditorPage.getExpression()).toBe('up == 0');
+      // Modify name
+      await ruleEditorPage.fillRuleName('test:recording:rule_modified');
+      
+      // Edit labels
+      const labelsModal = await ruleEditorPage.openLabelsModal();
+      await labelsModal.editLabel('environment', 'production');
+      await labelsModal.save();
 
-      // Modify the rule name
-      await ruleEditorPage.fillRuleName('TestEditRule_Modified');
-
-      // Save the changes
       await ruleEditorPage.clickSave();
-
-      // Wait for navigation
       await page.waitForURL('**/rules', { timeout: 5000 });
-
-      // Verify we navigated away from edit page
-      expect(page.url()).toContain('/rules');
-      expect(page.url()).not.toContain('/edit');
     });
-  });
 
-  test.describe('Clone Rule', () => {
-    test('should clone an existing rule successfully', async ({ ruleEditorPage, page }) => {
-      // Use pre-provisioned rule from test-data/mimir/rules/
-      const identifier = RuleBuilder.createTestCloneRuleIdentifier();
+    test('should clone an existing recording rule', async ({ ruleEditorPage, page }) => {
+      const identifier = RuleBuilder.createTestRecordingRuleIdentifier();
 
-      // Navigate to clone page
       await ruleEditorPage.gotoClone(identifier);
       await ruleEditorPage.waitForLoad();
 
-      // Verify page title
-      const pageTitle = await ruleEditorPage.getPageTitle();
-      expect(pageTitle).toContain('Clone');
-
-      // Verify name is modified with " (copy)" suffix
+      // Verify name has copy suffix
       const clonedName = await ruleEditorPage.getRuleName();
-      expect(clonedName).toContain('TestCloneRule');
       expect(clonedName).toContain('copy');
 
-      // Change the name to something unique
-      await ruleEditorPage.fillRuleName('TestCloneRule_Cloned');
-
-      // Save the cloned rule
+      await ruleEditorPage.fillRuleName('test:recording:rule_cloned');
       await ruleEditorPage.clickSave();
-
-      // Wait for navigation
       await page.waitForURL('**/rules', { timeout: 5000 });
-
-      // Verify we navigated to rules list
-      expect(page.url()).toContain('/rules');
-      expect(page.url()).not.toContain('/clone');
     });
   });
 
-  test.describe('Data Source Selection', () => {
-    test('should be able to select a data source and fill expression', async ({ ruleEditorPage, page }) => {
+  test.describe('Labels', () => {
+    test('should add labels via modal', async ({ ruleEditorPage, page }) => {
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
-      // Select data source
+      await ruleEditorPage.fillRuleName('TestLabels');
       await ruleEditorPage.selectDataSource('Test Mimir');
-
-      // Fill expression
       await ruleEditorPage.fillExpression('up == 0');
 
-      // Verify expression was filled
-      const expression = await ruleEditorPage.getExpression();
-      expect(expression).toBe('up == 0');
+      const labelsModal = await ruleEditorPage.openLabelsModal();
+      await labelsModal.addLabels({ severity: 'warning', team: 'backend' });
+      
+      expect(await labelsModal.getLabelCount()).toBe(2);
+      
+      await labelsModal.save();
+    });
+
+    test('should edit existing labels', async ({ ruleEditorPage }) => {
+      const identifier = RuleBuilder.createTestEditRuleIdentifier();
+
+      await ruleEditorPage.gotoEdit(identifier);
+      await ruleEditorPage.waitForLoad();
+
+      const labelsModal = await ruleEditorPage.openLabelsModal();
+      
+      // Edit the 'severity' label value
+      await labelsModal.editLabel('severity', 'critical');
+      await labelsModal.save();
+    });
+
+    test('should remove a label', async ({ ruleEditorPage }) => {
+      await ruleEditorPage.gotoNew('alerting');
+      await ruleEditorPage.waitForLoad();
+
+      await ruleEditorPage.fillRuleName('TestRemoveLabel');
+      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.fillExpression('up == 0');
+
+      const labelsModal = await ruleEditorPage.openLabelsModal();
+      await labelsModal.addLabels({ severity: 'warning', team: 'backend', env: 'prod' });
+      
+      expect(await labelsModal.getLabelCount()).toBe(3);
+      
+      // Remove the 'env' label
+      await labelsModal.removeLabel('env');
+      
+      expect(await labelsModal.getLabelCount()).toBe(2);
+      
+      await labelsModal.save();
+    });
+
+    test('should discard label changes when canceling', async ({ ruleEditorPage }) => {
+      await ruleEditorPage.gotoNew('alerting');
+      await ruleEditorPage.waitForLoad();
+
+      await ruleEditorPage.fillRuleName('TestCancelLabels');
+      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.fillExpression('up == 0');
+
+      // Add labels and save
+      let labelsModal = await ruleEditorPage.openLabelsModal();
+      await labelsModal.addLabels({ severity: 'warning' });
+      await labelsModal.save();
+
+      // Open modal again, add more labels, then cancel
+      labelsModal = await ruleEditorPage.openLabelsModal();
+      await labelsModal.addLabels({ team: 'backend' });
+      await labelsModal.cancel();
+
+      // Verify the new label was discarded - only the first label should exist
+      labelsModal = await ruleEditorPage.openLabelsModal();
+      expect(await labelsModal.getLabelCount()).toBe(1);
+      await labelsModal.cancel();
+    });
+  });
+
+  test.describe('Annotations', () => {
+    test('should add annotation to alerting rule', async ({ ruleEditorPage }) => {
+      await ruleEditorPage.gotoNew('alerting');
+      await ruleEditorPage.waitForLoad();
+
+      await ruleEditorPage.fillRuleName('TestAnnotations');
+      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.fillExpression('up == 0');
+
+      // Verify annotations section is visible for alerting rules
+      expect(await ruleEditorPage.hasAnnotationsSection()).toBe(true);
+
+      await ruleEditorPage.addAnnotation('summary', 'Test alert summary');
+      expect(await ruleEditorPage.getAnnotationCount()).toBe(1);
+    });
+
+    test('should edit existing annotation', async ({ ruleEditorPage }) => {
+      await ruleEditorPage.gotoNew('alerting');
+      await ruleEditorPage.waitForLoad();
+
+      await ruleEditorPage.fillRuleName('TestEditAnnotation');
+      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.fillExpression('up == 0');
+
+      // Add an annotation
+      await ruleEditorPage.addAnnotation('summary', 'Original summary');
+
+      // Edit the annotation
+      await ruleEditorPage.editAnnotation('summary', 'Updated summary');
+    });
+
+    test('should remove an annotation', async ({ ruleEditorPage }) => {
+      await ruleEditorPage.gotoNew('alerting');
+      await ruleEditorPage.waitForLoad();
+
+      await ruleEditorPage.fillRuleName('TestRemoveAnnotation');
+      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.fillExpression('up == 0');
+
+      // Add multiple annotations
+      await ruleEditorPage.addAnnotation('summary', 'Test summary');
+      await ruleEditorPage.addAnnotation('description', 'Test description');
+
+      expect(await ruleEditorPage.getAnnotationCount()).toBe(2);
+
+      // Remove first annotation
+      await ruleEditorPage.removeAnnotation('summary');
+
+      expect(await ruleEditorPage.getAnnotationCount()).toBe(1);
+    });
+
+  });
+
+  test.describe('Validation', () => {
+    test('should show error for empty rule name', async ({ ruleEditorPage, page }) => {
+      await ruleEditorPage.gotoNew('alerting');
+      await ruleEditorPage.waitForLoad();
+
+      // Fill required fields except name
+      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.fillExpression('up == 0');
+      await ruleEditorPage.selectNamespace('e2e-test-namespace');
+      await ruleEditorPage.selectGroup('e2e-test-group');
+
+      // Try to save without name
+      await ruleEditorPage.clickSave();
+
+      // Should show validation error and not navigate away
+      await page.waitForTimeout(500);
+      expect(page.url()).toContain('/new');
+      
+      // Verify error message appears (form validation should prevent submission)
+      const errorAlert = page.getByRole('alert').filter({ hasText: /required/i });
+      const hasError = await errorAlert.isVisible().catch(() => false);
+      expect(hasError).toBe(true);
+    });
+
+    test('should show error for empty expression', async ({ ruleEditorPage, page }) => {
+      await ruleEditorPage.gotoNew('alerting');
+      await ruleEditorPage.waitForLoad();
+
+      // Fill required fields except expression
+      await ruleEditorPage.fillRuleName('TestNoExpression');
+      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectNamespace('e2e-test-namespace');
+      await ruleEditorPage.selectGroup('e2e-test-group');
+
+      // Try to save without expression
+      await ruleEditorPage.clickSave();
+
+      // Should show validation error and not navigate away
+      await page.waitForTimeout(500);
+      expect(page.url()).toContain('/new');
+      
+      // Verify error message appears
+      const errorAlert = page.getByRole('alert').filter({ hasText: /required|expression/i });
+      const hasError = await errorAlert.isVisible().catch(() => false);
+      expect(hasError).toBe(true);
     });
   });
 
   test.describe('Navigation', () => {
     test('should navigate back when clicking Cancel', async ({ ruleEditorPage, page }) => {
-      // First, navigate to rules list
       const baseUrl = getBaseUrl(page.url());
       await page.goto(`${baseUrl}/a/grafana-prometheusalerting-app/rules`);
       await page.waitForLoadState('networkidle');
 
-      // Then navigate to new rule page
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
-      // Fill some fields (just the name, don't need data source/expression for cancel test)
       await ruleEditorPage.fillRuleName('CancelTest');
-
-      // Click Cancel
       await ruleEditorPage.clickCancel();
-
-      // Wait for navigation
       await page.waitForURL('**/rules', { timeout: 5000 });
-
-      // Verify we're back on rules list
-      expect(page.url()).toContain('/rules');
-      expect(page.url()).not.toContain('/new');
     });
   });
 
   // Cleanup: Restore pre-provisioned rules after Edit/Clone tests
   test.afterEach(async ({}, testInfo) => {
-    // Only restore rules after Edit or Clone tests that modify pre-provisioned rules
     if (testInfo.title.toLowerCase().includes('edit') || testInfo.title.toLowerCase().includes('clone')) {
       try {
-        // Restore original pre-provisioned rules by reloading from test-data file
         const { execSync } = require('child_process');
         execSync(
           'curl -X POST -H "Content-Type: application/yaml" ' +

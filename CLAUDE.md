@@ -35,7 +35,53 @@ npm run e2e          # Run E2E tests with Playwright (requires npm run server fi
 - Two-stage flow: Auth project authenticates first, then test project runs with saved session
 - Custom fixtures in `tests/fixtures.ts` provide `appConfigPage` and `gotoPage` helpers
 - CI integration: Tests run against multiple Grafana versions, reports published to GitHub Pages
-- Test patterns: Use role-based selectors (`page.getByRole()`), custom page objects, and `@grafana/plugin-e2e` fixtures
+
+**E2E Test Best Practices:**
+
+- **Selector priority**: Prefer role-based selectors (`page.getByRole()`) for accessibility and reliability
+  - Good: `page.getByRole('button', { name: 'Save' })`
+  - Fallback: `page.getByTestId('save-button')` (only when role selectors aren't feasible)
+  - Last resort: `page.getByText('Save')` (fragile, breaks with i18n)
+- **Waiting strategy**: Use element presence/absence checks instead of arbitrary timeouts
+  - Good: `await expect(page.getByRole('alert')).toBeVisible()`
+  - Good: `await expect(page.getByRole('status')).not.toBeVisible()`
+  - Bad: `await page.waitForTimeout(1000)` (flaky, slow)
+- **Page objects**: Encapsulate selectors and interactions in page objects (`tests/pages/`)
+- **Custom fixtures**: Use `@grafana/plugin-e2e` fixtures for common Grafana interactions
+
+**Provisioned Data Sources:**
+
+Three data sources are auto-provisioned via `provisioning/datasources/test-datasources.yaml`:
+
+1. **Test Prometheus** (`test-prometheus`)
+   - Type: `prometheus`
+   - Implementation: `prometheus` (vanilla)
+   - URL: `http://prometheus:9090`
+   - Default data source
+   - Read-only (no Ruler API support)
+   - Use case: Testing read-only rule viewing
+
+2. **Test Alertmanager** (`test-alertmanager`)
+   - Type: `alertmanager`
+   - Implementation: `prometheus` (vanilla)
+   - URL: `http://alertmanager:9093`
+   - Use case: Testing vanilla Alertmanager configuration (routes, receivers, silences, etc.)
+
+3. **Test Mimir** (`test-mimir`)
+   - Type: `prometheus`
+   - Implementation: `mimir`
+   - URL: `http://mimir:9009/prometheus`
+   - Supports Ruler API for rule CRUD operations
+   - Editable data source
+   - Use case: Testing rule creation, editing, cloning, and Mimir-specific features
+
+**Mimir Test Data:**
+
+- Mimir uses native file-based rule storage mounted from `test-data/mimir/rules/`
+- Pre-provisioned rules in `test-data/mimir/rules/e2e-test-namespace/` are loaded by Mimir on startup
+- Mimir creates internal storage in `test-data/mimir/rules/rules/anonymous/` (binary protobuf, base64-encoded names)
+- The `rules/rules/` directory is git-ignored to prevent binary files from being tracked
+- Tests that modify rules (edit/clone) restore them via Mimir's API in `afterEach` hooks
 
 ### Development Server
 

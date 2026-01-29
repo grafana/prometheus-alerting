@@ -75,6 +75,11 @@ export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Pr
               icon="trash-alt"
               onClick={() => handleRemoveLabel(index)}
               tooltip={t('alerting.labels-editor-modal.remove-label', 'Remove label')}
+              aria-label={
+                label.key
+                  ? t('alerting.labels-editor-modal.remove-label-named', 'Remove label {{key}}', { key: label.key })
+                  : t('alerting.labels-editor-modal.remove-label', 'Remove label')
+              }
             />
           </Stack>
         ))}

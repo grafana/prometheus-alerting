@@ -1,14 +1,49 @@
 {
   "alerting": {
     "all-matches-indicator": {
-      "content-this-policy-matches-all-labels": "This policy matches all labels"
+      "content-this-route-matches-all-labels": "This route matches all labels"
+    },
+    "annotations": {
+      "description": "Add more context to your alert notifications.",
+      "title": "Annotations"
+    },
+    "annotations-step": {
+      "add-custom-annotation": "Add custom annotation",
+      "label-key": "Key",
+      "placeholder-key": "Annotation key",
+      "placeholder-url": "https://",
+      "placeholder-value": "Annotation value",
+      "remove-annotation": "Remove annotation",
+      "remove-annotation-named": "Remove annotation {{key}}"
     },
     "clipboard": {
       "error": "Failed to copy to clipboard",
       "success": "URL copied to clipboard"
     },
+    "cloud-data-source-selector": {
+      "label": "Data source",
+      "message": {
+        "please-select-a-data-source": "Please select a data source"
+      }
+    },
+    "cloud-evaluation-behavior": {
+      "description-pending-period": "Period during which the threshold condition must be met to trigger an alert. Selecting \"None\" triggers the alert immediately once the condition is met.",
+      "label-pending-period": "Pending period",
+      "message": {
+        "must-be-positive": "Must be a positive number."
+      },
+      "title-set-evaluation-behavior": "Set evaluation behavior"
+    },
+    "cloud-rules-source-picker": {
+      "loading": "Loading data sources...",
+      "placeholder": "Select a data source"
+    },
+    "common": {
+      "cancel": "Cancel",
+      "save": "Save"
+    },
     "continue-matching-indicator": {
-      "content-route-continue-matching-other-policies": "This route will continue matching other policies"
+      "content-route-continue-matching-other-routes": "This route will continue matching other routes"
     },
     "delete-rule": {
       "cancel": "Cancel",
@@ -21,19 +56,118 @@
       "unknown-error": "Unknown error",
       "warning": "This action cannot be undone."
     },
+    "draggable-rules-table": {
+      "evals-to-start-alerting": "Evaluations to start alerting",
+      "pending-period": "Pending period",
+      "recording": "Recording",
+      "rule-name": "Rule name"
+    },
+    "evaluation-interval": {
+      "exceeds-pending": "Interval ({{interval}}) exceeds the pending period ({{for}}) of some rules. This may cause alerts to fire immediately.",
+      "invalid-format": "Invalid duration format. Use formats like 1m, 30s, 1h.",
+      "placeholder": "e.g. 1m, 30s, 5m"
+    },
+    "export": {
+      "copy-code": "Copy code",
+      "download": "Download",
+      "rule-title": "Export rule",
+      "subtitle": "Select the format and download the file or copy the contents to clipboard",
+      "title": "Export"
+    },
+    "expression-editor": {
+      "could-not-load-editor": "Could not load query editor: {{errorMessage}}",
+      "label-expression": "Expression",
+      "loading": "Loading query editor...",
+      "message": {
+        "expression-required": "Expression is required."
+      },
+      "select-datasource": "Select a data source",
+      "select-datasource-message": "Please select a data source above to load the query editor."
+    },
     "filter-view-results": {
       "aria-label-filteredrulelist": "filtered-rule-list"
+    },
+    "group-and-namespace-fields": {
+      "group-picker-description": "Type to search for an existing group or create a new one",
+      "group-picker-label-group": "Group",
+      "group-placeholder": "Select or create group",
+      "message": {
+        "required": "Required."
+      },
+      "namespace-picker-description": "Type to search for an existing namespace or create a new one",
+      "namespace-picker-label-namespace": "Namespace",
+      "namespace-placeholder": "Select or create namespace"
+    },
+    "group-details": {
+      "actions": {
+        "edit": "Edit"
+      },
+      "error": "Error loading group",
+      "interval": "Interval",
+      "loading": "Loading group details...",
+      "namespace": "Namespace",
+      "not-found": "Group not found",
+      "not-found-message": "The group \"{{groupName}}\" in namespace \"{{namespace}}\" could not be found.",
+      "rules": "Rules",
+      "subtitle": "View alert and recording rules in this evaluation group",
+      "title": {
+        "back": "Back to rules list"
+      }
+    },
+    "group-edit": {
+      "delete": "Delete group",
+      "delete-body": "Are you sure you want to delete this rule group? All rules in this group will be permanently deleted.",
+      "delete-confirm": "Delete",
+      "delete-title": "Delete rule group",
+      "error": "Error loading group",
+      "interval-description": "How often the rules in this group are evaluated",
+      "interval-label": "Evaluation interval",
+      "loading": "Loading group...",
+      "name-label": "Evaluation group name",
+      "name-required": "Group name is required",
+      "namespace-description": "The namespace containing this rule group",
+      "namespace-label": "Namespace",
+      "namespace-required": "Namespace is required",
+      "not-editable": "This group cannot be edited",
+      "not-editable-description": "This data source does not support editing rule groups.",
+      "not-found": "Group not found",
+      "not-found-message": "The group \"{{groupName}}\" in namespace \"{{namespace}}\" could not be found.",
+      "page-title": "Edit rule group",
+      "rules": "Rules",
+      "rules-description": "Drag rules to reorder their evaluation order",
+      "rules-label": "Alerting and recording rules",
+      "save": "Save",
+      "submit-error": "Failed to save changes",
+      "success": "Successfully updated the rule group"
+    },
+    "labels-editor-modal": {
+      "add-label": "Add label",
+      "label-key": "Key",
+      "label-value": "Value",
+      "placeholder-key": "Label key",
+      "placeholder-value": "Label value",
+      "remove-label": "Remove label",
+      "remove-label-named": "Remove label {{key}}",
+      "title": "Edit labels"
+    },
+    "labels-field": {
+      "add-labels": "Add labels",
+      "description-labels": "Add labels to help you better manage your rules.",
+      "edit-labels": "Edit labels",
+      "no-labels": "No labels defined",
+      "title-add-labels": "Labels"
     },
     "more-button": {
       "aria-label": "More",
       "button-text": "More"
     },
     "policies": {
+      "add-route": "Add",
       "aria-label-collapse": "Collapse",
       "aria-label-expand": "Expand",
-      "default-policy": {
-        "description": "All alert instances will be handled by the default policy if no other matching policies are found.",
-        "title": "Default policy"
+      "default-route": {
+        "description": "All alert instances will be handled by the default route if no other matching routes are found.",
+        "title": "Default route"
       },
       "metadata": {
         "active-time": "Active when",
@@ -61,15 +195,77 @@
           }
         }
       },
-      "n-more-policies_one": "{{count}} additional policies",
-      "n-more-policies_other": "{{count}} additional policies",
+      "new-child": "New child route",
       "no-matchers": "No matchers"
+    },
+    "policy": {
+      "label-delete-route": "Delete route",
+      "label-new-child-route": "New child route",
+      "label-new-sibling-above": "New sibling above",
+      "label-new-sibling-below": "New sibling below"
+    },
+    "routes": {
+      "n-more-routes_one": "{{count}} additional routes",
+      "n-more-routes_other": "{{count}} additional routes"
     },
     "rule-actions": {
       "copy-link": "Copy link",
       "delete": "Delete",
       "duplicate": "Duplicate",
-      "edit": "Edit"
+      "edit": "Edit",
+      "export": "Export",
+      "silence": "Silence notifications"
+    },
+    "rule-definition": {
+      "description-alerting": "Name your rule, select a data source, and define the query and alert condition.",
+      "description-recording": "Name your rule, select a data source, and write the query expression.",
+      "title-alerting": "Define alert rule",
+      "title-recording": "Define recording rule"
+    },
+    "rule-details": {
+      "recording": "Rule state: Recording",
+      "recording-error": "Rule health: Recording error"
+    },
+    "rule-editor": {
+      "clone-alert-rule": "Clone alert rule",
+      "clone-recording-rule": "Clone recording rule",
+      "clone-rule": "Clone rule",
+      "edit-alert-rule": "Edit alert rule",
+      "edit-recording-rule": "Edit recording rule",
+      "edit-rule": "Edit rule",
+      "failed-to-load": "Failed to load rule",
+      "invalid-identifier": "Invalid rule identifier",
+      "invalid-identifier-message": "The rule identifier format is invalid.",
+      "loading-description": "Fetching rule details and configuration...",
+      "loading-rule": "Loading rule...",
+      "new-alert-rule": "New alert rule",
+      "new-recording-rule": "New recording rule",
+      "only-cloud-rules-cloneable": "Cloning rules is only available for data sources with Ruler API.",
+      "only-cloud-rules-editable": "Editing rules is only available for data sources with Ruler API.",
+      "rule-not-found": "Rule not found",
+      "rule-not-found-clone-message": "The requested rule could not be found or does not support cloning. Only rules with Ruler API support can be cloned.",
+      "rule-not-found-edit-message": "The requested rule could not be found or does not support editing. Only rules with Ruler API support can be edited.",
+      "rules": "Rules",
+      "unsupported-rule-type": "Unsupported rule type"
+    },
+    "rule-editor-section": {
+      "label-advanced-options": "Advanced options"
+    },
+    "rule-form": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "validation": {
+        "datasource-required": "Data source is required",
+        "expression-required": "Expression is required",
+        "for-time-integer": "Must be a positive integer",
+        "for-time-positive": "Must be a positive number",
+        "group-required": "Group name is required",
+        "group-too-long": "Group name must be less than 255 characters",
+        "name-required": "Rule name is required",
+        "name-too-long": "Rule name must be less than 255 characters",
+        "namespace-required": "Namespace is required",
+        "namespace-too-long": "Namespace must be less than 255 characters"
+      }
     },
     "rule-list": {
       "filter-view": {
@@ -80,10 +276,20 @@
         "results-loading": "Searching – found {{numberOfRules}} rules",
         "results-with-cancellation": "Search cancelled – found {{numberOfRules}} rules"
       },
+      "new-alerting-rule": "New alerting rule",
+      "new-recording-rule": "New recording rule",
+      "new-rule": "New rule",
       "view-mode": {
         "grouped": "Grouped",
         "list": "List"
       }
+    },
+    "rule-name-input": {
+      "label-rule-name": "Rule name",
+      "message": {
+        "rule-name-is-required": "Rule name is required."
+      },
+      "placeholder-give-your-alert-a-name": "Give your alert rule a name"
     },
     "rules": {
       "state": {
@@ -101,16 +307,19 @@
       "data-source-placeholder": "Select data sources",
       "filter-label": "Filter",
       "filter-options-label": "Filter options",
-      "group-label": "Evaluation group",
-      "group-placeholder": "Select group",
+      "group-label": "Group",
       "labels-label": "Labels",
       "labels-placeholder": "Select labels",
       "namespace-label": "Namespace",
-      "namespace-placeholder": "Select namespace",
       "rule-name-label": "Rule name",
       "search-placeholder": "Search by name or enter filter query...",
       "state-label": "State",
       "type-label": "Type"
+    }
+  },
+  "alertmanager": {
+    "error": {
+      "data-source": "Data source: {{name}}"
     }
   },
   "app-config": {
@@ -166,8 +375,10 @@
   "common": {
     "all": "All",
     "apply": "Apply",
+    "cancel": "Cancel",
     "clear": "Clear",
-    "close": "Close"
+    "close": "Close",
+    "saving": "Saving..."
   },
   "components": {
     "alertmanager-picker": {
@@ -195,10 +406,10 @@
     },
     "error-deleting-message": "Failed to delete inhibit rule",
     "error-deleting-title": "Error deleting inhibit rule",
-    "error-loading-message": "Failed to fetch inhibit rules",
     "error-loading-title": "Error loading inhibit rules",
     "no-matchers": "None",
-    "no-rules-message": "No inhibit rules are configured in the Alertmanager."
+    "no-rules-message": "No inhibit rules are configured in the Alertmanager.",
+    "page-subtitle": "Suppress alerts based on other active alerts"
   },
   "key-value-list": {
     "empty-value": "(not set)",
@@ -216,6 +427,20 @@
     "column": {
       "integrations": "Integrations",
       "name": "Name"
+    },
+    "create": {
+      "error": "Failed to create receiver",
+      "success": "Receiver created successfully"
+    },
+    "create-button": "Create receiver",
+    "delete": {
+      "confirm-body": "Are you sure you want to delete the receiver \"{{name}}\"? This action cannot be undone.",
+      "confirm-button": "Delete",
+      "confirm-title": "Delete receiver",
+      "error": "Failed to delete receiver",
+      "in-use-warning": "This receiver is currently used by {{count}} route(s). Deleting it may cause alerts to not be delivered.",
+      "in-use-warning-title": "Receiver is in use",
+      "success": "Receiver deleted successfully"
     },
     "detail": {
       "back": "Back to receivers",
@@ -235,8 +460,12 @@
     },
     "drawer": {
       "back": "Back to route",
+      "cannot-delete-default": "Cannot delete the default receiver",
+      "create-title": "Create receiver",
       "edit": "Edit",
-      "remove": "Remove",
+      "editing": "Editing Receiver",
+      "new-receiver": "New Receiver",
+      "remove": "Delete",
       "title": "Receiver"
     },
     "email": {
@@ -259,10 +488,28 @@
       "to": "To",
       "to-desc": "Email address to send notifications to"
     },
-    "error-deleting-message": "Failed to delete receiver",
-    "error-deleting-title": "Error deleting receiver",
-    "error-loading-message": "Failed to fetch receivers",
     "error-loading-title": "Error loading receivers",
+    "error-message": "An error occurred",
+    "error-title": "Error",
+    "form": {
+      "add-integration": "Add integration",
+      "create": "Create receiver",
+      "field-required": "This field is required",
+      "integration-type": "Integration type",
+      "integrations-description": "Configure how alerts are sent when this receiver is triggered",
+      "integrations-title": "Integrations",
+      "name": "Name",
+      "name-duplicate": "A receiver with this name already exists",
+      "name-placeholder": "Enter receiver name",
+      "name-required": "Receiver name is required",
+      "no-integrations": "No integrations",
+      "no-integrations-message": "Add at least one integration to configure how alerts are delivered.",
+      "remove-integration": "Remove integration",
+      "select-type": "Select integration type",
+      "send-resolved": "Send resolved",
+      "send-resolved-description": "Send notifications when alerts are resolved",
+      "update": "Update receiver"
+    },
     "integration": {
       "http-config-title": "HTTP Configuration",
       "no-config": "No configuration",
@@ -297,6 +544,7 @@
       "tags": "Tags",
       "tags-desc": "Comma-separated list of tags"
     },
+    "page-subtitle": "Configure how and where to send alert notifications",
     "pagerduty": {
       "client": "Client",
       "client-desc": "Client name",
@@ -385,6 +633,14 @@
       "parse-mode": "Parse mode",
       "parse-mode-desc": "Message parsing mode (Markdown, HTML)"
     },
+    "tooltip": {
+      "integration-count_one": "{{type}}{{count}}",
+      "integration-count_other": "{{type}}{{count}}"
+    },
+    "update": {
+      "error": "Failed to update receiver",
+      "success": "Receiver updated successfully"
+    },
     "victorops": {
       "api-key": "API key",
       "api-key-desc": "VictorOps API key",
@@ -435,34 +691,92 @@
     }
   },
   "routes": {
+    "add": {
+      "error": "Failed to add route",
+      "success": "Successfully added route"
+    },
     "child-routes-count_one": "This route has {{count}} child route(s).",
     "child-routes-count_other": "This route has {{count}} child route(s).",
     "child-routes-label": "Child Routes",
     "configuration-label": "Configuration",
     "continue-label": "Continue",
+    "delete": {
+      "confirm-body": "Are you sure you want to delete this route?",
+      "confirm-body-with-children_one": "Are you sure you want to delete this route? This will also delete all {{count}} child route(s).",
+      "confirm-body-with-children_other": "Are you sure you want to delete this route? This will also delete all {{count}} child route(s).",
+      "confirm-button": "Delete",
+      "confirm-title": "Delete Route",
+      "error": "Failed to delete route",
+      "success": "Successfully deleted route"
+    },
     "detail": {
       "title": "Route"
     },
     "drawer": {
+      "adding": "New Route",
+      "delete": "Delete",
+      "edit": "Edit",
+      "editing": "Editing Route",
       "tabs": {
         "configuration": "Configuration",
         "instances": "Instances"
       }
     },
-    "error-loading-message": "Failed to fetch routes",
+    "edit": {
+      "add-matcher": "Add matcher",
+      "cancel": "Cancel",
+      "continue": "Continue matching subsequent sibling nodes",
+      "continue-description": "If enabled, matching will continue to subsequent sibling policies",
+      "field-required": "Required",
+      "group-by": "Group by",
+      "group-by-aria": "Group by",
+      "group-by-description": "Combine alerts into a single notification by grouping by the same label values.",
+      "group-interval": "Group interval",
+      "group-interval-description": "How long to wait before sending notifications about new alerts in a group",
+      "group-interval-placeholder": "5m",
+      "group-wait": "Group wait",
+      "group-wait-description": "How long to wait before sending the first notification for a group",
+      "group-wait-placeholder": "30s",
+      "invalid-duration": "Invalid duration format",
+      "label": "Label",
+      "label-placeholder": "label",
+      "matching-labels": "Matching labels",
+      "mute-timings": "Mute timings",
+      "mute-timings-description": "Mute notifications during specific time intervals",
+      "mute-timings-placeholder": "Select or type mute timing names",
+      "no-matchers-warning": "If no matchers are specified, this route will handle all alert instances.",
+      "operator": "Operator",
+      "override-grouping": "Override grouping",
+      "override-timings": "Override general timings",
+      "receiver": "Receiver",
+      "receiver-description": "The receiver to send notifications to",
+      "receiver-placeholder": "Select a receiver",
+      "remove-matcher": "Remove matcher",
+      "repeat-interval": "Repeat interval",
+      "repeat-interval-description": "Minimum time between repeated notifications for the same alert",
+      "repeat-interval-placeholder": "4h",
+      "save": "Save",
+      "value": "Value",
+      "value-placeholder": "value"
+    },
     "error-loading-title": "Error loading routes",
     "group-by-label": "Group by",
     "group-interval-label": "Group interval",
     "group-wait-label": "Group wait",
     "matchers-label": "Matchers",
+    "new-route": "New route",
     "no": "No",
     "no-routes-message": "No routing configuration is available in the Alertmanager.",
-    "page-subtitle": "Determine how alerts are routed to contact points",
+    "page-subtitle": "Determine how alerts are routed to receivers",
     "receiver-label": "Receiver",
     "repeat-interval-label": "Repeat interval",
     "root-route-desc": "This is the root route. All alerts will be processed through this route and its children.",
     "root-route-title": "Root Route",
     "route-label": "Route",
+    "update": {
+      "error": "Failed to update route",
+      "success": "Successfully updated route"
+    },
     "yes": "Yes"
   },
   "rule-details": {
@@ -474,6 +788,7 @@
       "ruler-unavailable": "⚠ Ruler API Unavailable (Read-only)"
     },
     "error": {
+      "evaluation": "Something went wrong when evaluating this alert rule",
       "loading": "Error loading rule",
       "not-found": "Rule not found",
       "not-found-message": "The requested rule could not be found."
@@ -483,12 +798,9 @@
       "evaluation-time-value": "{{time}}s",
       "for": "Pending Period",
       "health": "Health",
-      "interval": "Evaluation Interval",
-      "interval-value": "Every {{interval}}",
       "last-error": "Last Error",
       "last-evaluation": "Last Evaluation"
     },
-    "group": "<0>Group:</0> {groupName}",
     "instances": {
       "columns": {
         "active-at": "Active Since",
@@ -503,22 +815,66 @@
       },
       "empty": "No active alert instances"
     },
-    "labels": "<0>Labels:</0> {JSON.stringify(labels)}",
     "loading": "Loading rule details...",
-    "namespace": "<0>Namespace:</0> {namespace}",
-    "query": {
-      "logql": "LogQL Query",
-      "promql": "PromQL Query"
+    "metadata": {
+      "interval": "Evaluation interval",
+      "interval-value": "Every {{interval}}",
+      "labels": "Labels",
+      "labels-aria": "Rule labels"
     },
-    "recording-rule": "Recording Rule",
-    "state-label": "State: {promRule.state}{promRule.health && ` (${promRule.health})`}",
+    "query": {
+      "view-in-explore": "View in Explore"
+    },
     "tabs": {
       "details": "Details",
       "instances": "Instances",
       "query": "Query"
     }
   },
+  "rules": {
+    "datasource-section": {
+      "collapse": "Collapse",
+      "configure": "Configure",
+      "error": "Error",
+      "error-title": "Cannot load rules for this datasource"
+    },
+    "error-boundary": {
+      "message": "Check the data source configuration. Does the data source support Prometheus API?",
+      "stack-title": "Unable to load rules from this data source",
+      "title": "Unable to load rules from this data source"
+    },
+    "group-loader": {
+      "error": "Failed to load rules from group {{groupName}} in {{namespaceName}}",
+      "not-found": "Failed to load rules from group {{groupName}} in {{namespaceName}}"
+    },
+    "list-group": {
+      "collapse": "Collapse"
+    },
+    "list-item": {
+      "error": "Error:",
+      "unknown-type": "(Unknown rule type)"
+    },
+    "list-section": {
+      "collapse": "Collapse"
+    },
+    "load-more": {
+      "aria-label": "Show more…",
+      "loading": "Loading more groups…",
+      "show-more": "Show more…"
+    },
+    "no-rules-found": "No rules found",
+    "page-subtitle": "Manage and monitor alert rules from your data sources"
+  },
   "silences": {
+    "affected-alerts": {
+      "count": "{{count}} alert(s) silenced",
+      "error-message": "Failed to load affected alerts",
+      "error-title": "Error loading alerts",
+      "more-labels": "more",
+      "no-alerts": "No alerts are currently being silenced by this silence.",
+      "no-alerts-hint": "This could mean the silence has expired, or no alerts match the defined matchers.",
+      "unknown-alert": "Unknown Alert"
+    },
     "column": {
       "ends-at": "Ends At",
       "matchers": "Matchers",
@@ -579,6 +935,7 @@
       "expire": "Expire",
       "expiring": "Expiring...",
       "matchers-title": "Matchers",
+      "recreate": "Recreate",
       "starts-at": "Starts At",
       "tabs": {
         "affected-alerts": "Affected Alerts",
@@ -600,7 +957,6 @@
     },
     "error-expiring-message": "Failed to expire silence",
     "error-expiring-title": "Error expiring silence",
-    "error-loading-message": "Failed to fetch silences",
     "error-loading-title": "Error loading silences",
     "expire-modal": {
       "body": "Are you sure you want to expire this silence?",
@@ -608,15 +964,61 @@
       "confirm": "Expire",
       "title": "Expire Silence"
     },
-    "no-silences-message": "No silences are currently configured in the Alertmanager."
+    "no-active-silences-message": "No active silences found.",
+    "no-silences-message": "No silences are currently configured in the Alertmanager.",
+    "recreate": {
+      "page-title": "Recreate Silence"
+    },
+    "show-inactive": "Show inactive silences"
   },
   "templates": {
     "column": {
-      "path": "Template Path"
+      "name": "Template Name",
+      "preview": "Preview"
     },
-    "error-loading-message": "Failed to fetch templates",
+    "create": {
+      "error": "Failed to create template",
+      "success": "Template created successfully"
+    },
+    "create-button": "Create template",
+    "delete": {
+      "confirm-body": "Are you sure you want to delete the template \"{{name}}\"? This action cannot be undone.",
+      "confirm-button": "Delete",
+      "confirm-title": "Delete template",
+      "error": "Failed to delete template",
+      "success": "Template deleted successfully"
+    },
+    "drawer": {
+      "content-title": "Template Content",
+      "create-title": "Create template",
+      "delete": "Delete",
+      "edit": "Edit",
+      "editing": "Editing Template",
+      "new-template": "New Template",
+      "no-content": "No content available for this template.",
+      "syntax-hint": "Templates use Go template syntax. Refer to the Alertmanager documentation for available functions and variables.",
+      "title": "Template"
+    },
     "error-loading-title": "Error loading templates",
-    "no-templates-message": "No templates are configured in the Alertmanager."
+    "error-message": "An error occurred",
+    "error-title": "Error",
+    "form": {
+      "content": "Content",
+      "content-description": "Use Go template syntax. The template should be wrapped in {{ define \"name\" }} ... {{ end }}",
+      "content-required": "Template content is required",
+      "create": "Create template",
+      "name": "Name",
+      "name-duplicate": "A template with this name already exists",
+      "name-placeholder": "e.g., slack-notification.tmpl",
+      "name-required": "Template name is required",
+      "update": "Update template"
+    },
+    "no-templates-message": "No templates are configured in the Alertmanager.",
+    "page-subtitle": "Customize notification message templates",
+    "update": {
+      "error": "Failed to update template",
+      "success": "Template updated successfully"
+    }
   },
   "time-intervals": {
     "all": "All",
@@ -709,6 +1111,7 @@
     "no-intervals-defined": "No time intervals defined",
     "no-intervals-desc": "This time interval has no time ranges configured.",
     "no-time-intervals-message": "No time intervals are configured in the Alertmanager.",
+    "page-subtitle": "Define time windows for muting or activating notifications",
     "times-label": "Times",
     "weekdays-label": "Weekdays",
     "years-label": "Years"
