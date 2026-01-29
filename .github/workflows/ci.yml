@@ -171,6 +171,12 @@ jobs:
       - name: Setup Node.js with caching
         uses: ./.github/actions/setup-node-with-cache
 
+      - name: Verify test data exists
+        run: |
+          echo "Checking for Mimir test rules..."
+          ls -la test-data/mimir/rules/e2e-test-namespace/
+          cat test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml
+
       - name: Start Grafana
         run: |
           docker compose pull
@@ -209,12 +215,21 @@ jobs:
             fi
             if [ $i -eq 1 ] || [ $((i % 5)) -eq 0 ]; then
               echo "  Waiting for rules to load... (attempt $i/30)"
+              if [ $i -eq 1 ]; then
+                echo "  First response: $RESPONSE"
+              fi
             fi
             sleep 2
           done
           
           echo "ERROR: e2e-test-group not found in Mimir rules after 60s"
           echo "Last response: $RESPONSE"
+          echo ""
+          echo "Checking all rules:"
+          curl -sS http://localhost:9009/prometheus/config/v1/rules
+          echo ""
+          echo "Checking Mimir logs:"
+          docker logs mimir-test 2>&1 | tail -50
           exit 1
 
       - name: Setup Playwright with caching
