@@ -26,7 +26,7 @@ export class LabelsModal {
    * Wait for the modal to be visible
    */
   async waitForOpen(): Promise<void> {
-    await this.modal.waitFor({ state: 'visible', timeout: 5000 });
+    await this.modal.waitFor({ state: 'visible', timeout: 2000 });
   }
 
   /**
@@ -43,7 +43,10 @@ export class LabelsModal {
       // For subsequent labels, click "Add label" to create a new row
       if (i > 0) {
         await this.addLabelButton.click();
-        await this.page.waitForTimeout(300);
+        
+        // Wait for new row to appear by checking the count increased
+        const keyInputs = this.modal.getByRole('textbox', { name: /key/i });
+        await keyInputs.nth(i).waitFor({ state: 'visible', timeout: 2000 });
       }
 
       // Find the last key and value inputs (the current row to fill)
@@ -64,7 +67,7 @@ export class LabelsModal {
   async save(): Promise<void> {
     await this.saveButton.click();
     // Wait for modal to close
-    await expect(this.modal).not.toBeVisible({ timeout: 5000 });
+    await expect(this.modal).not.toBeVisible({ timeout: 3000 });
   }
 
   /**
@@ -73,7 +76,7 @@ export class LabelsModal {
   async cancel(): Promise<void> {
     await this.cancelButton.click();
     // Wait for modal to close
-    await expect(this.modal).not.toBeVisible({ timeout: 5000 });
+    await expect(this.modal).not.toBeVisible({ timeout: 3000 });
   }
 
   /**

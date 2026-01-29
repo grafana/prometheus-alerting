@@ -40,6 +40,9 @@ ci/
 /playwright/.cache/
 /playwright/.auth/
 
+# Mimir runtime storage (binary files, base64-encoded directories)
+/test-data/mimir/rules/rules/
+
 # Editor
 .idea
 

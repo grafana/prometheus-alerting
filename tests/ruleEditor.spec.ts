@@ -36,21 +36,15 @@ test.describe('RuleEditor Page - E2E', () => {
       await labelsModal.addLabels({ severity: 'critical', team: 'platform' });
       await labelsModal.save();
 
-      // Wait for modal to fully close and page to settle
-      await page.waitForTimeout(500);
-
       // Verify annotations section is visible for alerting rules
       expect(await ruleEditorPage.hasAnnotationsSection()).toBe(true);
       await ruleEditorPage.addAnnotation('summary', 'High CPU usage detected');
-
-      // Wait for annotation to be fully added
-      await page.waitForTimeout(500);
 
       // Save the rule
       await ruleEditorPage.clickSave();
 
       // Wait for navigation to rules list
-      await page.waitForURL('**/rules', { timeout: 10000 });
+      await page.waitForURL('**/rules', { timeout: 5000 });
 
       // Verify we navigated to rules list
       expect(page.url()).toContain('/rules');
@@ -84,7 +78,7 @@ test.describe('RuleEditor Page - E2E', () => {
       await ruleEditorPage.clickSave();
 
       // Wait for navigation to rules list
-      await page.waitForURL('**/rules', { timeout: 10000 });
+      await page.waitForURL('**/rules', { timeout: 5000 });
 
       // Verify we navigated to rules list
       expect(page.url()).toContain('/rules');
@@ -116,7 +110,7 @@ test.describe('RuleEditor Page - E2E', () => {
       await ruleEditorPage.clickSave();
 
       // Wait for navigation
-      await page.waitForURL('**/rules', { timeout: 10000 });
+      await page.waitForURL('**/rules', { timeout: 5000 });
 
       // Verify we navigated away from edit page
       expect(page.url()).toContain('/rules');
@@ -149,7 +143,7 @@ test.describe('RuleEditor Page - E2E', () => {
       await ruleEditorPage.clickSave();
 
       // Wait for navigation
-      await page.waitForURL('**/rules', { timeout: 10000 });
+      await page.waitForURL('**/rules', { timeout: 5000 });
 
       // Verify we navigated to rules list
       expect(page.url()).toContain('/rules');
@@ -192,7 +186,7 @@ test.describe('RuleEditor Page - E2E', () => {
       await ruleEditorPage.clickCancel();
 
       // Wait for navigation
-      await page.waitForURL('**/rules', { timeout: 10000 });
+      await page.waitForURL('**/rules', { timeout: 5000 });
 
       // Verify we're back on rules list
       expect(page.url()).toContain('/rules');

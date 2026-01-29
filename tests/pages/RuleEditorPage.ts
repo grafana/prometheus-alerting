@@ -19,7 +19,6 @@ export class RuleEditorPage {
   // Step 1: Definition
   readonly ruleNameInput: Locator;
   readonly dataSourcePickerInput: Locator;
-  readonly queryEditorContainer: Locator;
 
   // Step 2: Evaluation
   readonly pendingPeriodInput: Locator;
@@ -56,8 +55,6 @@ export class RuleEditorPage {
     this.ruleNameInput = this.pageContent.locator('#rule-name');
     // Data source picker is a Combobox - find the input element
     this.dataSourcePickerInput = this.pageContent.getByRole('combobox').first();
-    // Query editor container - will contain the Prometheus query editor
-    this.queryEditorContainer = this.pageContent.locator('[data-testid="query-editor-container"]');
 
     // Step 2: Evaluation
     // Pending period - look for the spinbutton near "Pending period" text
@@ -156,19 +153,17 @@ export class RuleEditorPage {
     // Click to open the dropdown
     await combobox.click();
 
-    // Wait a bit for the dropdown to populate
-    await this.page.waitForTimeout(1000);
-
     // Look for the option with the data source name
     // The option should be in a listbox or menu that appears
     const option = this.page.getByRole('option', { name: dataSourceName });
 
     // Wait for the option to be visible and click it
-    await option.waitFor({ state: 'visible', timeout: 10000 });
+    await option.waitFor({ state: 'visible', timeout: 3000 });
     await option.click();
 
-    // Wait for query editor to load after selection and for React state to update
-    await this.page.waitForTimeout(3000);
+    // Wait for query editor (Monaco editor) to load after selection
+    const queryField = this.pageContent.getByRole('textbox', { name: /Editor content/i });
+    await queryField.waitFor({ state: 'visible', timeout: 3000 });
   }
 
   /**
@@ -176,14 +171,11 @@ export class RuleEditorPage {
    * Must be called AFTER selecting a data source
    */
   async fillExpression(expression: string): Promise<void> {
-    // Wait a bit for query editor to fully load
-    await this.page.waitForTimeout(1000);
-
     // Find the Monaco editor textbox (accessible name includes "Editor content")
     const queryField = this.pageContent.getByRole('textbox', { name: /Editor content/i });
 
-    // Wait for the editor to be visible
-    await queryField.waitFor({ state: 'visible', timeout: 5000 });
+    // Wait for the editor to be visible and enabled
+    await queryField.waitFor({ state: 'visible', timeout: 2000 });
 
     // Click to focus the editor
     await queryField.click();
@@ -194,7 +186,6 @@ export class RuleEditorPage {
 
     // Blur the editor to trigger onChange and commit the value
     await queryField.blur();
-    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -207,8 +198,8 @@ export class RuleEditorPage {
 
     // Select the unit - click combobox and select option
     await this.pendingPeriodUnitSelect.click();
-    await this.page.waitForTimeout(300);
     const unitOption = this.page.getByRole('option', { name: unit });
+    await unitOption.waitFor({ state: 'visible', timeout: 2000 });
     await unitOption.click();
   }
 
@@ -218,16 +209,15 @@ export class RuleEditorPage {
   async selectNamespace(namespace: string): Promise<void> {
     await this.namespaceCombobox.click();
     await this.namespaceCombobox.fill(namespace);
-    // Wait for dropdown
-    await this.page.waitForTimeout(300);
     // Try to select existing option or create new
     const existingOption = this.page.getByRole('option', { name: namespace, exact: true });
-    const optionExists = await existingOption.isVisible().catch(() => false);
-
-    if (optionExists) {
+    
+    // Wait a bit for the dropdown to appear and check if option exists
+    try {
+      await existingOption.waitFor({ state: 'visible', timeout: 1000 });
       await existingOption.click();
-    } else {
-      // Press Enter to create new namespace
+    } catch {
+      // Option doesn't exist, press Enter to create new namespace
       await this.namespaceCombobox.press('Enter');
     }
   }
@@ -238,16 +228,15 @@ export class RuleEditorPage {
   async selectGroup(group: string): Promise<void> {
     await this.groupCombobox.click();
     await this.groupCombobox.fill(group);
-    // Wait for dropdown
-    await this.page.waitForTimeout(300);
     // Try to select existing option or create new
     const existingOption = this.page.getByRole('option', { name: group, exact: true });
-    const optionExists = await existingOption.isVisible().catch(() => false);
-
-    if (optionExists) {
+    
+    // Wait a bit for the dropdown to appear and check if option exists
+    try {
+      await existingOption.waitFor({ state: 'visible', timeout: 1000 });
       await existingOption.click();
-    } else {
-      // Press Enter to create new group
+    } catch {
+      // Option doesn't exist, press Enter to create new group
       await this.groupCombobox.press('Enter');
     }
   }
@@ -284,17 +273,18 @@ export class RuleEditorPage {
   async addAnnotation(key: string, value: string): Promise<void> {
     // Scroll button into view and wait for it to be visible
     await this.addAnnotationButton.scrollIntoViewIfNeeded();
-    await this.addAnnotationButton.waitFor({ state: 'visible', timeout: 5000 });
+    await this.addAnnotationButton.waitFor({ state: 'visible', timeout: 3000 });
 
     // Click add annotation button
     await this.addAnnotationButton.click();
 
-    // Wait for annotation fields to appear
-    await this.page.waitForTimeout(500);
-
     // Find the annotation key and value inputs by their specific placeholders
     const keyInput = this.pageContent.getByPlaceholder('Annotation key');
     const valueInput = this.pageContent.getByPlaceholder('Annotation value');
+
+    // Wait for annotation fields to appear
+    await keyInput.waitFor({ state: 'visible', timeout: 2000 });
+    await valueInput.waitFor({ state: 'visible', timeout: 2000 });
 
     await keyInput.fill(key);
     await valueInput.fill(value);
