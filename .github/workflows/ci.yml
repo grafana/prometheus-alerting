@@ -200,16 +200,22 @@ jobs:
             sleep 2
           done
           
-          echo "Verifying Mimir Ruler API has loaded test rules..."
-          RESPONSE=$(curl -sS http://localhost:9009/prometheus/config/v1/rules/e2e-test-namespace)
-          if echo "$RESPONSE" | grep -q "e2e-test-group"; then
-            echo "✓ Mimir Ruler API ready - e2e-test-group found"
-            exit 0
-          else
-            echo "ERROR: e2e-test-group not found in Mimir rules"
-            echo "Response: $RESPONSE"
-            exit 1
-          fi
+          echo "Waiting for Mimir Ruler API to load test rules..."
+          for i in {1..30}; do
+            RESPONSE=$(curl -sS http://localhost:9009/prometheus/config/v1/rules/e2e-test-namespace)
+            if echo "$RESPONSE" | grep -q "e2e-test-group"; then
+              echo "✓ Mimir Ruler API ready - e2e-test-group found"
+              exit 0
+            fi
+            if [ $i -eq 1 ] || [ $((i % 5)) -eq 0 ]; then
+              echo "  Waiting for rules to load... (attempt $i/30)"
+            fi
+            sleep 2
+          done
+          
+          echo "ERROR: e2e-test-group not found in Mimir rules after 60s"
+          echo "Last response: $RESPONSE"
+          exit 1
 
       - name: Setup Playwright with caching
         uses: ./.github/actions/setup-playwright-with-cache
