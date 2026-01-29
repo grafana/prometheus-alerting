@@ -5,7 +5,7 @@ import { skipToken } from '@reduxjs/toolkit/query';
 
 import { t } from '@grafana/i18n';
 import { getDataSourceSrv, PluginPage } from '@grafana/runtime';
-import { Alert, LoadingPlaceholder } from '@grafana/ui';
+import { Alert, LoadingPlaceholder, Stack } from '@grafana/ui';
 
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
@@ -18,6 +18,7 @@ import { groups, createListFilterLink } from '../../../utils/navigation';
 import { DataSourceGroupLoader } from '../list/DataSourceGroupLoader';
 import { GroupDetailsTitle } from '../components/GroupDetailsTitle';
 import { GroupDetailsActions } from '../components/GroupDetailsActions';
+import { useGroupConsistencyCheck } from '../hooks/useGroupConsistencyCheck';
 
 const { useGetGroupsQuery } = prometheusApi;
 const { useGetRuleGroupQuery } = rulerApi;
@@ -73,6 +74,13 @@ function GroupDetails() {
   const promGroup = useMemo(() => {
     return promResponse?.data.groups.find((g: PromRuleGroupDTO) => g.file === namespace && g.name === groupName);
   }, [promResponse, namespace, groupName]);
+
+  // Check consistency between Prometheus (state) and Ruler (config) APIs
+  const { isInSync, syncIssue, canCheck } = useGroupConsistencyCheck(
+    promGroup,
+    rulerGroup,
+    dsFeatures?.rulerApiEnabled ?? false
+  );
 
   // Format the group interval for display
   const groupInterval = useMemo(() => {
@@ -163,14 +171,30 @@ function GroupDetails() {
       ]}
       actions={<GroupDetailsActions editLink={editPageLink} canEdit={dsFeatures?.rulerApiEnabled ?? false} />}
     >
-      <ul role="tree">
-        <DataSourceGroupLoader
-          groupIdentifier={groupIdentifier}
-          expectedRulesCount={promGroup?.rules.length}
-          application={dsFeatures?.application}
-          rulerApiEnabled={dsFeatures?.rulerApiEnabled}
-        />
-      </ul>
+      <Stack direction="column" gap={2}>
+        {/* Consistency check warning */}
+        {canCheck && !isInSync && (
+          <Alert
+            severity="info"
+            title={t('alerting.group-details.pending-changes', 'Pending changes')}
+          >
+            {syncIssue ||
+              t(
+                'alerting.group-details.pending-changes-message',
+                'Recent configuration changes may not be reflected yet. The view will update automatically.'
+              )}
+          </Alert>
+        )}
+
+        <ul role="tree">
+          <DataSourceGroupLoader
+            groupIdentifier={groupIdentifier}
+            expectedRulesCount={promGroup?.rules.length}
+            application={dsFeatures?.application}
+            rulerApiEnabled={dsFeatures?.rulerApiEnabled}
+          />
+        </ul>
+      </Stack>
     </PluginPage>
   );
 }
