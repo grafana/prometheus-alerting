@@ -185,7 +185,7 @@ jobs:
         run: |
           echo "Waiting for Mimir Ruler API to load test rules..."
           for i in {1..30}; do
-            RESPONSE=$(curl -s http://localhost:9009/prometheus/config/v1/rules/e2e-test-namespace)
+            RESPONSE=$(curl -s http://localhost:9009/config/v1/rules/e2e-test-namespace)
             if echo "$RESPONSE" | grep -q "e2e-test-group"; then
               echo "✓ Mimir Ruler API ready - e2e-test-group found"
               exit 0
@@ -194,6 +194,7 @@ jobs:
             sleep 2
           done
           echo "ERROR: Mimir Ruler API timeout - rules not loaded after 60s"
+          echo "Last response: $RESPONSE"
           exit 1
 
       - name: Setup Playwright with caching
