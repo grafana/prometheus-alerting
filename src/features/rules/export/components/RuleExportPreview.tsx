@@ -1,9 +1,10 @@
 import { css } from '@emotion/css';
-import { saveAs } from 'file-saver';
+import { fileSave } from 'browser-fs-access';
 import React, { useCallback, useMemo } from 'react';
 
-import { GrafanaTheme2 } from '@grafana/data';
-import { Trans } from '@grafana/i18n';
+import { AppEvents, GrafanaTheme2 } from '@grafana/data';
+import { Trans, t } from '@grafana/i18n';
+import { getAppEvents } from '@grafana/runtime';
 import { Button, ClipboardButton, CodeEditor, Stack, useStyles2 } from '@grafana/ui';
 
 import type { RulerRuleDTO } from '@grafana/external-rules/vanilla';
@@ -27,12 +28,28 @@ export function RuleExportPreview({ rule, ruleName, format, onClose }: RuleExpor
     return provider.formatter ? provider.formatter(raw) : raw;
   }, [rule, format, provider]);
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
     const blob = new Blob([serializedRule], {
-      type: `${provider.mimeType};charset=utf-8`,
+      type: provider.mimeType,
     });
     const filename = `${generateExportFilename(ruleName)}.${format}`;
-    saveAs(blob, filename);
+
+    try {
+      await fileSave(blob, {
+        fileName: filename,
+        extensions: [`.${format}`],
+      });
+    } catch (error) {
+      // User cancelled the save dialog - this is expected, no action needed
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return;
+      }
+      // Show error toast to user 
+      getAppEvents().publish({
+        type: AppEvents.alertError.name,
+        payload: [t('alerting.export.download-failed', 'Download failed')],
+      });
+    }
   }, [serializedRule, ruleName, format, provider.mimeType]);
 
   return (
