@@ -132,6 +132,15 @@ export interface GroupIdentifier {
   groupName: string;
 }
 
+export interface WaitForConsistencyOptions {
+  /**
+   * When true, requires the group to exist in the Ruler API before resolving.
+   * Use this after create/rename operations to ensure the group is available.
+   * Default: false (allows resolution when both APIs agree group is missing - for deletions)
+   */
+  requireExists?: boolean;
+}
+
 /**
  * Hook that provides a function to wait for a rule group to be consistent
  * between Prometheus and Ruler APIs.
@@ -159,8 +168,9 @@ export function useWaitForGroupConsistency() {
   }, []);
 
   const waitForGroupConsistency = useCallback(
-    async (groupIdentifier: GroupIdentifier): Promise<void> => {
+    async (groupIdentifier: GroupIdentifier, options: WaitForConsistencyOptions = {}): Promise<void> => {
       const { dataSourceUid, namespace, groupName } = groupIdentifier;
+      const { requireExists = false } = options;
 
       // Clear any existing intervals
       if (intervalRef.current) {
@@ -185,18 +195,25 @@ export function useWaitForGroupConsistency() {
         // Function to check consistency
         const checkConsistency = async () => {
           try {
-            // Fetch from both APIs
+            // Fetch from both APIs, forcing refetch to bypass cache
+            // Second param `false` means preferCacheValue=false (force fresh fetch)
             const [promResult, rulerResult] = await Promise.allSettled([
-              fetchPromGroups({
-                ruleSource: { uid: dataSourceUid },
-                namespace,
-                groupName,
-              }).unwrap(),
-              fetchRulerGroup({
-                dataSourceUid,
-                namespace,
-                groupName,
-              }).unwrap(),
+              fetchPromGroups(
+                {
+                  ruleSource: { uid: dataSourceUid },
+                  namespace,
+                  groupName,
+                },
+                false
+              ).unwrap(),
+              fetchRulerGroup(
+                {
+                  dataSourceUid,
+                  namespace,
+                  groupName,
+                },
+                false
+              ).unwrap(),
             ]);
 
             // Extract groups from results
@@ -208,6 +225,12 @@ export function useWaitForGroupConsistency() {
                 : undefined;
 
             const rulerGroup = rulerResult.status === 'fulfilled' ? rulerResult.value : null;
+
+            // If requireExists is true, wait until ruler has the group
+            // This prevents resolving when both APIs agree group is missing (after rename)
+            if (requireExists && !rulerGroup) {
+              return; // Continue polling
+            }
 
             // Check if in sync
             if (checkGroupsInSync(promGroup, rulerGroup)) {
