@@ -18,8 +18,20 @@ export default defineConfig({
     pool: 'threads',
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: ['tests/'], // Playwright E2E tests
+      reporter: ['text-summary', 'json-summary', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      include: [
+        'src/**/*.{js,jsx,ts,tsx}',
+        'packages/**/*.{js,jsx,ts,tsx}',
+      ],
+      exclude: [
+        'src/module.tsx', // Plugin entry point
+        'src/types/**', // Type definitions
+        'src/locales/**', // Translation files
+        'src/**/*.stories.{js,jsx,ts,tsx}', // Storybook files
+        'src/**/*.constants.ts', // Constants files
+      ],
+      all: true,
     },
   },
   ssr: {
