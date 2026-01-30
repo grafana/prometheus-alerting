@@ -10,6 +10,7 @@ export class RulesListPage {
   readonly filterApplyButton: Locator;
   readonly filterClearButton: Locator;
   readonly filterCloseButton: Locator;
+  readonly filterPopup: Locator;
 
   // Filter fields
   readonly dataSourceSelect: Locator;
@@ -27,15 +28,16 @@ export class RulesListPage {
     // Search and filter
     this.searchInput = page.getByTestId('search-query-input');
     this.filterButton = page.getByRole('button', { name: /filter/i });
-    this.filterApplyButton = page.getByTestId('filter-apply-button');
-    this.filterClearButton = page.getByTestId('filter-clear-button');
-    this.filterCloseButton = page.getByRole('button', { name: /close/i });
+    this.filterPopup = page.getByRole('dialog', { name: /filter options/i });
+    this.filterApplyButton = this.filterPopup.getByTestId('filter-apply-button');
+    this.filterClearButton = this.filterPopup.getByTestId('filter-clear-button');
+    this.filterCloseButton = this.filterPopup.getByRole('button', { name: 'Close' });
 
     // Filter fields in the popup
-    this.dataSourceSelect = page.getByRole('combobox', { name: /data source/i });
-    this.namespaceInput = page.getByTestId('namespace-input');
-    this.groupInput = page.getByTestId('group-input');
-    this.ruleNameInput = page.getByTestId('rule-name-input');
+    this.dataSourceSelect = this.filterPopup.getByRole('combobox', { name: /data source/i });
+    this.namespaceInput = this.filterPopup.getByTestId('namespace-input');
+    this.groupInput = this.filterPopup.getByTestId('group-input');
+    this.ruleNameInput = this.filterPopup.getByTestId('rule-name-input');
 
     // Rule list
     this.ruleList = page.getByRole('list', { name: /rule/i });
@@ -64,12 +66,13 @@ export class RulesListPage {
 
   async openFilterPopup() {
     await this.filterButton.click();
+    await expect(this.filterPopup).toBeVisible();
     await expect(this.filterApplyButton).toBeVisible();
   }
 
   async closeFilterPopup() {
     await this.filterCloseButton.click();
-    await expect(this.filterApplyButton).not.toBeVisible();
+    await expect(this.filterPopup).not.toBeVisible();
   }
 
   async applyFilters() {
