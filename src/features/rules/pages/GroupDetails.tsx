@@ -14,6 +14,7 @@ import type { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
+import { extractErrorMessage } from '../../../utils/errors';
 import { groups, createListFilterLink } from '../../../utils/navigation';
 import { DataSourceGroupLoader } from '../list/DataSourceGroupLoader';
 import { GroupDetailsTitle } from '../components/GroupDetailsTitle';
@@ -138,7 +139,7 @@ function GroupDetails() {
     return (
       <PluginPage pageNav={pageNav}>
         <Alert severity="error" title={t('alerting.group-details.error', 'Error loading group')}>
-          {String(dsFeaturesError || promError || rulerError)}
+          {extractErrorMessage(dsFeaturesError || promError || rulerError)}
         </Alert>
       </PluginPage>
     );

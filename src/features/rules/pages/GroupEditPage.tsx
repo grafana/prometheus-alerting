@@ -25,6 +25,7 @@ import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
 const { useGetRuleGroupQuery, useDeleteRuleGroupMutation, useUpsertRuleGroupMutation } = rulerApi;
 import { useReturnTo } from '../../../hooks/useReturnTo';
+import { extractErrorMessage } from '../../../utils/errors';
 import { groups } from '../../../utils/navigation';
 
 import { DraggableRulesTable, SwapOperation, applySwaps } from '../components/DraggableRulesTable';
@@ -115,7 +116,7 @@ function GroupEditPage() {
     return (
       <PluginPage pageNav={pageNav}>
         <Alert severity="error" title={t('alerting.group-edit.error', 'Error loading group')}>
-          {String(dsFeaturesError || rulerError)}
+          {extractErrorMessage(dsFeaturesError || rulerError)}
         </Alert>
       </PluginPage>
     );
@@ -218,40 +219,30 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
         payload: newGroupPayload,
       }).unwrap();
 
-      // If namespace or name changed, delete the old group
-      if (isNamespaceChanged || isGroupRenamed) {
-        await deleteRuleGroup({
-          dataSourceUid,
-          namespace: originalNamespace,
-          groupName: originalGroupName,
-        }).unwrap();
-      }
-
-      // Wait for Prometheus to reflect the changes (like Grafana core)
-      const shouldWaitForConsistency = isNamespaceChanged || isGroupRenamed || hasSwaps;
-      if (shouldWaitForConsistency) {
-        setIsWaitingForConsistency(true);
-        await waitForGroupConsistency({
-          dataSourceUid,
-          namespace: targetNamespace,
-          groupName: data.name,
-        });
-        setIsWaitingForConsistency(false);
-      }
-
-      // Show success toast notification (like Grafana core)
+      // Show success toast notification
       const appEvents = getAppEvents();
       appEvents.publish({
         type: AppEvents.alertSuccess.name,
         payload: [t('alerting.group-edit.success', 'Successfully updated the rule group')],
       });
 
-      // Update URL to the new group's edit page (stay on edit page like Grafana core)
-      // Using replace() updates the URL without adding to history
-      locationService.replace(groups.editPageLink(dataSourceUid, targetNamespace, data.name));
+      // If namespace or name changed, navigate first then delete in background
+      // We MUST navigate BEFORE triggering the delete to avoid cache invalidation showing errors
+      if (isNamespaceChanged || isGroupRenamed) {
+        // Navigate to the new group's edit page immediately
+        locationService.replace(groups.editPageLink(dataSourceUid, targetNamespace, data.name));
+
+        // Fire-and-forget the delete - don't await, let it complete in background
+        // This avoids RTK Query cache invalidation causing a 404 error display
+        deleteRuleGroup({
+          dataSourceUid,
+          namespace: originalNamespace,
+          groupName: originalGroupName,
+        });
+      }
     } catch (error) {
       setIsWaitingForConsistency(false);
-      setSubmitError(error instanceof Error ? error.message : String(error));
+      setSubmitError(extractErrorMessage(error));
     }
   };
 
