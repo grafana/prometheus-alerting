@@ -7,6 +7,7 @@ import { RawQuery } from '@grafana/plugin-ui';
 import { Trans } from '@grafana/i18n';
 import { promqlGrammar, lokiGrammar } from '../../utils/prismGrammars';
 import { createExploreLink } from '../../../../utils/navigation';
+import { QueryPreviewPanel } from '../QueryPreviewPanel';
 
 interface Props {
   query: string;
@@ -48,6 +49,7 @@ export function QueryTab({ query, dataSourceUid }: Props) {
       <pre className={styles.codeBlock}>
         <RawQuery query={query} language={language} />
       </pre>
+      <QueryPreviewPanel dataSourceUid={dataSourceUid} expression={query} />
     </div>
   );
 }
