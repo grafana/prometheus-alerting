@@ -136,9 +136,9 @@ export function extractErrorMessage(err: unknown): string {
   }
 
   if (typeof err === 'object' && err !== null) {
-    // RTK Query error format: { data: { message: "..." } } or { data: "..." }
     const errorObj = err as Record<string, unknown>;
 
+    // RTK Query error format: { data: { message: "..." } } or { data: "..." }
     if (errorObj.data) {
       if (typeof errorObj.data === 'string') {
         return errorObj.data;
@@ -150,6 +150,28 @@ export function extractErrorMessage(err: unknown): string {
         }
         if (typeof dataObj.error === 'string') {
           return dataObj.error;
+        }
+      }
+    }
+
+    // Handle CUSTOM_ERROR format: { status: "CUSTOM_ERROR", error: { message: "..." } }
+    if (errorObj.status === 'CUSTOM_ERROR' && errorObj.error) {
+      // Recursively extract message from the nested error object
+      return extractErrorMessage(errorObj.error);
+    }
+
+    // Handle nested error property that might be an object
+    if (errorObj.error) {
+      if (typeof errorObj.error === 'string') {
+        return errorObj.error;
+      }
+      if (typeof errorObj.error === 'object' && errorObj.error !== null) {
+        const nestedError = errorObj.error as Record<string, unknown>;
+        if (typeof nestedError.message === 'string') {
+          return nestedError.message;
+        }
+        if (typeof nestedError.error === 'string') {
+          return nestedError.error;
         }
       }
     }

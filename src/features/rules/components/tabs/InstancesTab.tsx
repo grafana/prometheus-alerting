@@ -15,11 +15,17 @@ import {
 import { Trans, t } from '@grafana/i18n';
 import { PromAlert, PromAlertingRuleDTO } from '@grafana/external-rules/vanilla';
 
+import { InstancesFilters } from './InstancesFilters';
+import { useInstancesFilter } from './useInstancesFilter';
+
 interface Props {
   promRule: PromAlertingRuleDTO;
 }
 
 export function InstancesTab({ promRule }: Props) {
+  const alerts = promRule.alerts ?? [];
+  const { filterState, filteredAlerts, stateCounts, setSearchText, setStateFilter } = useInstancesFilter(alerts);
+
   const columns = useMemo<Array<Column<PromAlert>>>(
     () => [
       {
@@ -60,26 +66,53 @@ export function InstancesTab({ promRule }: Props) {
     []
   );
 
-  const alerts = promRule.alerts ?? [];
-
+  // Show empty state only if there are no alerts at all
   if (alerts.length === 0) {
     return <EmptyState variant="completed" message={t('rule-details.instances.empty', 'No active alert instances')} />;
   }
 
+  const hasActiveFilters = filterState.searchText.trim() !== '' || filterState.stateFilter !== 'all';
+
   return (
     <Box padding={2}>
+      {/* Filters */}
       <Box marginBottom={2}>
-        <Text variant="h6">
-          {t('rule-details.instances.count', '{{count}} active instance(s)', { count: alerts.length })}
+        <InstancesFilters
+          searchText={filterState.searchText}
+          stateFilter={filterState.stateFilter}
+          stateCounts={stateCounts}
+          onSearchChange={setSearchText}
+          onStateChange={setStateFilter}
+        />
+      </Box>
+
+      {/* Results count */}
+      <Box marginBottom={2}>
+        <Text variant="bodySmall" color="secondary">
+          {hasActiveFilters
+            ? t('rule-details.instances.count-filtered', '{{filtered}} of {{total}} instance(s)', {
+                filtered: filteredAlerts.length,
+                total: alerts.length,
+              })
+            : t('rule-details.instances.count', '{{count}} active instance(s)', { count: alerts.length })}
         </Text>
       </Box>
-      <InteractiveTable
-        columns={columns}
-        data={alerts}
-        getRowId={(alert, index) => `alert-${index}`}
-        renderExpandedRow={(alert) => <AlertInstanceDetails alert={alert} />}
-        showExpandAll={true}
-      />
+
+      {/* Table or empty state for filtered results */}
+      {filteredAlerts.length === 0 ? (
+        <EmptyState
+          variant="not-found"
+          message={t('rule-details.instances.no-match', 'No instances match the current filters')}
+        />
+      ) : (
+        <InteractiveTable
+          columns={columns}
+          data={filteredAlerts}
+          getRowId={(alert, index) => `alert-${index}`}
+          renderExpandedRow={(alert) => <AlertInstanceDetails alert={alert} />}
+          showExpandAll={true}
+        />
+      )}
     </Box>
   );
 }

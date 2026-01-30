@@ -12,7 +12,7 @@ export const YamlExportProvider: ExportProvider = {
   name: 'YAML',
   format: 'yaml',
   fileExtension: 'yaml',
-  mimeType: 'application/x-yaml',
+  mimeType: 'text/yaml',
 };
 
 export const JsonExportProvider: ExportProvider = {

@@ -29,6 +29,7 @@ import { groups } from '../../../utils/navigation';
 
 import { DraggableRulesTable, SwapOperation, applySwaps } from '../components/DraggableRulesTable';
 import { EvaluationIntervalInput } from '../components/EvaluationIntervalInput';
+import { useWaitForGroupConsistency } from '../hooks/useGroupConsistencyCheck';
 
 type GroupEditPageRouteParams = {
   dataSourceUid?: string;
@@ -159,10 +160,12 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
 
   const [upsertRuleGroup, { isLoading: isUpdating }] = useUpsertRuleGroupMutation();
   const [deleteRuleGroup, { isLoading: isDeleting }] = useDeleteRuleGroupMutation();
+  const { waitForGroupConsistency } = useWaitForGroupConsistency();
 
   const [swapOperations, setSwapOperations] = useState<SwapOperation[]>([]);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isWaitingForConsistency, setIsWaitingForConsistency] = useState(false);
 
   const defaultInterval = rulerGroup.interval ?? '1m';
 
@@ -224,6 +227,18 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
         }).unwrap();
       }
 
+      // Wait for Prometheus to reflect the changes (like Grafana core)
+      const shouldWaitForConsistency = isNamespaceChanged || isGroupRenamed || hasSwaps;
+      if (shouldWaitForConsistency) {
+        setIsWaitingForConsistency(true);
+        await waitForGroupConsistency({
+          dataSourceUid,
+          namespace: targetNamespace,
+          groupName: data.name,
+        });
+        setIsWaitingForConsistency(false);
+      }
+
       // Show success toast notification (like Grafana core)
       const appEvents = getAppEvents();
       appEvents.publish({
@@ -235,6 +250,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
       // Using replace() updates the URL without adding to history
       locationService.replace(groups.editPageLink(dataSourceUid, targetNamespace, data.name));
     } catch (error) {
+      setIsWaitingForConsistency(false);
       setSubmitError(error instanceof Error ? error.message : String(error));
     }
   };
@@ -247,14 +263,24 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
         groupName: originalGroupName,
       }).unwrap();
 
+      // Wait for Prometheus to reflect the deletion
+      setIsWaitingForConsistency(true);
+      await waitForGroupConsistency({
+        dataSourceUid,
+        namespace: originalNamespace,
+        groupName: originalGroupName,
+      });
+      setIsWaitingForConsistency(false);
+
       // Navigate back to rules list
       locationService.push(`${PLUGIN_BASE_URL}/${ROUTES.Rules}`);
     } catch (error) {
+      setIsWaitingForConsistency(false);
       setSubmitError(error instanceof Error ? error.message : String(error));
     }
   };
 
-  const isProcessing = isSubmitting || isUpdating || isDeleting;
+  const isProcessing = isSubmitting || isUpdating || isDeleting || isWaitingForConsistency;
 
   return (
     <>

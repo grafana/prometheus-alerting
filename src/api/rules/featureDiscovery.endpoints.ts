@@ -1,5 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+import { extractErrorMessage } from '../../utils/errors';
+
 import { DataSourceFeatures, discoverDataSourceFeatures } from './featureDiscovery';
 
 export const featureDiscoveryApi = createApi({
@@ -12,11 +14,10 @@ export const featureDiscoveryApi = createApi({
           const features = await discoverDataSourceFeatures(uid);
           return { data: features };
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
           return {
             error: {
               status: 'CUSTOM_ERROR',
-              error: errorMessage,
+              error: extractErrorMessage(error),
             } as const,
           };
         }

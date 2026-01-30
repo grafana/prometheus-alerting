@@ -12,23 +12,42 @@ interface DataSourceLoaderProps {
   rulesSourceIdentifier: DataSourceRulesSourceIdentifier;
   groupFilter?: string;
   namespaceFilter?: string;
+  /** When true, hide the datasource section if it has errors or no matching results */
+  hideOnEmptyOrError?: boolean;
 }
 
-export function DataSourceLoader({ rulesSourceIdentifier, groupFilter, namespaceFilter }: DataSourceLoaderProps) {
+export function DataSourceLoader({
+  rulesSourceIdentifier,
+  groupFilter,
+  namespaceFilter,
+  hideOnEmptyOrError = false,
+}: DataSourceLoaderProps) {
   const { uid, name } = rulesSourceIdentifier;
 
   // Run feature discovery
   const { data: features, isLoading, error } = useDiscoverFeaturesQuery({ uid });
 
   if (isLoading) {
+    // While loading, show skeleton only if not hiding on empty/error
+    // (we don't know yet if there will be results)
+    if (hideOnEmptyOrError) {
+      return null;
+    }
     return <DataSourceSection loader={<Skeleton width={250} height={16} />} uid={uid} name={name} />;
   }
 
   if (error) {
+    // Hide datasource with errors when filters are active
+    if (hideOnEmptyOrError) {
+      return null;
+    }
     return <DataSourceSection error={error} uid={uid} name={name} />;
   }
 
   if (!features) {
+    if (hideOnEmptyOrError) {
+      return null;
+    }
     return <DataSourceSection error="Unable to discover data source features" uid={uid} name={name} />;
   }
 
@@ -40,6 +59,7 @@ export function DataSourceLoader({ rulesSourceIdentifier, groupFilter, namespace
         rulerApiEnabled={features.rulerApiEnabled}
         groupFilter={groupFilter}
         namespaceFilter={namespaceFilter}
+        hideOnEmpty={hideOnEmptyOrError}
       />
     </DataSourceErrorBoundary>
   );

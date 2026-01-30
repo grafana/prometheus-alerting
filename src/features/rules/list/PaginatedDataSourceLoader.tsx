@@ -24,6 +24,8 @@ interface LoaderProps extends Required<Pick<DataSourceSectionProps, 'application
   rulerApiEnabled: boolean;
   groupFilter?: string;
   namespaceFilter?: string;
+  /** When true, return null instead of rendering when there are no matching results */
+  hideOnEmpty?: boolean;
 }
 
 export function PaginatedDataSourceLoader({
@@ -32,6 +34,7 @@ export function PaginatedDataSourceLoader({
   rulerApiEnabled,
   groupFilter,
   namespaceFilter,
+  hideOnEmpty = false,
 }: LoaderProps) {
   const key = `${rulesSourceIdentifier.uid}-${groupFilter}-${namespaceFilter}`;
 
@@ -44,6 +47,7 @@ export function PaginatedDataSourceLoader({
       rulerApiEnabled={rulerApiEnabled}
       groupFilter={groupFilter}
       namespaceFilter={namespaceFilter}
+      hideOnEmpty={hideOnEmpty}
     />
   );
 }
@@ -54,6 +58,7 @@ function PaginatedGroupsLoader({
   rulerApiEnabled,
   groupFilter,
   namespaceFilter,
+  hideOnEmpty = false,
 }: LoaderProps) {
   // If there are filters, we don't want to populate the cache to avoid performance issues
   // Filtering may trigger multiple HTTP requests, which would populate the cache with a lot of groups hurting performance
@@ -94,6 +99,11 @@ function PaginatedGroupsLoader({
 
   const hasNoRules = isEmpty(groups) && !isLoading;
   const groupsByNamespace = useMemo(() => groupBy(groups, 'file'), [groups]);
+
+  // Hide datasource section when filters are active and there are no matching results
+  if (hideOnEmpty && hasNoRules) {
+    return null;
+  }
 
   return (
     <DataSourceSection name={name} application={application} uid={uid} isLoading={isLoading} error={error}>

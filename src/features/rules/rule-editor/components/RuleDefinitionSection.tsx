@@ -5,6 +5,7 @@ import { DataSourceInstanceSettings } from '@grafana/data';
 import { t } from '@grafana/i18n';
 import { Field, Input, Stack, Alert } from '@grafana/ui';
 
+import { QueryPreviewPanel } from '../../components/QueryPreviewPanel';
 import { RuleFormValues } from '../types';
 import { RuleEditorSection } from './RuleEditorSection';
 import { CloudRulesSourcePicker } from './CloudRulesSourcePicker';
@@ -24,9 +25,9 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
   } = useFormContext<RuleFormValues>();
 
   // Use useWatch for better performance - single subscription instead of multiple
-  const [type, dataSourceUid] = useWatch<RuleFormValues, ['type', 'dataSourceUid']>({
+  const [type, dataSourceUid, expression] = useWatch<RuleFormValues, ['type', 'dataSourceUid', 'expression']>({
     control,
-    name: ['type', 'dataSourceUid'],
+    name: ['type', 'dataSourceUid', 'expression'],
   });
 
   const isRecording = isCloudRecordingRuleByType(type);
@@ -137,6 +138,11 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
             }}
           />
         </Field>
+
+        {/* Query Preview */}
+        {dataSourceUid && expression && (
+          <QueryPreviewPanel dataSourceUid={dataSourceUid} expression={expression} collapsible defaultCollapsed />
+        )}
       </Stack>
     </RuleEditorSection>
   );
