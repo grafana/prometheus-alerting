@@ -187,50 +187,47 @@ jobs:
         with:
           url: http://localhost:3000/login
 
-      - name: Wait for Mimir to load rules
+      - name: Wait for Mimir rules provisioner to complete
         run: |
-          echo "Waiting for Mimir to be ready..."
+          echo "Waiting for Mimir rules provisioner to complete..."
           for i in {1..60}; do
-            if curl -sf http://localhost:9009/ready > /dev/null 2>&1; then
-              echo "✓ Mimir is ready"
+            STATUS=$(docker inspect mimir-rules-provisioner --format='{{.State.Status}}' 2>/dev/null || echo "not_found")
+            EXIT_CODE=$(docker inspect mimir-rules-provisioner --format='{{.State.ExitCode}}' 2>/dev/null || echo "999")
+            
+            if [ "$STATUS" = "exited" ] && [ "$EXIT_CODE" = "0" ]; then
+              echo "✓ Rules provisioner completed successfully"
+              docker logs mimir-rules-provisioner 2>&1 | tail -10
               break
             fi
-            if [ $i -eq 1 ] || [ $((i % 10)) -eq 0 ]; then
-              echo "  Waiting for Mimir... (attempt $i/60)"
+            
+            if [ "$STATUS" = "exited" ] && [ "$EXIT_CODE" != "0" ]; then
+              echo "ERROR: Rules provisioner failed with exit code $EXIT_CODE"
+              docker logs mimir-rules-provisioner 2>&1
+              exit 1
             fi
+            
+            if [ $i -eq 1 ] || [ $((i % 10)) -eq 0 ]; then
+              echo "  Waiting for provisioner... (attempt $i/60, status: $STATUS)"
+            fi
+            
             if [ $i -eq 60 ]; then
-              echo "ERROR: Mimir not ready after 120s"
-              curl -v http://localhost:9009/ready
+              echo "ERROR: Provisioner did not complete after 120s"
+              docker logs mimir-rules-provisioner 2>&1
+              docker logs mimir-test 2>&1 | tail -50
               exit 1
             fi
             sleep 2
           done
           
-          echo "Waiting for Mimir Ruler API to load test rules..."
-          for i in {1..30}; do
-            RESPONSE=$(curl -sS http://localhost:9009/prometheus/config/v1/rules/e2e-test-namespace)
-            if echo "$RESPONSE" | grep -q "e2e-test-group"; then
-              echo "✓ Mimir Ruler API ready - e2e-test-group found"
-              exit 0
-            fi
-            if [ $i -eq 1 ] || [ $((i % 5)) -eq 0 ]; then
-              echo "  Waiting for rules to load... (attempt $i/30)"
-              if [ $i -eq 1 ]; then
-                echo "  First response: $RESPONSE"
-              fi
-            fi
-            sleep 2
-          done
-          
-          echo "ERROR: e2e-test-group not found in Mimir rules after 60s"
-          echo "Last response: $RESPONSE"
-          echo ""
-          echo "Checking all rules:"
-          curl -sS http://localhost:9009/prometheus/config/v1/rules
-          echo ""
-          echo "Checking Mimir logs:"
-          docker logs mimir-test 2>&1 | tail -50
-          exit 1
+          echo "Verifying rules are loaded in Mimir..."
+          RESPONSE=$(curl -sS -H 'Accept: application/yaml' http://localhost:9009/prometheus/config/v1/rules/e2e-test-namespace)
+          if echo "$RESPONSE" | grep -q "e2e-test-group"; then
+            echo "✓ e2e-test-group found in Mimir"
+          else
+            echo "ERROR: e2e-test-group not found"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
 
       - name: Setup Playwright with caching
         uses: ./.github/actions/setup-playwright-with-cache
