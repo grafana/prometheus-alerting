@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { DataSourceRuleIdentifier, isCloudRuleIdentifier } from '@grafana/external-rules';
 import { PromRuleDTO, PromRuleGroupDTO, RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
@@ -24,6 +24,9 @@ export interface RuleDetailsResult {
 
   loading: boolean;
   error?: unknown;
+
+  /** Refetch data from both APIs */
+  refetch: () => void;
 }
 
 export function useRuleDetails(identifier: DataSourceRuleIdentifier): RuleDetailsResult {
@@ -84,6 +87,14 @@ export function useRuleDetails(identifier: DataSourceRuleIdentifier): RuleDetail
   const loading = featuresLoading || promQuery.isLoading || (shouldFetchRulerData && rulerQuery.isLoading);
   const error = featuresError || promQuery.error || rulerQuery.error;
 
+  // Refetch function to manually trigger a refresh
+  const refetch = useCallback(() => {
+    promQuery.refetch();
+    if (shouldFetchRulerData) {
+      rulerQuery.refetch();
+    }
+  }, [promQuery, rulerQuery, shouldFetchRulerData]);
+
   return {
     promRule,
     promGroup,
@@ -95,5 +106,6 @@ export function useRuleDetails(identifier: DataSourceRuleIdentifier): RuleDetail
     hasRulerApi: shouldFetchRulerData,
     loading,
     error,
+    refetch,
   };
 }

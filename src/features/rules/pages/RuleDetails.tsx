@@ -1,13 +1,14 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { parseIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules';
 import type { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
-import { Alert, LoadingPlaceholder, Text } from '@grafana/ui';
+import { Alert, LoadingPlaceholder, Spinner, Stack, Text } from '@grafana/ui';
 import { PluginPage } from '@grafana/runtime';
-import { t } from '@grafana/i18n';
+import { Trans, t } from '@grafana/i18n';
 import { AlertLabels } from '@grafana/alerting/unstable';
 
 import { useRuleDetails } from '../hooks/useRuleDetails';
+import { useRuleCreationConsistencyCheck } from '../hooks/useRuleConsistencyCheck';
 import { RuleDetailsView } from '../components/RuleDetailsView';
 import { RuleDetailsTitle } from '../components/RuleDetailsTitle';
 import { RuleDetailsSubtitle } from '../components/RuleDetailsSubtitle';
@@ -37,7 +38,21 @@ function RuleDetails() {
     return parsed;
   }, [ruleIdentifier]);
 
-  const { promRule, rulerRule, promGroup, rulerGroup, loading, error, ...meta } = useRuleDetails(identifier);
+  const { promRule, rulerRule, promGroup, rulerGroup, loading, error, refetch, ...meta } = useRuleDetails(identifier);
+
+  // Check if the rule is newly created and not yet visible in Prometheus
+  // This happens due to eventual consistency between Ruler and Prometheus APIs
+  const isNewlyCreated = !loading && !promRule && !!rulerRule;
+  const { isConsistent, status: consistencyStatus } = useRuleCreationConsistencyCheck(
+    isNewlyCreated ? identifier : null
+  );
+
+  // Refetch when consistency check completes
+  useEffect(() => {
+    if (isNewlyCreated && isConsistent) {
+      refetch();
+    }
+  }, [isNewlyCreated, isConsistent, refetch]);
 
   const [deleteModal, showDeleteModal] = useDeleteRuleModal();
   const [exportingRule, setExportingRule] = useState<RulerRuleDTO | null>(null);
@@ -95,6 +110,32 @@ function RuleDetails() {
       <PluginPage>
         <Alert severity="error" title={t('rule-details.error.loading', 'Error loading rule')}>
           {extractErrorMessage(error)}
+        </Alert>
+      </PluginPage>
+    );
+  }
+
+  // Rule exists in Ruler but not yet in Prometheus (newly created, eventual consistency)
+  if (!promRule && rulerRule) {
+    return (
+      <PluginPage
+        pageNav={{
+          text: identifier.ruleName,
+        }}
+      >
+        <Alert
+          severity="info"
+          title={t('rule-details.consistency.pending-title', 'Rule is being propagated')}
+        >
+          <Stack direction="row" alignItems="center" gap={1}>
+            {consistencyStatus === 'checking' && <Spinner size="sm" />}
+            <span>
+              <Trans i18nKey="rule-details.consistency.pending-message">
+                This rule was recently created and is being propagated to the monitoring system.
+                This usually takes a few seconds. The page will update automatically.
+              </Trans>
+            </span>
+          </Stack>
         </Alert>
       </PluginPage>
     );

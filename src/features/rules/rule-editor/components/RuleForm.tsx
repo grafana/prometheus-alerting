@@ -11,8 +11,11 @@ import { Button, Stack, useStyles2 } from '@grafana/ui';
 
 import type { RulerRuleDTO } from '@grafana/external-rules/vanilla';
 import type { CloudRuleIdentifier } from '@grafana/external-rules';
+import { hashRulerRule } from '@grafana/external-rules/hashing';
+import { getRuleName } from '@grafana/external-rules/utils';
 
 import { rulerApi } from '../../../../api/rules/mimir.endpoints';
+import { rules as rulesNav } from '../../../../utils/navigation';
 
 const { useUpsertRuleGroupMutation } = rulerApi;
 
@@ -129,8 +132,20 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
       }).unwrap();
       console.log('API call successful:', result);
 
-      // Navigate back to rules list on success
-      locationService.push('/a/grafana-prometheusalerting-app/rules');
+      // Build the rule identifier for navigation
+      const ruleIdentifier: CloudRuleIdentifier = {
+        type: 'cloud',
+        uid: currentDataSourceUid,
+        namespace: values.namespace,
+        groupName: values.group,
+        ruleName: getRuleName(ruleDTO),
+        rulerRuleHash: hashRulerRule(ruleDTO),
+      };
+
+      // Navigate to rule details page (matches Grafana core behavior)
+      // For new rules, the details page will show a consistency warning
+      // while waiting for Prometheus to reflect the change
+      locationService.push(rulesNav.detailsPageLink(ruleIdentifier));
     } catch (error) {
       console.error('Failed to save rule:', error);
       // TODO: Show error notification

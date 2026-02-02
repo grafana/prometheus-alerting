@@ -46,9 +46,12 @@
     },
     "delete-rule": {
       "cancel": "Cancel",
+      "confirming": "Confirming...",
+      "consistency-message": "Waiting for the deletion to propagate. This ensures the rule list shows accurate data.",
+      "consistency-title": "Confirming deletion",
       "delete": "Delete",
       "deleting": "Deleting...",
-      "error": "Error: {{ error }}",
+      "error-title": "Delete failed",
       "message": "Are you sure you want to delete rule <1>{{ ruleName }}</1> from group <4>{{ groupName }}</4> in namespace <6>{{ namespace }}</6>?",
       "success": "Rule deleted successfully",
       "title": "Delete rule",
@@ -69,6 +72,7 @@
     "export": {
       "copy-code": "Copy code",
       "download": "Download",
+      "download-failed": "Download failed",
       "rule-title": "Export rule",
       "subtitle": "Select the format and download the file or copy the contents to clipboard",
       "title": "Export"
@@ -107,6 +111,8 @@
       "namespace": "Namespace",
       "not-found": "Group not found",
       "not-found-message": "The group \"{{groupName}}\" in namespace \"{{namespace}}\" could not be found.",
+      "pending-changes": "Pending changes",
+      "pending-changes-message": "Recent configuration changes may not be reflected yet. The view will update automatically.",
       "rules": "Rules",
       "subtitle": "View alert and recording rules in this evaluation group",
       "title": {
@@ -201,6 +207,18 @@
       "label-new-child-route": "New child route",
       "label-new-sibling-above": "New sibling above",
       "label-new-sibling-below": "New sibling below"
+    },
+    "query-preview": {
+      "error-title": "Query failed",
+      "loading": "Running query...",
+      "next-page": "Next page",
+      "no-data": "No data",
+      "page-counter": "{{start}} - {{end}} of {{total}}",
+      "previous-page": "Previous page",
+      "result-summary": "({{resultType}}, {{count}} results)",
+      "run-query": "Run query",
+      "series-label": "Series {{index}}",
+      "title": "Query Preview"
     },
     "routes": {
       "n-more-routes_one": "{{count}} additional routes",
@@ -778,6 +796,10 @@
     "yes": "Yes"
   },
   "rule-details": {
+    "consistency": {
+      "pending-message": "This rule was recently created and is being propagated to the monitoring system. This usually takes a few seconds. The page will update automatically.",
+      "pending-title": "Rule is being propagated"
+    },
     "details": {
       "annotations": "Annotations",
       "evaluation-behavior": "Evaluation Behavior",
@@ -807,11 +829,26 @@
       },
       "count_one": "{{count}} active instance(s)",
       "count_other": "{{count}} active instance(s)",
+      "count-filtered": "{{filtered}} of {{total}} instance(s)",
       "details": {
         "annotations": "Annotations",
         "value": "<0>Value:</0> {alert.value}"
       },
-      "empty": "No active alert instances"
+      "empty": "No active alert instances",
+      "filter": {
+        "search-placeholder": "Search by label",
+        "state-all": "All",
+        "state-all-count_one": "All ({{count}})",
+        "state-all-count_other": "All ({{count}})",
+        "state-firing": "Firing",
+        "state-firing-count_one": "Firing ({{count}})",
+        "state-firing-count_other": "Firing ({{count}})",
+        "state-label": "State",
+        "state-pending": "Pending",
+        "state-pending-count_one": "Pending ({{count}})",
+        "state-pending-count_other": "Pending ({{count}})"
+      },
+      "no-match": "No instances match the current filters"
     },
     "loading": "Loading rule details...",
     "metadata": {
