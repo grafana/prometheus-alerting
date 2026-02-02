@@ -357,14 +357,33 @@ export class RuleBuilder {
   /**
    * Create identifier for the TestEditRule (pre-provisioned in Mimir)
    * This rule exists in test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml
+   * 
+   * IMPORTANT: The hash must match the actual rule definition including labels and annotations
    */
   static createTestEditRuleIdentifier(): CloudRuleIdentifier {
-    return this.createMimirRuleIdentifier(
-      'e2e-test-namespace',
-      'e2e-test-group',
-      'TestEditRule',
-      'up == 0'
-    );
+    // Must match test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml exactly
+    const rule: RulerAlertingRuleDTO = {
+      alert: 'TestEditRule',
+      expr: 'up == 0',
+      for: '5m',
+      labels: {
+        severity: 'warning',
+        team: 'platform',
+      },
+      annotations: {
+        summary: 'Original summary for testing edit',
+        description: 'This rule is used for testing the edit functionality',
+      },
+    };
+
+    return {
+      type: 'cloud',
+      uid: TEST_MIMIR_DATASOURCE_UID,
+      namespace: 'e2e-test-namespace',
+      groupName: 'e2e-test-group',
+      ruleName: 'TestEditRule',
+      rulerRuleHash: hashRulerRule(rule),
+    };
   }
 
   /**
@@ -372,23 +391,49 @@ export class RuleBuilder {
    * This rule exists in test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml
    */
   static createTestCloneRuleIdentifier(): CloudRuleIdentifier {
-    return this.createMimirRuleIdentifier(
-      'e2e-test-namespace',
-      'e2e-test-group',
-      'TestCloneRule',
-      'vector(1) > 0'
-    );
+    // Must match test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml exactly
+    const rule: RulerAlertingRuleDTO = {
+      alert: 'TestCloneRule',
+      expr: 'vector(1) > 0',
+      for: '2m',
+      labels: {
+        severity: 'info',
+      },
+      annotations: {
+        summary: 'Rule to be cloned',
+      },
+    };
+
+    return {
+      type: 'cloud',
+      uid: TEST_MIMIR_DATASOURCE_UID,
+      namespace: 'e2e-test-namespace',
+      groupName: 'e2e-test-group',
+      ruleName: 'TestCloneRule',
+      rulerRuleHash: hashRulerRule(rule),
+    };
   }
 
   /**
    * Create identifier for the test recording rule (pre-provisioned in Mimir)
    */
   static createTestRecordingRuleIdentifier(): CloudRuleIdentifier {
-    return this.createMimirRuleIdentifier(
-      'e2e-test-namespace',
-      'e2e-test-group',
-      'test:recording:rule',
-      'sum(up)'
-    );
+    // Must match test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml exactly
+    const rule: RulerRecordingRuleDTO = {
+      record: 'test:recording:rule',
+      expr: 'sum(up)',
+      labels: {
+        environment: 'test',
+      },
+    };
+
+    return {
+      type: 'cloud',
+      uid: TEST_MIMIR_DATASOURCE_UID,
+      namespace: 'e2e-test-namespace',
+      groupName: 'e2e-test-group',
+      ruleName: 'test:recording:rule',
+      rulerRuleHash: hashRulerRule(rule),
+    };
   }
 }

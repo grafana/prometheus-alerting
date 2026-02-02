@@ -153,17 +153,36 @@ export class RuleEditorPage {
     // Click to open the dropdown
     await combobox.click();
 
-    // Look for the option with the data source name
-    // The option should be in a listbox or menu that appears
-    const option = this.page.getByRole('option', { name: dataSourceName });
+    // Wait for dropdown to appear - Grafana Combobox uses either role="option" or role="menuitem"
+    // Try multiple selectors to find the option
+    const optionByRole = this.page.getByRole('option', { name: dataSourceName });
+    const optionByMenuItem = this.page.getByRole('menuitem', { name: dataSourceName });
+    const optionByListbox = this.page.locator('[role="listbox"]').getByText(dataSourceName, { exact: true });
+    const optionByText = this.page.locator('[data-testid="data-source-card"]').filter({ hasText: dataSourceName });
 
-    // Wait for the option to be visible and click it
-    await option.waitFor({ state: 'visible', timeout: 3000 });
-    await option.click();
+    // Try each selector with a short timeout
+    let found = false;
+    for (const option of [optionByRole, optionByMenuItem, optionByListbox, optionByText]) {
+      try {
+        await option.waitFor({ state: 'visible', timeout: 1500 });
+        await option.click();
+        found = true;
+        break;
+      } catch {
+        // Continue to next selector
+      }
+    }
+
+    if (!found) {
+      // Last resort: type in the combobox and press Enter
+      await combobox.fill(dataSourceName);
+      await this.page.waitForTimeout(500);
+      await combobox.press('Enter');
+    }
 
     // Wait for query editor (Monaco editor) to load after selection
     const queryField = this.pageContent.getByRole('textbox', { name: /Editor content/i });
-    await queryField.waitFor({ state: 'visible', timeout: 3000 });
+    await queryField.waitFor({ state: 'visible', timeout: 5000 });
   }
 
   /**

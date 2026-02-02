@@ -60,6 +60,25 @@ export class DeleteRuleModal {
   }
 
   /**
+   * Check if the modal is waiting for consistency (showing "Confirming...")
+   */
+  async isConfirming(): Promise<boolean> {
+    const text = await this.deleteButton.textContent();
+    return text?.toLowerCase().includes('confirming') ?? false;
+  }
+
+  /**
+   * Get the consistency info alert if visible
+   */
+  async getConsistencyMessage(): Promise<string | null> {
+    const consistencyAlert = this.modal.getByRole('alert').filter({ hasText: /confirming deletion|propagate/i });
+    if (await consistencyAlert.isVisible()) {
+      return await consistencyAlert.textContent();
+    }
+    return null;
+  }
+
+  /**
    * Check if an error is displayed
    */
   async hasError(): Promise<boolean> {

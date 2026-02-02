@@ -294,6 +294,28 @@ export class RuleDetailsPage {
   }
 
   /**
+   * Check if the page shows a consistency/propagation warning
+   * This appears when a rule is newly created and not yet visible in Prometheus
+   */
+  async hasConsistencyWarning(): Promise<boolean> {
+    const pageContent = this.page.locator('#pageContent');
+    const consistencyAlert = pageContent.getByRole('alert').filter({ hasText: /propagat|being propagated/i });
+    return await consistencyAlert.isVisible();
+  }
+
+  /**
+   * Wait for the consistency warning to disappear (rule is now consistent)
+   * @param timeout Maximum time to wait in milliseconds (default: 120000 = 2 minutes)
+   */
+  async waitForConsistency(timeout = 120000): Promise<void> {
+    const pageContent = this.page.locator('#pageContent');
+    const consistencyAlert = pageContent.getByRole('alert').filter({ hasText: /propagat|being propagated/i });
+    
+    // Wait for the alert to disappear
+    await expect(consistencyAlert).not.toBeVisible({ timeout });
+  }
+
+  /**
    * Check if only the "Copy Link" action is available (read-only mode)
    */
   async isReadOnlyMode(): Promise<boolean> {
