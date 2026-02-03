@@ -46,5 +46,19 @@ export default defineConfig([
       '@grafana/i18n/no-translation-top-level': 'error',
     },
   },
+  {
+    name: 'grafana/i18n-test-overrides',
+    files: [
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/test/**/*.ts',
+      '**/test/**/*.tsx',
+      '**/*FormSchema.ts',
+      '**/*Schema.ts',
+    ],
+    rules: {
+      '@grafana/i18n/no-untranslated-strings': 'off',
+    },
+  },
   ...baseConfig,
 ]);
