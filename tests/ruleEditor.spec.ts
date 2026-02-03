@@ -37,9 +37,9 @@ test.describe('RuleEditor Page - E2E', () => {
       // Add annotation
       await ruleEditorPage.addAnnotation('summary', 'High CPU usage detected');
 
-      // Save and verify navigation
+      // Save and verify navigation to rule details page
       await ruleEditorPage.clickSave();
-      await page.waitForURL('**/rules', { timeout: 5000 });
+      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
     });
 
     test('should edit an existing alerting rule', async ({ ruleEditorPage, page }) => {
@@ -54,14 +54,14 @@ test.describe('RuleEditor Page - E2E', () => {
 
       // Modify name
       await ruleEditorPage.fillRuleName('TestEditRule_Modified');
-      
+
       // Edit labels
       const labelsModal = await ruleEditorPage.openLabelsModal();
       await labelsModal.editLabel('severity', 'critical');
       await labelsModal.save();
 
       await ruleEditorPage.clickSave();
-      await page.waitForURL('**/rules', { timeout: 5000 });
+      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
     });
 
     test('should clone an existing alerting rule', async ({ ruleEditorPage, page }) => {
@@ -79,7 +79,7 @@ test.describe('RuleEditor Page - E2E', () => {
 
       await ruleEditorPage.fillRuleName('TestCloneRule_Cloned');
       await ruleEditorPage.clickSave();
-      await page.waitForURL('**/rules', { timeout: 5000 });
+      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
     });
   });
 
@@ -106,7 +106,7 @@ test.describe('RuleEditor Page - E2E', () => {
       expect(await ruleEditorPage.hasAnnotationsSection()).toBe(false);
 
       await ruleEditorPage.clickSave();
-      await page.waitForURL('**/rules', { timeout: 5000 });
+      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
     });
 
     test('should edit an existing recording rule', async ({ ruleEditorPage, page }) => {
@@ -119,14 +119,14 @@ test.describe('RuleEditor Page - E2E', () => {
 
       // Modify name
       await ruleEditorPage.fillRuleName('test:recording:rule_modified');
-      
+
       // Edit labels
       const labelsModal = await ruleEditorPage.openLabelsModal();
       await labelsModal.editLabel('environment', 'production');
       await labelsModal.save();
 
       await ruleEditorPage.clickSave();
-      await page.waitForURL('**/rules', { timeout: 5000 });
+      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
     });
 
     test('should clone an existing recording rule', async ({ ruleEditorPage, page }) => {
@@ -141,7 +141,7 @@ test.describe('RuleEditor Page - E2E', () => {
 
       await ruleEditorPage.fillRuleName('test:recording:rule_cloned');
       await ruleEditorPage.clickSave();
-      await page.waitForURL('**/rules', { timeout: 5000 });
+      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
     });
   });
 
@@ -156,9 +156,9 @@ test.describe('RuleEditor Page - E2E', () => {
 
       const labelsModal = await ruleEditorPage.openLabelsModal();
       await labelsModal.addLabels({ severity: 'warning', team: 'backend' });
-      
+
       expect(await labelsModal.getLabelCount()).toBe(2);
-      
+
       await labelsModal.save();
     });
 
@@ -169,7 +169,7 @@ test.describe('RuleEditor Page - E2E', () => {
       await ruleEditorPage.waitForLoad();
 
       const labelsModal = await ruleEditorPage.openLabelsModal();
-      
+
       // Edit the 'severity' label value
       await labelsModal.editLabel('severity', 'critical');
       await labelsModal.save();
@@ -185,14 +185,14 @@ test.describe('RuleEditor Page - E2E', () => {
 
       const labelsModal = await ruleEditorPage.openLabelsModal();
       await labelsModal.addLabels({ severity: 'warning', team: 'backend', env: 'prod' });
-      
+
       expect(await labelsModal.getLabelCount()).toBe(3);
-      
+
       // Remove the 'env' label
       await labelsModal.removeLabel('env');
-      
+
       expect(await labelsModal.getLabelCount()).toBe(2);
-      
+
       await labelsModal.save();
     });
 
@@ -291,7 +291,7 @@ test.describe('RuleEditor Page - E2E', () => {
       // Should show validation error and not navigate away
       await page.waitForTimeout(500);
       expect(page.url()).toContain('/new');
-      
+
       // Verify error message appears (form validation should prevent submission)
       const errorAlert = page.getByRole('alert').filter({ hasText: /required/i });
       const hasError = await errorAlert.isVisible().catch(() => false);
@@ -314,7 +314,7 @@ test.describe('RuleEditor Page - E2E', () => {
       // Should show validation error and not navigate away
       await page.waitForTimeout(500);
       expect(page.url()).toContain('/new');
-      
+
       // Verify error message appears
       const errorAlert = page.getByRole('alert').filter({ hasText: /required|expression/i });
       const hasError = await errorAlert.isVisible().catch(() => false);
