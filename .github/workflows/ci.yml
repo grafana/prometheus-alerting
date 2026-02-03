@@ -137,7 +137,6 @@ jobs:
         uses: grafana/plugin-actions/e2e-version@main # zizmor: ignore[unpinned-uses] provided by grafana
         with:
           version-resolver-type: plugin-grafana-dependency
-          skip-grafana-react-19-preview-image: true
 
   playwright-tests:
     needs: [resolve-versions, build]
@@ -193,23 +192,23 @@ jobs:
           for i in {1..60}; do
             STATUS=$(docker inspect mimir-rules-provisioner --format='{{.State.Status}}' 2>/dev/null || echo "not_found")
             EXIT_CODE=$(docker inspect mimir-rules-provisioner --format='{{.State.ExitCode}}' 2>/dev/null || echo "999")
-            
+
             if [ "$STATUS" = "exited" ] && [ "$EXIT_CODE" = "0" ]; then
               echo "✓ Rules provisioner completed successfully"
               docker logs mimir-rules-provisioner 2>&1 | tail -10
               break
             fi
-            
+
             if [ "$STATUS" = "exited" ] && [ "$EXIT_CODE" != "0" ]; then
               echo "ERROR: Rules provisioner failed with exit code $EXIT_CODE"
               docker logs mimir-rules-provisioner 2>&1
               exit 1
             fi
-            
+
             if [ $i -eq 1 ] || [ $((i % 10)) -eq 0 ]; then
               echo "  Waiting for provisioner... (attempt $i/60, status: $STATUS)"
             fi
-            
+
             if [ $i -eq 60 ]; then
               echo "ERROR: Provisioner did not complete after 120s"
               docker logs mimir-rules-provisioner 2>&1
@@ -218,7 +217,7 @@ jobs:
             fi
             sleep 2
           done
-          
+
           echo "Verifying rules are loaded in Mimir..."
           RESPONSE=$(curl -sS -H 'Accept: application/yaml' http://localhost:9009/prometheus/config/v1/rules/e2e-test-namespace)
           if echo "$RESPONSE" | grep -q "e2e-test-group"; then
