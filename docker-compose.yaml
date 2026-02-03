@@ -1,3 +1,7 @@
+networks:
+  monitoring:
+    driver: bridge
+
 services:
   grafana:
     extends:
@@ -7,6 +11,8 @@ services:
       - prometheus
       - alertmanager
       - mimir
+    networks:
+      - monitoring
 
   prometheus:
     image: quay.io/prometheus/prometheus:v3.0.0
@@ -21,6 +27,8 @@ services:
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-lifecycle'
+    networks:
+      - monitoring
 
   alertmanager:
     image: prom/alertmanager:latest
@@ -30,13 +38,15 @@ services:
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
+    networks:
+      - monitoring
 
   minio:
     image: minio/minio:latest
     container_name: minio-test
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - '9000:9000'
+      - '9001:9001'
     environment:
       MINIO_ROOT_USER: mimir
       MINIO_ROOT_PASSWORD: mimirmimir
@@ -45,10 +55,12 @@ services:
       - type: tmpfs
         target: /data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ['CMD', 'mc', 'ready', 'local']
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - monitoring
 
   minio-init:
     image: minio/mc:latest
@@ -63,12 +75,14 @@ services:
       mc mb myminio/mimir-blocks --ignore-existing;
       exit 0;
       "
+    networks:
+      - monitoring
 
   mimir:
     image: grafana/mimir:latest
     container_name: mimir-test
     ports:
-      - "9009:9009"
+      - '9009:9009'
     volumes:
       - ./test-data/mimir:/etc/mimir:ro
       - type: tmpfs
@@ -81,6 +95,8 @@ services:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+    networks:
+      - monitoring
 
   mimir-rules-provisioner:
     image: curlimages/curl:latest
@@ -89,6 +105,8 @@ services:
       - mimir
     volumes:
       - ./test-data/mimir/rules:/rules:ro
+    networks:
+      - monitoring
     command:
       - sh
       - -c
@@ -109,7 +127,7 @@ services:
           fi
           sleep 2
         done
-        
+
         echo 'Waiting for Mimir Ruler API to be available...'
         for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
           RESPONSE=$$(curl -sS -H 'Accept: application/yaml' http://mimir:9009/prometheus/config/v1/rules/e2e-test-namespace 2>&1)
