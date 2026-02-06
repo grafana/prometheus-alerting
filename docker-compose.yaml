@@ -105,44 +105,8 @@ services:
       - mimir
     volumes:
       - ./test-data/mimir/rules:/rules:ro
+      - ./test-data/mimir/provision-rules.sh:/provision-rules.sh:ro
     networks:
       - monitoring
-    command:
-      - sh
-      - -c
-      - |
-        echo 'Waiting for Mimir to be ready...'
-        for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
-          if curl -sf http://mimir:9009/ready > /dev/null 2>&1; then
-            READY_MSG=$$(curl -s http://mimir:9009/ready)
-            if echo "$$READY_MSG" | grep -qv "Ingester not ready"; then
-              echo "✓ Mimir is ready"
-              break
-            fi
-            echo "  Mimir starting... ($$READY_MSG)"
-          fi
-          if [ $$i -eq 30 ]; then
-            echo "ERROR: Mimir not ready after 60s"
-            exit 1
-          fi
-          sleep 2
-        done
-
-        echo 'Waiting for Mimir Ruler API to be available...'
-        for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
-          RESPONSE=$$(curl -sS -H 'Accept: application/yaml' http://mimir:9009/prometheus/config/v1/rules/e2e-test-namespace 2>&1)
-          if echo "$$RESPONSE" | grep -q 'e2e-test-group'; then
-            echo '✓ Rules already provisioned.'
-            exit 0
-          fi
-          if echo "$$RESPONSE" | grep -q 'empty ring'; then
-            echo "  Waiting for ruler to be ready... (attempt $$i/30)"
-            sleep 2
-            continue
-          fi
-          echo "Attempting to provision rules (attempt $$i/30)..."
-          curl -X POST -H 'Content-Type: application/yaml' --data-binary @/rules/e2e-test-namespace/e2e-test-group.yaml http://mimir:9009/prometheus/config/v1/rules/e2e-test-namespace
-          sleep 2
-        done
-        echo 'ERROR: Failed to provision Mimir rules after 60s'
-        exit 1
+    restart: on-failure
+    command: ['/provision-rules.sh']
