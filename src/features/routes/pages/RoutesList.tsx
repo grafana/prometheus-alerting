@@ -152,21 +152,23 @@ function RoutesPage() {
             />
           }
         >
-          <div>
-            <RouteCard
-              currentRoute={routeTree!}
-              numberOfMatchingInstances={
-                isLoadingAlerts ? undefined : getRouteMatchCount(matchingCounts, routeTree!.id)
-              }
-              matchingCounts={isLoadingAlerts ? undefined : matchingCounts}
-              isDefaultPolicy={true}
-              onRouteClick={handleRouteClick}
-              focussedRouteID={selectedRoute?.id}
-              onAddPolicy={canEdit ? handleAddPolicy : undefined}
-              onDeletePolicy={canEdit ? handleDeletePolicy : undefined}
-              readOnly={!canEdit}
-            />
-          </div>
+          {routeTree && (
+            <div>
+              <RouteCard
+                currentRoute={routeTree}
+                numberOfMatchingInstances={
+                  isLoadingAlerts ? undefined : getRouteMatchCount(matchingCounts, routeTree.id)
+                }
+                matchingCounts={isLoadingAlerts ? undefined : matchingCounts}
+                isDefaultPolicy={true}
+                onRouteClick={handleRouteClick}
+                focussedRouteID={selectedRoute?.id}
+                onAddPolicy={canEdit ? handleAddPolicy : undefined}
+                onDeletePolicy={canEdit ? handleDeletePolicy : undefined}
+                readOnly={!canEdit}
+              />
+            </div>
+          )}
         </ViewState>
       </div>
       {/* Show drawer for viewing/editing selected route OR adding new route */}

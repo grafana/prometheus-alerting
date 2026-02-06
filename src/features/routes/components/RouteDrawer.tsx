@@ -70,7 +70,7 @@ function RouteDetails({ route, onReceiverClick }: RouteDetailsProps) {
       {route.receiver && (
         <Section title={t('routes.receiver-label', 'Receiver')}>
           {onReceiverClick ? (
-            <TextLink color="link" onClick={() => onReceiverClick(route.receiver!)} href="#">
+            <TextLink color="link" onClick={() => route.receiver && onReceiverClick(route.receiver)} href="#">
               {route.receiver}
             </TextLink>
           ) : (
@@ -236,7 +236,7 @@ export function RouteDrawer({
     ) : undefined;
 
   // For add mode, use a blank route as template
-  const routeForForm = isAddMode ? ({ ...emptyRoute, id: '' } as RouteWithID) : route!;
+  const routeForForm = isAddMode ? ({ ...emptyRoute, id: '' } as RouteWithID) : route;
 
   return (
     <DrawerWithFooter
@@ -261,14 +261,14 @@ export function RouteDrawer({
             <>Instances</>
           )}
         </TabContent>
-      ) : (
+      ) : routeForForm ? (
         <PolicyEditForm
           route={routeForForm}
           onSubmit={handleSave}
           onCancel={handleCancelEdit}
           isSubmitting={isUpdating || isAdding}
         />
-      )}
+      ) : null}
 
       <ConfirmModal
         isOpen={showDeleteConfirm}

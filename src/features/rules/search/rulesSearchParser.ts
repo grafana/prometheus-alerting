@@ -37,7 +37,7 @@ export function getSearchFilterFromQuery(query: string): RulesFilter {
     filter.dataSourceNames = [];
     datasourceMatches.forEach((match) => {
       const value = match[1] || match[2]; // Quoted or unquoted
-      filter.dataSourceNames!.push(value);
+      filter.dataSourceNames?.push(value);
       processedQuery = processedQuery.replace(match[0], ' ');
     });
   }
@@ -48,7 +48,7 @@ export function getSearchFilterFromQuery(query: string): RulesFilter {
     filter.labels = [];
     labelMatches.forEach((match) => {
       const value = match[1] || match[2];
-      filter.labels!.push(value);
+      filter.labels?.push(value);
       processedQuery = processedQuery.replace(match[0], ' ');
     });
   }

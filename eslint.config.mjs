@@ -60,5 +60,15 @@ export default defineConfig([
       '@grafana/i18n/no-untranslated-strings': 'off',
     },
   },
+  {
+    name: 'grafana/typescript-safety',
+    files: ['src/**/*.{ts,tsx}', 'packages/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.ts', '**/*.test.tsx', '**/test/**/*.ts', '**/test/**/*.tsx'],
+    rules: {
+      // Disallow non-null assertions (!) - they bypass TypeScript's null checking
+      // Use type guards (if (value)) or optional chaining (?.) instead
+      '@typescript-eslint/no-non-null-assertion': 'error',
+    },
+  },
   ...baseConfig,
 ]);

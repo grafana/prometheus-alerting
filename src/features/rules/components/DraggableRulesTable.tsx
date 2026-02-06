@@ -132,13 +132,14 @@ export function DraggableRulesTable({ rules, groupInterval, onSwap }: DraggableR
         return;
       }
 
-      const swapOperation: SwapOperation = [result.source.index, result.destination.index];
+      const destinationIndex = result.destination.index;
+      const swapOperation: SwapOperation = [result.source.index, destinationIndex];
       onSwap(swapOperation);
 
       // Re-order the rules list for the UI rendering
       const newOrderedRules = produce(rulesList, (draft) => {
         const [item] = draft.splice(result.source.index, 1);
-        draft.splice(result.destination!.index, 0, item);
+        draft.splice(destinationIndex, 0, item);
       });
       setRulesList(newOrderedRules);
     },

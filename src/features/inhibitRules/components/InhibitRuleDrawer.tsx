@@ -26,9 +26,9 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
         <KeyValuePair
           label={t('inhibit-rules.drawer.source-matchers', 'Source Matchers')}
           value={
-            hasSourceMatchers ? (
+            hasSourceMatchers && inhibitRule.source_matchers ? (
               <Stack direction="row" gap={0.5} wrap="wrap">
-                {inhibitRule.source_matchers!.map((matcher, idx) => (
+                {inhibitRule.source_matchers.map((matcher, idx) => (
                   <AlertLabel key={`source-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
                 ))}
               </Stack>
@@ -42,9 +42,9 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
         <KeyValuePair
           label={t('inhibit-rules.drawer.target-matchers', 'Target Matchers')}
           value={
-            hasTargetMatchers ? (
+            hasTargetMatchers && inhibitRule.target_matchers ? (
               <Stack direction="row" gap={0.5} wrap="wrap">
-                {inhibitRule.target_matchers!.map((matcher, idx) => (
+                {inhibitRule.target_matchers.map((matcher, idx) => (
                   <AlertLabel key={`target-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
                 ))}
               </Stack>
@@ -55,12 +55,12 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
         />
 
         {/* Equal labels */}
-        {hasEqualLabels && (
+        {hasEqualLabels && inhibitRule.equal && (
           <KeyValuePair
             label={t('inhibit-rules.drawer.equal', 'Equal Labels')}
             value={
               <Stack direction="row" gap={0.5} wrap="wrap">
-                {inhibitRule.equal!.map((label, idx) => (
+                {inhibitRule.equal.map((label, idx) => (
                   <AlertLabel key={`equal-${idx}`} value={label} colorBy="value" />
                 ))}
               </Stack>

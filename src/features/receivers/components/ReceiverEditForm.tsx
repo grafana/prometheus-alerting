@@ -328,6 +328,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
 
   // Select field
   if (option.element === 'select' && option.selectOptions) {
+    const selectOptions = option.selectOptions;
     return (
       <Field label={option.label} description={option.description}>
         <Controller
@@ -335,7 +336,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
           control={control}
           render={({ field: { onChange, value } }) => (
             <Combobox
-              options={option.selectOptions!.map((opt) => ({ label: opt.label, value: opt.value }))}
+              options={selectOptions.map((opt) => ({ label: opt.label, value: opt.value }))}
               value={value as string}
               onChange={(selected) => onChange(selected?.value ?? '')}
             />

@@ -214,15 +214,15 @@ function SilenceForm() {
     if (data.timeMode === 'relative') {
       // Calculate absolute times from relative duration
       const startDate = new Date();
-      const durationMs = parsePrometheusDuration(data.duration!);
+      const durationMs = data.duration ? parsePrometheusDuration(data.duration) : 0;
       const endDate = new Date(startDate.getTime() + durationMs);
 
       startsAt = startDate.toISOString();
       endsAt = endDate.toISOString();
     } else {
       // Use absolute times
-      startsAt = new Date(data.startsAt!).toISOString();
-      endsAt = new Date(data.endsAt!).toISOString();
+      startsAt = data.startsAt ? new Date(data.startsAt).toISOString() : new Date().toISOString();
+      endsAt = data.endsAt ? new Date(data.endsAt).toISOString() : new Date().toISOString();
     }
 
     const postableData: PostableSilence = {
