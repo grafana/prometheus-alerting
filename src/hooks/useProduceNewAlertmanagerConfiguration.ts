@@ -1,5 +1,6 @@
 import { Action } from '@reduxjs/toolkit';
 import reduceReducers from 'reduce-reducers';
+import { defaultsDeep } from 'lodash';
 
 import { timeIntervalsReducer } from '../reducers/alertmanager/timeIntervals';
 import { routesReducer } from '../reducers/alertmanager/routes';
@@ -60,10 +61,8 @@ export function useProduceNewAlertmanagerConfiguration() {
 
     // merge currect config with initial configuration so we can send fields that may not be configured yet but are expected by the API
     // this may happen for example when a new Mimir configuration is created for a tenant – it will not have any routes defined by requires a route property when posting the configuration
-    const initialConfiguration = {
-      ...currentConfig,
-      ...initialAlertmanagerConfiguration,
-    };
+    // NOTE: We preserve currentConfig values and only use initialAlertmanagerConfiguration as fallback for missing fields
+    const initialConfiguration = defaultsDeep({}, currentConfig, initialAlertmanagerConfiguration);
 
     // Apply the reducer to produce the new configuration
     const newConfig = configurationReducer(initialConfiguration, action);
