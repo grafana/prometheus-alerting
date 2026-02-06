@@ -9,6 +9,7 @@ import { prometheusHandlers } from './prometheus';
 import { featureDiscoveryHandlers } from './feature-discovery';
 import { datasourcesHandlers } from './datasources';
 import { alertmanagerHandlers } from './alertmanager';
+import { mimirAlertmanagerHandlers } from './mimir-alertmanager';
 
 /**
  * Catch-all handler to prevent ECONNREFUSED errors from unhandled requests.
@@ -27,5 +28,6 @@ export const allHandlers = [
   ...featureDiscoveryHandlers,
   ...datasourcesHandlers,
   ...alertmanagerHandlers,
+  ...mimirAlertmanagerHandlers,
   ...catchAllHandlers,
 ];

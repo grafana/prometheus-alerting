@@ -34,8 +34,8 @@ export const mockPrometheusDs: Partial<DataSourceInstanceSettings> = {
  * A mock Mimir datasource with ruler API enabled
  */
 export const mockMimirDs: Partial<DataSourceInstanceSettings> = {
-  uid: 'mimir-1',
-  name: 'Mimir',
+  uid: 'test-mimir-uid',
+  name: 'Test Mimir',
   type: 'prometheus',
   meta: {
     id: 'prometheus',
@@ -55,7 +55,8 @@ export const mockMimirDs: Partial<DataSourceInstanceSettings> = {
   },
   jsonData: {
     manageAlerts: true,
-  },
+    implementation: 'mimir',
+  } as any,
 };
 
 /**

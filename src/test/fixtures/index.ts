@@ -7,3 +7,4 @@
 
 export * from './rule-groups';
 export * from './datasources';
+export * from './alertmanager-config';

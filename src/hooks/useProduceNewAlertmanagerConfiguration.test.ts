@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
 
@@ -97,7 +97,10 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     };
 
     const [produceNewConfig] = result.current;
-    await produceNewConfig(addTimeInterval({ interval: newTimeInterval }));
+
+    await act(async () => {
+      await produceNewConfig(addTimeInterval({ interval: newTimeInterval }));
+    });
 
     // Wait for the POST request to complete
     await waitFor(() => {
@@ -139,11 +142,13 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     const [produceNewConfig] = result.current;
 
     // Act: Add a new time interval
-    await produceNewConfig(
-      addTimeInterval({
-        interval: { name: 'new-interval', time_intervals: [] },
-      })
-    );
+    await act(async () => {
+      await produceNewConfig(
+        addTimeInterval({
+          interval: { name: 'new-interval', time_intervals: [] },
+        })
+      );
+    });
 
     await waitFor(() => {
       expect(result.current[1].isSuccess).toBe(true);
@@ -186,11 +191,13 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     const [produceNewConfig] = result.current;
 
     // Act: Add a time interval to an empty config
-    await produceNewConfig(
-      addTimeInterval({
-        interval: { name: 'first-interval', time_intervals: [] },
-      })
-    );
+    await act(async () => {
+      await produceNewConfig(
+        addTimeInterval({
+          interval: { name: 'first-interval', time_intervals: [] },
+        })
+      );
+    });
 
     await waitFor(() => {
       expect(result.current[1].isSuccess).toBe(true);
@@ -236,11 +243,13 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     const [produceNewConfig] = result.current;
 
     // Act: Add a time interval
-    await produceNewConfig(
-      addTimeInterval({
-        interval: { name: 'new-interval', time_intervals: [] },
-      })
-    );
+    await act(async () => {
+      await produceNewConfig(
+        addTimeInterval({
+          interval: { name: 'new-interval', time_intervals: [] },
+        })
+      );
+    });
 
     await waitFor(() => {
       expect(result.current[1].isSuccess).toBe(true);
