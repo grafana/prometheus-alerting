@@ -12,11 +12,15 @@ import { ViewState } from '../../../components/ViewState';
 import { testIds } from '../../../components/testIds';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import { useAlertGroups } from '../hooks/useAlertGroups';
+import { useAlertsFilters } from '../hooks/useAlertsFilters';
 import { AlertStateBadge } from '../components/AlertStateBadge';
 import { AlertStateCounts } from '../components/AlertStateCounts';
+import { AlertsFilters } from '../components/AlertsFilters';
 
 function AlertsPage() {
   const { alertGroups, isLoading, isSuccess, error } = useAlertGroups();
+  const { filters, actions, applyFilters } = useAlertsFilters();
+  const filteredGroups = applyFilters(alertGroups);
 
   const columns = useMemo<Array<Column<AlertGroup>>>(
     () => [
@@ -48,11 +52,12 @@ function AlertsPage() {
   return (
     <AlertmanagerPage subTitle={t('pages.alerts.subtitle', 'Alert instances grouped by Alertmanager')}>
       <div data-testid={testIds.alerts.container}>
+        <AlertsFilters filters={filters} actions={actions} alertGroups={alertGroups} />
         <ViewState
           isLoading={isLoading}
           isSuccess={isSuccess}
           error={error}
-          isEmpty={alertGroups.length === 0}
+          isEmpty={filteredGroups.length === 0}
           loading={
             <div>
               <Skeleton height={50} style={{ marginBottom: '10px' }} />
@@ -71,7 +76,7 @@ function AlertsPage() {
         >
           <InteractiveTable<AlertGroup>
             columns={columns}
-            data={alertGroups}
+            data={filteredGroups}
             getRowId={(_group, index) => String(index)}
             pageSize={DEFAULT_PAGE_SIZE}
             renderExpandedRow={(group) => <AlertGroupExpansion original={group} />}
