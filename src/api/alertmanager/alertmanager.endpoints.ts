@@ -91,7 +91,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         body: postableSilence,
         dataSourceUID,
       }),
-      invalidatesTags: ['Silences'],
+      invalidatesTags: ['Silences', 'AlertGroups'],
       responseSchema: PostSilencesApiResponseSchema,
     }),
     getSilence: build.query<GetSilenceApiResponse, WithDataSourceInformation<GetSilenceApiArg>>({
@@ -108,7 +108,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         method: 'DELETE',
         dataSourceUID,
       }),
-      invalidatesTags: ['Silences'],
+      invalidatesTags: ['Silences', 'AlertGroups'],
     }),
     getAlerts: build.query<GetAlertsApiResponse, WithDataSourceInformation<GetAlertsApiArg>>({
       query: ({ dataSourceUID, active, silenced, inhibited, unprocessed, filter, receiver }) => ({

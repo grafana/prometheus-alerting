@@ -13,6 +13,9 @@ export function useAlertGroups() {
     active: true,
     silenced: true,
     inhibited: true,
+  }, {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
   });
 
   return {
