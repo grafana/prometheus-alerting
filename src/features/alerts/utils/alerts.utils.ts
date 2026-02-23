@@ -1,4 +1,5 @@
-import type { AlertStatus, GettableAlert } from '@grafana/external-alertmanager/vanilla';
+import { AlertStatus, GettableAlert, parsePromQLStyleMatcherLooseSafe, type Matcher as AmMatcher } from '@grafana/external-alertmanager/vanilla';
+import { labelsMatchMatchers, looseParseMatcher, Matcher } from 'utils/labels';
 
 export type AlertGroupCounts = Record<AlertStatus['state'], number> & {
   silenced: number;
@@ -25,4 +26,44 @@ export function countAlertsByState(alerts: GettableAlert[]): AlertGroupCounts {
   }
 
   return counts;
+}
+
+
+export function alertMatchesFilters(
+  alert: GettableAlert,
+  allowedStates: Set<AlertStatus['state']>,
+  matchers: Matcher[]
+): boolean {
+  if (!allowedStates.has(alert.status.state)) {
+    return false;
+  }
+  if (matchers.length > 0) {
+    return labelsMatchMatchers(alert.labels, matchers);
+  }
+  return true;
+}
+
+export function parseMatchers(input: string): Matcher[] {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  // Try PromQL-style first (handles both `{foo="bar"}` and `foo="bar",env=~"prod.*"`)
+  const amMatchers = parsePromQLStyleMatcherLooseSafe(trimmed);
+  if (amMatchers.length > 0) {
+    return amMatchers.map(toMatcher);
+  }
+
+  // Fall back to single loose matcher (e.g. `foo=bar`)
+  const single = looseParseMatcher(trimmed);
+  return single ? [single] : [];
+}
+
+function toMatcher(m: AmMatcher): Matcher {
+  return {
+    name: m.name,
+    value: m.value,
+    operator: m.isRegex ? (m.isEqual ? '=~' : '!~') : m.isEqual ? '=' : '!=',
+  };
 }

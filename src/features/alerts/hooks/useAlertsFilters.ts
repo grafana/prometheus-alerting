@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react';
-import type { AlertGroup } from '@grafana/external-alertmanager/vanilla';
+import { type AlertGroup, type AlertStatus} from '@grafana/external-alertmanager/vanilla';
+import { alertMatchesFilters, parseMatchers } from '../utils/alerts.utils';
 
 export interface AlertsFiltersState {
   receiver: string;
   showActive: boolean;
   showUnprocessed: boolean;
   showSuppressed: boolean;
+  labelInput: string;
 }
 
 export interface AlertsFiltersActions {
@@ -13,6 +15,7 @@ export interface AlertsFiltersActions {
   setShowActive: (show: boolean) => void;
   setShowUnprocessed: (show: boolean) => void;
   setShowSuppressed: (show: boolean) => void;
+  setLabelInput: (input: string) => void;
 }
 
 export interface UseAlertsFiltersResult {
@@ -21,30 +24,38 @@ export interface UseAlertsFiltersResult {
   applyFilters: (groups: AlertGroup[]) => AlertGroup[];
 }
 
+
 export function useAlertsFilters(): UseAlertsFiltersResult {
   const [receiver, setReceiver] = useState('');
   const [showActive, setShowActive] = useState(true);
   const [showUnprocessed, setShowUnprocessed] = useState(false);
   const [showSuppressed, setShowSuppressed] = useState(false);
+  const [labelInput, setLabelInput] = useState('');
 
   const applyFilters = useMemo(
     () => (groups: AlertGroup[]) => {
-      const allowedStates = new Set([
-        ...(showActive ? ['active'] : []),
-        ...(showUnprocessed ? ['unprocessed'] : []),
-        ...(showSuppressed ? ['suppressed'] : []),
+      const allowedStates = new Set<AlertStatus['state']>([
+        ...(showActive ? ['active' as const] : []),
+        ...(showUnprocessed ? ['unprocessed' as const] : []),
+        ...(showSuppressed ? ['suppressed' as const] : []),
       ]);
+
+      const matchers = parseMatchers(labelInput);
 
       return groups
         .filter((group) => !receiver || group.receiver.name === receiver)
-        .filter((group) => group.alerts.some((alert) => allowedStates.has(alert.status.state)));
+        .map((group) => ({
+          ...group,
+          alerts: group.alerts.filter((alert) => alertMatchesFilters(alert, allowedStates, matchers)),
+        }))
+        .filter((group) => group.alerts.length > 0);
     },
-    [receiver, showActive, showUnprocessed, showSuppressed]
+    [receiver, showActive, showUnprocessed, showSuppressed, labelInput]
   );
 
   return {
-    filters: { receiver, showActive, showUnprocessed, showSuppressed },
-    actions: { setReceiver, setShowActive, setShowUnprocessed, setShowSuppressed },
+    filters: { receiver, showActive, showUnprocessed, showSuppressed, labelInput },
+    actions: { setReceiver, setShowActive, setShowUnprocessed, setShowSuppressed, setLabelInput },
     applyFilters,
   };
 }
