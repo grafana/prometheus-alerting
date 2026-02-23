@@ -7,7 +7,7 @@ import { ROUTES } from '../../constants';
 import { StoreProvider } from '../StoreProvider/StoreProvider';
 import { sharedStore } from '../../store/store';
 
-const Landing = React.lazy(() => import('../../pages/Landing'));
+const Alerts = React.lazy(() => import('../../features/alerts/pages/Alerts'));
 const Rules = React.lazy(() => import('../../features/rules/pages/RulesList'));
 const RuleDetails = React.lazy(() => import('../../features/rules/pages/RuleDetails'));
 const RuleEditor = React.lazy(() => import('../../features/rules/pages/RuleEditor'));
@@ -34,6 +34,7 @@ function App(_props: AppRootProps) {
         highlightColor={theme.colors.emphasize(theme.colors.background.secondary, 0.03)}
       >
         <Routes>
+          <Route path={ROUTES.Alerts} element={<Alerts />} />
           <Route path={ROUTES.Routes} element={<RouteTree />} />
           <Route path={ROUTES.Rules} element={<Rules />} />
           <Route path={ROUTES.RuleView} element={<RuleDetails />} />
@@ -50,9 +51,6 @@ function App(_props: AppRootProps) {
           <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
           <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
           <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
-
-          {/* Default page */}
-          <Route path="*" element={<Landing />} />
         </Routes>
       </SkeletonTheme>
     </StoreProvider>

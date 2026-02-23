@@ -9,7 +9,7 @@ export const STORAGE_KEYS = {
 export const DEFAULT_PAGE_SIZE = 40;
 
 export enum ROUTES {
-  Landing = 'landing',
+  Alerts = 'alerts',
   Rules = 'rules',
   RuleView = 'rules/:ruleIdentifier',
   RuleEdit = 'rules/:ruleIdentifier/edit',

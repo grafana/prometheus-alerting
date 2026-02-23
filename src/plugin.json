@@ -20,10 +20,10 @@
   "includes": [
     {
       "type": "page",
-      "name": "Landing",
-      "path": "/a/%PLUGIN_ID%/landing",
+      "name": "Alerts",
+      "path": "/a/%PLUGIN_ID%/alerts",
       "addToNav": true,
-      "defaultNav": true
+      "defaultNav": false
     },
     {
       "type": "page",

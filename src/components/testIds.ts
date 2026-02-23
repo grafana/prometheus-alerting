@@ -1,5 +1,8 @@
 export const testIds = {
   appConfig: {},
+  alerts: {
+    container: 'data-testid prom-alerts',
+  },
   landing: {
     container: 'data-testid prom-landing',
   },
