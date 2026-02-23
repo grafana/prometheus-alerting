@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 
 import { t } from '@grafana/i18n';
-import { Checkbox, Counter, Input, Select, Stack } from '@grafana/ui';
+import { Checkbox, Combobox, Counter, Input, Stack } from '@grafana/ui';
 import type { AlertGroup } from '@grafana/external-alertmanager/vanilla';
 
 import type { AlertsFiltersState, AlertsFiltersActions } from '../hooks/useAlertsFilters';
@@ -34,11 +34,11 @@ export function AlertsFilters({ filters, actions, alertGroups }: AlertsFiltersPr
         onChange={(e) => actions.setLabelInput(e.currentTarget.value)}
         placeholder={t('alerts.filters.label-placeholder', 'Filter by labels, e.g. foo=bar, env=~prod.*')}
       />
-      <Select
+      <Combobox
         width={24}
         options={receiverOptions}
         value={filters.receiver}
-        onChange={(option) => actions.setReceiver(option.value ?? '')}
+        onChange={(option) => actions.setReceiver(option?.value ?? '')}
         placeholder={t('alerts.filters.receiver-placeholder', 'Filter by receiver')}
       />
       <Stack direction="row" gap={0.5} alignItems="center">

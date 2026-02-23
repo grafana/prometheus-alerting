@@ -280,6 +280,11 @@ const [loadReceivers, { receivers, isLoading, error }] = useReceivers();
 | `packages/alertmanager/`       | Shared Alertmanager types                  |
 | `packages/rules/`              | Shared rules API types                     |
 
+## Component Usage
+
+- Do not use deprecated components or functions from `@grafana/ui` or other packages
+- Prefer current alternatives (e.g. use `Combobox` instead of `Select` for searchable dropdowns)
+
 ## Important Conventions
 
 - Selected Alertmanager data source UID stored in Redux (`dataSourceSlice`)
