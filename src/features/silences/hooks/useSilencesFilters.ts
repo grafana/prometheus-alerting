@@ -1,12 +1,16 @@
 import { useState, useMemo } from 'react';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 
+import { formatMatchers } from '../utils/silences.utils';
+
 export interface SilencesFiltersState {
   showInactive: boolean;
+  matcherInput: string;
 }
 
 export interface SilencesFiltersActions {
   setShowInactive: (show: boolean) => void;
+  setMatcherInput: (input: string) => void;
 }
 
 export interface UseSilencesFiltersResult {
@@ -15,23 +19,33 @@ export interface UseSilencesFiltersResult {
   applyFilters: (silences: GettableSilence[]) => GettableSilence[];
 }
 
+function silenceMatchesInput(silence: GettableSilence, input: string): boolean {
+  const trimmed = input.trim().toLowerCase();
+  if (!trimmed) {
+    return true;
+  }
+  return formatMatchers(silence).some((matcher) => {
+    const normalized = matcher.toLowerCase();
+    return normalized.includes(trimmed) || normalized.replace(/"/g, '').includes(trimmed);
+  });
+}
+
 export function useSilencesFilters(): UseSilencesFiltersResult {
   const [showInactive, setShowInactive] = useState(false);
+  const [matcherInput, setMatcherInput] = useState('');
 
   const applyFilters = useMemo(
     () => (silences: GettableSilence[]) => {
-      if (showInactive) {
-        return silences;
-      }
-      // Only show active and pending silences by default (hide expired)
-      return silences.filter((silence) => silence.status.state === 'active' || silence.status.state === 'pending');
+      return silences
+        .filter((silence) => showInactive || silence.status.state === 'active' || silence.status.state === 'pending')
+        .filter((silence) => silenceMatchesInput(silence, matcherInput));
     },
-    [showInactive]
+    [showInactive, matcherInput]
   );
 
   return {
-    filters: { showInactive },
-    actions: { setShowInactive },
+    filters: { showInactive, matcherInput },
+    actions: { setShowInactive, setMatcherInput },
     applyFilters,
   };
 }
