@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import Skeleton from 'react-loading-skeleton';
 
+import { css } from '@emotion/css';
 import { t } from '@grafana/i18n';
 import { AlertLabel } from '@grafana/alerting';
 import { Column, EmptyState, InteractiveTable, Stack, Text } from '@grafana/ui';
@@ -16,6 +17,7 @@ import { useAlertsFilters } from '../hooks/useAlertsFilters';
 import { AlertStateBadge } from '../components/AlertStateBadge';
 import { AlertStateCounts } from '../components/AlertStateCounts';
 import { AlertsFilters } from '../components/AlertsFilters';
+import { AlertDrawer } from '../components/AlertDrawer';
 
 function AlertsPage() {
   const { alertGroups, isLoading, isSuccess, error } = useAlertGroups();
@@ -89,41 +91,64 @@ function AlertsPage() {
 }
 
 function AlertGroupExpansion({ original }: { original: AlertGroup }) {
+  const [selectedAlert, setSelectedAlert] = useState<GettableAlert | null>(null);
+
+  const handleAlertClick = useCallback((alert: GettableAlert) => {
+    setSelectedAlert(alert);
+  }, []);
+
+  const handleDrawerClose = useCallback(() => {
+    setSelectedAlert(null);
+  }, []);
+
+  const clickableCellStyles = css({ cursor: 'pointer' });
+
   const alertColumns = useMemo<Array<Column<GettableAlert>>>(
     () => [
       {
         id: 'state',
         header: t('alerts.column.state', 'State'),
-        cell: ({ row: { original: alert } }) => <AlertStateBadge alert={alert} />,
+        cell: ({ row: { original: alert } }) => (
+          <div className={clickableCellStyles} onClick={() => handleAlertClick(alert)}>
+            <AlertStateBadge alert={alert} />
+          </div>
+        ),
       },
       {
         id: 'labels',
         header: t('alerts.column.labels', 'Labels'),
         cell: ({ row: { original: alert } }) => (
-          <Stack direction="row" gap={0.5} wrap="wrap">
-            {Object.entries(alert.labels).map(([key, value]) => (
-              <AlertLabel key={key} value={`${key}=${value}`} colorBy="value" size="sm" />
-            ))}
-          </Stack>
+          <div className={clickableCellStyles} onClick={() => handleAlertClick(alert)}>
+            <Stack direction="row" gap={0.5} wrap="wrap">
+              {Object.entries(alert.labels).map(([key, value]) => (
+                <AlertLabel key={key} value={`${key}=${value}`} colorBy="value" size="sm" />
+              ))}
+            </Stack>
+          </div>
         ),
       },
       {
         id: 'startsAt',
         header: t('alerts.column.starts-at', 'Started'),
         cell: ({ row: { original: alert } }) => (
-          <Text variant="bodySmall">{new Date(alert.startsAt).toLocaleString()}</Text>
+          <div className={clickableCellStyles} onClick={() => handleAlertClick(alert)}>
+            <Text variant="bodySmall">{new Date(alert.startsAt).toLocaleString()}</Text>
+          </div>
         ),
       },
     ],
-    []
+    [clickableCellStyles, handleAlertClick]
   );
 
   return (
-    <InteractiveTable<GettableAlert>
-      columns={alertColumns}
-      data={original.alerts}
-      getRowId={(alert) => alert.fingerprint}
-    />
+    <>
+      <InteractiveTable<GettableAlert>
+        columns={alertColumns}
+        data={original.alerts}
+        getRowId={(alert) => alert.fingerprint}
+      />
+      {selectedAlert && <AlertDrawer alert={selectedAlert} onClose={handleDrawerClose} />}
+    </>
   );
 }
 
