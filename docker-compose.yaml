@@ -38,6 +38,7 @@ services:
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
+      - '--cluster.listen-address='
     networks:
       - monitoring
 
