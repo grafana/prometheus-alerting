@@ -338,6 +338,33 @@
       "data-source": "Data source: {{name}}"
     }
   },
+  "alerts": {
+    "column": {
+      "count": "Alerts",
+      "grouped-by": "Grouped by",
+      "labels": "Labels",
+      "receiver": "Receiver",
+      "starts-at": "Started",
+      "state": "State"
+    },
+    "count": {
+      "active": "{{n}} active",
+      "inhibited": "{{n}} inhibited",
+      "muted": "{{n}} muted",
+      "silenced": "{{n}} silenced",
+      "unprocessed": "{{n}} unprocessed"
+    },
+    "error-loading-title": "Error loading alert groups",
+    "no-alerts-message": "No active alerts found in the Alertmanager.",
+    "state": {
+      "inhibited-by_one": "Inhibited by {{count}} inhibition",
+      "inhibited-by_other": "Inhibited by {{count}} inhibition",
+      "muted-by_one": "Muted by {{count}} time interval",
+      "muted-by_other": "Muted by {{count}} time interval",
+      "silenced-by_one": "Silenced by {{count}} silence",
+      "silenced-by_other": "Silenced by {{count}} silence"
+    }
+  },
   "app-config": {
     "alertmanager-selection": {
       "title": "Alertmanager"
@@ -435,6 +462,9 @@
     "true": "Yes"
   },
   "pages": {
+    "alerts": {
+      "subtitle": "Alert instances grouped by Alertmanager"
+    },
     "silences": {
       "subtitle": "Stop notifications from one or more alerting rules"
     }

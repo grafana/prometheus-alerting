@@ -50,6 +50,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-webpack-plugin": "^5.0.0",
+    "fishery": "^2.4.0",
     "fork-ts-checker-webpack-plugin": "^8.0.0",
     "glob": "^10.2.7",
     "happy-dom": "^20.3.9",

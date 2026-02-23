@@ -28,7 +28,7 @@ describe('Components/App', () => {
     } as unknown as AppRootProps;
   });
 
-  test('renders the landing page by default', async () => {
+  test('renders the alerts page by default', async () => {
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <App {...props} />
@@ -38,7 +38,7 @@ describe('Components/App', () => {
     // Application is lazy loaded, so we need to wait for the component to render
     await waitFor(
       () => {
-        expect(screen.getByTestId(testIds.landing.container)).toBeInTheDocument();
+        expect(screen.getByTestId(testIds.alerts.container)).toBeInTheDocument();
       },
       { timeout: 2000 }
     );

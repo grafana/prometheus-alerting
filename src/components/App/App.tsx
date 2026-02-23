@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppRootProps } from '@grafana/data';
 import { useTheme2 } from '@grafana/ui';
 import { SkeletonTheme } from 'react-loading-skeleton';
@@ -34,6 +34,7 @@ function App(_props: AppRootProps) {
         highlightColor={theme.colors.emphasize(theme.colors.background.secondary, 0.03)}
       >
         <Routes>
+          <Route path="/" element={<Navigate to={ROUTES.Alerts} replace />} />
           <Route path={ROUTES.Alerts} element={<Alerts />} />
           <Route path={ROUTES.Routes} element={<RouteTree />} />
           <Route path={ROUTES.Rules} element={<Rules />} />

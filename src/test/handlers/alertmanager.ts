@@ -35,4 +35,9 @@ export const alertmanagerHandlers = [
   http.get('/api/datasources/proxy/uid/:uid/api/v2/status', () => {
     return HttpResponse.json(mockStatus);
   }),
+
+  // GET /api/v2/alerts/groups
+  http.get('/api/datasources/proxy/uid/:uid/api/v2/alerts/groups', () => {
+    return HttpResponse.json([]);
+  }),
 ];
