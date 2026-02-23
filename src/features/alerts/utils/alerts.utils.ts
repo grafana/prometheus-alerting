@@ -1,5 +1,5 @@
 import { AlertStatus, GettableAlert, parsePromQLStyleMatcherLooseSafe, type Matcher as AmMatcher } from '@grafana/external-alertmanager/vanilla';
-import { labelsMatchMatchers, looseParseMatcher, Matcher } from 'utils/labels';
+import { labelsMatchMatchers, looseParseMatcher, Matcher } from '../../../utils/labels';
 
 export type AlertGroupCounts = Record<AlertStatus['state'], number> & {
   silenced: number;

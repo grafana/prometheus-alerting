@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRootProps, PluginType } from '@grafana/data';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -6,6 +6,13 @@ import { vi } from 'vitest';
 
 import App from './App';
 import { testIds } from '../testIds';
+import { createTestWrapper } from '../../test/utils/test-wrapper';
+
+vi.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
+  AlertmanagerPicker: () => <div data-testid="alertmanager-picker" />,
+}));
+
+vi.mock('@grafana/runtime');
 
 describe('Components/App', () => {
   let props: AppRootProps;
@@ -29,10 +36,15 @@ describe('Components/App', () => {
   });
 
   test('renders the alerts page by default', async () => {
+    const Wrapper = createTestWrapper();
     render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <App {...props} />
-      </MemoryRouter>
+      <Wrapper>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Suspense fallback={null}>
+            <App {...props} />
+          </Suspense>
+        </MemoryRouter>
+      </Wrapper>
     );
 
     // Application is lazy loaded, so we need to wait for the component to render

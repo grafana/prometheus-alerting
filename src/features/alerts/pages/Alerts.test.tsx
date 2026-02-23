@@ -12,10 +12,7 @@ vi.mock('../../../components/AlertmanagerPicker/AlertmanagerPicker', () => ({
   AlertmanagerPicker: () => <div data-testid="alertmanager-picker" />,
 }));
 
-vi.mock('@grafana/runtime', async () => ({
-  ...(await vi.importActual('@grafana/runtime')),
-  PluginPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
+vi.mock('@grafana/runtime');
 
 describe('Alerts page', () => {
   test('renders the alerts container', async () => {
