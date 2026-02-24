@@ -280,6 +280,14 @@ const [loadReceivers, { receivers, isLoading, error }] = useReceivers();
 | `packages/alertmanager/`       | Shared Alertmanager types                  |
 | `packages/rules/`              | Shared rules API types                     |
 
+### Unit Testing
+
+- Write unit tests for all pure functions (utilities, data transformations, filtering logic, etc.)
+- Aim for ~100% coverage with the minimum number of tests — each test should cover a distinct code path; avoid redundant cases that exercise the same lines
+- Co-locate test files next to the file under test using the `.test.ts` / `.test.tsx` suffix
+- Use `fishery` factories from `src/features/<feature>/mocks/*.fakes.ts` to build test data — do not inline raw objects
+- Export pure functions that need testing; prefer named exports over default for testability
+
 ## Component Usage
 
 - Do not use deprecated components or functions from `@grafana/ui` or other packages
