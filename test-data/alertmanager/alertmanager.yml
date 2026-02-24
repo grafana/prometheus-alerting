@@ -1,0 +1,33 @@
+route:
+  receiver: default
+  group_by: ['alertname', 'severity']
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+  routes:
+    # Critical alerts go to both pagerduty and slack (continue: true sends to both)
+    - receiver: pagerduty
+      matchers:
+        - severity = critical
+      continue: true
+
+    - receiver: slack-critical
+      matchers:
+        - severity = critical
+
+    # Platform team alerts go to both slack-platform and email
+    - receiver: slack-platform
+      matchers:
+        - team = platform
+      continue: true
+
+    - receiver: email-platform
+      matchers:
+        - team = platform
+
+receivers:
+  - name: default
+  - name: pagerduty
+  - name: slack-critical
+  - name: slack-platform
+  - name: email-platform

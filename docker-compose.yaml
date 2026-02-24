@@ -35,6 +35,8 @@ services:
     container_name: alertmanager-test
     ports:
       - '9093:9093'
+    volumes:
+      - ./test-data/alertmanager:/etc/alertmanager
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
