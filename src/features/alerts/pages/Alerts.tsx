@@ -18,25 +18,50 @@ import { AlertStateBadge } from '../components/AlertStateBadge';
 import { AlertStateCounts } from '../components/AlertStateCounts';
 import { AlertsFilters } from '../components/AlertsFilters';
 import { AlertDrawer } from '../components/AlertDrawer';
+import { groupBy, mapValues, values } from 'lodash';
+
+type GroupedAlerts = { group: AlertGroup; receivers: string[] };
+
+export function deduplicateGroups(groups: AlertGroup[]): GroupedAlerts[] {
+  const grouped = groupBy(groups, (group) => {
+    const labelKey = Object.entries(group.labels)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}=${v}`)
+      .join(',');
+    const alertKey = group.alerts
+      .map((a) => a.fingerprint)
+      .sort()
+      .join(',');
+    return `${labelKey}|${alertKey}`;
+  });
+
+  const deduplicatedGroups = mapValues(grouped, (groupsArray) => {
+    const firstGroup = groupsArray[0];
+    const receivers = groupsArray.map(g => g.receiver.name);
+    return { group: firstGroup, receivers };
+  });
+
+  return values(deduplicatedGroups);
+}
 
 function AlertsPage() {
   const { alertGroups, isLoading, isSuccess, error } = useAlertGroups();
   const { filters, actions, applyFilters } = useAlertsFilters();
-  const filteredGroups = applyFilters(alertGroups);
+  const filteredGroups = deduplicateGroups(applyFilters(alertGroups));
 
-  const columns = useMemo<Array<Column<AlertGroup>>>(
+  const columns = useMemo<Array<Column<GroupedAlerts>>>(
     () => [
       {
         id: 'receiver',
         header: t('alerts.column.receiver', 'Receiver'),
-        cell: ({ row: { original } }) => <Text variant="body">{original.receiver.name}</Text>,
+        cell: ({ row: { original } }) => <Text variant="body">{original.receivers.join(', ')}</Text>,
       },
       {
         id: 'labels',
         header: t('alerts.column.grouped-by', 'Grouped by'),
         cell: ({ row: { original } }) => (
           <Stack direction="row" gap={0.5} wrap="wrap">
-            {Object.entries(original.labels).map(([key, value]) => (
+            {Object.entries(original.group.labels).map(([key, value]) => (
               <AlertLabel key={key} value={`${key}=${value}`} colorBy="value" size="sm" />
             ))}
           </Stack>
@@ -45,7 +70,7 @@ function AlertsPage() {
       {
         id: 'count',
         header: t('alerts.column.count', 'Alerts'),
-        cell: ({ row: { original } }) => <AlertStateCounts alerts={original.alerts} />,
+        cell: ({ row: { original } }) => <AlertStateCounts alerts={original.group.alerts} />,
       },
     ],
     []
@@ -76,12 +101,12 @@ function AlertsPage() {
             />
           }
         >
-          <InteractiveTable<AlertGroup>
+          <InteractiveTable<GroupedAlerts>
             columns={columns}
             data={filteredGroups}
             getRowId={(_group, index) => String(index)}
             pageSize={DEFAULT_PAGE_SIZE}
-            renderExpandedRow={(group) => <AlertGroupExpansion original={group} />}
+            renderExpandedRow={({ group }) => <AlertGroupExpansion group={group} />}
             showExpandAll
           />
         </ViewState>
@@ -90,7 +115,7 @@ function AlertsPage() {
   );
 }
 
-function AlertGroupExpansion({ original }: { original: AlertGroup }) {
+function AlertGroupExpansion({ group }: { group: AlertGroup }) {
   const [selectedAlert, setSelectedAlert] = useState<GettableAlert | null>(null);
 
   const handleAlertClick = useCallback((alert: GettableAlert) => {
@@ -144,7 +169,7 @@ function AlertGroupExpansion({ original }: { original: AlertGroup }) {
     <>
       <InteractiveTable<GettableAlert>
         columns={alertColumns}
-        data={original.alerts}
+        data={group.alerts}
         getRowId={(alert) => alert.fingerprint}
       />
       {selectedAlert && <AlertDrawer alert={selectedAlert} onClose={handleDrawerClose} />}

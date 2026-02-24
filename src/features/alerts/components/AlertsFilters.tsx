@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 
 import { t } from '@grafana/i18n';
-import { Checkbox, Combobox, Counter, Input, Stack } from '@grafana/ui';
+import { Checkbox, Counter, Input, MultiCombobox, Stack } from '@grafana/ui';
 import type { AlertGroup } from '@grafana/external-alertmanager/vanilla';
 
 import type { AlertsFiltersState, AlertsFiltersActions } from '../hooks/useAlertsFilters';
@@ -14,17 +14,20 @@ interface AlertsFiltersProps {
 }
 
 export function AlertsFilters({ filters, actions, alertGroups }: AlertsFiltersProps) {
-  const receiverOptions = [
-    { label: t('alerts.filters.all-receivers', 'All receivers'), value: '' },
-    ...Array.from(new Set(alertGroups.map((g) => g.receiver.name))).map((name) => ({ label: name, value: name })),
-  ];
+  const receiverOptions = Array.from(new Set(alertGroups.map((g) => g.receiver.name))).map((name) => ({
+    label: name,
+    value: name,
+  }));
 
-  // Count across all alerts, optionally scoped to the selected receiver
+  // Count across all alerts, optionally scoped to the selected receivers
   const counts = useMemo(() => {
-    const groups = filters.receiver ? alertGroups.filter((g) => g.receiver.name === filters.receiver) : alertGroups;
+    const groups =
+      filters.receivers.length > 0
+        ? alertGroups.filter((g) => filters.receivers.includes(g.receiver.name))
+        : alertGroups;
     const allAlerts = groups.flatMap((g) => g.alerts);
     return countAlertsByState(allAlerts);
-  }, [alertGroups, filters.receiver]);
+  }, [alertGroups, filters.receivers]);
 
   return (
     <Stack direction="row" gap={2} alignItems="center">
@@ -34,11 +37,11 @@ export function AlertsFilters({ filters, actions, alertGroups }: AlertsFiltersPr
         onChange={(e) => actions.setLabelInput(e.currentTarget.value)}
         placeholder={t('alerts.filters.label-placeholder', 'Filter by labels, e.g. foo=bar, env=~prod.*')}
       />
-      <Combobox
+      <MultiCombobox
         width={24}
         options={receiverOptions}
-        value={filters.receiver}
-        onChange={(option) => actions.setReceiver(option?.value ?? '')}
+        value={filters.receivers}
+        onChange={(values) => actions.setReceivers(values.map((o) => o.value))}
         placeholder={t('alerts.filters.receiver-placeholder', 'Filter by receiver')}
       />
       <Stack direction="row" gap={0.5} alignItems="center">

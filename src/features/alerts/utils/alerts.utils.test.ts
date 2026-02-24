@@ -1,5 +1,5 @@
-import { AlertStatusFactory, GettableAlertFactory } from '../mocks/alerts.fakes';
-import { countAlertsByState } from './alerts.utils';
+import { AlertGroupFactory, AlertStatusFactory, GettableAlertFactory } from '../mocks/alerts.fakes';
+import { countAlertsByState, deduplicateGroups } from './alerts.utils';
 
 describe('countAlertsByState', () => {
   it('returns all zeros for an empty list', () => {
@@ -50,5 +50,40 @@ describe('countAlertsByState', () => {
     expect(counts.suppressed).toBe(1);
     expect(counts.silenced).toBe(1);
     expect(counts.inhibited).toBe(1);
+  });
+});
+
+describe('deduplicateGroups', () => {
+  it('returns an empty array for no groups', () => {
+    expect(deduplicateGroups([])).toEqual([]);
+  });
+
+  it('returns each distinct group once with its receiver name', () => {
+    const group1 = AlertGroupFactory.build({ labels: { env: 'prod' } });
+    const group2 = AlertGroupFactory.build({ labels: { env: 'staging' } });
+
+    const result = deduplicateGroups([group1, group2]);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({ group: group1, receivers: [group1.receiver.name] });
+    expect(result[1]).toEqual({ group: group2, receivers: [group2.receiver.name] });
+  });
+
+  it('merges groups with the same labels and alerts, collecting all receiver names', () => {
+    // Build a base group once, then derive the other groups from it — same labels,
+    // same alerts, different receiver. Deliberately reverse label/alert order to verify
+    // that sorting makes the key order-independent.
+    // Note: spread base to override labels fully (factory merges rather than replaces).
+    const base = AlertGroupFactory.build();
+    const labels = { b: '2', a: '1' };
+    const group1 = { ...base, labels, receiver: { name: 'slack' } };
+    const group2 = { ...base, labels: { a: '1', b: '2' }, receiver: { name: 'pagerduty' }, alerts: [...base.alerts].reverse() };
+    const group3 = { ...base, labels, receiver: { name: 'email' } };
+
+    const result = deduplicateGroups([group1, group2, group3]);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].group).toBe(group1);
+    expect(result[0].receivers).toEqual(['slack', 'pagerduty', 'email']);
   });
 });
