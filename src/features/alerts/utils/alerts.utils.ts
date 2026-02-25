@@ -69,7 +69,7 @@ function toMatcher(m: AmMatcher): Matcher {
   };
 }
 
-type GroupedAlerts = { group: AlertGroup; receivers: string[] };
+export type GroupedAlerts = { group: AlertGroup; receivers: string[] };
 
 export function deduplicateGroups(groups: AlertGroup[]): GroupedAlerts[] {
   const grouped = groupBy(groups, (group) => {

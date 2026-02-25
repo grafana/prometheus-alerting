@@ -18,31 +18,7 @@ import { AlertStateBadge } from '../components/AlertStateBadge';
 import { AlertStateCounts } from '../components/AlertStateCounts';
 import { AlertsFilters } from '../components/AlertsFilters';
 import { AlertDrawer } from '../components/AlertDrawer';
-import { groupBy, mapValues, values } from 'lodash';
-
-type GroupedAlerts = { group: AlertGroup; receivers: string[] };
-
-export function deduplicateGroups(groups: AlertGroup[]): GroupedAlerts[] {
-  const grouped = groupBy(groups, (group) => {
-    const labelKey = Object.entries(group.labels)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, v]) => `${k}=${v}`)
-      .join(',');
-    const alertKey = group.alerts
-      .map((a) => a.fingerprint)
-      .sort()
-      .join(',');
-    return `${labelKey}|${alertKey}`;
-  });
-
-  const deduplicatedGroups = mapValues(grouped, (groupsArray) => {
-    const firstGroup = groupsArray[0];
-    const receivers = groupsArray.map(g => g.receiver.name);
-    return { group: firstGroup, receivers };
-  });
-
-  return values(deduplicatedGroups);
-}
+import { deduplicateGroups, GroupedAlerts } from '../utils/alerts.utils';
 
 function AlertsPage() {
   const { alertGroups, isLoading, isSuccess, error } = useAlertGroups();
