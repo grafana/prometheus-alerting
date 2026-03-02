@@ -47,11 +47,7 @@ export function AlertDrawer({ alert, onClose }: AlertDrawerProps) {
   ];
 
   return (
-    <DrawerWithFooter
-      title={t('alerts.drawer.title', 'Alert details')}
-      onClose={onClose}
-      size="sm"
-    >
+    <DrawerWithFooter title={t('alerts.drawer.title', 'Alert details')} onClose={onClose} size="sm">
       <Stack direction="column" gap={3}>
         <Stack direction="row" alignItems="center">
           <AlertStateBadge alert={alert} />

@@ -1,4 +1,3 @@
- 
 import {
   formatPrometheusDuration,
   isValidPrometheusDuration,

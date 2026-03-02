@@ -16,11 +16,7 @@ vi.mock('@grafana/runtime');
 
 describe('Alerts page', () => {
   test('renders the alerts container', async () => {
-    server.use(
-      http.get('/api/datasources/proxy/uid/:uid/api/v2/alerts/groups', () =>
-        HttpResponse.json([])
-      )
-    );
+    server.use(http.get('/api/datasources/proxy/uid/:uid/api/v2/alerts/groups', () => HttpResponse.json([])));
 
     render(<Alerts />, { wrapper: createTestWrapper('alertmanager-1') });
 

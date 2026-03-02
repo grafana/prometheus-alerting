@@ -123,16 +123,13 @@ function RuleDetails() {
           text: identifier.ruleName,
         }}
       >
-        <Alert
-          severity="info"
-          title={t('rule-details.consistency.pending-title', 'Rule is being propagated')}
-        >
+        <Alert severity="info" title={t('rule-details.consistency.pending-title', 'Rule is being propagated')}>
           <Stack direction="row" alignItems="center" gap={1}>
             {consistencyStatus === 'checking' && <Spinner size="sm" />}
             <span>
               <Trans i18nKey="rule-details.consistency.pending-message">
-                This rule was recently created and is being propagated to the monitoring system.
-                This usually takes a few seconds. The page will update automatically.
+                This rule was recently created and is being propagated to the monitoring system. This usually takes a
+                few seconds. The page will update automatically.
               </Trans>
             </span>
           </Stack>

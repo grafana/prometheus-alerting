@@ -8,15 +8,18 @@ import { useAlertmanager } from '../../../hooks/useAlertmanager';
 export function useAlertGroups() {
   const { uid: dataSourceUID } = useAlertmanager();
 
-  const { data, isLoading, isSuccess, error } = alertmanagerApi.endpoints.getAlertGroups.useQuery({
-    dataSourceUID,
-    active: true,
-    silenced: true,
-    inhibited: true,
-  }, {
-    refetchOnFocus: true,
-    refetchOnReconnect: true,
-  });
+  const { data, isLoading, isSuccess, error } = alertmanagerApi.endpoints.getAlertGroups.useQuery(
+    {
+      dataSourceUID,
+      active: true,
+      silenced: true,
+      inhibited: true,
+    },
+    {
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    }
+  );
 
   return {
     alertGroups: data ?? [],

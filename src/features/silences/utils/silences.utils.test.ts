@@ -5,7 +5,7 @@ import { formatMatchers, formatDateTime } from './silences.utils';
 const makeSilence = (matchers: GettableSilence['matchers']): GettableSilence =>
   ({
     matchers,
-  }) as GettableSilence;
+  } as GettableSilence);
 
 describe('formatMatchers', () => {
   it('formats an equal matcher', () => {

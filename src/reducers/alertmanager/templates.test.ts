@@ -1,4 +1,3 @@
- 
 import {
   initialAlertmanagerConfiguration,
   type PostableParsedUserConfiguration,

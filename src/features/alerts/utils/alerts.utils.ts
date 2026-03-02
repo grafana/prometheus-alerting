@@ -1,4 +1,10 @@
-import { AlertGroup, AlertStatus, GettableAlert, parsePromQLStyleMatcherLooseSafe, type Matcher as AmMatcher } from '@grafana/external-alertmanager/vanilla';
+import {
+  AlertGroup,
+  AlertStatus,
+  GettableAlert,
+  parsePromQLStyleMatcherLooseSafe,
+  type Matcher as AmMatcher,
+} from '@grafana/external-alertmanager/vanilla';
 import { labelsMatchMatchers, looseParseMatcher, Matcher } from '../../../utils/labels';
 import { groupBy, mapValues, values } from 'lodash';
 
@@ -20,15 +26,20 @@ export function countAlertsByState(alerts: GettableAlert[]): AlertGroupCounts {
       counts.unprocessed++;
     } else {
       counts.suppressed++;
-      if (alert.status.silencedBy.length > 0) { counts.silenced++; }
-      if (alert.status.inhibitedBy.length > 0) { counts.inhibited++; }
-      if (alert.status.mutedBy.length > 0) { counts.muted++; }
+      if (alert.status.silencedBy.length > 0) {
+        counts.silenced++;
+      }
+      if (alert.status.inhibitedBy.length > 0) {
+        counts.inhibited++;
+      }
+      if (alert.status.mutedBy.length > 0) {
+        counts.muted++;
+      }
     }
   }
 
   return counts;
 }
-
 
 export function alertMatchesFilters(
   alert: GettableAlert,
@@ -86,7 +97,7 @@ export function deduplicateGroups(groups: AlertGroup[]): GroupedAlerts[] {
 
   const deduplicatedGroups = mapValues(grouped, (groupsArray) => {
     const firstGroup = groupsArray[0];
-    const receivers = groupsArray.map(g => g.receiver.name);
+    const receivers = groupsArray.map((g) => g.receiver.name);
     return { group: firstGroup, receivers };
   });
 

@@ -310,7 +310,7 @@ export class RuleDetailsPage {
   async waitForConsistency(timeout = 120000): Promise<void> {
     const pageContent = this.page.locator('#pageContent');
     const consistencyAlert = pageContent.getByRole('alert').filter({ hasText: /propagat|being propagated/i });
-    
+
     // Wait for the alert to disappear
     await expect(consistencyAlert).not.toBeVisible({ timeout });
   }

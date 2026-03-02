@@ -230,7 +230,7 @@ export class RuleEditorPage {
     await this.namespaceCombobox.fill(namespace);
     // Try to select existing option or create new
     const existingOption = this.page.getByRole('option', { name: namespace, exact: true });
-    
+
     // Wait a bit for the dropdown to appear and check if option exists
     try {
       await existingOption.waitFor({ state: 'visible', timeout: 1000 });
@@ -249,7 +249,7 @@ export class RuleEditorPage {
     await this.groupCombobox.fill(group);
     // Try to select existing option or create new
     const existingOption = this.page.getByRole('option', { name: group, exact: true });
-    
+
     // Wait a bit for the dropdown to appear and check if option exists
     try {
       await existingOption.waitFor({ state: 'visible', timeout: 1000 });
@@ -390,12 +390,12 @@ export class RuleEditorPage {
     const valueInputs = this.pageContent.getByPlaceholder('Annotation value');
 
     const count = await keyInputs.count();
-    
+
     // Find the annotation with the matching key
     for (let i = 0; i < count; i++) {
       const keyInput = keyInputs.nth(i);
       const currentKey = await keyInput.inputValue();
-      
+
       if (currentKey === key) {
         // Found the matching annotation, update the value
         const valueInput = valueInputs.nth(i);
@@ -405,7 +405,7 @@ export class RuleEditorPage {
         return;
       }
     }
-    
+
     throw new Error(`Annotation with key "${key}" not found`);
   }
 
@@ -414,15 +414,15 @@ export class RuleEditorPage {
    */
   async removeAnnotation(key: string): Promise<void> {
     const initialCount = await this.getAnnotationCount();
-    
+
     const deleteButton = this.pageContent.getByRole('button', {
       name: new RegExp(`Remove annotation ${key}`, 'i'),
     });
     await deleteButton.click();
-    
+
     // Wait for the annotation row to be removed by checking the button is gone
     await expect(deleteButton).not.toBeVisible({ timeout: 2000 });
-    
+
     // Verify count decreased
     const newCount = await this.getAnnotationCount();
     expect(newCount).toBe(initialCount - 1);

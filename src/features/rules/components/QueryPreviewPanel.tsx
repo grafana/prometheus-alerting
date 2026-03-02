@@ -39,10 +39,7 @@ export function QueryPreviewPanel({
           </Text>
           {resultType && results.length > 0 && (
             <Text color="secondary" variant="bodySmall">
-              <Trans
-                i18nKey="alerting.query-preview.result-summary"
-                values={{ resultType, count: results.length }}
-              >
+              <Trans i18nKey="alerting.query-preview.result-summary" values={{ resultType, count: results.length }}>
                 ({'{{resultType}}'}, {'{{count}}'} results)
               </Trans>
             </Text>

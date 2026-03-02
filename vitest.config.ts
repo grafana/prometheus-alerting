@@ -20,10 +20,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text-summary', 'json-summary', 'html', 'lcov'],
       reportsDirectory: './coverage',
-      include: [
-        'src/**/*.{js,jsx,ts,tsx}',
-        'packages/**/*.{js,jsx,ts,tsx}',
-      ],
+      include: ['src/**/*.{js,jsx,ts,tsx}', 'packages/**/*.{js,jsx,ts,tsx}'],
       exclude: [
         'src/module.tsx', // Plugin entry point
         'src/types/**', // Type definitions

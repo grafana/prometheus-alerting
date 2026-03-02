@@ -77,7 +77,12 @@ describe('deduplicateGroups', () => {
     const base = AlertGroupFactory.build();
     const labels = { b: '2', a: '1' };
     const group1 = { ...base, labels, receiver: { name: 'slack' } };
-    const group2 = { ...base, labels: { a: '1', b: '2' }, receiver: { name: 'pagerduty' }, alerts: [...base.alerts].reverse() };
+    const group2 = {
+      ...base,
+      labels: { a: '1', b: '2' },
+      receiver: { name: 'pagerduty' },
+      alerts: [...base.alerts].reverse(),
+    };
     const group3 = { ...base, labels, receiver: { name: 'email' } };
 
     const result = deduplicateGroups([group1, group2, group3]);
