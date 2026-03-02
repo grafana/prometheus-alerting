@@ -7,7 +7,7 @@ import { InteractiveTable, EmptyState, LinkButton, Stack } from '@grafana/ui';
 import { AlertLabel } from '@grafana/alerting';
 import { useSilences } from '../hooks/useSilences';
 import { useSilencesFilters } from '../hooks/useSilencesFilters';
-import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
+import { type GettableSilence, parsePromQLStyleMatcherLooseSafe } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
@@ -17,17 +17,30 @@ import { prefixRoute } from '../../../utils/utils.routing';
 import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
 import { SilenceDrawer } from '../components/SilenceDrawer';
 import { SilencesFilters } from '../components/SilencesFilters';
+import { matchesSilenceMatcher } from '../utils/matchesSilenceMatcher';
+import { useURLSearchParams } from '../../../hooks/useURLSearchParams';
 
 function SilencesPage() {
   const { data: silences = [], isLoading, error, isSuccess } = useSilences();
-  const { filters, actions, applyFilters } = useSilencesFilters();
+  const { showInactive, setShowInactive, applyStateFilter } = useSilencesFilters();
   const [selectedSilence, setSelectedSilence] = useState<GettableSilence | null>(null);
+  const [searchParams] = useURLSearchParams();
+  const queryString = searchParams.get('queryString') ?? '';
 
   const clickableCellStyles = css({
     cursor: 'pointer',
   });
 
-  const filteredSilences = applyFilters(silences);
+  const stateFilteredSilences = applyStateFilter(silences);
+
+  const filteredSilences = queryString
+    ? stateFilteredSilences.filter((silence) => {
+        const matchers = parsePromQLStyleMatcherLooseSafe(queryString);
+        return matchers.every((filterMatcher) =>
+          silence.matchers?.some((silenceMatcher) => matchesSilenceMatcher(filterMatcher, silenceMatcher))
+        );
+      })
+    : stateFilteredSilences;
 
   const columns = [
     {
@@ -80,8 +93,9 @@ function SilencesPage() {
             <LinkButton icon="plus" href={prefixRoute(ROUTES.CreateSilence)}>
               {t('silences.create-button', 'Create Silence')}
             </LinkButton>
-            <SilencesFilters filters={filters} actions={actions} />
           </Stack>
+
+          <SilencesFilters silences={silences} showInactive={showInactive} onShowInactiveChange={setShowInactive} />
 
           <ViewState
             isLoading={isLoading}
