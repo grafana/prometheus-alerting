@@ -43,7 +43,7 @@ export class LabelsModal {
       // For subsequent labels, click "Add label" to create a new row
       if (i > 0) {
         await this.addLabelButton.click();
-        
+
         // Wait for new row to appear by checking the count increased
         const keyInputs = this.modal.getByRole('textbox', { name: /key/i });
         await keyInputs.nth(i).waitFor({ state: 'visible', timeout: 2000 });
@@ -102,12 +102,12 @@ export class LabelsModal {
     const valueInputs = this.modal.getByRole('textbox', { name: /value/i });
 
     const count = await keyInputs.count();
-    
+
     // Find the row with the matching key
     for (let i = 0; i < count; i++) {
       const keyInput = keyInputs.nth(i);
       const currentKey = await keyInput.inputValue();
-      
+
       if (currentKey === key) {
         // Found the matching row, update the value
         const valueInput = valueInputs.nth(i);
@@ -116,7 +116,7 @@ export class LabelsModal {
         return;
       }
     }
-    
+
     throw new Error(`Label with key "${key}" not found`);
   }
 
@@ -125,15 +125,15 @@ export class LabelsModal {
    */
   async removeLabel(key: string): Promise<void> {
     const initialCount = await this.getLabelCount();
-    
+
     const deleteButton = this.modal.getByRole('button', {
       name: new RegExp(`Remove label ${key}`, 'i'),
     });
     await deleteButton.click();
-    
+
     // Wait for the label row to be removed by checking the button is gone
     await expect(deleteButton).not.toBeVisible({ timeout: 2000 });
-    
+
     // Verify count decreased (unless it was the last label, then an empty one is added)
     const newCount = await this.getLabelCount();
     if (initialCount === 1) {

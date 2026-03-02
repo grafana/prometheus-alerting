@@ -64,7 +64,7 @@ test.describe('Mimir Rules - E2E', () => {
     test('should delete a rule and show confirming state', async ({ ruleEditorPage, ruleDetailsPage, page }) => {
       // First, create a new rule to delete
       const uniqueRuleName = `DeleteTest_${Date.now()}`;
-      
+
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
@@ -78,7 +78,7 @@ test.describe('Mimir Rules - E2E', () => {
       await page.waitForTimeout(500);
 
       await ruleEditorPage.clickSave();
-      
+
       // Wait for redirect to details page
       await page.waitForURL(RULE_DETAILS_URL_PATTERN, { timeout: 15000 });
       await ruleDetailsPage.waitForLoad();
@@ -127,14 +127,18 @@ test.describe('Mimir Rules - E2E', () => {
 
       // Wait for redirect to rule details page (should NOT match /rules/new)
       await page.waitForURL(RULE_DETAILS_URL_PATTERN, { timeout: 15000 });
-      
+
       // URL should contain the rule identifier
       const url = page.url();
       expect(url).toMatch(/\/rules\/[^/]+$/);
       expect(url).not.toMatch(/\/rules\/new/);
     });
 
-    test('should show consistency warning for newly created rule', async ({ ruleEditorPage, ruleDetailsPage, page }) => {
+    test('should show consistency warning for newly created rule', async ({
+      ruleEditorPage,
+      ruleDetailsPage,
+      page,
+    }) => {
       const uniqueRuleName = `PropagationTest_${Date.now()}`;
 
       await ruleEditorPage.gotoNew('alerting');
@@ -160,11 +164,11 @@ test.describe('Mimir Rules - E2E', () => {
       // Check for consistency warning (may or may not be visible depending on timing)
       // If Mimir is fast, the warning may not appear
       const hasWarning = await ruleDetailsPage.hasConsistencyWarning();
-      
+
       if (hasWarning) {
         // If warning is shown, wait for it to clear
         await ruleDetailsPage.waitForConsistency(120000);
-        
+
         // After consistency, the page should show the rule details
         await ruleDetailsPage.waitForLoad();
         const ruleName = await ruleDetailsPage.getRuleName();

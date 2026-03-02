@@ -34,9 +34,7 @@ function isErrorLike(error: unknown): error is ErrorLike {
 export function DataSourceError({ error, title }: DataSourceErrorProps) {
   const alertmanager = useAlertmanagerSafe();
 
-  const errorMessage = isErrorLike(error)
-    ? stringifyFetchError(error)
-    : String(error);
+  const errorMessage = isErrorLike(error) ? stringifyFetchError(error) : String(error);
   const dataSourceName = alertmanager?.settings.name;
 
   return (

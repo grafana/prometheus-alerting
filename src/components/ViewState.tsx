@@ -5,18 +5,27 @@ import type { RequireAllOrNone } from 'type-fest';
 type ViewStateProps = {
   isSuccess: boolean;
   children: React.ReactNode;
-} & RequireAllOrNone<{
-  isLoading: boolean;
-  loading: React.ReactNode;
-}, 'isLoading' | 'loading'>
-& RequireAllOrNone<{
-  isEmpty: boolean;
-  empty: React.ReactNode;
-}, 'isEmpty' | 'empty'>
-& RequireAllOrNone<{
-  error: unknown;
-  renderError: React.ReactNode;
-}, 'error' | 'renderError'>;
+} & RequireAllOrNone<
+  {
+    isLoading: boolean;
+    loading: React.ReactNode;
+  },
+  'isLoading' | 'loading'
+> &
+  RequireAllOrNone<
+    {
+      isEmpty: boolean;
+      empty: React.ReactNode;
+    },
+    'isEmpty' | 'empty'
+  > &
+  RequireAllOrNone<
+    {
+      error: unknown;
+      renderError: React.ReactNode;
+    },
+    'error' | 'renderError'
+  >;
 
 /**
  * Component that handles common list view states: loading, error, empty, and data.

@@ -175,10 +175,7 @@ function GroupDetails() {
       <Stack direction="column" gap={2}>
         {/* Consistency check warning */}
         {canCheck && !isInSync && (
-          <Alert
-            severity="info"
-            title={t('alerting.group-details.pending-changes', 'Pending changes')}
-          >
+          <Alert severity="info" title={t('alerting.group-details.pending-changes', 'Pending changes')}>
             {syncIssue ||
               t(
                 'alerting.group-details.pending-changes-message',

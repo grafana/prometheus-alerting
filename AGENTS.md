@@ -54,6 +54,7 @@ npm run e2e          # Run E2E tests with Playwright (requires npm run server fi
 Three data sources are auto-provisioned via `provisioning/datasources/test-datasources.yaml`:
 
 1. **Test Prometheus** (`test-prometheus`)
+
    - Type: `prometheus`
    - Implementation: `prometheus` (vanilla)
    - URL: `http://prometheus:9090`
@@ -62,6 +63,7 @@ Three data sources are auto-provisioned via `provisioning/datasources/test-datas
    - Use case: Testing read-only rule viewing
 
 2. **Test Alertmanager** (`test-alertmanager`)
+
    - Type: `alertmanager`
    - Implementation: `prometheus` (vanilla)
    - URL: `http://alertmanager:9093`
@@ -150,12 +152,14 @@ This project has specialized agents available for specific tasks:
 **Invoke with:** `/grafana-ui-expert`
 
 **Examples:**
+
 - `/grafana-ui-expert Review this component and suggest layout improvements`
 - `/grafana-ui-expert Which @grafana/ui component should I use for a form with inline fields?`
 - `/grafana-ui-expert Is this Stack usage following best practices?`
 - `/grafana-ui-expert How can I make this layout responsive?`
 
 **Expertise:**
+
 - Component selection and API guidance
 - Layout patterns (Stack, Box, Grid)
 - Accessibility best practices

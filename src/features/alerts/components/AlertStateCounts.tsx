@@ -22,13 +22,22 @@ export function AlertStateCounts({ alerts }: AlertStateCountsProps) {
   return (
     <Stack direction="row" gap={0.5}>
       {counts.active > 0 && (
-        <Badge color={STATE_BADGE_COLOR['active']} text={t('alerts.count.active', '{{n}} active', { n: counts.active })} />
+        <Badge
+          color={STATE_BADGE_COLOR['active']}
+          text={t('alerts.count.active', '{{n}} active', { n: counts.active })}
+        />
       )}
       {counts.unprocessed > 0 && (
-        <Badge color={STATE_BADGE_COLOR['unprocessed']} text={t('alerts.count.unprocessed', '{{n}} unprocessed', { n: counts.unprocessed })} />
+        <Badge
+          color={STATE_BADGE_COLOR['unprocessed']}
+          text={t('alerts.count.unprocessed', '{{n}} unprocessed', { n: counts.unprocessed })}
+        />
       )}
       {counts.suppressed > 0 && (
-        <Badge color={STATE_BADGE_COLOR['suppressed']} text={t('alerts.count.suppressed', '{{n}} suppressed', { n: counts.suppressed })} />
+        <Badge
+          color={STATE_BADGE_COLOR['suppressed']}
+          text={t('alerts.count.suppressed', '{{n}} suppressed', { n: counts.suppressed })}
+        />
       )}
     </Stack>
   );

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { type AlertGroup, type AlertStatus} from '@grafana/external-alertmanager/vanilla';
+import { type AlertGroup, type AlertStatus } from '@grafana/external-alertmanager/vanilla';
 import { alertMatchesFilters, parseMatchers } from '../utils/alerts.utils';
 
 export interface AlertsFiltersState {
@@ -23,7 +23,6 @@ export interface UseAlertsFiltersResult {
   actions: AlertsFiltersActions;
   applyFilters: (groups: AlertGroup[]) => AlertGroup[];
 }
-
 
 export function useAlertsFilters(): UseAlertsFiltersResult {
   const [receivers, setReceivers] = useState<string[]>([]);

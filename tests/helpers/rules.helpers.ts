@@ -357,7 +357,7 @@ export class RuleBuilder {
   /**
    * Create identifier for the TestEditRule (pre-provisioned in Mimir)
    * This rule exists in test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml
-   * 
+   *
    * IMPORTANT: The hash must match the actual rule definition including labels and annotations
    */
   static createTestEditRuleIdentifier(): CloudRuleIdentifier {

@@ -44,7 +44,7 @@ export function RuleExportPreview({ rule, ruleName, format, onClose }: RuleExpor
       if (error instanceof DOMException && error.name === 'AbortError') {
         return;
       }
-      // Show error toast to user 
+      // Show error toast to user
       getAppEvents().publish({
         type: AppEvents.alertError.name,
         payload: [t('alerting.export.download-failed', 'Download failed')],

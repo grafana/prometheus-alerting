@@ -40,9 +40,7 @@ export const rulerApi = createApi({
   endpoints: (build) => ({
     getRuleGroup: build.query<RulerRuleGroupDTO | null, GetRuleGroupParams>({
       query: ({ dataSourceUid, namespace, groupName }) => ({
-        url: `/${dataSourceUid}/config/v1/rules/${encodeURIComponent(namespace)}/${encodeURIComponent(
-          groupName
-        )}`,
+        url: `/${dataSourceUid}/config/v1/rules/${encodeURIComponent(namespace)}/${encodeURIComponent(groupName)}`,
         responseHandler: 'text',
       }),
       transformResponse: (response: string): RulerRuleGroupDTO | null => {
@@ -64,9 +62,7 @@ export const rulerApi = createApi({
     }),
     deleteRuleGroup: build.mutation<void, DeleteRuleGroupParams>({
       query: ({ dataSourceUid, namespace, groupName }) => ({
-        url: `/${dataSourceUid}/config/v1/rules/${encodeURIComponent(namespace)}/${encodeURIComponent(
-          groupName
-        )}`,
+        url: `/${dataSourceUid}/config/v1/rules/${encodeURIComponent(namespace)}/${encodeURIComponent(groupName)}`,
         method: 'DELETE',
       }),
       invalidatesTags: (_result, _error, { dataSourceUid, namespace, groupName }) => [

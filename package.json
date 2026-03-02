@@ -16,7 +16,9 @@
     "e2e:ui": "playwright test --ui --project=e2e-tests",
     "server": "docker compose up --build",
     "sign": "npx --yes @grafana/sign-plugin@latest",
-    "i18n-extract": "i18next --config src/locales/i18next-parser.config.js"
+    "i18n-extract": "i18next --config src/locales/i18next-parser.config.js",
+    "prepare": "husky",
+    "prepare": "husky"
   },
   "author": "Grafana",
   "license": "Apache-2.0",
@@ -54,10 +56,12 @@
     "fork-ts-checker-webpack-plugin": "^8.0.0",
     "glob": "^10.2.7",
     "happy-dom": "^20.3.9",
+    "husky": "^9.1.7",
     "i18next-parser": "^9.3.0",
     "imports-loader": "^5.0.0",
     "jsdom": "^27.4.0",
     "knip": "^5.82.1",
+    "lint-staged": "^16.3.1",
     "msw": "^2.12.7",
     "prettier": "^2.8.7",
     "replace-in-file-webpack-plugin": "^1.0.6",
@@ -86,10 +90,10 @@
     "@emotion/css": "11.10.6",
     "@grafana/alerting": "^12.3.0-18720481639",
     "@grafana/data": "^12.4.0",
-    "@grafana/scenes": "^7.0.3",
     "@grafana/i18n": "^12.4.0",
     "@grafana/plugin-ui": "^0.11.1",
     "@grafana/runtime": "^12.4.0",
+    "@grafana/scenes": "^7.0.3",
     "@grafana/schema": "^12.4.0",
     "@grafana/ui": "^12.4.0",
     "@hello-pangea/dnd": "^18.0.1",
@@ -125,5 +129,14 @@
   ],
   "volta": {
     "node": "22.21.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --cache --fix",
+      "prettier --write"
+    ],
+    "*.{js,json,css,md}": [
+      "prettier --write"
+    ]
   }
 }

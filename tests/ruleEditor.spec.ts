@@ -271,7 +271,6 @@ test.describe('RuleEditor Page - E2E', () => {
 
       expect(await ruleEditorPage.getAnnotationCount()).toBe(1);
     });
-
   });
 
   test.describe('Validation', () => {

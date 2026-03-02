@@ -35,18 +35,14 @@ export function useMatchingPromRuleExists() {
         ).unwrap();
 
         // Find matching group
-        const matchingGroup = response.data.groups.find(
-          (g) => g.file === namespace && g.name === groupName
-        );
+        const matchingGroup = response.data.groups.find((g) => g.file === namespace && g.name === groupName);
 
         if (!matchingGroup) {
           return false;
         }
 
         // Find matching rule by name
-        const hasMatchingRule = matchingGroup.rules.some(
-          (rule: PromRuleDTO) => rule.name === ruleName
-        );
+        const hasMatchingRule = matchingGroup.rules.some((rule: PromRuleDTO) => rule.name === ruleName);
 
         return hasMatchingRule;
       } catch (error) {
