@@ -8,11 +8,13 @@ import { Box, Button, Dropdown, Menu, RadioButtonGroup, Stack } from '@grafana/u
 import { testIds } from '../../../components/testIds';
 import { PLUGIN_BASE_URL } from '../../../constants';
 import { RulesFilter } from '../components/RulesFilter';
+import { RulesFilterSidebar } from '../components/RulesFilterSidebar';
 import { useRulesFilter } from '../hooks/useRulesFilter';
 import { FilterView } from '../list/FilterView';
 import { GroupedView } from '../list/GroupedView';
 
 type ViewMode = 'grouped' | 'list';
+
 function RulesPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grouped');
   const { filterState, hasActiveFilters } = useRulesFilter();
@@ -61,16 +63,21 @@ function RulesPage() {
             </Dropdown>
           </Stack>
 
-          {/* Render appropriate view based on mode */}
-          {viewMode === 'grouped' ? (
-            <GroupedView
-              groupFilter={filterState.groupName}
-              namespaceFilter={filterState.namespace}
-              dataSourceFilter={filterState.dataSourceNames}
-            />
-          ) : (
-            <FilterView filterState={filterState} />
-          )}
+          {/* Sidebar + rule list */}
+          <div style={{ display: 'flex', gap: '16px', minHeight: 0 }}>
+            <RulesFilterSidebar />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {viewMode === 'grouped' ? (
+                <GroupedView
+                  groupFilter={filterState.groupName}
+                  namespaceFilter={filterState.namespace}
+                  dataSourceFilter={filterState.dataSourceNames}
+                />
+              ) : (
+                <FilterView filterState={filterState} />
+              )}
+            </div>
+          </div>
         </Stack>
       </div>
     </PluginPage>
