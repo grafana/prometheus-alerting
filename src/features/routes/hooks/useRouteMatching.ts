@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { findMatchingRoutes, RouteWithID } from '@grafana/alerting/unstable';
+import { findMatchingRoutes, RouteWithID } from '@grafana/alerting';
 import { AlertGroup } from '@grafana/external-alertmanager/vanilla';
 
 /**

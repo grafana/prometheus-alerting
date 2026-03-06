@@ -87,7 +87,7 @@
   },
   "dependencies": {
     "@emotion/css": "11.10.6",
-    "@grafana/alerting": "^12.3.0-18720481639",
+    "@grafana/alerting": "^13.0.0-22761893021",
     "@grafana/data": "^12.4.0",
     "@grafana/i18n": "^12.4.0",
     "@grafana/plugin-ui": "^0.11.1",

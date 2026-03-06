@@ -6,7 +6,7 @@ import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
 import { DataSourceError } from '../../../components/AlertmanagerError';
 import { t } from '@grafana/i18n';
-import { computeInheritedTree } from '@grafana/alerting/unstable';
+import { computeInheritedTree } from '@grafana/alerting';
 import { RouteCard } from '../components/RouteCard';
 import { Route, Receiver } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
