@@ -3,6 +3,44 @@
  */
 
 import { DataSourceInstanceSettings, PluginType } from '@grafana/data';
+import { Factory } from 'fishery';
+
+export const DataSourceInstanceSettingsFactory = Factory.define<DataSourceInstanceSettings>(({ sequence }) => ({
+  id: sequence,
+  uid: `ds-uid-${sequence}`,
+  orgId: 1,
+  name: `Data Source ${sequence}`,
+  type: 'prometheus',
+  typeName: 'Prometheus',
+  typeLogoUrl: '',
+  access: 'proxy',
+  url: '',
+  isDefault: false,
+  readOnly: false,
+  withCredentials: false,
+  jsonData: {},
+  meta: {
+    id: 'prometheus',
+    name: 'Prometheus',
+    type: PluginType.datasource,
+    builtIn: false,
+    info: {
+      author: { name: 'Grafana Labs' },
+      description: '',
+      links: [],
+      logos: { small: '', large: '' },
+      screenshots: [],
+      updated: '',
+      version: '',
+    },
+    module: '',
+    baseUrl: '',
+  },
+}));
+
+export const BuiltInDataSourceInstanceSettingsFactory = DataSourceInstanceSettingsFactory.params({
+  meta: { builtIn: true } as DataSourceInstanceSettings['meta'],
+});
 
 /**
  * A mock Prometheus datasource
