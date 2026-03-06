@@ -25,9 +25,68 @@ route:
       matchers:
         - team = platform
 
+    # Mixed receiver for alerts that need multiple notification channels
+    - receiver: mixed
+      matchers:
+        - team = ops
+
 receivers:
   - name: default
+    webhook_configs:
+      - url: 'http://localhost:9999/webhook'
+        send_resolved: true
+
   - name: pagerduty
+    pagerduty_configs:
+      - routing_key: 'dummy-routing-key-pagerduty'
+        severity: 'critical'
+        client: 'Alertmanager'
+        client_url: 'https://grafana.example.com'
+        description: '{{ .CommonLabels.alertname }}'
+        send_resolved: true
+
   - name: slack-critical
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/DUMMY/DUMMY/DUMMYTOKEN'
+        channel: '#critical-alerts'
+        username: 'Alertmanager'
+        title: '{{ .CommonLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+        send_resolved: true
+
   - name: slack-platform
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/DUMMY/DUMMY/DUMMYTOKEN2'
+        channel: '#platform-alerts'
+        username: 'Alertmanager'
+        title: '{{ .CommonLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+        send_resolved: true
+
   - name: email-platform
+    email_configs:
+      - to: 'platform-team@example.com'
+        from: 'alertmanager@example.com'
+        smarthost: 'smtp.example.com:587'
+        auth_username: 'alertmanager@example.com'
+        auth_password: 'dummy-smtp-password'
+        require_tls: true
+        send_resolved: true
+
+  - name: mixed
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/DUMMY/DUMMY/DUMMYTOKEN3'
+        channel: '#ops-alerts'
+        username: 'Alertmanager'
+        title: '{{ .CommonLabels.alertname }}'
+        send_resolved: true
+    pagerduty_configs:
+      - routing_key: 'dummy-routing-key-ops'
+        severity: 'warning'
+        client: 'Alertmanager'
+        send_resolved: true
+    email_configs:
+      - to: 'ops-team@example.com'
+        from: 'alertmanager@example.com'
+        smarthost: 'smtp.example.com:587'
+        send_resolved: true
