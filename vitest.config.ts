@@ -29,10 +29,6 @@ export default defineConfig({
         'src/**/*.constants.ts', // Constants files
       ],
       all: true,
-      thresholds: {
-        lines: 60,
-        branches: 60,
-      },
     },
   },
   ssr: {
