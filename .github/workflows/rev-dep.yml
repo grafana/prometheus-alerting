@@ -1,0 +1,57 @@
+name: Rev-dep
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  rev-dep:
+    name: Check dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js with caching
+        uses: ./.github/actions/setup-node-with-cache
+
+      - name: Run rev-dep
+        id: rev-dep
+        run: |
+          set +e
+          OUTPUT=$(npm run rev-dep --silent 2>&1)
+          EXIT_CODE=$?
+          set -e
+          echo "output<<EOF" >> $GITHUB_OUTPUT
+          echo "$OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+
+      - name: Post failure comment
+        if: steps.rev-dep.outputs.exit_code != '0'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: rev-dep
+          message: |
+            ### rev-dep found issues
+
+            ```
+            ${{ steps.rev-dep.outputs.output }}
+            ```
+
+      - name: Delete stale comment
+        if: steps.rev-dep.outputs.exit_code == '0'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: rev-dep
+          delete: true
+
+      - name: Fail if rev-dep did not pass
+        if: steps.rev-dep.outputs.exit_code != '0'
+        run: exit 1
