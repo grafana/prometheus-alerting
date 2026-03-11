@@ -118,7 +118,7 @@ export function InhibitRuleDrawerViewFooter({ onEdit, onDelete, isDeleting }: In
     <>
       <Stack gap={2} justifyContent="flex-end">
         <Button variant="secondary" onClick={onEdit}>
-          {t('inhibit-rules.drawer.edit', 'Edit')}
+          {t('inhibit-rules.drawer.edit.edit-button', 'Edit')}
         </Button>
         <Button variant="destructive" onClick={() => setIsConfirmModalOpen(true)} disabled={isDeleting}>
           {t('inhibit-rules.drawer.remove', 'Remove')}

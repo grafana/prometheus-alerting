@@ -33,12 +33,12 @@ const ROUTES_PER_PAGE = 20;
 interface Props {
   numberOfMatchingInstances?: number;
   currentRoute: RouteWithID;
-  isDefaultPolicy?: boolean;
+  isDefault?: boolean;
   onRouteClick?: (route: RouteWithID) => void;
   focussedRouteID?: string;
   matchingCounts?: RouteMatchingCounts;
-  onAddPolicy?: (referenceRoute: RouteWithID, position: InsertPosition) => void;
-  onDeletePolicy?: (route: RouteWithID) => void;
+  onAddRoute?: (referenceRoute: RouteWithID, position: InsertPosition) => void;
+  onDeleteRoute?: (route: RouteWithID) => void;
   readOnly?: boolean;
 }
 
@@ -46,12 +46,12 @@ const RouteCard = (props: Props) => {
   const {
     numberOfMatchingInstances: mumberOfMatchingInstances,
     currentRoute,
-    isDefaultPolicy = false,
+    isDefault = false,
     onRouteClick,
     focussedRouteID,
     matchingCounts,
-    onAddPolicy,
-    onDeletePolicy,
+    onAddRoute,
+    onDeleteRoute,
     readOnly = false,
   } = props;
 
@@ -63,27 +63,27 @@ const RouteCard = (props: Props) => {
   const matchers = normalizeMatchers(currentRoute);
   const hasMatchers = Boolean(matchers && matchers.length);
 
-  // if the route has no matchers, is not the default policy (that one has none) and it does not continue
+  // if the route has no matchers, is not the default route (that one has none) and it does not continue
   // then we should warn the user that it's a suspicious setup
-  const showMatchesAllLabelsWarning = !hasMatchers && !isDefaultPolicy && !continueMatching;
+  const showMatchesAllLabelsWarning = !hasMatchers && !isDefault && !continueMatching;
 
-  const childPolicies = currentRoute.routes ?? [];
-  const hasChildPolicies = childPolicies.length > 0;
+  const childRoutes = currentRoute.routes ?? [];
+  const hasChildRoutes = childRoutes.length > 0;
 
-  // we collapse the auto-generated policies by default
-  const [showPolicyChildren, togglePolicyChildren] = useToggle(true);
+  // we collapse the auto-generated routes by default
+  const [showRouteChildren, toggleRouteChildren] = useToggle(true);
 
   const groupBy = currentRoute.group_by;
   const muteTimings = currentRoute.mute_time_intervals ?? [];
   const activeTimings = currentRoute.active_time_intervals ?? [];
 
-  const [visibleChildPolicies, setVisibleChildPolicies] = useState(ROUTES_PER_PAGE);
+  const [visibleChildRoutes, setVisibleChildRoutes] = useState(ROUTES_PER_PAGE);
 
-  // child policies to render are the ones that belong to the path that matches the filters
-  const childPoliciesToRender = childPolicies;
-  const pageOfChildren = childPoliciesToRender.slice(0, visibleChildPolicies);
+  // child routes to render are the ones that belong to the path that matches the filters
+  const childRoutesToRender = childRoutes;
+  const pageOfChildren = childRoutesToRender.slice(0, visibleChildRoutes);
 
-  const moreCount = childPoliciesToRender.length - pageOfChildren.length;
+  const moreCount = childRoutesToRender.length - pageOfChildren.length;
   const showMore = moreCount > 0;
 
   const hasFocus = Boolean(focussedRouteID) && String(currentRoute.id) === String(focussedRouteID);
@@ -91,36 +91,36 @@ const RouteCard = (props: Props) => {
   return (
     <Stack direction="column" gap={1.5}>
       <div
-        className={styles.policyWrapper(hasFocus)}
-        data-testid={isDefaultPolicy ? 'am-root-route-container' : 'am-route-container'}
+        className={styles.routeWrapper(hasFocus)}
+        data-testid={isDefault ? 'am-root-route-container' : 'am-route-container'}
         onClick={() => onRouteClick?.(currentRoute)}
       >
         {/* continueMatching and showMatchesAllLabelsWarning are mutually exclusive so the icons can't overlap */}
         {continueMatching && <ContinueMatchingIndicator />}
         {showMatchesAllLabelsWarning && <AllMatchesIndicator />}
 
-        <div className={styles.policyItemWrapper}>
+        <div className={styles.routeItemWrapper}>
           <Stack direction="column" gap={1}>
             {/* Matchers and actions */}
             <div>
               <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
                 <Stack direction="row" alignItems="center" gap={1}>
-                  {hasChildPolicies ? (
+                  {hasChildRoutes ? (
                     <IconButton
-                      name={showPolicyChildren ? 'angle-down' : 'angle-right'}
+                      name={showRouteChildren ? 'angle-down' : 'angle-right'}
                       onClick={(e) => {
                         e.stopPropagation();
-                        togglePolicyChildren();
+                        toggleRouteChildren();
                       }}
                       aria-label={
-                        showPolicyChildren
-                          ? t('alerting.policies.aria-label-collapse', 'Collapse')
-                          : t('alerting.policies.aria-label-expand', 'Expand')
+                        showRouteChildren
+                          ? t('alerting.routes.aria-label-collapse', 'Collapse')
+                          : t('alerting.routes.aria-label-expand', 'Expand')
                       }
                     />
                   ) : null}
-                  {isDefaultPolicy && <DefaultPolicyIndicator />}
-                  {!isDefaultPolicy && (
+                  {isDefault && <DefaultRouteIndicator />}
+                  {!isDefault && (
                     <>
                       {hasMatchers ? (
                         <>
@@ -131,53 +131,53 @@ const RouteCard = (props: Props) => {
                         </>
                       ) : (
                         <span className={styles.metadata}>
-                          <Trans i18nKey="alerting.policies.no-matchers">No matchers</Trans>
+                          <Trans i18nKey="alerting.routes.no-matchers">No matchers</Trans>
                         </span>
                       )}
                     </>
                   )}
                 </Stack>
 
-                {/* Add policy actions */}
-                {!readOnly && onAddPolicy && (
+                {/* Add route actions */}
+                {!readOnly && onAddRoute && (
                   <div onClick={(e) => e.stopPropagation()}>
-                    {isDefaultPolicy ? (
+                    {isDefault ? (
                       <Button
                         size="sm"
                         icon="plus"
                         variant="secondary"
-                        onClick={() => onAddPolicy(currentRoute, 'child')}
+                        onClick={() => onAddRoute(currentRoute, 'child')}
                       >
-                        <Trans i18nKey="alerting.policies.new-child">New child route</Trans>
+                        <Trans i18nKey="alerting.routes.new-child">New child route</Trans>
                       </Button>
                     ) : (
                       <Dropdown
                         overlay={
                           <Menu>
                             <Menu.Item
-                              label={t('alerting.policy.label-new-sibling-above', 'New sibling above')}
+                              label={t('alerting.route.label-new-sibling-above', 'New sibling above')}
                               icon="arrow-up"
-                              onClick={() => onAddPolicy(currentRoute, 'above')}
+                              onClick={() => onAddRoute(currentRoute, 'above')}
                             />
                             <Menu.Item
-                              label={t('alerting.policy.label-new-sibling-below', 'New sibling below')}
+                              label={t('alerting.route.label-new-sibling-below', 'New sibling below')}
                               icon="arrow-down"
-                              onClick={() => onAddPolicy(currentRoute, 'below')}
+                              onClick={() => onAddRoute(currentRoute, 'below')}
                             />
                             <Menu.Divider />
                             <Menu.Item
-                              label={t('alerting.policy.label-new-child-route', 'New child route')}
+                              label={t('alerting.route.label-new-child-route', 'New child route')}
                               icon="plus"
-                              onClick={() => onAddPolicy(currentRoute, 'child')}
+                              onClick={() => onAddRoute(currentRoute, 'child')}
                             />
-                            {onDeletePolicy && (
+                            {onDeleteRoute && (
                               <>
                                 <Menu.Divider />
                                 <Menu.Item
-                                  label={t('alerting.policy.label-delete-route', 'Delete route')}
+                                  label={t('alerting.route.label-delete-route', 'Delete route')}
                                   icon="trash-alt"
                                   destructive
-                                  onClick={() => onDeletePolicy(currentRoute)}
+                                  onClick={() => onDeleteRoute(currentRoute)}
                                 />
                               </>
                             )}
@@ -185,7 +185,7 @@ const RouteCard = (props: Props) => {
                         }
                       >
                         <Button size="sm" icon="plus" variant="secondary">
-                          <Trans i18nKey="alerting.policies.add-route">Add</Trans>
+                          <Trans i18nKey="alerting.routes.add-route">Add</Trans>
                         </Button>
                       </Dropdown>
                     )}
@@ -205,13 +205,13 @@ const RouteCard = (props: Props) => {
               groupInterval={currentRoute.group_interval}
               repeatInterval={currentRoute.repeat_interval}
               matchers={matchers}
-              isDefaultPolicy={isDefaultPolicy}
+              isDefault={isDefault}
             />
           </Stack>
         </div>
       </div>
-      <div className={styles.childPolicies}>
-        {showPolicyChildren && (
+      <div className={styles.childRoutes}>
+        {showRouteChildren && (
           <>
             {pageOfChildren.map((child: RouteWithID) => (
               <RouteCard
@@ -221,8 +221,8 @@ const RouteCard = (props: Props) => {
                 matchingCounts={matchingCounts}
                 onRouteClick={onRouteClick}
                 focussedRouteID={focussedRouteID}
-                onAddPolicy={onAddPolicy}
-                onDeletePolicy={onDeletePolicy}
+                onAddRoute={onAddRoute}
+                onDeleteRoute={onDeleteRoute}
                 readOnly={readOnly}
               />
             ))}
@@ -232,7 +232,7 @@ const RouteCard = (props: Props) => {
                 icon="angle-down"
                 variant="secondary"
                 className={styles.moreButtons}
-                onClick={() => setVisibleChildPolicies(visibleChildPolicies + ROUTES_PER_PAGE)}
+                onClick={() => setVisibleChildRoutes(visibleChildRoutes + ROUTES_PER_PAGE)}
               >
                 <Trans i18nKey="alerting.routes.n-more-routes" count={moreCount}>
                   {{ count: moreCount }} additional routes
@@ -256,12 +256,12 @@ interface MetadataRowProps {
   groupInterval?: string;
   repeatInterval?: string;
   matchers?: ObjectMatcher[];
-  isDefaultPolicy: boolean;
+  isDefault: boolean;
 }
 
 function MetadataRow({
   numberOfAlertInstances,
-  isDefaultPolicy,
+  isDefault,
   groupWait,
   groupInterval,
   repeatInterval,
@@ -272,7 +272,7 @@ function MetadataRow({
 }: MetadataRowProps) {
   const noGrouping = isArray(groupBy) && groupBy[0] === '...';
   const customGrouping = !noGrouping && isArray(groupBy) && groupBy.length > 0;
-  const singleGroup = isDefaultPolicy && isArray(groupBy) && groupBy.length === 0;
+  const singleGroup = isDefault && isArray(groupBy) && groupBy.length === 0;
 
   const hasMuteTimings = Boolean(muteTimings.length);
   const hasActiveTimings = Boolean(activeTimings.length);
@@ -282,7 +282,7 @@ function MetadataRow({
       <MetaText icon="layers-alt" data-testid="matching-instances">
         <Text color="primary">{numberOfAlertInstances ?? '-'}</Text>
         <span>
-          <Trans i18nKey="alerting.policies.metadata.n-instances" count={numberOfAlertInstances ?? 0}>
+          <Trans i18nKey="alerting.routes.metadata.n-instances" count={numberOfAlertInstances ?? 0}>
             instance
           </Trans>
         </span>
@@ -290,7 +290,7 @@ function MetadataRow({
       {receiver && (
         <MetaText icon="at" data-testid="receiver">
           <span>
-            <Trans i18nKey="alerting.policies.metadata.delivered-to">Delivered to</Trans>{' '}
+            <Trans i18nKey="alerting.routes.metadata.delivered-to">Delivered to</Trans>{' '}
           </span>
           <Text color="primary">{receiver}</Text>
         </MetaText>
@@ -298,7 +298,7 @@ function MetadataRow({
       {customGrouping && (
         <MetaText icon="layer-group" data-testid="grouping">
           <span>
-            <Trans i18nKey="alerting.policies.metadata.grouped-by">Grouped by</Trans>{' '}
+            <Trans i18nKey="alerting.routes.metadata.grouped-by">Grouped by</Trans>{' '}
           </span>
           <Text color="primary">{groupBy.join(', ')}</Text>
         </MetaText>
@@ -306,21 +306,21 @@ function MetadataRow({
       {singleGroup && (
         <MetaText icon="layer-group">
           <span>
-            <Trans i18nKey="alerting.policies.metadata.grouping.single-group">Single group</Trans>
+            <Trans i18nKey="alerting.routes.metadata.grouping.single-group">Single group</Trans>
           </span>
         </MetaText>
       )}
       {noGrouping && (
         <MetaText icon="layer-group">
           <span>
-            <Trans i18nKey="alerting.policies.metadata.grouping.none">Not grouping</Trans>
+            <Trans i18nKey="alerting.routes.metadata.grouping.none">Not grouping</Trans>
           </span>
         </MetaText>
       )}
       {hasMuteTimings && (
         <MetaText icon="calendar-slash" data-testid="mute-timings">
           <span>
-            <Trans i18nKey="alerting.policies.metadata.mute-time">Muted when</Trans>{' '}
+            <Trans i18nKey="alerting.routes.metadata.mute-time">Muted when</Trans>{' '}
           </span>
           <TimeIntervals timings={muteTimings} />
         </MetaText>
@@ -328,7 +328,7 @@ function MetadataRow({
       {hasActiveTimings && (
         <MetaText icon="calendar-alt" data-testid="active-timings">
           <span>
-            <Trans i18nKey="alerting.policies.metadata.active-time">Active when</Trans>{' '}
+            <Trans i18nKey="alerting.routes.metadata.active-time">Active when</Trans>{' '}
           </span>
           <TimeIntervals timings={activeTimings} />
         </MetaText>
@@ -374,15 +374,15 @@ const AllMatchesIndicator: FC = () => {
   );
 };
 
-export function DefaultPolicyIndicator() {
+export function DefaultRouteIndicator() {
   const styles = useStyles2(getStyles);
   return (
     <>
       <Text element="h2" variant="body" weight="medium">
-        <Trans i18nKey="alerting.policies.default-route.title">Default route</Trans>
+        <Trans i18nKey="alerting.routes.default-route.title">Default route</Trans>
       </Text>
       <span className={styles.metadata}>
-        <Trans i18nKey="alerting.policies.default-route.description">
+        <Trans i18nKey="alerting.routes.default-route.description">
           All alert instances will be handled by the default route if no other matching routes are found.
         </Trans>
       </span>
@@ -422,12 +422,12 @@ export const TimingOptionsMeta = ({ groupWait, groupInterval, repeatInterval }: 
       <Tooltip
         placement="top"
         content={t(
-          'alerting.policies.metadata.timingOptions.groupWait.description',
+          'alerting.routes.metadata.timingOptions.groupWait.description',
           'How long to initially wait to send a notification for a group of alert instances.'
         )}
       >
         <span>
-          <Trans i18nKey="alerting.policies.metadata.timingOptions.groupWait.label" values={{ groupWait }}>
+          <Trans i18nKey="alerting.routes.metadata.timingOptions.groupWait.label" values={{ groupWait }}>
             Wait <Text color="primary">{'{{ groupWait }}'}</Text> to group instances
           </Trans>
         </span>
@@ -440,12 +440,12 @@ export const TimingOptionsMeta = ({ groupWait, groupInterval, repeatInterval }: 
       <Tooltip
         placement="top"
         content={t(
-          'alerting.policies.metadata.timingOptions.groupInterval.description',
+          'alerting.routes.metadata.timingOptions.groupInterval.description',
           'How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent.'
         )}
       >
         <span>
-          <Trans i18nKey="alerting.policies.metadata.timingOptions.groupInterval.label" values={{ groupWait }}>
+          <Trans i18nKey="alerting.routes.metadata.timingOptions.groupInterval.label" values={{ groupWait }}>
             Wait <Text color="primary">{'{{ groupWait }}'}</Text> before sending updates
           </Trans>
         </span>
@@ -458,12 +458,12 @@ export const TimingOptionsMeta = ({ groupWait, groupInterval, repeatInterval }: 
       <Tooltip
         placement="top"
         content={t(
-          'alerting.policies.metadata.timingOptions.repeatInterval.description',
+          'alerting.routes.metadata.timingOptions.repeatInterval.description',
           'How often notifications are sent if the group of alerts has not changed since the last notification.'
         )}
       >
         <span>
-          <Trans i18nKey="alerting.policies.metadata.timingOptions.repeatInterval.label" values={{ repeatInterval }}>
+          <Trans i18nKey="alerting.routes.metadata.timingOptions.repeatInterval.label" values={{ repeatInterval }}>
             Repeated every <Text color="primary">{'{{ repeatInterval }}'}</Text>
           </Trans>
         </span>
@@ -498,7 +498,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
       }),
     };
   },
-  childPolicies: css({
+  childRoutes: css({
     marginLeft: theme.spacing(4),
     position: 'relative',
     '&:before': {
@@ -510,10 +510,10 @@ const getStyles = (theme: GrafanaTheme2) => ({
       marginLeft: '-20px',
     },
   }),
-  policyItemWrapper: css({
+  routeItemWrapper: css({
     padding: theme.spacing(1.5),
   }),
-  policyWrapper: (hasFocus = false) =>
+  routeWrapper: (hasFocus = false) =>
     css({
       flex: 1,
       position: 'relative',
@@ -563,8 +563,8 @@ const RouteCardSkeleton: FC<{ count?: number }> = ({ count = 1 }) => {
   return (
     <Stack direction="column" gap={1.5}>
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className={styles.policyWrapper(false)}>
-          <div className={styles.policyItemWrapper}>
+        <div key={index} className={styles.routeWrapper(false)}>
+          <div className={styles.routeItemWrapper}>
             <Stack direction="column" gap={1}>
               <Skeleton height={24} width="10%" />
               <Skeleton height={16} width="60%" />

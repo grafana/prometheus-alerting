@@ -102,16 +102,16 @@ function RoutesPage() {
     setDrawerMode(DrawerMode.View);
   }, []);
 
-  // Handle adding a new policy
-  const handleAddPolicy = useCallback((referenceRoute: RouteWithID, position: InsertPosition) => {
+  // Handle adding a new route
+  const handleAddRoute = useCallback((referenceRoute: RouteWithID, position: InsertPosition) => {
     setReferenceRouteId(referenceRoute.id);
     setInsertPosition(position);
     setSelectedRoute(null); // Clear selected route since we're adding new
     setDrawerMode(DrawerMode.Add);
   }, []);
 
-  // Handle deleting a policy (from RouteCard menu)
-  const handleDeletePolicy = useCallback((route: RouteWithID) => {
+  // Handle deleting a route (from RouteCard menu)
+  const handleDeleteRoute = useCallback((route: RouteWithID) => {
     setRouteToDelete(route);
   }, []);
 
@@ -160,11 +160,11 @@ function RoutesPage() {
                   isLoadingAlerts ? undefined : getRouteMatchCount(matchingCounts, routeTree.id)
                 }
                 matchingCounts={isLoadingAlerts ? undefined : matchingCounts}
-                isDefaultPolicy={true}
+                isDefault={true}
                 onRouteClick={handleRouteClick}
                 focussedRouteID={selectedRoute?.id}
-                onAddPolicy={canEdit ? handleAddPolicy : undefined}
-                onDeletePolicy={canEdit ? handleDeletePolicy : undefined}
+                onAddRoute={canEdit ? handleAddRoute : undefined}
+                onDeleteRoute={canEdit ? handleDeleteRoute : undefined}
                 readOnly={!canEdit}
               />
             </div>

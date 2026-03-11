@@ -84,7 +84,7 @@ export function formAmRouteToAmRoute(formAmRoute: Partial<FormAmRoute>): Route {
     receiver,
   } = formAmRoute;
 
-  // "undefined" means "inherit from the parent policy"
+  // "undefined" means "inherit from the parent route"
   const INHERIT_FROM_PARENT = undefined;
 
   const group_by = overrideGrouping ? groupBy : INHERIT_FROM_PARENT;

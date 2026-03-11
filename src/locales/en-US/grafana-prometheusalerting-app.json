@@ -165,7 +165,25 @@
       "aria-label": "More",
       "button-text": "More"
     },
-    "policies": {
+    "query-preview": {
+      "error-title": "Query failed",
+      "loading": "Running query...",
+      "next-page": "Next page",
+      "no-data": "No data",
+      "page-counter": "{{start}} - {{end}} of {{total}}",
+      "previous-page": "Previous page",
+      "result-summary": "({{resultType}}, {{count}} results)",
+      "run-query": "Run query",
+      "series-label": "Series {{index}}",
+      "title": "Query Preview"
+    },
+    "route": {
+      "label-delete-route": "Delete route",
+      "label-new-child-route": "New child route",
+      "label-new-sibling-above": "New sibling above",
+      "label-new-sibling-below": "New sibling below"
+    },
+    "routes": {
       "add-route": "Add",
       "aria-label-collapse": "Collapse",
       "aria-label-expand": "Expand",
@@ -199,30 +217,10 @@
           }
         }
       },
+      "n-more-routes_one": "{{count}} additional routes",
+      "n-more-routes_other": "{{count}} additional routes",
       "new-child": "New child route",
       "no-matchers": "No matchers"
-    },
-    "policy": {
-      "label-delete-route": "Delete route",
-      "label-new-child-route": "New child route",
-      "label-new-sibling-above": "New sibling above",
-      "label-new-sibling-below": "New sibling below"
-    },
-    "query-preview": {
-      "error-title": "Query failed",
-      "loading": "Running query...",
-      "next-page": "Next page",
-      "no-data": "No data",
-      "page-counter": "{{start}} - {{end}} of {{total}}",
-      "previous-page": "Previous page",
-      "result-summary": "({{resultType}}, {{count}} results)",
-      "run-query": "Run query",
-      "series-label": "Series {{index}}",
-      "title": "Query Preview"
-    },
-    "routes": {
-      "n-more-routes_one": "{{count}} additional routes",
-      "n-more-routes_other": "{{count}} additional routes"
     },
     "rule-actions": {
       "copy-link": "Copy link",
@@ -284,6 +282,11 @@
       }
     },
     "rule-list": {
+      "filter-sidebar": {
+        "group-placeholder": "Filter by group...",
+        "namespace-placeholder": "Filter by namespace...",
+        "rule-name-placeholder": "Filter by name..."
+      },
       "filter-view": {
         "cancel-search": "Cancel search",
         "no-more-results": "No more results – found {{numberOfRules}} rules",
@@ -321,8 +324,6 @@
     "rules-filter": {
       "data-source-label": "Data source",
       "data-source-placeholder": "Select data sources",
-      "filter-label": "Filter",
-      "filter-options-label": "Filter options",
       "group-label": "Group",
       "labels-label": "Labels",
       "labels-placeholder": "Select labels",
@@ -331,6 +332,9 @@
       "search-placeholder": "Search by name or enter filter query...",
       "state-label": "State",
       "type-label": "Type"
+    },
+    "rules-filter-sidebar": {
+      "clear-filters": "Clear filters"
     }
   },
   "alertmanager": {
@@ -349,12 +353,35 @@
     },
     "count": {
       "active": "{{n}} active",
-      "inhibited": "{{n}} inhibited",
-      "muted": "{{n}} muted",
-      "silenced": "{{n}} silenced",
+      "suppressed": "{{n}} suppressed",
       "unprocessed": "{{n}} unprocessed"
     },
+    "drawer": {
+      "ends-at": "Ends",
+      "generator-url": "Generator URL",
+      "inhibited-by": "Inhibited by",
+      "muted-by": "Muted by",
+      "receiver": "Receiver",
+      "section": {
+        "annotations": "Annotations",
+        "details": "Details",
+        "labels": "Labels",
+        "receivers": "Receivers",
+        "timing": "Timing"
+      },
+      "silenced-by": "Silenced by",
+      "starts-at": "Started",
+      "title": "Alert details",
+      "updated-at": "Updated"
+    },
     "error-loading-title": "Error loading alert groups",
+    "filters": {
+      "active": "Active",
+      "label-placeholder": "Filter by labels, e.g. foo=bar, env=~prod.*",
+      "receiver-placeholder": "Filter by receiver",
+      "suppressed": "Suppressed",
+      "unprocessed": "Unprocessed"
+    },
     "no-alerts-message": "No active alerts found in the Alertmanager.",
     "state": {
       "inhibited-by_one": "Inhibited by {{count}} inhibition",
@@ -417,10 +444,7 @@
   },
   "common": {
     "all": "All",
-    "apply": "Apply",
     "cancel": "Cancel",
-    "clear": "Clear",
-    "close": "Close",
     "saving": "Saving..."
   },
   "components": {
@@ -429,15 +453,31 @@
     }
   },
   "inhibit-rules": {
+    "add-button": "Add inhibit rule",
     "column": {
       "equal": "Equal",
       "source-matchers": "Source Matchers",
       "target-matchers": "Target Matchers"
     },
+    "confirm-remove": {
+      "body": "Are you sure you want to remove this inhibit rule? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Remove",
+      "title": "Remove Inhibit Rule"
+    },
+    "create-drawer": {
+      "subtitle": "Inhibit Rule",
+      "title": "New Inhibit Rule"
+    },
     "drawer": {
       "default-title": "Inhibit Rule",
       "details": "Inhibit Rule Details",
-      "edit": "Edit",
+      "edit": {
+        "cancel-button": "Cancel",
+        "edit-button": "Edit",
+        "update-button": "Update",
+        "updating": "Updating..."
+      },
       "equal": "Equal Labels",
       "no-config": "No configuration",
       "no-config-desc": "This inhibit rule has no visible configuration.",
@@ -450,6 +490,25 @@
     "error-deleting-message": "Failed to delete inhibit rule",
     "error-deleting-title": "Error deleting inhibit rule",
     "error-loading-title": "Error loading inhibit rules",
+    "form": {
+      "cancel-button": "Cancel",
+      "create-button": "Create",
+      "creating": "Creating...",
+      "equal-description": "Comma-separated label names that must be equal in both source and target alerts (e.g. alertname, instance).",
+      "equal-label": "Equal Labels",
+      "equal-placeholder": "alertname, instance",
+      "error-creating-title": "Error creating inhibit rule",
+      "error-generic": "An error occurred",
+      "error-updating-title": "Error updating inhibit rule",
+      "source-matchers-description": "One matcher per line (e.g. severity = critical). The source alert must match all of these.",
+      "source-matchers-label": "Source Matchers",
+      "source-matchers-placeholder": "severity = critical",
+      "target-matchers-description": "One matcher per line (e.g. severity = warning). Matching alerts will be suppressed.",
+      "target-matchers-label": "Target Matchers",
+      "target-matchers-placeholder": "severity = warning",
+      "update-button": "Update",
+      "updating": "Updating..."
+    },
     "no-matchers": "None",
     "no-rules-message": "No inhibit rules are configured in the Alertmanager.",
     "page-subtitle": "Suppress alerts based on other active alerts"
@@ -772,7 +831,7 @@
       "add-matcher": "Add matcher",
       "cancel": "Cancel",
       "continue": "Continue matching subsequent sibling nodes",
-      "continue-description": "If enabled, matching will continue to subsequent sibling policies",
+      "continue-description": "If enabled, matching will continue to subsequent sibling routes",
       "field-required": "Required",
       "group-by": "Group by",
       "group-by-aria": "Group by",
@@ -1023,14 +1082,7 @@
     "error-expiring-message": "Failed to expire silence",
     "error-expiring-title": "Error expiring silence",
     "error-loading-title": "Error loading silences",
-    "expire-modal": {
-      "body": "Are you sure you want to expire this silence?",
-      "cancel": "Cancel",
-      "confirm": "Expire",
-      "title": "Expire Silence"
-    },
     "filter": {
-      "clear-filters": "Clear filters",
       "search-by-matchers": "Search by matchers",
       "tooltip-description": "Search silences by matcher label and value.",
       "tooltip-exact": "Exact match:",

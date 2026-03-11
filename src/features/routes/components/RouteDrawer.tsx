@@ -9,7 +9,7 @@ import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
-import { PolicyEditForm } from './PolicyEditForm';
+import { RouteEditForm } from './RouteEditForm';
 import { useUpdateRoute } from '../hooks/useUpdateRoute';
 import { useAddRoute } from '../hooks/useAddRoute';
 import { useDeleteRoute } from '../hooks/useDeleteRoute';
@@ -262,7 +262,7 @@ export function RouteDrawer({
           )}
         </TabContent>
       ) : routeForForm ? (
-        <PolicyEditForm
+        <RouteEditForm
           route={routeForForm}
           onSubmit={handleSave}
           onCancel={handleCancelEdit}

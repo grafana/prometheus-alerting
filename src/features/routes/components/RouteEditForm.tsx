@@ -30,14 +30,14 @@ const matcherOperatorOptions: Array<ComboboxOption<MatcherOperator>> = [
   { label: '!~', value: MatcherOperator.notRegex },
 ];
 
-export interface PolicyEditFormProps {
+export interface RouteEditFormProps {
   route: RouteWithID;
   onSubmit: (values: Partial<FormAmRoute>) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
 
-export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false }: PolicyEditFormProps) {
+export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false }: RouteEditFormProps) {
   const styles = useStyles2(getStyles);
   const [groupByOptions, setGroupByOptions] = useState<Array<SelectableValue<string>>>(
     (route.group_by ?? []).map((g) => ({ label: g, value: g }))
@@ -175,7 +175,7 @@ export function PolicyEditForm({ route, onSubmit, onCancel, isSubmitting = false
           label={t('routes.edit.continue', 'Continue matching subsequent sibling nodes')}
           description={t(
             'routes.edit.continue-description',
-            'If enabled, matching will continue to subsequent sibling policies'
+            'If enabled, matching will continue to subsequent sibling routes'
           )}
         >
           <Switch id="continue-toggle" {...register('continue')} />

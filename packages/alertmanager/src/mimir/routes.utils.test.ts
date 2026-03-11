@@ -135,7 +135,7 @@ describe('routes.utils', () => {
     it('should throw error when trying to remove root', () => {
       const routeTree: RouteWithID = addUniqueIdentifierToRoute({ receiver: 'default' });
 
-      expect(() => omitRouteFromRouteTree(routeTree.id, routeTree)).toThrow('You cant remove the root policy');
+      expect(() => omitRouteFromRouteTree(routeTree.id, routeTree)).toThrow('You cant remove the root route');
     });
   });
 

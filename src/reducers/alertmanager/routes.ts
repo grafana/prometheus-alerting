@@ -49,8 +49,8 @@ export const routesReducer = createReducer(initialAlertmanagerConfiguration, (bu
       }
 
       const rootRouteWithIdentifiers = addUniqueIdentifierToRoute(alertmanager_config.route);
-      const updatedPolicyTree = omitRouteFromRouteTree(id, rootRouteWithIdentifiers);
-      draft.alertmanager_config.route = cleanRouteIDs(updatedPolicyTree);
+      const updatedRouteTree = omitRouteFromRouteTree(id, rootRouteWithIdentifiers);
+      draft.alertmanager_config.route = cleanRouteIDs(updatedRouteTree);
     })
     // add a new route to given position
     .addCase(addRouteAction, (draft, { payload }) => {
@@ -62,13 +62,13 @@ export const routesReducer = createReducer(initialAlertmanagerConfiguration, (bu
       }
 
       const rootRouteWithIdentifiers = addUniqueIdentifierToRoute(alertmanager_config.route);
-      const updatedPolicyTree = addRouteToReferenceRoute(
+      const updatedRouteTree = addRouteToReferenceRoute(
         partialRoute,
         rootRouteWithIdentifiers,
         insertPosition,
         referenceRouteIdentifier
       );
 
-      draft.alertmanager_config.route = cleanRouteIDs(updatedPolicyTree);
+      draft.alertmanager_config.route = cleanRouteIDs(updatedRouteTree);
     });
 });
