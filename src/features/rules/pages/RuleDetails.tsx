@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { parseIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules';
+import { parseIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import type { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
 import { Alert, LoadingPlaceholder, Spinner, Stack, Text } from '@grafana/ui';
 import { PluginPage } from '@grafana/runtime';

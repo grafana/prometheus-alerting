@@ -1,5 +1,5 @@
 import { Locator, Page, expect } from '@playwright/test';
-import { DataSourceRuleIdentifier, stringifyIdentifier } from '@grafana/external-rules';
+import { DataSourceRuleIdentifier, stringifyIdentifier } from '@grafana/external-rules/identifiers';
 import { DeleteRuleModal } from './modals/DeleteRuleModal';
 
 /**

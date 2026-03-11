@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { parseIdentifier, isCloudRuleIdentifier, CloudRuleIdentifier, getRuleName } from '@grafana/external-rules';
+import { parseIdentifier, isCloudRuleIdentifier, CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
+import { getRuleName } from '@grafana/external-rules/utils';
 import type { NavModelItem } from '@grafana/data';
 
 import { t } from '@grafana/i18n';

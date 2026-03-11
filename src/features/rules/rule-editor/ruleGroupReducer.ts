@@ -2,7 +2,7 @@ import { createAction, createReducer, isAnyOf } from '@reduxjs/toolkit';
 import { inRange } from 'lodash';
 
 import { RulerRuleGroupDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
-import { CloudRuleIdentifier } from '@grafana/external-rules';
+import { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { matchRulerRuleById } from '@grafana/external-rules/matching';
 
 /**
