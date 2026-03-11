@@ -126,9 +126,9 @@ export const LabelSetSchema = z.record(z.string(), z.string());
 
 export const AlertStatusSchema = z.object({
   state: z.enum(['unprocessed', 'active', 'suppressed']),
-  silencedBy: z.array(z.string()),
-  inhibitedBy: z.array(z.string()),
-  mutedBy: z.array(z.string()),
+  silencedBy: z.array(z.string()).optional().default([]),
+  inhibitedBy: z.array(z.string()).optional().default([]),
+  mutedBy: z.array(z.string()).optional().default([]),
 });
 
 export const AlertSchema = z.object({
