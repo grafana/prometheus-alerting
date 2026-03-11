@@ -5,13 +5,7 @@
 
 import { config, setDataSourceSrv } from '@grafana/runtime';
 
-import {
-  mockDatasourcesConfig,
-  mockAlertmanagerDs,
-  mockMimirAlertmanagerDs,
-  mockMimirDs,
-  mockPrometheusDs,
-} from '../fixtures/datasources';
+import { mockDatasourcesConfig, mockAlertmanagerDs, mockMimirDs, mockPrometheusDs } from '../fixtures/datasources';
 
 /**
  * Mock implementation of getDataSourceSrv().getInstanceSettings()

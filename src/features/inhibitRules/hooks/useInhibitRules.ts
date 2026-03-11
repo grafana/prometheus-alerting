@@ -1,22 +1,20 @@
-import { normalizeInhibitRuleMatchers } from '@grafana/external-alertmanager/vanilla';
+import { normalizeInhibitRuleMatchers, type InhibitRule } from '@grafana/external-alertmanager/vanilla';
 import { alertmanagerApi } from '../../../api/alertmanager/alertmanager.endpoints';
 import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
+import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
+import {
+  addInhibitRuleAction,
+  updateInhibitRuleAction,
+  deleteInhibitRuleAction,
+} from '../../../reducers/alertmanager/inhibitRules';
 
 /**
  * Hook to fetch and manage inhibit rules from the Alertmanager configuration.
  * Uses the getConfiguration endpoint which returns ParsedUserConfiguration.
  * Dynamically selects the correct API endpoint based on the data source implementation.
  *
- * Inhibit rules allow you to mute alerts based on the presence of other alerts.
- * For example, you can inhibit alerts about a service when an alert about the host is firing.
- *
  * The hook normalizes matchers from string arrays to ObjectMatcher arrays.
- *
- * This hook can be extended in the future to support:
- * - Creating new inhibit rules
- * - Editing existing inhibit rules
- * - Deleting inhibit rules
  */
 export function useInhibitRules() {
   const { uid: dataSourceUID, settings } = useAlertmanager();
@@ -47,4 +45,58 @@ export function useInhibitRules() {
     ...queryResult,
     inhibitRules,
   };
+}
+
+/**
+ * Hook to add a new inhibit rule to the Alertmanager configuration.
+ * Only works with Mimir-backed Alertmanager (requires configuration API).
+ *
+ * @example
+ * const [addInhibitRule, { isLoading, error, isSuccess }] = useAddInhibitRule();
+ * await addInhibitRule(newRule);
+ */
+export function useAddInhibitRule() {
+  const [produceNewConfig, state] = useProduceNewAlertmanagerConfiguration();
+
+  const addInhibitRuleFn = async (rule: InhibitRule) => {
+    return produceNewConfig(addInhibitRuleAction({ rule }));
+  };
+
+  return [addInhibitRuleFn, state] as const;
+}
+
+/**
+ * Hook to update an existing inhibit rule in the Alertmanager configuration.
+ * Only works with Mimir-backed Alertmanager (requires configuration API).
+ *
+ * @example
+ * const [updateInhibitRule, { isLoading, error, isSuccess }] = useUpdateInhibitRule();
+ * await updateInhibitRule(updatedRule, ruleIndex);
+ */
+export function useUpdateInhibitRule() {
+  const [produceNewConfig, state] = useProduceNewAlertmanagerConfiguration();
+
+  const updateInhibitRuleFn = async (rule: InhibitRule, index: number) => {
+    return produceNewConfig(updateInhibitRuleAction({ rule, index }));
+  };
+
+  return [updateInhibitRuleFn, state] as const;
+}
+
+/**
+ * Hook to delete an inhibit rule from the Alertmanager configuration.
+ * Only works with Mimir-backed Alertmanager (requires configuration API).
+ *
+ * @example
+ * const [deleteInhibitRule, { isLoading, error, isSuccess }] = useDeleteInhibitRule();
+ * await deleteInhibitRule(ruleIndex);
+ */
+export function useDeleteInhibitRule() {
+  const [produceNewConfig, state] = useProduceNewAlertmanagerConfiguration();
+
+  const deleteInhibitRuleFn = async (index: number) => {
+    return produceNewConfig(deleteInhibitRuleAction(index));
+  };
+
+  return [deleteInhibitRuleFn, state] as const;
 }

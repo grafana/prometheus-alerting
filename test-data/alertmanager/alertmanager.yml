@@ -30,6 +30,35 @@ route:
       matchers:
         - team = ops
 
+inhibit_rules:
+  # Suppress warning alerts when a critical alert is already firing for the same alertname and instance
+  - source_matchers:
+      - severity = critical
+    target_matchers:
+      - severity = warning
+    equal:
+      - alertname
+      - instance
+
+  # Suppress all platform-team alerts when a critical infrastructure alert is firing on the same cluster
+  - source_matchers:
+      - alertname = ClusterDown
+      - severity = critical
+    target_matchers:
+      - team = platform
+    equal:
+      - cluster
+
+  # Suppress ops-team non-critical alerts when a critical ops alert is already firing
+  - source_matchers:
+      - team = ops
+      - severity = critical
+    target_matchers:
+      - team = ops
+      - severity =~ "warning|info"
+    equal:
+      - namespace
+
 receivers:
   - name: default
     webhook_configs:

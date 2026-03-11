@@ -6,6 +6,7 @@ import { timeIntervalsReducer } from '../reducers/alertmanager/timeIntervals';
 import { routesReducer } from '../reducers/alertmanager/routes';
 import { notificationTemplatesReducer } from '../reducers/alertmanager/templates';
 import { receiversReducer } from '../reducers/alertmanager/receivers';
+import { inhibitRulesReducer } from '../reducers/alertmanager/inhibitRules';
 import { useAlertmanager } from './useAlertmanager';
 import { mimirAlertmanagerApi } from '../api/alertmanager/mimir.endpoints';
 import {
@@ -22,7 +23,8 @@ const configurationReducer = reduceReducers<PostableParsedUserConfiguration>(
   timeIntervalsReducer,
   receiversReducer,
   notificationTemplatesReducer,
-  routesReducer
+  routesReducer,
+  inhibitRulesReducer
 );
 
 /**

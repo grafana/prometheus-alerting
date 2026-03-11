@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { css } from '@emotion/css';
 import { testIds } from '../../../components/testIds';
-import { InteractiveTable, Stack, EmptyState } from '@grafana/ui';
+import { Button, InteractiveTable, Stack, EmptyState } from '@grafana/ui';
 import { useInhibitRules } from '../hooks/useInhibitRules';
 import { t } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
@@ -16,6 +16,8 @@ import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
 import { DataSourceError } from '../../../components/AlertmanagerError';
 import { InhibitRuleDrawer } from '../components/InhibitRuleDrawer';
+import { InhibitRuleCreateDrawer } from '../components/InhibitRuleCreateDrawer';
+import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 
 const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
   if (!matchers || matchers.length === 0) {
@@ -37,8 +39,10 @@ const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
 
 function InhibitRulesPage() {
   const { inhibitRules, isLoading, error, isSuccess } = useInhibitRules();
+  const hasConfigurationAPI = useHasConfigurationAPI();
   const [selectedInhibitRule, setSelectedInhibitRule] = useState<NormalizedInhibitRule | null>(null);
   const [selectedInhibitRuleIndex, setSelectedInhibitRuleIndex] = useState<number | null>(null);
+  const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
 
   const clickableCellStyles = css({
     cursor: 'pointer',
@@ -90,6 +94,13 @@ function InhibitRulesPage() {
   return (
     <AlertmanagerPage subTitle={t('inhibit-rules.page-subtitle', 'Suppress alerts based on other active alerts')}>
       <div data-testid={testIds.inhibitRules.container}>
+        {hasConfigurationAPI && (
+          <Stack justifyContent="flex-end">
+            <Button icon="plus" onClick={() => setIsCreateDrawerOpen(true)}>
+              {t('inhibit-rules.add-button', 'Add inhibit rule')}
+            </Button>
+          </Stack>
+        )}
         <ViewState
           isLoading={isLoading}
           isSuccess={isSuccess}
@@ -111,7 +122,13 @@ function InhibitRulesPage() {
             <EmptyState
               message={t('inhibit-rules.no-rules-message', 'No inhibit rules are configured in the Alertmanager.')}
               variant="call-to-action"
-            />
+            >
+              {hasConfigurationAPI && (
+                <Button icon="plus" onClick={() => setIsCreateDrawerOpen(true)}>
+                  {t('inhibit-rules.add-button', 'Add inhibit rule')}
+                </Button>
+              )}
+            </EmptyState>
           }
         >
           <InteractiveTable
@@ -122,6 +139,7 @@ function InhibitRulesPage() {
           />
         </ViewState>
       </div>
+
       {selectedInhibitRule && (
         <InhibitRuleDrawer
           inhibitRule={selectedInhibitRule}
@@ -132,6 +150,8 @@ function InhibitRulesPage() {
           }}
         />
       )}
+
+      {isCreateDrawerOpen && <InhibitRuleCreateDrawer onClose={() => setIsCreateDrawerOpen(false)} />}
     </AlertmanagerPage>
   );
 }
