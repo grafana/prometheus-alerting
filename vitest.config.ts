@@ -18,7 +18,7 @@ export default defineConfig({
     pool: 'threads',
     coverage: {
       provider: 'v8',
-      reporter: ['text-summary', 'json-summary', 'html', 'lcov'],
+      reporter: ['text-summary', 'json-summary', 'json', 'html', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**/*.{js,jsx,ts,tsx}', 'packages/**/*.{js,jsx,ts,tsx}'],
       exclude: [
@@ -29,6 +29,10 @@ export default defineConfig({
         'src/**/*.constants.ts', // Constants files
       ],
       all: true,
+      thresholds: {
+        lines: 60,
+        branches: 60,
+      },
     },
   },
   ssr: {
