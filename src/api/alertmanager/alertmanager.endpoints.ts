@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
   GetStatusApiArg,
   AlertmanagerStatus,
@@ -124,7 +125,10 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         dataSourceUID,
       }),
       providesTags: ['Alerts'],
-      responseSchema: GetAlertsApiResponseSchema,
+      // Cast needed: zod v4 vendors its own Standard Schema types rather than depending on
+      // @standard-schema/spec, causing a module identity mismatch with RTK Query. Safe at runtime.
+      // See: https://github.com/colinhacks/zod/issues/4938
+      responseSchema: GetAlertsApiResponseSchema as unknown as StandardSchemaV1<GetAlertsApiResponse>,
     }),
     postAlerts: build.mutation<PostAlertsApiResponse, WithDataSourceInformation<PostAlertsApiArg>>({
       query: ({ dataSourceUID, postableAlerts }) => ({
@@ -149,7 +153,10 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         dataSourceUID,
       }),
       providesTags: ['AlertGroups'],
-      responseSchema: GetAlertGroupsApiResponseSchema,
+      // Cast needed: zod v4 vendors its own Standard Schema types rather than depending on
+      // @standard-schema/spec, causing a module identity mismatch with RTK Query. Safe at runtime.
+      // See: https://github.com/colinhacks/zod/issues/4938
+      responseSchema: GetAlertGroupsApiResponseSchema as unknown as StandardSchemaV1<GetAlertGroupsApiResponse>,
     }),
   }),
 });
