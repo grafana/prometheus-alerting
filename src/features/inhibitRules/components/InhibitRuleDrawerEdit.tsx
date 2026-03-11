@@ -2,7 +2,12 @@ import React from 'react';
 import { t } from '@grafana/i18n';
 import type { NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
 import { useUpdateInhibitRule } from '../hooks/useInhibitRules';
-import { InhibitRuleFormFields, type InhibitRuleFormData, formDataToInhibitRule } from './InhibitRuleFormFields';
+import {
+  InhibitRuleFormFields,
+  type InhibitRuleFormData,
+  formDataToInhibitRule,
+  normalizedInhibitRuleToInhibitRule,
+} from './InhibitRuleFormFields';
 
 interface InhibitRuleDrawerEditProps {
   inhibitRule: NormalizedInhibitRule;
@@ -28,12 +33,7 @@ export function InhibitRuleDrawerEdit({
     }
   };
 
-  // Convert NormalizedInhibitRule (ObjectMatcher[]) back to InhibitRule (string[]) for the form
-  const inhibitRuleForForm = {
-    source_matchers: inhibitRule.source_matchers.map(([name, op, value]) => `${name} ${op} ${value}`),
-    target_matchers: inhibitRule.target_matchers.map(([name, op, value]) => `${name} ${op} ${value}`),
-    equal: inhibitRule.equal,
-  };
+  const inhibitRuleForForm = normalizedInhibitRuleToInhibitRule(inhibitRule);
 
   return (
     <InhibitRuleFormFields

@@ -104,6 +104,36 @@ export const fullyPopulatedConfig: PostableParsedUserConfiguration = {
 };
 
 /**
+ * Configuration with multiple inhibit rules for testing index-based CRUD operations
+ */
+export const configWithInhibitRules: PostableParsedUserConfiguration = {
+  template_files: {},
+  alertmanager_config: {
+    route: {
+      receiver: 'default-receiver',
+      group_wait: '30s',
+      group_interval: '5m',
+      repeat_interval: '4h',
+    },
+    receivers: [{ name: 'default-receiver' }],
+    time_intervals: [],
+    inhibit_rules: [
+      {
+        source_matchers: ['severity=critical'],
+        target_matchers: ['severity=warning'],
+        equal: ['alertname', 'instance'],
+      },
+      {
+        source_matchers: ['team=ops', 'severity=critical'],
+        target_matchers: ['team=ops', 'severity=~"warning|info"'],
+        equal: ['namespace'],
+      },
+    ],
+    templates: [],
+  },
+};
+
+/**
  * Configuration for testing route preservation with custom receivers
  */
 export const configWithSpecificRoutes: PostableParsedUserConfiguration = {

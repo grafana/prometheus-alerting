@@ -14,6 +14,7 @@ import { setupGrafanaRuntimeMocks, resetGrafanaRuntimeMocks } from './src/test/m
 // Import handler reset functions
 import { resetRulerState } from './src/test/handlers/ruler';
 import { resetMimirAlertmanagerState } from './src/test/handlers/mimir-alertmanager';
+import { resetVanillaAlertmanagerState } from './src/test/handlers/alertmanager';
 
 /**
  * React InlineSVG Mock
@@ -96,6 +97,7 @@ afterEach(() => {
   // Reset any stateful mock data
   resetRulerState();
   resetMimirAlertmanagerState();
+  resetVanillaAlertmanagerState();
   resetGrafanaRuntimeMocks();
 });
 

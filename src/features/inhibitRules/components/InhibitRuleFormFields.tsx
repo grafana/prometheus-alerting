@@ -48,6 +48,22 @@ export function inhibitRuleToFormData(rule: InhibitRule): InhibitRuleFormData {
 }
 
 /**
+ * Convert a NormalizedInhibitRule (ObjectMatcher[] matchers) back to an InhibitRule (string[] matchers)
+ * suitable for populating the form or sending to the API.
+ */
+export function normalizedInhibitRuleToInhibitRule(rule: {
+  source_matchers: Array<[string, string, string]>;
+  target_matchers: Array<[string, string, string]>;
+  equal?: string[];
+}): InhibitRule {
+  return {
+    source_matchers: rule.source_matchers.map(([name, op, value]) => `${name} ${op} ${value}`),
+    target_matchers: rule.target_matchers.map(([name, op, value]) => `${name} ${op} ${value}`),
+    equal: rule.equal,
+  };
+}
+
+/**
  * Convert InhibitRuleFormData back to an InhibitRule for the API.
  */
 export function formDataToInhibitRule(data: InhibitRuleFormData): InhibitRule {

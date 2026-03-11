@@ -88,8 +88,12 @@ describe('inhibitRulesReducer', () => {
     });
 
     it('should throw when the index is out of bounds', () => {
-      const action = updateInhibitRuleAction({ rule: mockInhibitRule(), index: 99 });
-      expect(() => inhibitRulesReducer(initialConfig, action)).toThrow('Invalid inhibit rule index 99');
+      expect(() =>
+        inhibitRulesReducer(initialConfig, updateInhibitRuleAction({ rule: mockInhibitRule(), index: 99 }))
+      ).toThrow('Invalid inhibit rule index 99');
+      expect(() =>
+        inhibitRulesReducer(initialConfig, updateInhibitRuleAction({ rule: mockInhibitRule(), index: -1 }))
+      ).toThrow('Invalid inhibit rule index -1');
     });
   });
 
@@ -107,8 +111,12 @@ describe('inhibitRulesReducer', () => {
     });
 
     it('should throw when the index is out of bounds', () => {
-      const action = deleteInhibitRuleAction(99);
-      expect(() => inhibitRulesReducer(initialConfig, action)).toThrow('Invalid inhibit rule index 99');
+      expect(() => inhibitRulesReducer(initialConfig, deleteInhibitRuleAction(99))).toThrow(
+        'Invalid inhibit rule index 99'
+      );
+      expect(() => inhibitRulesReducer(initialConfig, deleteInhibitRuleAction(-1))).toThrow(
+        'Invalid inhibit rule index -1'
+      );
     });
   });
 });
