@@ -38,6 +38,7 @@ export const mockGrafanaConfig = {
       orgName: 'Main Org.',
       name: 'Admin',
       login: 'admin',
+      email: 'admin@localhost',
     },
   },
   appSubUrl: '',

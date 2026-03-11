@@ -23,7 +23,7 @@ import { ROUTES } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { parsePrometheusDuration } from '../../../utils/time.utils';
 import { t } from '@grafana/i18n';
-import { locationService } from '@grafana/runtime';
+import { locationService, config } from '@grafana/runtime';
 
 interface MatcherFormData {
   name: string;
@@ -122,7 +122,7 @@ function SilenceForm() {
       duration: '2h',
       startsAt: formatDateTimeLocal(now),
       endsAt: formatDateTimeLocal(oneHourLater),
-      createdBy: '',
+      createdBy: config.bootData.user.email,
       comment: '',
     },
   });
@@ -185,7 +185,7 @@ function SilenceForm() {
         duration: '2h',
         startsAt: formatDateTimeLocal(currentTime),
         endsAt: formatDateTimeLocal(oneHourFromNow),
-        createdBy: '',
+        createdBy: config.bootData.user.email,
         comment: '',
       });
     }

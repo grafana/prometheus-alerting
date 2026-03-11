@@ -13,6 +13,7 @@ import {
   RadioButtonGroup,
 } from '@grafana/ui';
 import { t } from '@grafana/i18n';
+import { config } from '@grafana/runtime';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { SilenceFormSchema, type SilenceFormData } from '../utils/silenceFormSchema';
 
@@ -79,7 +80,7 @@ export function SilenceFormFields({
       duration: '2h',
       startsAt: formatDateTimeLocal(now),
       endsAt: formatDateTimeLocal(oneHourLater),
-      createdBy: '',
+      createdBy: config.bootData.user.email,
       comment: '',
     },
   });
