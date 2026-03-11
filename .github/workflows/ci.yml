@@ -35,7 +35,16 @@ jobs:
       - name: Lint
         run: npm run lint
       - name: Unit tests
-        run: npm run test:ci
+        run: npx vitest run --coverage --passWithNoTests
+
+      - name: Upload coverage artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-pull-request
+          path: coverage
+          retention-days: 1
+
       - name: Build frontend
         run: npm run build
 
@@ -250,3 +259,60 @@ jobs:
 
       - name: Stop grafana docker
         run: docker compose down
+
+  test-base-branch:
+    name: Run tests (Base)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.base_ref }}
+          persist-credentials: false
+
+      - name: Setup Node.js with caching
+        uses: ./.github/actions/setup-node-with-cache
+
+      - name: Run coverage
+        run: npx vitest run --coverage --passWithNoTests
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-main
+          path: coverage
+          retention-days: 1
+
+  report-coverage:
+    name: Report coverage
+    if: github.event_name == 'pull_request'
+    needs: [build, test-base-branch]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Download PR coverage
+        uses: actions/download-artifact@v6
+        with:
+          name: coverage-pull-request
+          path: coverage
+
+      - name: Download base coverage
+        uses: actions/download-artifact@v6
+        with:
+          name: coverage-main
+          path: coverage-main
+
+      - name: Report coverage
+        uses: davelosert/vitest-coverage-report-action@2500dafcee7dd64f85ab689c0b83798a8359770e # v2.9.3
+        with:
+          json-summary-compare-path: coverage-main/coverage-summary.json
+          file-coverage-mode: none
+          threshold-icons: "{0: '🔴', 80: '🟠', 90: '🟢'}"
