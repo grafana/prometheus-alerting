@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Alert, Button, Field, Input, Stack } from '@grafana/ui';
 import { t } from '@grafana/i18n';
-import type { InhibitRule } from '@grafana/external-alertmanager/vanilla';
+import { normalizeInhibitRuleMatchers, type InhibitRule } from '@grafana/external-alertmanager/vanilla';
 
 /**
  * Matchers are stored as string arrays in the API (e.g. ["severity = critical", "team = ops"]).
@@ -38,12 +38,23 @@ export function matchersArrayToString(matchers: string[] | undefined): string {
 
 /**
  * Convert an InhibitRule (API shape) to InhibitRuleFormData.
+ *
+ * Runs the rule through normalizeInhibitRuleMatchers first so that deprecated
+ * fields (source_match, source_match_re, target_match, target_match_re) are
+ * merged into the modern source_matchers/target_matchers string arrays before
+ * the form sees them. Without this step, rules that arrived from an older
+ * Alertmanager using only the deprecated fields would show empty matcher fields.
  */
 export function inhibitRuleToFormData(rule: InhibitRule): InhibitRuleFormData {
+  const normalized = normalizeInhibitRuleMatchers(rule);
   return {
-    sourceMatchers: matchersArrayToString(rule.source_matchers),
-    targetMatchers: matchersArrayToString(rule.target_matchers),
-    equal: (rule.equal ?? []).join(', '),
+    sourceMatchers: matchersArrayToString(
+      normalized.source_matchers.map(([name, op, value]) => `${name} ${op} ${value.trim()}`)
+    ),
+    targetMatchers: matchersArrayToString(
+      normalized.target_matchers.map(([name, op, value]) => `${name} ${op} ${value.trim()}`)
+    ),
+    equal: (normalized.equal ?? []).join(', '),
   };
 }
 
@@ -57,8 +68,8 @@ export function normalizedInhibitRuleToInhibitRule(rule: {
   equal?: string[];
 }): InhibitRule {
   return {
-    source_matchers: rule.source_matchers.map(([name, op, value]) => `${name} ${op} ${value}`),
-    target_matchers: rule.target_matchers.map(([name, op, value]) => `${name} ${op} ${value}`),
+    source_matchers: rule.source_matchers.map(([name, op, value]) => `${name} ${op} ${value.trim()}`),
+    target_matchers: rule.target_matchers.map(([name, op, value]) => `${name} ${op} ${value.trim()}`),
     equal: rule.equal,
   };
 }

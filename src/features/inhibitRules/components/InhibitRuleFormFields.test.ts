@@ -91,6 +91,62 @@ describe('inhibitRuleToFormData', () => {
       equal: '',
     });
   });
+
+  it('normalizes deprecated source_match (equality) into sourceMatchers', () => {
+    expect(
+      inhibitRuleToFormData({
+        source_match: { severity: 'critical', alertname: 'HostDown' },
+        target_matchers: ['severity = warning'],
+      })
+    ).toEqual({
+      sourceMatchers: 'severity = critical\nalertname = HostDown',
+      targetMatchers: 'severity = warning',
+      equal: '',
+    });
+  });
+
+  it('normalizes deprecated source_match_re (regex) into sourceMatchers with =~ operator', () => {
+    expect(
+      inhibitRuleToFormData({
+        source_match_re: { region: 'us-.*' },
+        target_matchers: ['severity = warning'],
+      })
+    ).toEqual({
+      sourceMatchers: 'region =~ us-.*',
+      targetMatchers: 'severity = warning',
+      equal: '',
+    });
+  });
+
+  it('normalizes deprecated target_match and target_match_re into targetMatchers', () => {
+    // normalizeInhibitRuleMatchers order: *_match_re before *_match
+    expect(
+      inhibitRuleToFormData({
+        source_matchers: ['severity = critical'],
+        target_match: { team: 'ops' },
+        target_match_re: { env: 'prod.*' },
+      })
+    ).toEqual({
+      sourceMatchers: 'severity = critical',
+      targetMatchers: 'env =~ prod.*\nteam = ops',
+      equal: '',
+    });
+  });
+
+  it('merges deprecated fields with modern matchers when both are present', () => {
+    // modern source_matchers come first, then deprecated source_match_re, then source_match
+    expect(
+      inhibitRuleToFormData({
+        source_matchers: ['severity = critical'],
+        source_match: { alertname: 'HostDown' },
+        target_matchers: ['severity = warning'],
+      })
+    ).toEqual({
+      sourceMatchers: 'severity = critical\nalertname = HostDown',
+      targetMatchers: 'severity = warning',
+      equal: '',
+    });
+  });
 });
 
 describe('formDataToInhibitRule', () => {
