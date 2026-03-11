@@ -105,6 +105,8 @@ describe('useMatchingPromRuleExists', () => {
       unwrap: () => Promise.reject(new Error('API error')),
     });
 
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     const { result } = renderHook(() => useMatchingPromRuleExists());
 
     let exists: boolean | undefined;
@@ -113,6 +115,8 @@ describe('useMatchingPromRuleExists', () => {
     });
 
     expect(exists).toBe(false);
+    expect(warnSpy).toHaveBeenCalledWith('Error checking if rule exists in Prometheus:', expect.any(Error));
+    warnSpy.mockRestore();
   });
 });
 
