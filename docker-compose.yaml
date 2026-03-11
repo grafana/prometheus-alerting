@@ -76,6 +76,7 @@ services:
       mc alias set myminio http://minio:9000 mimir mimirmimir;
       mc mb myminio/mimir-ruler --ignore-existing;
       mc mb myminio/mimir-blocks --ignore-existing;
+      mc mb myminio/mimir-alertmanager --ignore-existing;
       exit 0;
       "
     networks:
@@ -92,7 +93,7 @@ services:
         target: /data
     command:
       - '-config.file=/etc/mimir/mimir.yaml'
-      - '-target=all'
+      - '-target=all,alertmanager'
     depends_on:
       minio:
         condition: service_healthy

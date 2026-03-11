@@ -4,6 +4,7 @@
 
 import { DataSourceInstanceSettings, PluginType } from '@grafana/data';
 import { Factory } from 'fishery';
+import { AlertManagerDataSourceJsonData } from '../../types/datasources';
 
 export const DataSourceInstanceSettingsFactory = Factory.define<DataSourceInstanceSettings>(({ sequence }) => ({
   id: sequence,
@@ -98,6 +99,34 @@ export const mockMimirDs: Partial<DataSourceInstanceSettings> = {
 };
 
 /**
+ * A mock Mimir Alertmanager datasource
+ */
+export const mockMimirAlertmanagerDs: Partial<DataSourceInstanceSettings<AlertManagerDataSourceJsonData>> = {
+  uid: 'mimir-alertmanager-1',
+  name: 'Mimir Alertmanager',
+  type: 'alertmanager',
+  meta: {
+    id: 'alertmanager',
+    name: 'Alertmanager',
+    type: PluginType.datasource,
+    info: {
+      author: { name: 'Grafana Labs' },
+      description: 'Mimir Alertmanager datasource',
+      links: [],
+      logos: { small: '', large: '' },
+      screenshots: [],
+      updated: '',
+      version: '',
+    },
+    module: '',
+    baseUrl: '',
+  },
+  jsonData: {
+    implementation: 'mimir',
+  },
+};
+
+/**
  * A mock Alertmanager datasource
  */
 export const mockAlertmanagerDs: Partial<DataSourceInstanceSettings> = {
@@ -131,4 +160,5 @@ export const mockDatasourcesConfig = {
   [mockPrometheusDs.uid!]: mockPrometheusDs,
   [mockMimirDs.uid!]: mockMimirDs,
   [mockAlertmanagerDs.uid!]: mockAlertmanagerDs,
+  [mockMimirAlertmanagerDs.uid!]: mockMimirAlertmanagerDs,
 };

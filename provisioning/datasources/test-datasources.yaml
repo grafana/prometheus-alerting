@@ -29,6 +29,18 @@ datasources:
       implementation: prometheus
     version: 1
 
+  # Mimir Alertmanager data source - for testing alertmanager CRUD on Mimir
+  - name: Test Mimir Alertmanager
+    type: alertmanager
+    uid: test-mimir-alertmanager
+    url: http://mimir:9009
+    access: proxy
+    isDefault: false
+    editable: true
+    jsonData:
+      implementation: mimir
+    version: 1
+
   # Mimir with Ruler API - for testing rule creation/editing
   - name: Test Mimir
     type: prometheus
