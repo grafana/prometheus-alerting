@@ -104,6 +104,7 @@ npm run i18n-extract # Extract translation strings after adding t() or <Trans />
 
 - Never use `as` to type cast unless it can't be avoided
 - Never use `any` and prefer `unknown` unless it can't be avoided
+- Try to use `satisfies` instead of `any`
 - Run `npm run typecheck` to verify types
 
 ### Linting and Formatting
