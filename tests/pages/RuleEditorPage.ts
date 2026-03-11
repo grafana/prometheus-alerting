@@ -1,5 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test';
-import { CloudRuleIdentifier, stringifyIdentifier } from '@grafana/external-rules';
+import { CloudRuleIdentifier, stringifyIdentifier } from '@grafana/external-rules/identifiers';
 import { LabelsModal } from './modals/LabelsModal';
 
 /**

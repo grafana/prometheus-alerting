@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CloudRuleIdentifier } from '@grafana/external-rules';
+import { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { matchRulerRuleById } from '@grafana/external-rules/matching';
 

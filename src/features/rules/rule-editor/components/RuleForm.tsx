@@ -10,7 +10,7 @@ import { locationService } from '@grafana/runtime';
 import { Button, Stack, useStyles2 } from '@grafana/ui';
 
 import type { RulerRuleDTO } from '@grafana/external-rules/vanilla';
-import type { CloudRuleIdentifier } from '@grafana/external-rules';
+import type { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { hashRulerRule } from '@grafana/external-rules/hashing';
 import { getRuleName } from '@grafana/external-rules/utils';
 

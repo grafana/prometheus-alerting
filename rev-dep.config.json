@@ -1,0 +1,68 @@
+{
+  "configVersion": "1.6",
+  "$schema": "https://github.com/jayu/rev-dep/blob/master/config-schema/1.6.schema.json?raw=true",
+  "ignoreFiles": ["**/*.d.ts", "**/.prettierrc.js", "src/test/**"],
+  "rules": [
+    {
+      "path": ".",
+      "prodEntryPoints": ["src/module.tsx"],
+      "devEntryPoints": [
+        "tests/**",
+        "src/**/*.test.{ts,tsx}",
+        "packages/**/*.test.{ts,tsx}",
+        "**/*.config.*",
+        "vitest-setup.ts",
+        "scripts/**",
+        "__mocks__/**"
+      ],
+      "unusedNodeModulesDetection": {
+        "enabled": true,
+        "excludeModules": [
+          "@types/**",
+          "@typescript-eslint/**",
+          "eslint-plugin-*",
+          "eslint-config-*",
+          "@stylistic/**",
+          "@swc/**",
+          "@vitest/**",
+          "@grafana/tsconfig",
+          "webpack-cli",
+          "@popperjs/core"
+        ],
+        "pkgJsonFieldsWithBinaries": ["scripts"],
+        "filesWithBinaries": [".husky/pre-commit"],
+        "filesWithModules": [
+          ".config/tsconfig.json",
+          ".config/webpack/webpack.config.ts",
+          ".config/eslint.config.mjs",
+          ".config/bundler/externals.ts",
+          "vitest.config.ts"
+        ]
+      },
+      "orphanFilesDetection": { "enabled": true, "graphExclude": ["packages/**"] },
+      "unusedExportsDetection": { "enabled": false }
+    },
+    {
+      "path": "packages/alertmanager",
+      "prodEntryPoints": ["src/common/index.ts", "src/vanilla/index.ts", "src/mimir/index.ts"],
+      "devEntryPoints": ["src/**/*.test.{ts,tsx}"],
+      "unusedExportsDetection": { "enabled": true },
+      "orphanFilesDetection": { "enabled": true },
+      "circularImportsDetection": { "enabled": true, "ignoreTypeImports": true }
+    },
+    {
+      "path": "packages/rules",
+      "prodEntryPoints": [
+        "src/identifiers/index.ts",
+        "src/hashing/index.ts",
+        "src/utils/index.ts",
+        "src/matching.ts",
+        "src/vanilla/index.ts"
+      ],
+      "devEntryPoints": ["src/**/*.test.{ts,tsx}"],
+      "unusedExportsDetection": { "enabled": true },
+      "orphanFilesDetection": { "enabled": true },
+      "circularImportsDetection": { "enabled": true, "ignoreTypeImports": true }
+    }
+  ]
+}

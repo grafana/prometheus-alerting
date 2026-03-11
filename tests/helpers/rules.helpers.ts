@@ -3,7 +3,7 @@ import {
   PrometheusRuleIdentifier,
   CloudRuleIdentifier,
   stringifyIdentifier,
-} from '@grafana/external-rules';
+} from '@grafana/external-rules/identifiers';
 import type {
   PromRuleDTO,
   PromAlertingRuleDTO,

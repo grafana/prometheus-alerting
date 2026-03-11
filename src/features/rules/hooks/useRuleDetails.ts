@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { skipToken } from '@reduxjs/toolkit/query';
-import { DataSourceRuleIdentifier, isCloudRuleIdentifier } from '@grafana/external-rules';
+import { DataSourceRuleIdentifier, isCloudRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { PromRuleDTO, PromRuleGroupDTO, RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
