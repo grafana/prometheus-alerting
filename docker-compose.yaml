@@ -15,7 +15,7 @@ services:
       - monitoring
 
   prometheus:
-    image: quay.io/prometheus/prometheus:v3.0.0
+    image: quay.io/prometheus/prometheus:v3.0.0@sha256:3b9b2a15d376334da8c286d995777d3b9315aa666d2311170ada6059a517b74f
     container_name: prometheus-test
     ports:
       - '9090:9090'
@@ -31,7 +31,7 @@ services:
       - monitoring
 
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager:latest@sha256:88b605de9aba0410775c1eb3438f951115054e0d307f23f274a4c705f51630c1
     container_name: alertmanager-test
     ports:
       - '9093:9093'
@@ -45,7 +45,7 @@ services:
       - monitoring
 
   minio:
-    image: minio/minio:latest
+    image: minio/minio:latest@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     container_name: minio-test
     ports:
       - '9000:9000'
@@ -66,7 +66,7 @@ services:
       - monitoring
 
   minio-init:
-    image: minio/mc:latest
+    image: minio/mc:latest@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
     container_name: minio-init
     depends_on:
       minio:
@@ -83,7 +83,7 @@ services:
       - monitoring
 
   mimir:
-    image: grafana/mimir:latest
+    image: grafana/mimir:latest@sha256:686138d9f941508c99c931cc9e69bf9f6100dd4d2d623bf57b38d5c25ee645c1
     container_name: mimir-test
     ports:
       - '9009:9009'
@@ -103,7 +103,7 @@ services:
       - monitoring
 
   mimir-rules-provisioner:
-    image: curlimages/curl:latest
+    image: curlimages/curl:latest@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
     container_name: mimir-rules-provisioner
     depends_on:
       - mimir
