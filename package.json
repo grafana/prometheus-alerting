@@ -114,7 +114,7 @@
     "yaml": "^2.8.1",
     "zod": "^4.1.12"
   },
-  "packageManager": "npm@11.9.0",
+  "packageManager": "npm@11.15.0",
   "workspaces": [
     "packages/*"
   ],

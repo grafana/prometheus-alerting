@@ -6,6 +6,16 @@ This template is a starting point for building an app plugin for Grafana.
 
 App plugins can let you create a custom out-of-the-box monitoring experience by custom pages, nested data sources and panel plugins.
 
+## Requirements
+
+This project uses [Corepack](https://nodejs.org/api/corepack.html) to enforce the npm version declared in `package.json`. Before running any npm commands, enable Corepack once on your machine:
+
+```bash
+corepack enable
+```
+
+Corepack will automatically use the pinned npm version for this project. No manual npm upgrades are needed.
+
 ## Get started
 
 ### Frontend
