@@ -118,6 +118,9 @@
   "workspaces": [
     "packages/*"
   ],
+  "overrides": {
+    "immutable@5.1": "~5.1.5"
+  },
   "volta": {
     "node": "22.21.1"
   },
