@@ -10,7 +10,7 @@ runs:
   steps:
     # Install pnpm (version read from engines.pnpm in package.json)
     - name: Setup pnpm
-      uses: pnpm/action-setup@v4
+      uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
 
     # Setup Node.js with built-in pnpm store cache (~/.local/share/pnpm/store)
     # Caches the pnpm store automatically using pnpm-lock.yaml as the cache key
