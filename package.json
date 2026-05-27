@@ -83,6 +83,7 @@
     "node": ">=24.16",
     "pnpm": ">=11.3"
   },
+  "packageManager": "pnpm@11.3.0",
   "dependencies": {
     "@emotion/css": "11.10.6",
     "@grafana/alerting": "^13.0.0-22761893021",
