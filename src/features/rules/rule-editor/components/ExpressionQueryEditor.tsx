@@ -22,14 +22,12 @@ export function ExpressionQueryEditor({ value, onChange, dataSourceUid }: Expres
   const styles = useStyles2(getStyles);
 
   // Load datasource instance
-  const [state] = useAsync(async () => {
+  const [{ error, status, result: dataSource }] = useAsync(async () => {
     if (!dataSourceUid) {
       throw new Error('No datasource name provided');
     }
     return await getDataSourceSrv().get(dataSourceUid);
   });
-
-  const { error, status, result: dataSource } = state;
 
   // Create query model from expression string
   const dataQuery = useMemo((): PromLokiQuery => {
