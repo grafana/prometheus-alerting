@@ -1,22 +1,36 @@
 import { Locator, Page, expect } from '@playwright/test';
 
+/**
+ * Page object for the Rules List view.
+ *
+ * The filter UI is an always-visible sidebar (commit b1d48ba, 2026-03-06).
+ * All filters apply live on change and write to the `?search=` URL parameter
+ * as space-separated `key:value` tokens (see `src/features/rules/search/rulesSearchParser.ts`).
+ */
 export class RulesListPage {
   readonly page: Page;
   readonly pluginId: string;
 
-  // Search and filter elements
+  // Top-bar free-text search
   readonly searchInput: Locator;
-  readonly filterButton: Locator;
-  readonly filterApplyButton: Locator;
-  readonly filterClearButton: Locator;
-  readonly filterCloseButton: Locator;
-  readonly filterPopup: Locator;
 
-  // Filter fields
-  readonly dataSourceSelect: Locator;
+  // Filter sidebar (landmark + fields)
+  readonly sidebar: Locator;
+  readonly ruleNameInput: Locator;
   readonly namespaceInput: Locator;
   readonly groupInput: Locator;
-  readonly ruleNameInput: Locator;
+  readonly labelsCombobox: Locator;
+  readonly dataSourceCombobox: Locator;
+  readonly clearFiltersButton: Locator;
+
+  // State + type toggle buttons (visible text, scoped to sidebar)
+  readonly stateAllButton: Locator;
+  readonly stateFiringButton: Locator;
+  readonly stateNormalButton: Locator;
+  readonly statePendingButton: Locator;
+  readonly typeAllButton: Locator;
+  readonly typeAlertButton: Locator;
+  readonly typeRecordingButton: Locator;
 
   // Rule list
   readonly ruleList: Locator;
@@ -25,21 +39,24 @@ export class RulesListPage {
     this.page = page;
     this.pluginId = pluginId;
 
-    // Search and filter
     this.searchInput = page.getByTestId('search-query-input');
-    this.filterButton = page.getByRole('button', { name: /filter/i });
-    this.filterPopup = page.getByRole('dialog', { name: /filter options/i });
-    this.filterApplyButton = this.filterPopup.getByTestId('filter-apply-button');
-    this.filterClearButton = this.filterPopup.getByTestId('filter-clear-button');
-    this.filterCloseButton = this.filterPopup.getByRole('button', { name: 'Close' });
 
-    // Filter fields in the popup
-    this.dataSourceSelect = this.filterPopup.getByRole('combobox', { name: /data source/i });
-    this.namespaceInput = this.filterPopup.getByTestId('namespace-input');
-    this.groupInput = this.filterPopup.getByTestId('group-input');
-    this.ruleNameInput = this.filterPopup.getByTestId('rule-name-input');
+    this.sidebar = page.getByRole('complementary', { name: /filter rules/i });
+    this.ruleNameInput = this.sidebar.getByLabel(/rule name/i);
+    this.namespaceInput = this.sidebar.getByLabel(/namespace/i);
+    this.groupInput = this.sidebar.getByLabel(/^group$/i);
+    this.labelsCombobox = this.sidebar.getByLabel(/^labels$/i);
+    this.dataSourceCombobox = this.sidebar.getByLabel(/^data source$/i);
+    this.clearFiltersButton = this.sidebar.getByRole('button', { name: /clear filters/i });
 
-    // Rule list
+    this.stateAllButton = this.sidebar.getByRole('button', { name: /^all$/i }).first();
+    this.stateFiringButton = this.sidebar.getByRole('button', { name: /^firing$/i });
+    this.stateNormalButton = this.sidebar.getByRole('button', { name: /^normal$/i });
+    this.statePendingButton = this.sidebar.getByRole('button', { name: /^pending$/i });
+    this.typeAllButton = this.sidebar.getByRole('button', { name: /^all$/i }).nth(1);
+    this.typeAlertButton = this.sidebar.getByRole('button', { name: /alert rule/i });
+    this.typeRecordingButton = this.sidebar.getByRole('button', { name: /recording rule/i });
+
     this.ruleList = page.getByRole('list', { name: /rule/i });
   }
 
@@ -48,14 +65,15 @@ export class RulesListPage {
   }
 
   async waitForLoad() {
-    // Wait for search input to be visible
-    await expect(this.searchInput).toBeVisible({ timeout: 10000 });
+    // Sidebar is rendered immediately on the rules list view; wait for it to be visible.
+    await expect(this.sidebar).toBeVisible({ timeout: 10000 });
   }
+
+  // ----- Top-bar search (unchanged) -----
 
   async search(query: string) {
     await this.searchInput.fill(query);
     await this.searchInput.press('Enter');
-    // Wait for URL to update
     await this.page.waitForURL(/search=/);
   }
 
@@ -64,70 +82,81 @@ export class RulesListPage {
     await this.searchInput.press('Enter');
   }
 
-  async openFilterPopup() {
-    await this.filterButton.click();
-    await expect(this.filterPopup).toBeVisible();
-    await expect(this.filterApplyButton).toBeVisible();
+  // ----- Sidebar filters (live-apply) -----
+
+  async filterByRuleName(value: string) {
+    await this.ruleNameInput.fill(value);
+    await this.waitForSearchToken('rule:');
   }
 
-  async closeFilterPopup() {
-    await this.filterCloseButton.click();
-    await expect(this.filterPopup).not.toBeVisible();
+  async filterByNamespace(value: string) {
+    await this.namespaceInput.fill(value);
+    await this.waitForSearchToken('namespace:');
   }
 
-  async applyFilters() {
-    await this.filterApplyButton.click();
-    // Wait for filter popup to close
-    await expect(this.filterApplyButton).not.toBeVisible();
+  async filterByGroup(value: string) {
+    await this.groupInput.fill(value);
+    await this.waitForSearchToken('group:');
   }
 
-  async clearFilters() {
-    await this.filterClearButton.click();
+  async selectState(state: 'firing' | 'normal' | 'pending') {
+    const button = {
+      firing: this.stateFiringButton,
+      normal: this.stateNormalButton,
+      pending: this.statePendingButton,
+    }[state];
+    await button.click();
+    await this.waitForSearchToken(`state:${state}`);
   }
 
-  async filterByNamespace(namespace: string) {
-    await this.openFilterPopup();
-    await this.namespaceInput.fill(namespace);
-    await this.applyFilters();
+  async selectType(type: 'alerting' | 'recording') {
+    const button = type === 'alerting' ? this.typeAlertButton : this.typeRecordingButton;
+    await button.click();
+    await this.waitForSearchToken(`type:${type}`);
   }
 
-  async filterByGroup(groupName: string) {
-    await this.openFilterPopup();
-    await this.groupInput.fill(groupName);
-    await this.applyFilters();
+  async selectLabel(label: string) {
+    await this.labelsCombobox.click();
+    await this.page.getByRole('option', { name: label }).click();
+    await this.waitForSearchToken('label:');
   }
 
-  async filterByRuleName(ruleName: string) {
-    await this.openFilterPopup();
-    await this.ruleNameInput.fill(ruleName);
-    await this.applyFilters();
+  async selectDataSource(name: string) {
+    await this.dataSourceCombobox.click();
+    await this.page.getByRole('option', { name }).click();
+    await this.waitForSearchToken('datasource:');
   }
 
-  async selectDataSource(dataSourceName: string) {
-    await this.openFilterPopup();
-    // Click on the data source combobox to open dropdown
-    const combobox = this.page.locator('[class*="MultiCombobox"]').first();
-    await combobox.click();
-    // Select the option
-    await this.page.getByRole('option', { name: dataSourceName }).click();
-    await this.applyFilters();
+  async clearAll() {
+    await this.clearFiltersButton.click();
+    await this.page.waitForURL((url) => !url.searchParams.get('search'));
   }
+
+  // ----- URL helpers -----
+
+  async getSearchQueryFromUrl(): Promise<string> {
+    const url = new URL(this.page.url());
+    return url.searchParams.get('search') || '';
+  }
+
+  /** Wait for the URL `?search=` param to contain the given token (live-applied filters). */
+  async waitForSearchToken(token: string) {
+    await this.page.waitForURL((url) => (url.searchParams.get('search') ?? '').includes(token));
+  }
+
+  // ----- Rule list inspection -----
 
   async getVisibleRuleNames(): Promise<string[]> {
-    // Wait for any loading to complete
     await this.page.waitForTimeout(500);
-
     const ruleItems = this.page.locator('[data-testid="rule-list-item"], [class*="ListItem"]');
     const count = await ruleItems.count();
     const names: string[] = [];
-
     for (let i = 0; i < count; i++) {
       const text = await ruleItems.nth(i).textContent();
       if (text) {
         names.push(text);
       }
     }
-
     return names;
   }
 
@@ -140,10 +169,5 @@ export class RulesListPage {
   async hasNoRulesMessage(): Promise<boolean> {
     const emptyState = this.page.getByText(/no matching rules found/i);
     return emptyState.isVisible();
-  }
-
-  async getSearchQueryFromUrl(): Promise<string> {
-    const url = new URL(this.page.url());
-    return url.searchParams.get('search') || '';
   }
 }

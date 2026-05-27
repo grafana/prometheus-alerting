@@ -136,7 +136,6 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
         )}
         confirmText={t('time-intervals.confirm-remove.confirm', 'Remove')}
         dismissText={t('time-intervals.confirm-remove.cancel', 'Cancel')}
-        icon="exclamation-triangle"
         onConfirm={handleConfirmRemove}
         onDismiss={handleCancelRemove}
         confirmButtonVariant="destructive"

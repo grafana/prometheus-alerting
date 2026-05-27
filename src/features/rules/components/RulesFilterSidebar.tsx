@@ -1,10 +1,10 @@
 import { css, cx } from '@emotion/css';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useId, useRef } from 'react';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
-import { Button, Icon, Input, Label, MultiCombobox, Stack, useStyles2, useTheme2 } from '@grafana/ui';
+import { Button, Icon, Input, MultiCombobox, Stack, useStyles2, useTheme2 } from '@grafana/ui';
 
 import { useDataSourceOptions, useLabelOptions } from '../hooks/useRuleFilterOptions';
 import { useRulesFilter } from '../hooks/useRulesFilter';
@@ -65,7 +65,7 @@ export function RulesFilterSidebar() {
   const { hasActiveFilters, clearAll } = useRulesFilter();
 
   return (
-    <div className={styles.sidebar}>
+    <aside className={styles.sidebar} aria-label={t('alerting.rules-filter-sidebar.aria-label', 'Filter rules')}>
       <Stack direction="column" gap={0}>
         <Stack direction="row" justifyContent="flex-end">
           <Button size="sm" variant="primary" fill="text" onClick={clearAll} disabled={!hasActiveFilters}>
@@ -74,7 +74,7 @@ export function RulesFilterSidebar() {
         </Stack>
         <FilterSidebarForm />
       </Stack>
-    </div>
+    </aside>
   );
 }
 
@@ -84,6 +84,14 @@ function FilterSidebarForm() {
 
   const dataSourceOptions = useDataSourceOptions();
   const { labelOptions } = useLabelOptions();
+
+  const ruleNameId = useId();
+  const labelsId = useId();
+  const stateId = useId();
+  const typeId = useId();
+  const namespaceId = useId();
+  const groupId = useId();
+  const dataSourceId = useId();
 
   const defaultValues = filterStateToAdvancedFilters(filterState);
 
@@ -131,20 +139,25 @@ function FilterSidebarForm() {
       <form>
         <Stack direction="column" gap={2}>
           <SidebarSection>
-            <SidebarField label={<Trans i18nKey="alerting.rules-filter.rule-name-label">Rule name</Trans>}>
+            <SidebarField
+              htmlFor={ruleNameId}
+              label={<Trans i18nKey="alerting.rules-filter.rule-name-label">Rule name</Trans>}
+            >
               <Input
+                id={ruleNameId}
                 {...register('ruleName')}
                 placeholder={t('alerting.rule-list.filter-sidebar.rule-name-placeholder', 'Filter by name...')}
                 data-testid="rule-name-filter-input"
               />
             </SidebarField>
 
-            <SidebarField label={<Trans i18nKey="alerting.rules-filter.labels-label">Labels</Trans>}>
+            <SidebarField htmlFor={labelsId} label={<Trans i18nKey="alerting.rules-filter.labels-label">Labels</Trans>}>
               <Controller
                 name="labels"
                 control={control}
                 render={({ field }) => (
                   <MultiCombobox
+                    id={labelsId}
                     options={labelOptions}
                     value={field.value}
                     onChange={(selections) => field.onChange(selections.map((s) => s.value))}
@@ -155,12 +168,13 @@ function FilterSidebarForm() {
               />
             </SidebarField>
 
-            <SidebarField label={<Trans i18nKey="alerting.rules-filter.state-label">State</Trans>}>
+            <SidebarField htmlFor={stateId} label={<Trans i18nKey="alerting.rules-filter.state-label">State</Trans>}>
               <Controller
                 name="ruleState"
                 control={control}
                 render={({ field }) => (
                   <ToggleButtonGroup<AdvancedFilters['ruleState']>
+                    id={stateId}
                     value={field.value}
                     onChange={field.onChange}
                     options={[
@@ -189,12 +203,13 @@ function FilterSidebarForm() {
               />
             </SidebarField>
 
-            <SidebarField label={<Trans i18nKey="alerting.rules-filter.type-label">Type</Trans>}>
+            <SidebarField htmlFor={typeId} label={<Trans i18nKey="alerting.rules-filter.type-label">Type</Trans>}>
               <Controller
                 name="ruleType"
                 control={control}
                 render={({ field }) => (
                   <ToggleButtonGroup<AdvancedFilters['ruleType']>
+                    id={typeId}
                     value={field.value}
                     onChange={field.onChange}
                     options={[
@@ -211,16 +226,21 @@ function FilterSidebarForm() {
           <SidebarDivider />
 
           <SidebarSection>
-            <SidebarField label={<Trans i18nKey="alerting.rules-filter.namespace-label">Namespace</Trans>}>
+            <SidebarField
+              htmlFor={namespaceId}
+              label={<Trans i18nKey="alerting.rules-filter.namespace-label">Namespace</Trans>}
+            >
               <Input
+                id={namespaceId}
                 {...register('namespace')}
                 placeholder={t('alerting.rule-list.filter-sidebar.namespace-placeholder', 'Filter by namespace...')}
                 data-testid="namespace-filter-input"
               />
             </SidebarField>
 
-            <SidebarField label={<Trans i18nKey="alerting.rules-filter.group-label">Group</Trans>}>
+            <SidebarField htmlFor={groupId} label={<Trans i18nKey="alerting.rules-filter.group-label">Group</Trans>}>
               <Input
+                id={groupId}
                 {...register('groupName')}
                 placeholder={t('alerting.rule-list.filter-sidebar.group-placeholder', 'Filter by group...')}
                 data-testid="group-filter-input"
@@ -231,12 +251,16 @@ function FilterSidebarForm() {
           <SidebarDivider />
 
           <SidebarSection>
-            <SidebarField label={<Trans i18nKey="alerting.rules-filter.data-source-label">Data source</Trans>}>
+            <SidebarField
+              htmlFor={dataSourceId}
+              label={<Trans i18nKey="alerting.rules-filter.data-source-label">Data source</Trans>}
+            >
               <Controller
                 name="dataSourceNames"
                 control={control}
                 render={({ field }) => (
                   <MultiCombobox
+                    id={dataSourceId}
                     options={dataSourceOptions}
                     value={field.value}
                     onChange={(selections) => field.onChange(selections.map((s) => s.value))}
@@ -269,11 +293,21 @@ function SidebarDivider() {
   return <div className={styles.divider} />;
 }
 
-function SidebarField({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+function SidebarField({
+  htmlFor,
+  label,
+  children,
+}: {
+  htmlFor: string;
+  label: React.ReactNode;
+  children: React.ReactNode;
+}) {
   const styles = useStyles2(getStyles);
   return (
     <div className={styles.field}>
-      <Label className={styles.fieldLabel}>{label}</Label>
+      <label className={styles.fieldLabel} htmlFor={htmlFor}>
+        {label}
+      </label>
       <div>{children}</div>
     </div>
   );
@@ -287,12 +321,13 @@ interface ToggleOption<T> {
 }
 
 interface ToggleButtonGroupProps<T> {
+  id?: string;
   options: Array<ToggleOption<T>>;
   value: T;
   onChange: (value: T) => void;
 }
 
-function ToggleButtonGroup<T>({ options, value, onChange }: ToggleButtonGroupProps<T>) {
+function ToggleButtonGroup<T>({ id, options, value, onChange }: ToggleButtonGroupProps<T>) {
   const styles = useStyles2(getStyles);
   const theme = useTheme2();
 
@@ -305,29 +340,31 @@ function ToggleButtonGroup<T>({ options, value, onChange }: ToggleButtonGroupPro
   };
 
   return (
-    <Stack direction="column" gap={0.5}>
-      {options.map((opt) => {
-        const isActive = opt.value === value;
-        return (
-          <button
-            key={String(opt.value)}
-            type="button"
-            className={cx(styles.toggleButton, isActive && styles.toggleButtonActive)}
-            onClick={() => onChange(opt.value)}
-          >
-            {opt.icon && (
-              <span
-                className={styles.toggleButtonIcon}
-                style={{ color: opt.color ? colorMap[opt.color] : undefined, display: 'flex' }}
-              >
-                <Icon name={opt.icon} size="sm" />
-              </span>
-            )}
-            <span className={styles.toggleButtonLabel}>{opt.label}</span>
-          </button>
-        );
-      })}
-    </Stack>
+    <div id={id} role="group">
+      <Stack direction="column" gap={0.5}>
+        {options.map((opt) => {
+          const isActive = opt.value === value;
+          return (
+            <button
+              key={String(opt.value)}
+              type="button"
+              className={cx(styles.toggleButton, isActive && styles.toggleButtonActive)}
+              onClick={() => onChange(opt.value)}
+            >
+              {opt.icon && (
+                <span
+                  className={styles.toggleButtonIcon}
+                  style={{ color: opt.color ? colorMap[opt.color] : undefined, display: 'flex' }}
+                >
+                  <Icon name={opt.icon} size="sm" />
+                </span>
+              )}
+              <span className={styles.toggleButtonLabel}>{opt.label}</span>
+            </button>
+          );
+        })}
+      </Stack>
+    </div>
   );
 }
 

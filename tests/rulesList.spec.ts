@@ -2,8 +2,10 @@ import { test, expect } from './fixtures';
 import pluginJson from '../src/plugin.json';
 
 /**
- * E2E tests for the Rules List filtering functionality
- * These tests verify that the filter UI works correctly and updates the URL
+ * E2E tests for the Rules List filter sidebar.
+ *
+ * The sidebar is always visible and all filters apply live on change. Each filter
+ * writes one or more `key:value` tokens into the `?search=` URL parameter.
  */
 test.describe('Rules List Filtering - E2E', () => {
   test.beforeEach(async ({ rulesListPage }) => {
@@ -11,12 +13,22 @@ test.describe('Rules List Filtering - E2E', () => {
     await rulesListPage.waitForLoad();
   });
 
+  test.describe('Sidebar', () => {
+    test('should render the filter sidebar landmark', async ({ rulesListPage }) => {
+      await expect(rulesListPage.sidebar).toBeVisible();
+    });
+
+    test('clear filters button is disabled when no filters are active', async ({ rulesListPage }) => {
+      await expect(rulesListPage.clearFiltersButton).toBeDisabled();
+    });
+  });
+
   test.describe('Search Input', () => {
     test('should have search input visible', async ({ rulesListPage }) => {
       await expect(rulesListPage.searchInput).toBeVisible();
     });
 
-    test('should update URL when searching', async ({ rulesListPage, page }) => {
+    test('should update URL when searching', async ({ rulesListPage }) => {
       await rulesListPage.search('namespace:production');
       const searchQuery = await rulesListPage.getSearchQueryFromUrl();
       expect(searchQuery).toContain('namespace:production');
@@ -27,35 +39,6 @@ test.describe('Rules List Filtering - E2E', () => {
       await rulesListPage.clearSearch();
       const searchQuery = await rulesListPage.getSearchQueryFromUrl();
       expect(searchQuery).toBe('');
-    });
-  });
-
-  test.describe('Filter Popup', () => {
-    test('should open filter popup when clicking filter button', async ({ rulesListPage }) => {
-      await rulesListPage.openFilterPopup();
-      await expect(rulesListPage.filterApplyButton).toBeVisible();
-      await expect(rulesListPage.filterClearButton).toBeVisible();
-    });
-
-    test('should close filter popup when clicking close', async ({ rulesListPage }) => {
-      await rulesListPage.openFilterPopup();
-      await rulesListPage.closeFilterPopup();
-      await expect(rulesListPage.filterApplyButton).not.toBeVisible();
-    });
-
-    test('should have namespace input in filter popup', async ({ rulesListPage }) => {
-      await rulesListPage.openFilterPopup();
-      await expect(rulesListPage.namespaceInput).toBeVisible();
-    });
-
-    test('should have group input in filter popup', async ({ rulesListPage }) => {
-      await rulesListPage.openFilterPopup();
-      await expect(rulesListPage.groupInput).toBeVisible();
-    });
-
-    test('should have rule name input in filter popup', async ({ rulesListPage }) => {
-      await rulesListPage.openFilterPopup();
-      await expect(rulesListPage.ruleNameInput).toBeVisible();
     });
   });
 
@@ -89,29 +72,57 @@ test.describe('Rules List Filtering - E2E', () => {
     });
   });
 
+  test.describe('State Filter', () => {
+    test('should update URL when selecting firing state', async ({ rulesListPage }) => {
+      await rulesListPage.selectState('firing');
+      const searchQuery = await rulesListPage.getSearchQueryFromUrl();
+      expect(searchQuery).toContain('state:firing');
+    });
+
+    test('should update URL when selecting normal state', async ({ rulesListPage }) => {
+      await rulesListPage.selectState('normal');
+      const searchQuery = await rulesListPage.getSearchQueryFromUrl();
+      expect(searchQuery).toContain('state:normal');
+    });
+  });
+
+  test.describe('Type Filter', () => {
+    test('should update URL when selecting alert rule type', async ({ rulesListPage }) => {
+      await rulesListPage.selectType('alerting');
+      const searchQuery = await rulesListPage.getSearchQueryFromUrl();
+      expect(searchQuery).toContain('type:alerting');
+    });
+
+    test('should update URL when selecting recording rule type', async ({ rulesListPage }) => {
+      await rulesListPage.selectType('recording');
+      const searchQuery = await rulesListPage.getSearchQueryFromUrl();
+      expect(searchQuery).toContain('type:recording');
+    });
+  });
+
   test.describe('Clear Filters', () => {
     test('should clear all filters when clicking clear', async ({ rulesListPage }) => {
-      // Apply some filters first
       await rulesListPage.filterByNamespace('test');
       expect(await rulesListPage.getSearchQueryFromUrl()).toContain('namespace:test');
 
-      // Open filter popup and clear
-      await rulesListPage.openFilterPopup();
-      await rulesListPage.clearFilters();
+      await rulesListPage.clearAll();
 
-      // URL should be cleared
       const searchQuery = await rulesListPage.getSearchQueryFromUrl();
       expect(searchQuery).toBe('');
+    });
+
+    test('clear button becomes enabled once a filter is applied', async ({ rulesListPage }) => {
+      await expect(rulesListPage.clearFiltersButton).toBeDisabled();
+      await rulesListPage.filterByNamespace('foo');
+      await expect(rulesListPage.clearFiltersButton).toBeEnabled();
     });
   });
 
   test.describe('Combined Filters', () => {
     test('should support multiple filters', async ({ rulesListPage }) => {
-      await rulesListPage.openFilterPopup();
-      await rulesListPage.namespaceInput.fill('production');
-      await rulesListPage.groupInput.fill('alerts');
-      await rulesListPage.ruleNameInput.fill('Error');
-      await rulesListPage.applyFilters();
+      await rulesListPage.filterByNamespace('production');
+      await rulesListPage.filterByGroup('alerts');
+      await rulesListPage.filterByRuleName('Error');
 
       const searchQuery = await rulesListPage.getSearchQueryFromUrl();
       expect(searchQuery).toContain('namespace:production');
@@ -122,20 +133,17 @@ test.describe('Rules List Filtering - E2E', () => {
 
   test.describe('URL Persistence', () => {
     test('should restore filters from URL on page load', async ({ rulesListPage, page }) => {
-      // Navigate directly with search params
       await page.goto(`/a/${pluginJson.id}/rules?search=namespace:test-ns`);
       await rulesListPage.waitForLoad();
 
-      // Open filter popup and verify namespace is populated
-      await rulesListPage.openFilterPopup();
       await expect(rulesListPage.namespaceInput).toHaveValue('test-ns');
     });
   });
 });
 
 /**
- * Integration tests for actual filtering behavior
- * These tests require the test Prometheus data source to be configured
+ * Integration tests for actual filtering behavior.
+ * Skipped — require real datasources / rules to be provisioned in the stack.
  */
 test.describe('Rules List Filtering - Integration', () => {
   test.beforeEach(async ({ rulesListPage }) => {
@@ -144,29 +152,19 @@ test.describe('Rules List Filtering - Integration', () => {
   });
 
   test.skip('should show rules from all data sources when no filter is applied', async ({ rulesListPage }) => {
-    // This test requires actual data sources to be configured
     const ruleCount = await rulesListPage.getRuleCount();
     expect(ruleCount).toBeGreaterThan(0);
   });
 
   test.skip('should filter rules by namespace', async ({ rulesListPage }) => {
-    // Filter by a known namespace
     await rulesListPage.filterByNamespace('test-namespace');
-
-    // Verify only rules from that namespace are shown
-    // This requires knowledge of the test data
     const hasNoRules = await rulesListPage.hasNoRulesMessage();
-    // Either we find rules or we get "no rules found" - both are valid
     expect(typeof hasNoRules).toBe('boolean');
   });
 
   test.skip('should show "no rules found" when filter matches nothing', async ({ rulesListPage }) => {
-    // Use a filter that won't match anything
     await rulesListPage.filterByNamespace('nonexistent-namespace-xyz123');
-
-    // Wait for search to complete
     await rulesListPage.page.waitForTimeout(2000);
-
     const hasNoRules = await rulesListPage.hasNoRulesMessage();
     expect(hasNoRules).toBe(true);
   });
