@@ -32,6 +32,8 @@ jobs:
       - name: Lint
         run: pnpm run lint
       - name: Unit tests
+        env:
+          I18NEXT_NO_SUPPORT_NOTICE: true
         run: pnpm exec vitest run --coverage --passWithNoTests
 
       - name: Upload coverage artifact
@@ -208,6 +210,8 @@ jobs:
 
       - name: Run Playwright tests
         id: run-tests
+        env:
+          I18NEXT_NO_SUPPORT_NOTICE: true
         run: pnpm run e2e
 
       - name: Upload e2e test summary
