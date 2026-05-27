@@ -1,5 +1,5 @@
 name: 'Setup Node.js with caching'
-description: 'Sets up Node.js with npm tarball caching via setup-node built-in functionality'
+description: 'Sets up Node.js with pnpm and pnpm store caching via setup-node built-in functionality'
 inputs:
   node-version:
     description: 'Node.js version to use'
@@ -8,14 +8,18 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    # Setup Node.js with built-in npm cache (~/.npm)
-    # This caches npm tarballs and metadata automatically
-    - name: Setup Node.js with npm cache
-      uses: actions/setup-node@v6
+    # Install pnpm (version read from engines.pnpm in package.json)
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+
+    # Setup Node.js with built-in pnpm store cache (~/.local/share/pnpm/store)
+    # Caches the pnpm store automatically using pnpm-lock.yaml as the cache key
+    - name: Setup Node.js with pnpm cache
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-        cache: 'npm'
+        cache: 'pnpm'
 
     - name: Install dependencies
       shell: bash
-      run: npm ci
+      run: pnpm ci

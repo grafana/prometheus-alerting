@@ -28,11 +28,11 @@ jobs:
         uses: ./.github/actions/setup-node-with-cache
 
       - name: Check types
-        run: npm run typecheck
+        run: pnpm run typecheck
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
       - name: Unit tests
-        run: npx vitest run --coverage --passWithNoTests
+        run: pnpm exec vitest run --coverage --passWithNoTests
 
       - name: Upload coverage artifact
         if: github.event_name == 'pull_request'
@@ -43,7 +43,7 @@ jobs:
           retention-days: 1
 
       - name: Build frontend
-        run: npm run build
+        run: pnpm run build
 
       - name: Check for E2E
         id: check-for-e2e
@@ -57,7 +57,7 @@ jobs:
         env:
           GRAFANA_ACCESS_POLICY_TOKEN: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
         if: ${{ env.GRAFANA_ACCESS_POLICY_TOKEN != '' }}
-        run: npm run sign
+        run: pnpm run sign
 
       - name: Get plugin metadata
         id: metadata
@@ -208,7 +208,7 @@ jobs:
 
       - name: Run Playwright tests
         id: run-tests
-        run: npm run e2e
+        run: pnpm run e2e
 
       - name: Upload e2e test summary
         uses: grafana/plugin-actions/playwright-gh-pages/upload-report-artifacts@main # zizmor: ignore[unpinned-uses] provided by grafana
