@@ -154,7 +154,6 @@ export function SilenceDrawerView({ silence, activeTab, onEdit, onClose }: Silen
         )}
         confirmText={t('silences.confirm-expire.confirm', 'Expire')}
         dismissText={t('silences.confirm-expire.cancel', 'Cancel')}
-        icon="exclamation-triangle"
         onConfirm={handleConfirmExpire}
         onDismiss={handleCancelExpire}
         confirmButtonVariant="destructive"

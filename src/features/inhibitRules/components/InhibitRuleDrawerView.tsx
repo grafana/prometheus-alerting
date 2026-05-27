@@ -134,7 +134,6 @@ export function InhibitRuleDrawerViewFooter({ onEdit, onDelete, isDeleting }: In
         )}
         confirmText={t('inhibit-rules.confirm-remove.confirm', 'Remove')}
         dismissText={t('inhibit-rules.confirm-remove.cancel', 'Cancel')}
-        icon="exclamation-triangle"
         onConfirm={() => {
           setIsConfirmModalOpen(false);
           onDelete();

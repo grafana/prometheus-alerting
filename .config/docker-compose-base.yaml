@@ -7,7 +7,7 @@ services:
       context: .
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana}
-        grafana_version: ${GRAFANA_VERSION:-12.4.0}
+        grafana_version: ${GRAFANA_VERSION:-13.0.1}
         development: ${DEVELOPMENT:-false}
         anonymous_auth_enabled: ${ANONYMOUS_AUTH_ENABLED:-true}
     ports:
@@ -27,3 +27,4 @@ services:
       GF_AUTH_DISABLE_LOGIN_FORM: false
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
       GF_FEATURE_TOGGLES_ENABLE: promRulerApiViaProxyWrite
+      GF_FEATURE_TOGGLES_splashScreen: 'false'

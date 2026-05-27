@@ -11,7 +11,7 @@ App plugins can let you create a custom out-of-the-box monitoring experience by 
 This project uses [Corepack](https://nodejs.org/api/corepack.html) to enforce the npm version declared in `package.json`. Before running any npm commands, enable Corepack once on your machine:
 
 ```bash
-corepack enable
+corepack enable npm
 ```
 
 Corepack will automatically use the pinned npm version for this project. No manual npm upgrades are needed.

@@ -33,12 +33,14 @@
     "@swc/core": "^1.3.90",
     "@swc/helpers": "^0.5.0",
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "14.0.0",
+    "@testing-library/react": "^16.3.2",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.19.19",
     "@types/object-hash": "^3.0.6",
     "@types/pluralize": "^0.0.33",
     "@types/prismjs": "^1.26.5",
+    "@types/react": "^18.3.29",
+    "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^8.3.0",
     "@typescript-eslint/parser": "^8.3.0",
     "@vitejs/plugin-react": "^5.1.2",
@@ -81,14 +83,14 @@
   },
   "dependencies": {
     "@emotion/css": "11.10.6",
-    "@grafana/alerting": "^13.0.0-22761893021",
-    "@grafana/data": "^12.4.0",
-    "@grafana/i18n": "^12.4.0",
-    "@grafana/plugin-ui": "^0.11.1",
-    "@grafana/runtime": "^12.4.0",
-    "@grafana/scenes": "^7.0.3",
-    "@grafana/schema": "^12.4.0",
-    "@grafana/ui": "^12.4.0",
+    "@grafana/alerting": "^13.0.1",
+    "@grafana/data": "^13.0.1",
+    "@grafana/i18n": "^13.0.1",
+    "@grafana/plugin-ui": "^0.13.1",
+    "@grafana/runtime": "^13.0.1",
+    "@grafana/scenes": "8.2.5",
+    "@grafana/schema": "^13.0.1",
+    "@grafana/ui": "^13.0.1",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@popperjs/core": "^2.11.8",
@@ -120,7 +122,13 @@
     "packages/*"
   ],
   "overrides": {
-    "immutable@5.1": "~5.1.5"
+    "immutable@5.1": "~5.1.5",
+    "@grafana/alerting": {
+      "@grafana/data": "$@grafana/data",
+      "@grafana/ui": "$@grafana/ui",
+      "@grafana/runtime": "$@grafana/runtime"
+    },
+    "react-data-grid": "~7.0.0-beta.57"
   },
   "volta": {
     "node": "22.21.1"
