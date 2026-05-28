@@ -56,6 +56,7 @@ export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Pr
                 value={label.key}
                 onChange={(e) => handleLabelChange(index, 'key', e.currentTarget.value)}
                 placeholder={t('alerting.labels-editor-modal.placeholder-key', 'Label key')}
+                aria-label={t('alerting.labels-editor-modal.label-key', 'Key')}
               />
             </Field>
             <Field
@@ -67,6 +68,7 @@ export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Pr
                 value={label.value}
                 onChange={(e) => handleLabelChange(index, 'value', e.currentTarget.value)}
                 placeholder={t('alerting.labels-editor-modal.placeholder-value', 'Label value')}
+                aria-label={t('alerting.labels-editor-modal.label-value', 'Value')}
               />
             </Field>
             <Button
