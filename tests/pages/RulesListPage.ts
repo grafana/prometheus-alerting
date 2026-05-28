@@ -147,8 +147,8 @@ export class RulesListPage {
   // ----- Rule list inspection -----
 
   async getVisibleRuleNames(): Promise<string[]> {
-    await this.page.waitForTimeout(500);
-    const ruleItems = this.page.locator('[data-testid="rule-list-item"], [class*="ListItem"]');
+    const ruleItems = this.page.getByRole('treeitem');
+    await expect(ruleItems.first()).toBeVisible({ timeout: 10000 });
     const count = await ruleItems.count();
     const names: string[] = [];
     for (let i = 0; i < count; i++) {
@@ -161,8 +161,8 @@ export class RulesListPage {
   }
 
   async getRuleCount(): Promise<number> {
-    await this.page.waitForTimeout(500);
-    const ruleItems = this.page.locator('[data-testid="rule-list-item"], [class*="ListItem"]');
+    const ruleItems = this.page.getByRole('treeitem');
+    await expect(ruleItems.first()).toBeVisible({ timeout: 10000 });
     return ruleItems.count();
   }
 

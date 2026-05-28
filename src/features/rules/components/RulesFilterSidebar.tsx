@@ -65,10 +65,7 @@ export function RulesFilterSidebar() {
   const { hasActiveFilters, clearAll } = useRulesFilter();
 
   return (
-    <aside
-      className={styles.sidebar}
-      aria-label={t('alerting.rules-filter-sidebar.aria-label', 'Filter rules')}
-    >
+    <aside className={styles.sidebar} aria-label={t('alerting.rules-filter-sidebar.aria-label', 'Filter rules')}>
       <Stack direction="column" gap={0}>
         <Stack direction="row" justifyContent="flex-end">
           <Button size="sm" variant="primary" fill="text" onClick={clearAll} disabled={!hasActiveFilters}>
@@ -154,10 +151,7 @@ function FilterSidebarForm() {
               />
             </SidebarField>
 
-            <SidebarField
-              htmlFor={labelsId}
-              label={<Trans i18nKey="alerting.rules-filter.labels-label">Labels</Trans>}
-            >
+            <SidebarField htmlFor={labelsId} label={<Trans i18nKey="alerting.rules-filter.labels-label">Labels</Trans>}>
               <Controller
                 name="labels"
                 control={control}
@@ -174,10 +168,7 @@ function FilterSidebarForm() {
               />
             </SidebarField>
 
-            <SidebarField
-              htmlFor={stateId}
-              label={<Trans i18nKey="alerting.rules-filter.state-label">State</Trans>}
-            >
+            <SidebarField htmlFor={stateId} label={<Trans i18nKey="alerting.rules-filter.state-label">State</Trans>}>
               <Controller
                 name="ruleState"
                 control={control}
@@ -212,10 +203,7 @@ function FilterSidebarForm() {
               />
             </SidebarField>
 
-            <SidebarField
-              htmlFor={typeId}
-              label={<Trans i18nKey="alerting.rules-filter.type-label">Type</Trans>}
-            >
+            <SidebarField htmlFor={typeId} label={<Trans i18nKey="alerting.rules-filter.type-label">Type</Trans>}>
               <Controller
                 name="ruleType"
                 control={control}
@@ -250,10 +238,7 @@ function FilterSidebarForm() {
               />
             </SidebarField>
 
-            <SidebarField
-              htmlFor={groupId}
-              label={<Trans i18nKey="alerting.rules-filter.group-label">Group</Trans>}
-            >
+            <SidebarField htmlFor={groupId} label={<Trans i18nKey="alerting.rules-filter.group-label">Group</Trans>}>
               <Input
                 id={groupId}
                 {...register('groupName')}

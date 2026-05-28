@@ -8,13 +8,13 @@ App plugins can let you create a custom out-of-the-box monitoring experience by 
 
 ## Requirements
 
-This project uses [Corepack](https://nodejs.org/api/corepack.html) to enforce the npm version declared in `package.json`. Before running any npm commands, enable Corepack once on your machine:
+This project uses [Corepack](https://nodejs.org/api/corepack.html) to enforce the pnpm version declared in `package.json`. Before running any pnpm commands, enable Corepack once on your machine:
 
 ```bash
-corepack enable npm
+corepack enable pnpm
 ```
 
-Corepack will automatically use the pinned npm version for this project. No manual npm upgrades are needed.
+Corepack will automatically use the pinned pnpm version for this project. No manual pnpm upgrades are needed.
 
 ## Get started
 
@@ -23,58 +23,58 @@ Corepack will automatically use the pinned npm version for this project. No manu
 1. Install dependencies
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. Build plugin in development mode and run in watch mode
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 3. Build plugin in production mode
 
    ```bash
-   npm run build
+   pnpm run build
    ```
 
 4. Run the tests (using Jest)
 
    ```bash
    # Runs the tests and watches for changes, requires git init first
-   npm run test
+   pnpm run test
 
    # Exits after running all the tests
-   npm run test:ci
+   pnpm run test:ci
    ```
 
 5. Spin up a Grafana instance and run the plugin inside it (using Docker)
 
    ```bash
-   npm run server
+   pnpm run server
    ```
 
 6. Run the E2E tests (using Playwright)
 
    ```bash
    # Spins up a Grafana instance first that we tests against
-   npm run server
+   pnpm run server
 
    # If you wish to start a certain Grafana version. If not specified will use latest by default
-   GRAFANA_VERSION=11.3.0 npm run server
+   GRAFANA_VERSION=11.3.0 pnpm run server
 
    # Starts the tests
-   npm run e2e
+   pnpm run e2e
    ```
 
 7. Run the linter
 
    ```bash
-   npm run lint
+   pnpm run lint
 
    # or
 
-   npm run lint:fix
+   pnpm run lint:fix
    ```
 
 ## Installing the plugin in a local Grafana instance
@@ -86,8 +86,8 @@ To install and test the plugin in a local Grafana instance (outside of Docker):
    ```bash
    git clone https://github.com/grafana/prometheus-alerting
    cd prometheus-alerting
-   npm install
-   npm run dev
+   pnpm install
+   pnpm run dev
    ```
 
 2. Configure Grafana to load plugins from your local directory. In your Grafana configuration file (e.g., `custom.ini` or `grafana.ini`), add:
@@ -148,7 +148,7 @@ If the plugin is using the github actions supplied with `@grafana/create-plugin`
 
 To trigger the workflow we need to push a version tag to github. This can be achieved with the following steps:
 
-1. Run `npm version <major|minor|patch>`
+1. Run `pnpm version <major|minor|patch>`
 2. Run `git push origin main --follow-tags`
 
 ## Learn more

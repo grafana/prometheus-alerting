@@ -151,20 +151,20 @@ test.describe('Rules List Filtering - Integration', () => {
     await rulesListPage.waitForLoad();
   });
 
-  test.skip('should show rules from all data sources when no filter is applied', async ({ rulesListPage }) => {
+  test('should show rules from all data sources when no filter is applied', async ({ rulesListPage }) => {
     const ruleCount = await rulesListPage.getRuleCount();
     expect(ruleCount).toBeGreaterThan(0);
   });
 
-  test.skip('should filter rules by namespace', async ({ rulesListPage }) => {
-    await rulesListPage.filterByNamespace('test-namespace');
-    const hasNoRules = await rulesListPage.hasNoRulesMessage();
-    expect(typeof hasNoRules).toBe('boolean');
+  test('should filter rules by namespace', async ({ rulesListPage }) => {
+    await rulesListPage.filterByNamespace('e2e-test-namespace');
+    const ruleCount = await rulesListPage.getRuleCount();
+    expect(ruleCount).toBeGreaterThan(0);
   });
 
-  test.skip('should show "no rules found" when filter matches nothing', async ({ rulesListPage }) => {
+  test('should show "no rules found" when filter matches nothing', async ({ rulesListPage }) => {
     await rulesListPage.filterByNamespace('nonexistent-namespace-xyz123');
-    await rulesListPage.page.waitForTimeout(2000);
+    await expect(rulesListPage.page.getByText(/no matching rules found/i)).toBeVisible();
     const hasNoRules = await rulesListPage.hasNoRulesMessage();
     expect(hasNoRules).toBe(true);
   });

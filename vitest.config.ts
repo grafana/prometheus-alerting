@@ -14,6 +14,8 @@ export default defineConfig({
     ],
     exclude: [
       'tests/**/*.spec.ts', // Exclude Playwright E2E tests
+      '**/node_modules/**',
+      '**/.git/**',
     ],
     pool: 'threads',
     coverage: {
@@ -27,6 +29,8 @@ export default defineConfig({
         'src/locales/**', // Translation files
         'src/**/*.stories.{js,jsx,ts,tsx}', // Storybook files
         'src/**/*.constants.ts', // Constants files
+        '**/node_modules/**',
+        '**/.git/**',
       ],
       all: true,
     },

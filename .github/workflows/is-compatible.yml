@@ -11,11 +11,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup Node.js with caching
-        uses: ./.github/actions/setup-node-with-cache
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node
 
       - name: Build plugin
-        run: npm run build
+        run: pnpm run build
 
       - name: Find module.ts or module.tsx
         id: find-module-ts

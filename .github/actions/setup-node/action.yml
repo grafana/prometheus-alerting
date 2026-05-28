@@ -1,0 +1,23 @@
+name: 'Setup Node.js'
+description: 'Sets up Node.js with pnpm'
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '22'
+runs:
+  using: 'composite'
+  steps:
+    # Install pnpm (version read from engines.pnpm in package.json)
+    - name: Setup pnpm
+      uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+
+    - name: Setup Node.js
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+      with:
+        node-version: ${{ inputs.node-version }}
+        package-manager-cache: false # prevents cache poisoning
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm ci

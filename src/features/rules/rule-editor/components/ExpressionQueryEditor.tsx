@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
-import React, { useCallback, useMemo } from 'react';
-import { useAsync } from 'react-use';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { useAsync } from '@react-hookz/web';
 
 import { CoreApp, DataSourcePluginContextProvider, GrafanaTheme2 } from '@grafana/data';
 import { Trans } from '@grafana/i18n';
@@ -22,16 +22,16 @@ export function ExpressionQueryEditor({ value, onChange, dataSourceUid }: Expres
   const styles = useStyles2(getStyles);
 
   // Load datasource instance
-  const {
-    error,
-    loading,
-    value: dataSource,
-  } = useAsync(async () => {
+  const [{ error, status, result: dataSource }, { execute }] = useAsync(async () => {
     if (!dataSourceUid) {
       throw new Error('No datasource name provided');
     }
     return await getDataSourceSrv().get(dataSourceUid);
-  }, [dataSourceUid]);
+  });
+
+  useEffect(() => {
+    execute();
+  }, [dataSourceUid, execute]);
 
   // Create query model from expression string
   const dataQuery = useMemo((): PromLokiQuery => {
@@ -53,7 +53,7 @@ export function ExpressionQueryEditor({ value, onChange, dataSourceUid }: Expres
   );
 
   // Loading state
-  if (loading) {
+  if (status === 'not-executed' || status === 'loading') {
     return (
       <div className={styles.placeholder}>
         <Trans i18nKey="alerting.expression-editor.loading">Loading query editor...</Trans>

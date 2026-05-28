@@ -18,12 +18,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup Node.js with caching
-        uses: ./.github/actions/setup-node-with-cache
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node
 
       - name: Run rev-dep
         id: rev-dep
-        run: npm run rev-dep
+        run: pnpm run rev-dep
 
       - name: Post failure comment
         if: failure() && steps.rev-dep.outcome == 'failure'

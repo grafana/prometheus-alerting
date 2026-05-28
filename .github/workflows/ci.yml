@@ -24,26 +24,28 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
-      - name: Setup Node.js with caching
-        uses: ./.github/actions/setup-node-with-cache
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node
 
       - name: Check types
-        run: npm run typecheck
+        run: pnpm run typecheck
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
       - name: Unit tests
-        run: npx vitest run --coverage --passWithNoTests
+        env:
+          I18NEXT_NO_SUPPORT_NOTICE: true
+        run: pnpm exec vitest run --coverage --passWithNoTests
 
       - name: Upload coverage artifact
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: coverage-pull-request
           path: coverage
           retention-days: 1
 
       - name: Build frontend
-        run: npm run build
+        run: pnpm run build
 
       - name: Check for E2E
         id: check-for-e2e
@@ -57,7 +59,7 @@ jobs:
         env:
           GRAFANA_ACCESS_POLICY_TOKEN: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
         if: ${{ env.GRAFANA_ACCESS_POLICY_TOKEN != '' }}
-        run: npm run sign
+        run: pnpm run sign
 
       - name: Get plugin metadata
         id: metadata
@@ -91,7 +93,7 @@ jobs:
           ARCHIVE: ${{ steps.metadata.outputs.archive }}
 
       - name: Archive Build
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}
           path: ${{ steps.metadata.outputs.plugin-id }}
@@ -143,8 +145,8 @@ jobs:
           path: dist
           name: ${{ needs.build.outputs.plugin-id }}-${{ needs.build.outputs.plugin-version }}
 
-      - name: Setup Node.js with caching
-        uses: ./.github/actions/setup-node-with-cache
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node
 
       - name: Verify test data exists
         run: |
@@ -204,12 +206,14 @@ jobs:
             exit 1
           fi
 
-      - name: Setup Playwright with caching
-        uses: ./.github/actions/setup-playwright-with-cache
+      - name: Setup Playwright
+        uses: ./.github/actions/setup-playwright
 
       - name: Run Playwright tests
         id: run-tests
-        run: npm run e2e
+        env:
+          I18NEXT_NO_SUPPORT_NOTICE: true
+        run: pnpm run e2e
 
       - name: Upload e2e test summary
         uses: grafana/plugin-actions/playwright-gh-pages/upload-report-artifacts@main # zizmor: ignore[unpinned-uses] provided by grafana
