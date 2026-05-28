@@ -36,8 +36,8 @@ importers:
         specifier: ^13.0.1
         version: 13.0.1(@react-spectrum/provider@3.11.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.3.29)(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3)
       '@grafana/scenes':
-        specifier: 8.2.5
-        version: 8.2.5(@babel/core@7.29.0)(@grafana/data@13.0.1(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/e2e-selectors@13.0.1)(@grafana/i18n@13.0.1(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/runtime@13.0.1(@react-spectrum/provider@3.11.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.3.29)(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/schema@13.0.1)(@grafana/ui@13.0.1(@react-spectrum/provider@3.11.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.3.29)(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@types/react@18.3.29)(react-dom@18.2.0(react@18.2.0))(react-router-dom@6.30.3(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(rxjs@7.8.2)
+        specifier: 8.2.6
+        version: 8.2.6(@babel/core@7.29.0)(@grafana/data@13.0.1(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/e2e-selectors@13.0.1)(@grafana/i18n@13.0.1(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/runtime@13.0.1(@react-spectrum/provider@3.11.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.3.29)(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/schema@13.0.1)(@grafana/ui@13.0.1(@react-spectrum/provider@3.11.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.3.29)(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@types/react@18.3.29)(react-dom@18.2.0(react@18.2.0))(react-router-dom@6.30.3(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(rxjs@7.8.2)
       '@grafana/schema':
         specifier: ^13.0.1
         version: 13.0.1
@@ -997,8 +997,8 @@ packages:
       react: ^18.0.0
       react-dom: ^18.0.0
 
-  '@grafana/scenes@8.2.5':
-    resolution: {integrity: sha512-W0qazkGWlsN5HDXcF81cw6j1W1fSYCLsfOqNRIKNCotWQSeNUTJOtQhh3jPnoUreI1aWhLR+DaH83mA0b04AsA==}
+  '@grafana/scenes@8.2.6':
+    resolution: {integrity: sha512-TpQLeh1L9QKx30wWKF/ZqkSs8/x55l0wJz6NuTRjxW9vi/J16rkf8DCsk0PhH6VFZXrOvrwizef6SgTnb4M1dg==}
     peerDependencies:
       '@grafana/data': '>=11.6'
       '@grafana/e2e-selectors': '>=11.6'
@@ -6514,7 +6514,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@grafana/scenes@8.2.5(@babel/core@7.29.0)(@grafana/data@13.0.1(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/e2e-selectors@13.0.1)(@grafana/i18n@13.0.1(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/runtime@13.0.1(@react-spectrum/provider@3.11.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.3.29)(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/schema@13.0.1)(@grafana/ui@13.0.1(@react-spectrum/provider@3.11.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.3.29)(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@types/react@18.3.29)(react-dom@18.2.0(react@18.2.0))(react-router-dom@6.30.3(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(rxjs@7.8.2)':
+  '@grafana/scenes@8.2.6(@babel/core@7.29.0)(@grafana/data@13.0.1(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/e2e-selectors@13.0.1)(@grafana/i18n@13.0.1(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/runtime@13.0.1(@react-spectrum/provider@3.11.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.3.29)(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@grafana/schema@13.0.1)(@grafana/ui@13.0.1(@react-spectrum/provider@3.11.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.3.29)(eslint@9.39.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@types/react@18.3.29)(react-dom@18.2.0(react@18.2.0))(react-router-dom@6.30.3(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(rxjs@7.8.2)':
     dependencies:
       '@emotion/css': 11.10.5(@babel/core@7.29.0)
       '@emotion/react': 11.10.5(@babel/core@7.29.0)(@types/react@18.3.29)(react@18.2.0)

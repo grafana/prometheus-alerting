@@ -91,7 +91,7 @@
     "@grafana/i18n": "^13.0.1",
     "@grafana/plugin-ui": "^0.13.1",
     "@grafana/runtime": "^13.0.1",
-    "@grafana/scenes": "8.2.5",
+    "@grafana/scenes": "8.2.6",
     "@grafana/schema": "^13.0.1",
     "@grafana/ui": "^13.0.1",
     "@hello-pangea/dnd": "^18.0.1",
