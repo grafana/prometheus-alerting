@@ -39,7 +39,10 @@ export class RuleEditorPage {
   readonly saveButton: Locator;
   readonly cancelButton: Locator;
 
-  constructor(private page: Page, private pluginId: string) {
+  constructor(
+    private page: Page,
+    private pluginId: string
+  ) {
     // Scope all selectors to page content
     this.pageContent = page.locator('#pageContent');
 
@@ -115,6 +118,11 @@ export class RuleEditorPage {
     // this don't return stale content from a layout-level heading.
     await expect(this.loadingAlert).toBeHidden();
     await expect(this.pageTitle).toBeVisible();
+    // Wait for the rule-name input to be in the DOM. This pins the wait to
+    // actual form readiness: React may flush the form render slightly after
+    // networkidle + heading checks pass, causing getRuleName() / inputValue()
+    // calls to time out on a missing element in slow CI environments.
+    await expect(this.ruleNameInput).toBeVisible();
   }
 
   /**
