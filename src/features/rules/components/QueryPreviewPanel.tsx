@@ -78,7 +78,6 @@ export function QueryPreviewPanel({
         label={t('alerting.query-preview.title', 'Query Preview')}
         isOpen={isOpen}
         onToggle={() => setIsOpen(!isOpen)}
-        collapsible
       >
         {content}
       </Collapse>

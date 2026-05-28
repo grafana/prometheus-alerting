@@ -5,13 +5,6 @@ import { vi } from 'vitest';
 
 import GroupDetails from './GroupDetails';
 
-// Mock ResizeObserver which is not available in jsdom
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
-
 // Mock PluginPage component (not an HTTP request, so we mock it directly)
 // Recursively render breadcrumb items with their URLs
 interface PageNavItem {
@@ -109,7 +102,7 @@ vi.mock('../../../api/rules/mimir.endpoints', async () => {
 
 function renderGroupDetails(path = '/groups/prometheus-1/my-namespace/my-group') {
   return render(
-    <MemoryRouter initialEntries={[path]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path="/groups/:dataSourceUid/:namespace/:groupName" element={<GroupDetails />} />
       </Routes>

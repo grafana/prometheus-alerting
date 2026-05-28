@@ -105,6 +105,7 @@ export function SilenceFormFields({
     }
   }, [silence, reset]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() is inherently non-memoizable; this is a known library limitation
   const matchers = watch('matchers');
   const timeMode = watch('timeMode');
 
@@ -141,8 +142,8 @@ export function SilenceFormFields({
               error instanceof Error
                 ? error.message
                 : isEditMode
-                ? t('silences.edit.error-message', 'Failed to update silence')
-                : t('silences.create.error-message', 'Failed to create silence')
+                  ? t('silences.edit.error-message', 'Failed to update silence')
+                  : t('silences.create.error-message', 'Failed to create silence')
             )}
           </Alert>
         )}
@@ -342,8 +343,8 @@ export function SilenceFormFields({
                   ? t('silences.edit.updating', 'Updating...')
                   : t('silences.create.creating', 'Creating...')
                 : isEditMode
-                ? t('silences.edit.submit', 'Update Silence')
-                : t('silences.create.submit', 'Create Silence'))}
+                  ? t('silences.edit.submit', 'Update Silence')
+                  : t('silences.create.submit', 'Create Silence'))}
           </Button>
           <Button type="button" variant="secondary" onClick={onCancel} disabled={isLoading}>
             {cancelButtonText || t('silences.create.cancel', 'Cancel')}

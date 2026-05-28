@@ -17,9 +17,6 @@ export function useUnsavedChanges(enabled = true) {
     // Browser native prompt when closing/refreshing tab
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      // Chrome requires returnValue to be set
-      e.returnValue = '';
-      return '';
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);

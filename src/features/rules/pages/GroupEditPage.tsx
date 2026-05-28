@@ -185,6 +185,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
     },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() is inherently non-memoizable; this is a known library limitation
   const currentInterval = watch('interval');
 
   const onSwap = (operation: SwapOperation) => {

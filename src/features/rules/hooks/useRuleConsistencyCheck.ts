@@ -64,18 +64,10 @@ export function useMatchingPromRuleExists() {
 export function useRuleConsistencyCheck() {
   const { matchingPromRuleExists } = useMatchingPromRuleExists();
 
-  const removalIntervalRef = useRef<ReturnType<typeof setInterval>>();
-  const removalTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const creationIntervalRef = useRef<ReturnType<typeof setInterval>>();
-  const creationTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      clearRemovalInterval();
-      clearCreationInterval();
-    };
-  }, []);
+  const removalIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const removalTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const creationIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const creationTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const clearRemovalInterval = () => {
     if (removalIntervalRef.current) {
@@ -98,6 +90,14 @@ export function useRuleConsistencyCheck() {
       creationTimeoutRef.current = undefined;
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearRemovalInterval();
+      clearCreationInterval();
+    };
+  }, []);
 
   /**
    * Wait until a rule is removed from the Prometheus API.
@@ -207,6 +207,7 @@ export function useRuleCreationConsistencyCheck(
 
   useEffect(() => {
     if (!identifier || skip) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus('idle');
       return;
     }

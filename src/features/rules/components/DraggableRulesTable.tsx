@@ -223,9 +223,11 @@ const DraggableListItem = ({ provided, rule, groupInterval, isClone = false }: D
       }
       data-testid="reorder-alert-rule"
       className={cx(styles.listItem, { [styles.listItemClone]: isClone })}
+      /* eslint-disable react-hooks/refs -- provided.innerRef/draggableProps/dragHandleProps are @hello-pangea/dnd render-prop API, not useRef values */
       ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
+      /* eslint-enable react-hooks/refs */
     />
   );
 };

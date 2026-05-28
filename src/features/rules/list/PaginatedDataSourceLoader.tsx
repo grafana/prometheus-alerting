@@ -92,6 +92,7 @@ function PaginatedGroupsLoader({
   );
 
   const { isLoading, groups, hasMoreGroups, fetchMoreGroups, error } = useLazyLoadPrometheusGroups(
+    // eslint-disable-next-line react-hooks/refs -- groupsGenerator.current is initialised once and never reassigned; the value is stable for the component lifetime
     groupsGenerator.current,
     FRONTED_GROUPED_PAGE_SIZE,
     filterFn

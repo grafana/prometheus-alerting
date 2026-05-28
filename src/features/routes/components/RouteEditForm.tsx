@@ -186,6 +186,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
           <Switch id="override-grouping-toggle" {...register('overrideGrouping')} />
         </Field>
 
+        {/* eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() is inherently non-memoizable; this is a known library limitation */}
         {watch('overrideGrouping') && (
           <Field
             label={t('routes.edit.group-by', 'Group by')}
@@ -196,6 +197,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
           >
             <Controller
               render={({ field: { onChange, ref, ...fieldProps } }) => (
+                // eslint-disable-next-line @typescript-eslint/no-deprecated -- MultiSelect→MultiCombobox migration requires onCreateOption API changes; tracked separately
                 <MultiSelect
                   {...fieldProps}
                   allowCustomValue
@@ -284,6 +286,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
         >
           <Controller
             render={({ field: { onChange, ref, value, ...fieldProps } }) => (
+              // eslint-disable-next-line @typescript-eslint/no-deprecated -- MultiSelect→MultiCombobox migration requires onCreateOption API changes; tracked separately
               <MultiSelect
                 {...fieldProps}
                 value={(value ?? []).map((v) => ({ label: v, value: v }))}

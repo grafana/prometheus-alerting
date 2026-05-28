@@ -35,6 +35,7 @@ export function useGroupConsistencyCheck(
   rulerGroup: RulerRuleGroupDTO | null | undefined,
   rulerApiEnabled: boolean
 ): GroupConsistencyResult {
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- intentional: O(n) rule-array comparison; React Compiler cannot statically prove object identity here
   return useMemo(() => {
     // If Ruler API is not enabled, we can't compare - assume in sync
     if (!rulerApiEnabled) {
@@ -152,8 +153,8 @@ export function useWaitForGroupConsistency() {
   const [fetchPromGroups] = useLazyGetGroupsQuery();
   const [fetchRulerGroup] = useLazyGetRuleGroupQuery();
 
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Cleanup on unmount
   useEffect(() => {

@@ -191,6 +191,7 @@ function SilenceForm() {
     }
   }, [isPrefillMode, prefillMatchers, reset]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() is inherently non-memoizable; this is a known library limitation
   const matchers = watch('matchers');
   const timeMode = watch('timeMode');
 
@@ -264,8 +265,8 @@ function SilenceForm() {
               {isEditMode
                 ? t('silences.edit.page-title', 'Edit Silence')
                 : isRecreateMode
-                ? t('silences.recreate.page-title', 'Recreate Silence')
-                : t('silences.create.page-title', 'Create Silence')}
+                  ? t('silences.recreate.page-title', 'Recreate Silence')
+                  : t('silences.create.page-title', 'Create Silence')}
             </h2>
 
             {loadError && (
@@ -303,8 +304,8 @@ function SilenceForm() {
                 {mutationError instanceof Error
                   ? mutationError.message
                   : isEditMode
-                  ? t('silences.edit.error-message', 'Failed to update silence')
-                  : t('silences.create.error-message', 'Failed to create silence')}
+                    ? t('silences.edit.error-message', 'Failed to update silence')
+                    : t('silences.create.error-message', 'Failed to create silence')}
               </Alert>
             )}
 
@@ -494,8 +495,8 @@ function SilenceForm() {
                         ? t('silences.edit.updating', 'Updating...')
                         : t('silences.create.creating', 'Creating...')
                       : isEditMode
-                      ? t('silences.edit.submit', 'Update Silence')
-                      : t('silences.create.submit', 'Create Silence')}
+                        ? t('silences.edit.submit', 'Update Silence')
+                        : t('silences.create.submit', 'Create Silence')}
                   </Button>
                   <Button variant="secondary" onClick={handleCancel} type="button" disabled={isLoading}>
                     {t('silences.create.cancel', 'Cancel')}

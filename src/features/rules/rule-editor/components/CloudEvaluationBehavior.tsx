@@ -56,6 +56,7 @@ export const CloudEvaluationBehavior = () => {
           <Controller
             name="forTimeUnit"
             render={({ field: { onChange, ref, ...field } }) => (
+              // eslint-disable-next-line @typescript-eslint/no-deprecated -- Select→Combobox migration; tracked separately
               <Select
                 {...field}
                 options={timeOptions}

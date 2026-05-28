@@ -80,6 +80,7 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
   // Warn about unsaved changes
   useUnsavedChanges(true);
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() is inherently non-memoizable; this is a known library limitation
   const type = watch('type');
   const isAlerting = isCloudAlertingRuleByType(type);
 

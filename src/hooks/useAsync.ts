@@ -73,8 +73,8 @@ export function useAsync<Result, Args extends unknown[] = unknown[]>(
     error: undefined,
     result: initialValue,
   });
-  const promiseRef = useRef<Promise<Result>>();
-  const argsRef = useRef<Args>();
+  const promiseRef = useRef<Promise<Result> | undefined>(undefined);
+  const argsRef = useRef<Args | undefined>(undefined);
 
   const methods = useSyncedRef({
     execute(...params: Args) {
@@ -115,6 +115,9 @@ export function useAsync<Result, Args extends unknown[] = unknown[]>(
     },
   });
 
+  // promiseRef/argsRef are read here to expose the latest values as metadata;
+  // stale-on-render is acceptable for this introspection API.
+  // eslint-disable-next-line react-hooks/refs
   return [
     useMemo(
       () => ({
@@ -127,6 +130,7 @@ export function useAsync<Result, Args extends unknown[] = unknown[]>(
       []
     ),
     state,
+    // eslint-disable-next-line react-hooks/refs
     { promise: promiseRef.current, lastArgs: argsRef.current },
   ];
 }
@@ -139,6 +143,7 @@ export function useAsync<Result, Args extends unknown[] = unknown[]>(
 function useSyncedRef<T>(value: T): { readonly current: T } {
   const ref = useRef(value);
 
+  // eslint-disable-next-line react-hooks/refs -- canonical useSyncedRef / useEvent pattern: keep ref current so callbacks always see the latest value
   ref.current = value;
 
   return useMemo(

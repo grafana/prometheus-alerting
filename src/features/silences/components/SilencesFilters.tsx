@@ -75,6 +75,7 @@ function getSilenceMatcherOperators(): Array<SelectableValue<string>> {
  */
 function useSilenceFiltersController(silences: GettableSilence[]) {
   const silencesRef = useRef(silences);
+  // eslint-disable-next-line react-hooks/refs -- canonical useSyncedRef pattern: keep ref current so controller callbacks always see the latest silences without creating new closures
   silencesRef.current = silences;
 
   const [searchParams, updateSearchParams] = useURLSearchParams();
