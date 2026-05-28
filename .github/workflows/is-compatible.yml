@@ -12,7 +12,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: ./.github/actions/setup-node-with-cache
+        uses: ./.github/actions/setup-node
 
       - name: Build plugin
         run: pnpm run build
