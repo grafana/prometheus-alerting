@@ -7,21 +7,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm ci
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node-with-cache
 
       - name: Build plugin
         run: pnpm run build
@@ -33,7 +24,7 @@ jobs:
           echo "modulets=${MODULETS}" >> $GITHUB_OUTPUT
 
       - name: Compatibility check
-        uses: grafana/plugin-actions/is-compatible@main
+        uses: grafana/plugin-actions/is-compatible@main # zizmor: ignore[unpinned-uses] provided by grafana
         with:
           module: ${{ steps.find-module-ts.outputs.modulets }}
           comment-pr: 'no'

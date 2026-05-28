@@ -21,10 +21,10 @@ jobs:
       plugin-version: ${{ steps.metadata.outputs.plugin-version }}
       has-e2e: ${{ steps.check-for-e2e.outputs.has-e2e }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
-      - name: Setup Node.js with caching
+      - name: Setup Node.js
         uses: ./.github/actions/setup-node-with-cache
 
       - name: Check types
@@ -87,7 +87,8 @@ jobs:
         run: |
           docker run --pull=always \
             -v $PWD/${ARCHIVE}:/archive.zip \
-            grafana/plugin-validator-cli -analyzer=metadatavalid /archive.zip
+            grafana/plugin-validator-cli@sha256:ba3f8f4916ca1ed50ee4b75bf9887efbd7bd05e10bb0b26629781d427b87fec5 \
+            -analyzer=metadatavalid /archive.zip
         env:
           ARCHIVE: ${{ steps.metadata.outputs.archive }}
 
@@ -110,13 +111,13 @@ jobs:
       matrix: ${{ steps.resolve-versions.outputs.matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
       - name: Resolve Grafana E2E versions
         id: resolve-versions
-        uses: grafana/plugin-actions/e2e-version@main # zizmor: ignore[unpinned-uses] provided by grafana
+        uses: grafana/plugin-actions/e2e-version@1c101efc8e5bb6450d6b982ee1d0c668cb21d64f # pin before plugin-actions#228 broke @main
         with:
           version-resolver-type: plugin-grafana-dependency
 
@@ -134,17 +135,17 @@ jobs:
     name: e2e test ${{ matrix.GRAFANA_IMAGE.name }}@${{ matrix.GRAFANA_IMAGE.VERSION }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
       - name: Download plugin
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           path: dist
           name: ${{ needs.build.outputs.plugin-id }}-${{ needs.build.outputs.plugin-version }}
 
-      - name: Setup Node.js with caching
+      - name: Setup Node.js
         uses: ./.github/actions/setup-node-with-cache
 
       - name: Verify test data exists
@@ -205,7 +206,7 @@ jobs:
             exit 1
           fi
 
-      - name: Setup Playwright with caching
+      - name: Setup Playwright
         uses: ./.github/actions/setup-playwright-with-cache
 
       - name: Run Playwright tests
