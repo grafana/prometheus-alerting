@@ -70,6 +70,10 @@ export class RuleDetailsPage {
   async waitForLoad(): Promise<void> {
     // Wait for network to be idle (all API calls complete)
     await this.page.waitForLoadState('networkidle');
+    // Ensure the loading placeholder is gone and the H1 has mounted, so reads
+    // after this don't return stale content from the previous route.
+    await expect(this.loadingPlaceholder).toBeHidden();
+    await expect(this.pageTitle).toBeVisible();
   }
 
   /**

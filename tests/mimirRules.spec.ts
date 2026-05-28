@@ -1,5 +1,7 @@
 import { test, expect } from './fixtures';
-import { RuleBuilder } from './helpers/rules.helpers';
+import { RuleBuilder } from './factories/rules';
+
+const MIMIR_TEST_NAMESPACE = 'e2e-test-namespace';
 
 /**
  * E2E tests for Mimir rules (requires Ruler API)
@@ -61,9 +63,15 @@ test.describe('Mimir Rules - E2E', () => {
   });
 
   test.describe('Delete Rule', () => {
-    test('should delete a rule and show confirming state', async ({ ruleEditorPage, ruleDetailsPage, page }) => {
+    test('should delete a rule and show confirming state', async ({
+      ruleEditorPage,
+      ruleDetailsPage,
+      page,
+      mimirGroup,
+    }) => {
       // First, create a new rule to delete
       const uniqueRuleName = `DeleteTest_${Date.now()}`;
+      const groupName = mimirGroup('e2e-delete-test-group');
 
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
@@ -71,8 +79,8 @@ test.describe('Mimir Rules - E2E', () => {
       await ruleEditorPage.fillRuleName(uniqueRuleName);
       await ruleEditorPage.selectDataSource('Test Mimir');
       await ruleEditorPage.fillExpression('vector(1) > 0');
-      await ruleEditorPage.selectNamespace('e2e-test-namespace');
-      await ruleEditorPage.selectGroup('e2e-delete-test-group');
+      await ruleEditorPage.selectNamespace(MIMIR_TEST_NAMESPACE);
+      await ruleEditorPage.createGroup(groupName);
 
       // Wait a moment for form state to settle
       await page.waitForTimeout(500);
@@ -108,8 +116,9 @@ test.describe('Mimir Rules - E2E', () => {
   });
 
   test.describe('Create Rule - Consistency Warning', () => {
-    test('should redirect to details page after creating a rule', async ({ ruleEditorPage, page }) => {
+    test('should redirect to details page after creating a rule', async ({ ruleEditorPage, page, mimirGroup }) => {
       const uniqueRuleName = `ConsistencyTest_${Date.now()}`;
+      const groupName = mimirGroup('e2e-consistency-test-group');
 
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
@@ -117,8 +126,8 @@ test.describe('Mimir Rules - E2E', () => {
       await ruleEditorPage.fillRuleName(uniqueRuleName);
       await ruleEditorPage.selectDataSource('Test Mimir');
       await ruleEditorPage.fillExpression('vector(0) > 1'); // Always inactive
-      await ruleEditorPage.selectNamespace('e2e-test-namespace');
-      await ruleEditorPage.selectGroup('e2e-consistency-test-group');
+      await ruleEditorPage.selectNamespace(MIMIR_TEST_NAMESPACE);
+      await ruleEditorPage.createGroup(groupName);
 
       // Wait a moment for form state to settle before saving
       await page.waitForTimeout(500);
@@ -138,8 +147,10 @@ test.describe('Mimir Rules - E2E', () => {
       ruleEditorPage,
       ruleDetailsPage,
       page,
+      mimirGroup,
     }) => {
       const uniqueRuleName = `PropagationTest_${Date.now()}`;
+      const groupName = mimirGroup('e2e-propagation-test-group');
 
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
@@ -147,8 +158,8 @@ test.describe('Mimir Rules - E2E', () => {
       await ruleEditorPage.fillRuleName(uniqueRuleName);
       await ruleEditorPage.selectDataSource('Test Mimir');
       await ruleEditorPage.fillExpression('vector(0) > 1');
-      await ruleEditorPage.selectNamespace('e2e-test-namespace');
-      await ruleEditorPage.selectGroup('e2e-propagation-test-group');
+      await ruleEditorPage.selectNamespace(MIMIR_TEST_NAMESPACE);
+      await ruleEditorPage.createGroup(groupName);
 
       // Wait a moment for form state to settle before saving
       await page.waitForTimeout(500);
@@ -182,7 +193,4 @@ test.describe('Mimir Rules - E2E', () => {
       }
     });
   });
-
-  // Cleanup: Rules created during tests will be left in Mimir
-  // They use unique names so won't conflict with other tests
 });
