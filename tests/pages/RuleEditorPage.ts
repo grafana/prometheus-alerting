@@ -111,6 +111,10 @@ export class RuleEditorPage {
    */
   async waitForLoad(): Promise<void> {
     await this.page.waitForLoadState('networkidle');
+    // Ensure the loading state is gone and the H1 has mounted, so reads after
+    // this don't return stale content from a layout-level heading.
+    await expect(this.loadingAlert).toBeHidden();
+    await expect(this.pageTitle).toBeVisible();
   }
 
   /**
