@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch, Controller } from 'react-hook-form';
 import { useParams, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -112,7 +112,6 @@ function SilenceForm() {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     reset,
   } = useForm<SilenceFormData>({
     resolver: zodResolver(SilenceFormSchema),
@@ -191,9 +190,8 @@ function SilenceForm() {
     }
   }, [isPrefillMode, prefillMatchers, reset]);
 
-  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() is inherently non-memoizable; this is a known library limitation
-  const matchers = watch('matchers');
-  const timeMode = watch('timeMode');
+  const matchers = useWatch({ control, name: 'matchers' });
+  const timeMode = useWatch({ control, name: 'timeMode' });
 
   const getOperatorOption = (matcher: MatcherFormData): ComboboxOption => {
     if (matcher.isRegex && matcher.isEqual === false) {

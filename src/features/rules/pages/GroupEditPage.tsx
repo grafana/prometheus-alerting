@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import React, { useMemo, useState } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 
 import { AppEvents, GrafanaTheme2 } from '@grafana/data';
@@ -174,7 +174,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors, dirtyFields, isSubmitting },
   } = useForm<GroupEditFormData>({
     mode: 'onBlur',
@@ -185,8 +185,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
     },
   });
 
-  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() is inherently non-memoizable; this is a known library limitation
-  const currentInterval = watch('interval');
+  const currentInterval = useWatch({ control, name: 'interval' });
 
   const onSwap = (operation: SwapOperation) => {
     setSwapOperations((prev) => [...prev, operation]);

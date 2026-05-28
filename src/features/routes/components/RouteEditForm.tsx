@@ -1,8 +1,8 @@
 import { css } from '@emotion/css';
 import React, { useState } from 'react';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 
-import { GrafanaTheme2, SelectableValue } from '@grafana/data';
+import { GrafanaTheme2 } from '@grafana/data';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { Trans, t } from '@grafana/i18n';
 import {
@@ -13,7 +13,7 @@ import {
   Field,
   IconButton,
   Input,
-  MultiSelect,
+  MultiCombobox,
   Stack,
   Switch,
   useStyles2,
@@ -39,7 +39,7 @@ export interface RouteEditFormProps {
 
 export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false }: RouteEditFormProps) {
   const styles = useStyles2(getStyles);
-  const [groupByOptions, setGroupByOptions] = useState<Array<SelectableValue<string>>>(
+  const [groupByOptions, setGroupByOptions] = useState<Array<ComboboxOption<string>>>(
     (route.group_by ?? []).map((g) => ({ label: g, value: g }))
   );
 
@@ -50,8 +50,6 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
     control,
     register,
     formState: { errors },
-    setValue,
-    watch,
   } = useForm<FormAmRoute>({
     defaultValues: formAmRoute,
   });
@@ -60,6 +58,9 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
     control,
     name: 'object_matchers',
   });
+
+  const overrideGrouping = useWatch({ control, name: 'overrideGrouping' });
+  const overrideTimings = useWatch({ control, name: 'overrideTimings' });
 
   const handleFormSubmit = (values: FormAmRoute) => {
     onSubmit(values);
@@ -186,8 +187,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
           <Switch id="override-grouping-toggle" {...register('overrideGrouping')} />
         </Field>
 
-        {/* eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() is inherently non-memoizable; this is a known library limitation */}
-        {watch('overrideGrouping') && (
+        {overrideGrouping && (
           <Field
             label={t('routes.edit.group-by', 'Group by')}
             description={t(
@@ -196,16 +196,25 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
             )}
           >
             <Controller
-              render={({ field: { onChange, ref, ...fieldProps } }) => (
-                // eslint-disable-next-line @typescript-eslint/no-deprecated -- MultiSelect→MultiCombobox migration requires onCreateOption API changes; tracked separately
-                <MultiSelect
-                  {...fieldProps}
-                  allowCustomValue
-                  onCreateOption={(opt: string) => {
-                    setGroupByOptions((opts) => [...opts, { label: opt, value: opt }]);
-                    setValue('groupBy', [...(fieldProps.value || []), opt]);
+              render={({ field: { onChange, onBlur, value } }) => (
+                <MultiCombobox
+                  value={value ?? []}
+                  createCustomValue
+                  onChange={(selected) => {
+                    const knownValues = new Set([
+                      ...commonGroupByOptions.map((o) => o.value),
+                      ...groupByOptions.map((o) => o.value),
+                    ]);
+                    const newOpts = selected.filter((o) => !knownValues.has(o.value));
+                    if (newOpts.length) {
+                      setGroupByOptions((opts) => [
+                        ...opts,
+                        ...newOpts.map((o) => ({ label: o.label ?? o.value, value: o.value })),
+                      ]);
+                    }
+                    onChange(selected.map((v) => v.value));
                   }}
-                  onChange={(value) => onChange(value.map((v) => v.value))}
+                  onBlur={onBlur}
                   options={[...commonGroupByOptions, ...groupByOptions]}
                   aria-label={t('routes.edit.group-by-aria', 'Group by')}
                 />
@@ -221,7 +230,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
           <Switch id="override-timings-toggle" {...register('overrideTimings')} />
         </Field>
 
-        {watch('overrideTimings') && (
+        {overrideTimings && (
           <>
             <Field
               label={t('routes.edit.group-wait', 'Group wait')}
@@ -285,16 +294,12 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
           description={t('routes.edit.mute-timings-description', 'Mute notifications during specific time intervals')}
         >
           <Controller
-            render={({ field: { onChange, ref, value, ...fieldProps } }) => (
-              // eslint-disable-next-line @typescript-eslint/no-deprecated -- MultiSelect→MultiCombobox migration requires onCreateOption API changes; tracked separately
-              <MultiSelect
-                {...fieldProps}
-                value={(value ?? []).map((v) => ({ label: v, value: v }))}
-                allowCustomValue
-                onCreateOption={(opt: string) => {
-                  setValue('muteTimeIntervals', [...(value || []), opt]);
-                }}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <MultiCombobox
+                value={value ?? []}
+                createCustomValue
                 onChange={(selected) => onChange(selected.map((v) => v.value))}
+                onBlur={onBlur}
                 options={[]}
                 placeholder={t('routes.edit.mute-timings-placeholder', 'Select or type mute timing names')}
               />

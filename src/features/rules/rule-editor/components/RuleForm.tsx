@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import React, { useMemo, useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -73,15 +73,14 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
 
   const {
     handleSubmit,
-    watch,
+    control,
     formState: { isSubmitting },
   } = formAPI;
 
   // Warn about unsaved changes
   useUnsavedChanges(true);
 
-  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() is inherently non-memoizable; this is a known library limitation
-  const type = watch('type');
+  const type = useWatch({ control, name: 'type' });
   const isAlerting = isCloudAlertingRuleByType(type);
 
   const onChangeDataSource = (uid: string) => {

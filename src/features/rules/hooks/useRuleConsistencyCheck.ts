@@ -202,13 +202,16 @@ export function useRuleCreationConsistencyCheck(
   const { matchingPromRuleExists } = useMatchingPromRuleExists();
   const { waitForCreation } = useRuleConsistencyCheck();
 
-  const [status, setStatus] = useState<ConsistencyCheckStatus>('idle');
+  // asyncStatus reflects only the outcome of the async check.
+  // The visible `status` is derived below, so no effect is needed to reset it.
+  const [asyncStatus, setAsyncStatus] = useState<ConsistencyCheckStatus>('idle');
   const [error, setError] = useState<Error | null>(null);
+
+  // Derive the visible status: while skipped or without an identifier, always idle.
+  const status: ConsistencyCheckStatus = !identifier || skip ? 'idle' : asyncStatus;
 
   useEffect(() => {
     if (!identifier || skip) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStatus('idle');
       return;
     }
 
@@ -225,12 +228,12 @@ export function useRuleCreationConsistencyCheck(
 
         if (exists) {
           // Rule already exists, no need to wait
-          setStatus('consistent');
+          setAsyncStatus('consistent');
           return;
         }
 
         // Rule doesn't exist yet, start waiting
-        setStatus('checking');
+        setAsyncStatus('checking');
 
         await waitForCreation(identifier);
 
@@ -238,7 +241,7 @@ export function useRuleCreationConsistencyCheck(
           return;
         }
 
-        setStatus('consistent');
+        setAsyncStatus('consistent');
       } catch (err) {
         if (cancelled) {
           return;
@@ -247,9 +250,9 @@ export function useRuleCreationConsistencyCheck(
         // Check if it's a timeout error
         const errorMessage = err instanceof Error ? err.message : '';
         if (errorMessage.includes('Timeout')) {
-          setStatus('timeout');
+          setAsyncStatus('timeout');
         } else {
-          setStatus('error');
+          setAsyncStatus('error');
         }
         setError(err instanceof Error ? err : new Error('Unknown error'));
       }

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -70,7 +70,6 @@ export function SilenceFormFields({
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     reset,
   } = useForm<SilenceFormData>({
     resolver: zodResolver(SilenceFormSchema),
@@ -105,9 +104,8 @@ export function SilenceFormFields({
     }
   }, [silence, reset]);
 
-  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() is inherently non-memoizable; this is a known library limitation
-  const matchers = watch('matchers');
-  const timeMode = watch('timeMode');
+  const matchers = useWatch({ control, name: 'matchers' });
+  const timeMode = useWatch({ control, name: 'timeMode' });
 
   const getOperatorOption = (matcher: MatcherFormData): ComboboxOption => {
     if (matcher.isRegex && matcher.isEqual === false) {

@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import { chain, isEqual, reject } from 'lodash';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 import { GrafanaTheme2, SelectableValue } from '@grafana/data';
 import { t } from '@grafana/i18n';
@@ -74,10 +74,6 @@ function getSilenceMatcherOperators(): Array<SelectableValue<string>> {
  * object duck-typed to satisfy AdHocFiltersComboboxRenderer.
  */
 function useSilenceFiltersController(silences: GettableSilence[]) {
-  const silencesRef = useRef(silences);
-  // eslint-disable-next-line react-hooks/refs -- canonical useSyncedRef pattern: keep ref current so controller callbacks always see the latest silences without creating new closures
-  silencesRef.current = silences;
-
   const [searchParams, updateSearchParams] = useURLSearchParams();
   const queryString = searchParams.get('queryString') ?? '';
 
@@ -111,7 +107,7 @@ function useSilenceFiltersController(silences: GettableSilence[]) {
     },
 
     async getKeys(_currentKey: string | null): Promise<Array<SelectableValue<string>>> {
-      return chain(silencesRef.current)
+      return chain(silences)
         .flatMap((s) => s.matchers ?? [])
         .map('name')
         .uniq()
@@ -120,7 +116,7 @@ function useSilenceFiltersController(silences: GettableSilence[]) {
     },
 
     async getValuesFor(filter: SilenceFilter): Promise<Array<SelectableValue<string>>> {
-      return chain(silencesRef.current)
+      return chain(silences)
         .flatMap((s) => s.matchers ?? [])
         .filter({ name: filter.key })
         .map('value')

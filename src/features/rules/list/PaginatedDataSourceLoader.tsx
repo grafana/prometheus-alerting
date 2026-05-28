@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { groupBy, isEmpty } from 'lodash';
 
@@ -71,16 +71,15 @@ function PaginatedGroupsLoader({
   // However, if there are filters, we need to fetch more groups from the API to populate one frontend page
   const apiGroupPageSize = getApiGroupPageSize(hasFilters);
 
-  const groupsGenerator = useRef(
+  const [generator] = useState(() =>
     toIndividualRuleGroups(prometheusGroupsGenerator(rulesSourceIdentifier, apiGroupPageSize))
   );
 
   useEffect(() => {
-    const currentGenerator = groupsGenerator.current;
     return () => {
-      currentGenerator.return();
+      generator.return();
     };
-  }, []);
+  }, [generator]);
 
   const filterFn = useMemo(
     () => (group: RuleGroup) =>
@@ -92,8 +91,7 @@ function PaginatedGroupsLoader({
   );
 
   const { isLoading, groups, hasMoreGroups, fetchMoreGroups, error } = useLazyLoadPrometheusGroups(
-    // eslint-disable-next-line react-hooks/refs -- groupsGenerator.current is initialised once and never reassigned; the value is stable for the component lifetime
-    groupsGenerator.current,
+    generator,
     FRONTED_GROUPED_PAGE_SIZE,
     filterFn
   );

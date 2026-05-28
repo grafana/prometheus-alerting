@@ -58,6 +58,7 @@ function FilterViewResults({ filterState }: FilterViewProps) {
 
   const [rules, setRules] = useState<KeyedRuleWithOrigin[]>([]);
   const [doneSearching, setDoneSearching] = useState(false);
+  const [loadingAborted, setLoadingAborted] = useState(false);
 
   // Lazy initialization of useRef
   // https://18.react.dev/reference/react/useRef#how-to-avoid-null-checks-when-initializing-use-ref-later
@@ -107,10 +108,9 @@ function FilterViewResults({ filterState }: FilterViewProps) {
   const loading = isLoading(state) || transitionPending;
   const numberOfRules = rules.length;
   const noRulesFound = numberOfRules === 0 && !loading;
-  // eslint-disable-next-line react-hooks/refs -- reading abort state during render is safe here; the component re-renders whenever loading state changes after an abort
-  const loadingAborted = iteration.current?.abortController.signal.aborted;
   const cancelSearch = useCallback(() => {
     iteration.current?.abortController.abort();
+    setLoadingAborted(true);
   }, []);
 
   /* When we unmount the component we make sure to abort all iterables and stop making HTTP requests */
@@ -120,7 +120,6 @@ function FilterViewResults({ filterState }: FilterViewProps) {
 
   // track the state of the filter progress, which is either searching, done or aborted
   const filterProgressState = useMemo<FilterProgressState>(() => {
-    // eslint-disable-next-line react-hooks/refs
     if (loadingAborted) {
       return 'aborted';
     } else if (doneSearching) {
@@ -161,7 +160,6 @@ function FilterViewResults({ filterState }: FilterViewProps) {
       {!noRulesFound && (
         <FilterStatus state={filterProgressState} numberOfRules={numberOfRules} onCancel={cancelSearch} />
       )}
-      {/* eslint-disable-next-line react-hooks/refs */}
       {!doneSearching && !loading && !loadingAborted && <LoadMoreHelper handleLoad={loadResultPage} />}
     </Stack>
   );
