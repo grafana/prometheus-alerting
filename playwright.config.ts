@@ -21,6 +21,7 @@ export default defineConfig<PluginOptions>({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 6 : undefined,
   /* Global setup to wait for Prometheus rules to be ready */
   globalSetup: './tests/global-setup.ts',
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
