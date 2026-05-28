@@ -23,7 +23,7 @@
   "author": "Grafana",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@grafana/eslint-config": "^8.2.0",
+    "@grafana/eslint-config": "^9.0.0",
     "@grafana/external-alertmanager": "workspace:*",
     "@grafana/external-rules": "workspace:*",
     "@grafana/plugin-e2e": "^2.2.1",
