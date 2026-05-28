@@ -223,41 +223,53 @@ export class RuleEditorPage {
   }
 
   /**
-   * Select or create a namespace
+   * Select an existing namespace from the dropdown. Throws if no matching option is found.
    */
   async selectNamespace(namespace: string): Promise<void> {
-    await this.namespaceCombobox.click();
-    await this.namespaceCombobox.fill(namespace);
-    // Try to select existing option or create new
-    const existingOption = this.page.getByRole('option', { name: namespace, exact: true });
-
-    // Wait a bit for the dropdown to appear and check if option exists
-    try {
-      await existingOption.waitFor({ state: 'visible', timeout: 1000 });
-      await existingOption.click();
-    } catch {
-      // Option doesn't exist, press Enter to create new namespace
-      await this.namespaceCombobox.press('Enter');
-    }
+    await this.pickComboboxOption(this.namespaceCombobox, namespace, 'existing');
   }
 
   /**
-   * Select or create a group
+   * Create a new namespace via the "Use custom value" option. Throws if the namespace
+   * already exists (i.e. the custom-value option does not appear).
+   */
+  async createNamespace(namespace: string): Promise<void> {
+    await this.pickComboboxOption(this.namespaceCombobox, namespace, 'custom');
+  }
+
+  /**
+   * Select an existing group from the dropdown. Throws if no matching option is found.
    */
   async selectGroup(group: string): Promise<void> {
-    await this.groupCombobox.click();
-    await this.groupCombobox.fill(group);
-    // Try to select existing option or create new
-    const existingOption = this.page.getByRole('option', { name: group, exact: true });
+    await this.pickComboboxOption(this.groupCombobox, group, 'existing');
+  }
 
-    // Wait a bit for the dropdown to appear and check if option exists
-    try {
-      await existingOption.waitFor({ state: 'visible', timeout: 1000 });
-      await existingOption.click();
-    } catch {
-      // Option doesn't exist, press Enter to create new group
-      await this.groupCombobox.press('Enter');
-    }
+  /**
+   * Create a new group via the "Use custom value" option. Throws if the group
+   * already exists (i.e. the custom-value option does not appear).
+   */
+  async createGroup(group: string): Promise<void> {
+    await this.pickComboboxOption(this.groupCombobox, group, 'custom');
+  }
+
+  /**
+   * Pick an option from a Grafana Combobox.
+   * - `existing`: matches an option whose accessible name equals `value` exactly
+   *   (no "Use custom value" description sibling).
+   * - `custom`: matches the prepended option that has the "Use custom value" description.
+   */
+  private async pickComboboxOption(combobox: Locator, value: string, kind: 'existing' | 'custom'): Promise<void> {
+    await expect(combobox).toBeEnabled({ timeout: 2000 });
+    await combobox.click();
+    await combobox.fill(value);
+
+    const listbox = this.page.getByRole('listbox');
+    const option =
+      kind === 'custom'
+        ? listbox.getByRole('option').filter({ hasText: 'Use custom value' })
+        : listbox.getByRole('option', { name: value, exact: true });
+
+    await option.click({ timeout: 2000 });
   }
 
   /**

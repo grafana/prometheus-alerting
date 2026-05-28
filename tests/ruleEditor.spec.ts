@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { RuleBuilder } from './helpers/rules.helpers';
+import { RuleBuilder } from './factories/rules';
 
 /**
  * E2E tests for the RuleEditor page
@@ -84,7 +84,7 @@ test.describe('RuleEditor Page - E2E', () => {
   });
 
   test.describe('Recording Rules', () => {
-    test('should create a new recording rule successfully', async ({ ruleEditorPage, page }) => {
+    test('should create a new recording rule successfully', async ({ ruleEditorPage, page, mimirGroup }) => {
       await ruleEditorPage.gotoNew('recording');
       await ruleEditorPage.waitForLoad();
 
@@ -95,7 +95,7 @@ test.describe('RuleEditor Page - E2E', () => {
       await ruleEditorPage.selectDataSource('Test Mimir');
       await ruleEditorPage.fillExpression('sum(rate(http_requests_total[5m]))');
       await ruleEditorPage.selectNamespace('e2e-test-namespace');
-      await ruleEditorPage.selectGroup('e2e-recording-group');
+      await ruleEditorPage.createGroup(mimirGroup('e2e-recording-group'));
 
       // Add labels
       const labelsModal = await ruleEditorPage.openLabelsModal();
@@ -336,9 +336,10 @@ test.describe('RuleEditor Page - E2E', () => {
     });
   });
 
-  // Cleanup: Restore pre-provisioned rules after Edit/Clone tests
+  // Cleanup: Restore pre-provisioned rules after Edit/Clone tests.
   test.afterEach(async ({}, testInfo) => {
-    if (testInfo.title.toLowerCase().includes('edit') || testInfo.title.toLowerCase().includes('clone')) {
+    const title = testInfo.title.toLowerCase();
+    if (title.includes('edit') || title.includes('clone')) {
       try {
         const { execSync } = require('child_process');
         execSync(

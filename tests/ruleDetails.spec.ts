@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { RuleBuilder } from './helpers/rules.helpers';
+import { RuleBuilder } from './factories/rules';
 
 /**
  * E2E tests for the RuleDetails page
