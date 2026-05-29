@@ -11,14 +11,14 @@ const BANNER = `
 `;
 
 const execPath = process.execPath;
+const isCI = process.env.CI === 'true';
 
-if (!execPath.includes('mise')) {
+if (!execPath.includes('mise') && !isCI) {
   process.stderr.write(BANNER + '\n');
-  process.stderr.write('  This repo requires mise to manage Node and pnpm versions.\n');
+  process.stderr.write('  ⚠️  WARNING: This repo recommends using mise to manage Node and pnpm versions.\n');
   process.stderr.write(`  Node is running from: ${execPath}\n\n`);
-  process.stderr.write('  Please install mise: https://mise.jdx.dev\n');
+  process.stderr.write('  For the best development experience, install mise: https://mise.jdx.dev\n');
   process.stderr.write('  Then run:\n');
   process.stderr.write('    mise trust && mise install\n\n');
-  process.stderr.write('  See the README for setup instructions.\n\n');
-  process.exit(1);
+  process.stderr.write('  Continuing anyway...\n\n');
 }
