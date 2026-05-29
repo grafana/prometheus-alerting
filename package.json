@@ -19,7 +19,7 @@
     "sign": "npx --yes @grafana/sign-plugin@3.2.2",
     "i18n-extract": "i18next --config src/locales/i18next-parser.config.js",
     "preinstall": "node scripts/check-mise.js",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install || true"
   },
   "author": "Grafana",
   "license": "Apache-2.0",
