@@ -12,9 +12,11 @@
       rangeStrategy: 'pin',
     },
     {
-      // Pin Docker Compose image tags exactly.
+      // Pin Docker Compose image tags exactly and add SHA256 digests
+      // so images are pinned by content, not just by tag name.
       matchManagers: ['docker-compose'],
       rangeStrategy: 'pin',
+      pinDigests: true,
     },
   ],
   lockFileMaintenance: {

@@ -7,7 +7,7 @@ runs:
       uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
       with:
         install: true   # runs `mise install` using committed mise.lock
-        cache: true     # caches tool downloads keyed on mise.lock hash
+        cache: false    # disabled — cached binaries skip checksum re-verification; paranoid mode + mise.lock already verify every download
 
     - name: Install dependencies
       shell: bash
