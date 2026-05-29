@@ -110,21 +110,26 @@ export class RuleEditorPage {
   }
 
   /**
-   * Wait for the page to finish loading
+   * Wait for the page to finish loading.
+   *
+   * Pass the expected page header (e.g. "New alert rule", /Clone/) to wait for
+   * the editor title specifically, rather than just any mounted H1.
    */
-  async waitForLoad(): Promise<void> {
+  async waitForLoad(expectedTitle?: string | RegExp): Promise<void> {
     await this.page.waitForLoadState('networkidle');
     // Ensure the loading state is gone and the H1 has mounted, so reads after
     // this don't return stale content from a layout-level heading.
     await expect(this.loadingAlert).toBeHidden();
-    await expect(this.pageTitle).toBeVisible();
-  }
-
-  /**
-   * Get the page title text
-   */
-  async getPageTitle(): Promise<string> {
-    return await this.pageTitle.innerText();
+    if (expectedTitle !== undefined) {
+      await expect(this.pageTitle).toHaveText(expectedTitle);
+    } else {
+      await expect(this.pageTitle).toBeVisible();
+    }
+    // Wait for the rule-name input to be in the DOM. This pins the wait to
+    // actual form readiness: React may flush the form render slightly after
+    // the heading checks pass, causing reads of the rule-name input to time
+    // out on a missing element in slow CI environments.
+    await expect(this.ruleNameInput).toBeVisible();
   }
 
   /**
@@ -376,13 +381,6 @@ export class RuleEditorPage {
     }
 
     return null;
-  }
-
-  /**
-   * Get the current rule name value
-   */
-  async getRuleName(): Promise<string> {
-    return await this.ruleNameInput.inputValue();
   }
 
   /**

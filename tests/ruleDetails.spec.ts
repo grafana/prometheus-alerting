@@ -12,11 +12,9 @@ test.describe('RuleDetails Page - E2E', () => {
       const identifier = RuleBuilder.createHighErrorRateIdentifier();
 
       await ruleDetailsPage.goto(identifier);
-      await ruleDetailsPage.waitForLoad();
-
-      // Verify rule name
-      const ruleName = await ruleDetailsPage.getRuleName();
-      expect(ruleName).toBe('HighErrorRate');
+      // Pass the rule name so the load wait verifies the rule's own H1 has
+      // rendered (not the transient "Rules" breadcrumb heading).
+      await ruleDetailsPage.waitForLoad('HighErrorRate');
 
       // Verify firing state
       const state = await ruleDetailsPage.getState();
@@ -40,11 +38,9 @@ test.describe('RuleDetails Page - E2E', () => {
       const identifier = RuleBuilder.createInactiveRuleIdentifier();
 
       await ruleDetailsPage.goto(identifier);
-      await ruleDetailsPage.waitForLoad();
-
-      // Verify rule name
-      const ruleName = await ruleDetailsPage.getRuleName();
-      expect(ruleName).toBe('InactiveRule');
+      // Pass the rule name so the load wait verifies the rule's own H1 has
+      // rendered (not the transient "Rules" breadcrumb heading).
+      await ruleDetailsPage.waitForLoad('InactiveRule');
 
       // Verify state badge shows inactive/normal
       expect(await ruleDetailsPage.hasStateBadge()).toBe(true);
@@ -58,11 +54,9 @@ test.describe('RuleDetails Page - E2E', () => {
       const identifier = RuleBuilder.createRecordingRuleIdentifier();
 
       await ruleDetailsPage.goto(identifier);
-      await ruleDetailsPage.waitForLoad();
-
-      // Verify rule name
-      const ruleName = await ruleDetailsPage.getRuleName();
-      expect(ruleName).toBe('test:request_rate:sum');
+      // Pass the rule name so the load wait verifies the rule's own H1 has
+      // rendered (not the transient "Rules" breadcrumb heading).
+      await ruleDetailsPage.waitForLoad('test:request_rate:sum');
 
       // Recording rules show a "Recording" badge
       expect(await ruleDetailsPage.hasStateBadge()).toBe(true);
