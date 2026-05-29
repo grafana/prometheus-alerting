@@ -7,3 +7,4 @@ yes = false
 [tools]
 node = "24.16.0"
 pnpm = "11.4.0"
+"aqua:trufflesecurity/trufflehog" = "3.95.3"

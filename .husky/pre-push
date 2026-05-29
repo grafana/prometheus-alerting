@@ -1,0 +1,2 @@
+pnpm audit --audit-level=high
+trufflehog git file://. --since-commit HEAD~1 --only-verified --fail
