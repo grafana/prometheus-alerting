@@ -10,7 +10,7 @@ runs:
         cache: false # disabled — cached binaries skip checksum re-verification; paranoid mode + mise.lock already verify every download
         cache_save: false # disabled — see above
       env:
-        MISE_ENV: ci # Skip loading mise.local.toml (dev-only tools)
+        MISE_ENV: ci # Loads mise.ci.toml (if any) instead of mise.development.toml — dev-only tools (lefthook, trufflehog) are not installed
 
     - name: Install dependencies
       shell: bash
