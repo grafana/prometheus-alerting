@@ -23,11 +23,15 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: grafana/plugin-actions/build-plugin@62c2d322b176c9b104fae6b300029e08d0a0ee8e # build-plugin/v1.0.2
-        # Uncomment to enable plugin signing
-        # (For more info on how to generate the access policy token see https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin#generate-an-access-policy-token)
+      - name: Install mise tools
+        uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
         with:
-          # Make sure to save the token in your repository secrets
+          install: true
+          cache: false
+          cache_save: false
+
+      - uses: grafana/plugin-actions/build-plugin@62c2d322b176c9b104fae6b300029e08d0a0ee8e # build-plugin/v1.0.2
+        with:
+          node-version: "24.16"
           policy_token: ${{ secrets.PLUGIN_SIGN_TOKEN }}
-          # creates a signed build provenance attestation to verify the authenticity of the plugin build
           attestation: true

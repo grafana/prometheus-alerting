@@ -24,4 +24,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install mise tools
+        uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
+        with:
+          install: true
+          cache: false
+          cache_save: false
+
       - uses: grafana/plugin-actions/bundle-size@main # zizmor: ignore[unpinned-uses] provided by grafana
+        with:
+          node-version: "24.16"
