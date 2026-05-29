@@ -6,8 +6,9 @@ runs:
     - name: Setup mise
       uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
       with:
-        install: true   # runs `mise install` using committed mise.lock
-        cache: false    # disabled — cached binaries skip checksum re-verification; paranoid mode + mise.lock already verify every download
+        install: true # runs `mise install` using committed mise.lock
+        cache: false # disabled — cached binaries skip checksum re-verification; paranoid mode + mise.lock already verify every download
+        cache_save: false # disabled — see above
 
     - name: Install dependencies
       shell: bash
