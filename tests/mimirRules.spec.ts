@@ -94,6 +94,11 @@ test.describe('Mimir Rules - E2E', () => {
       // Ensure we're on the rule details page (not error state)
       expect(await ruleDetailsPage.hasError()).toBe(false);
 
+      // A newly created rule starts in a "propagating" state where the Ruler API has it
+      // but Prometheus hasn't evaluated the group yet. The More/Delete actions are only
+      // rendered once the rule is visible in Prometheus, so we wait here explicitly.
+      await ruleDetailsPage.waitForConsistency(60000);
+
       // Now delete the rule
       const deleteModal = await ruleDetailsPage.clickDelete();
       await deleteModal.waitForOpen();
