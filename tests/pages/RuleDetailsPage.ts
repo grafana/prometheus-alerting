@@ -71,11 +71,8 @@ export class RuleDetailsPage {
    * Wait for the page to finish loading (either success, error, or not found state)
    */
   async waitForLoad(): Promise<void> {
-    // Wait for the page and its sub-resources to finish loading. 'load' is used
-    // instead of 'networkidle' because Grafana nightly / dev-preview builds may
-    // keep background connections open indefinitely (websockets, telemetry), which
-    // prevents 'networkidle' from settling within the default 30 s test timeout.
-    await this.page.waitForLoadState('load');
+    // Wait for network to be idle (all API calls complete)
+    await this.page.waitForLoadState('networkidle');
     // Ensure the loading placeholder is gone and the H1 has mounted, so reads
     // after this don't return stale content from the previous route.
     await expect(this.loadingPlaceholder).toBeHidden();
