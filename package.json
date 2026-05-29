@@ -19,7 +19,7 @@
     "sign": "npx --yes @grafana/sign-plugin@3.2.2",
     "i18n-extract": "i18next --config src/locales/i18next-parser.config.js",
     "preinstall": "node scripts/check-mise.js",
-    "prepare": "husky"
+    "prepare": "lefthook install"
   },
   "author": "Grafana",
   "license": "Apache-2.0",
@@ -59,10 +59,8 @@
     "fork-ts-checker-webpack-plugin": "^9.1.0",
     "glob": "^13.0.6",
     "happy-dom": "^20.9.0",
-    "husky": "^9.1.7",
     "i18next-parser": "^9.4.0",
     "imports-loader": "^5.0.0",
-    "lint-staged": "^17.0.5",
     "msw": "^2.14.6",
     "prettier": "^3.8.3",
     "replace-in-file-webpack-plugin": "^1.0.6",
@@ -121,14 +119,5 @@
     "type-fest": "^5.6.0",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --cache --fix",
-      "prettier --write"
-    ],
-    "*.{js,json,css,md}": [
-      "prettier --write"
-    ]
   }
 }

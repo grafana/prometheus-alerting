@@ -1,0 +1,28 @@
+pre-commit:
+  piped: true
+  jobs:
+    - name: check-mise
+      run: node scripts/check-mise.js
+
+    - name: lint-ts
+      glob: "*.{ts,tsx}"
+      run: pnpm exec eslint --cache --fix {staged_files}
+      stage_fixed: true
+
+    - name: prettier
+      group:
+        parallel: true
+        jobs:
+          - name: format-ts
+            glob: "*.{ts,tsx}"
+            run: pnpm exec prettier --write {staged_files}
+            stage_fixed: true
+          - name: format-other
+            glob: "*.{js,json,css,md}"
+            run: pnpm exec prettier --write {staged_files}
+            stage_fixed: true
+
+pre-push:
+  setup:
+    - run: pnpm audit --audit-level=high
+    - run: trufflehog git file://. --since-commit HEAD~1 --only-verified --fail --log-level=-1 --no-update

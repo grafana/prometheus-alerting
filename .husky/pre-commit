@@ -1,2 +1,0 @@
-node scripts/check-mise.js
-pnpm exec lint-staged
