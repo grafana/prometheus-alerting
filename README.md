@@ -8,13 +8,24 @@ App plugins can let you create a custom out-of-the-box monitoring experience by 
 
 ## Requirements
 
-This project uses [Corepack](https://nodejs.org/api/corepack.html) to enforce the pnpm version declared in `package.json`. Before running any pnpm commands, enable Corepack once on your machine:
+This project uses [mise](https://mise.jdx.dev) to manage the Node.js and pnpm versions declared in `mise.toml`. Install mise once on your machine:
 
 ```bash
-corepack enable pnpm
+# macOS
+brew install mise
+
+# or via the installer script
+curl https://mise.run | sh
 ```
 
-Corepack will automatically use the pinned pnpm version for this project. No manual pnpm upgrades are needed.
+Then, from the repo root, trust the config and install the pinned tool versions:
+
+```bash
+mise trust
+mise install
+```
+
+See the [mise installation docs](https://mise.jdx.dev/installing-mise.html) for other platforms and shell activation options.
 
 ## Get started
 
@@ -23,6 +34,7 @@ Corepack will automatically use the pinned pnpm version for this project. No man
 1. Install dependencies
 
    ```bash
+   mise trust && mise install  # installs pinned Node.js and pnpm
    pnpm install
    ```
 
@@ -86,6 +98,7 @@ To install and test the plugin in a local Grafana instance (outside of Docker):
    ```bash
    git clone https://github.com/grafana/prometheus-alerting
    cd prometheus-alerting
+   mise trust && mise install  # installs pinned Node.js and pnpm
    pnpm install
    pnpm run dev
    ```

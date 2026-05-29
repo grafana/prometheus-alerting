@@ -7,11 +7,22 @@
   internalChecksFilter: 'strict',
   packageRules: [
     {
-      // Pin the Node runtime exactly, mirroring `.nvmrc` (v24.16.0).
-      matchManagers: ['nvm'],
+      // Pin the Node and pnpm runtimes exactly, sourced from mise.toml.
+      matchManagers: ['mise'],
+      rangeStrategy: 'pin',
+    },
+    {
+      // Pin Docker Compose image tags exactly.
+      matchManagers: ['docker-compose'],
       rangeStrategy: 'pin',
     },
   ],
+  lockFileMaintenance: {
+    enabled: true,
+    // Re-run `mise lock` weekly to keep mise.lock checksums fresh even when
+    // no version pins change — detects silent binary replacement attacks.
+    schedule: ['before 9am on Monday'],
+  },
   vulnerabilityAlerts: {
     // Security fixes bypass the 7-day age gate and land ASAP.
     minimumReleaseAge: null,

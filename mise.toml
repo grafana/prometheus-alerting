@@ -1,3 +1,9 @@
+[settings]
+lockfile = true
+paranoid = true
+not_found_auto_install = false
+yes = false
+
 [tools]
-node = "lts"
-pnpm = "latest"
+node = "24.16.0"
+pnpm = "11.4.0"

@@ -31,7 +31,7 @@ services:
       - monitoring
 
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager:v0.32.1
     container_name: alertmanager-test
     ports:
       - '9093:9093'
@@ -45,7 +45,7 @@ services:
       - monitoring
 
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: minio-test
     ports:
       - '9000:9000'
@@ -66,7 +66,7 @@ services:
       - monitoring
 
   minio-init:
-    image: minio/mc:latest
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
     container_name: minio-init
     depends_on:
       minio:
@@ -83,7 +83,7 @@ services:
       - monitoring
 
   mimir:
-    image: grafana/mimir:latest
+    image: grafana/mimir:3.0.6
     container_name: mimir-test
     ports:
       - '9009:9009'
@@ -103,7 +103,7 @@ services:
       - monitoring
 
   mimir-rules-provisioner:
-    image: curlimages/curl:latest
+    image: curlimages/curl:8.20.0
     container_name: mimir-rules-provisioner
     depends_on:
       - mimir
