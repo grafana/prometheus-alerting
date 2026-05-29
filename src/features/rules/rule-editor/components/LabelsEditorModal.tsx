@@ -48,7 +48,7 @@ export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Pr
         {labels.map((label, index) => (
           <Stack key={index} direction="row" gap={1} alignItems="flex-end">
             <Field
-              label={index === 0 ? t('alerting.labels-editor-modal.label-key', 'Key') : ''}
+              label={index === 0 ? t('alerting.labels-editor-modal.label-key', 'Key') : undefined}
               className={styles.fieldKey}
               noMargin
             >
@@ -56,11 +56,13 @@ export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Pr
                 value={label.key}
                 onChange={(e) => handleLabelChange(index, 'key', e.currentTarget.value)}
                 placeholder={t('alerting.labels-editor-modal.placeholder-key', 'Label key')}
-                aria-label={t('alerting.labels-editor-modal.label-key', 'Key')}
+                aria-label={t('alerting.labels-editor-modal.aria-label-key', 'Key for label {{number}}', {
+                  number: index + 1,
+                })}
               />
             </Field>
             <Field
-              label={index === 0 ? t('alerting.labels-editor-modal.label-value', 'Value') : ''}
+              label={index === 0 ? t('alerting.labels-editor-modal.label-value', 'Value') : undefined}
               className={styles.fieldValue}
               noMargin
             >
@@ -68,7 +70,9 @@ export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Pr
                 value={label.value}
                 onChange={(e) => handleLabelChange(index, 'value', e.currentTarget.value)}
                 placeholder={t('alerting.labels-editor-modal.placeholder-value', 'Label value')}
-                aria-label={t('alerting.labels-editor-modal.label-value', 'Value')}
+                aria-label={t('alerting.labels-editor-modal.aria-label-value', 'Value for label {{number}}', {
+                  number: index + 1,
+                })}
               />
             </Field>
             <Button
@@ -80,7 +84,9 @@ export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Pr
               aria-label={
                 label.key
                   ? t('alerting.labels-editor-modal.remove-label-named', 'Remove label {{key}}', { key: label.key })
-                  : t('alerting.labels-editor-modal.remove-label', 'Remove label')
+                  : t('alerting.labels-editor-modal.remove-label-numbered', 'Remove label {{number}}', {
+                      number: index + 1,
+                    })
               }
             />
           </Stack>

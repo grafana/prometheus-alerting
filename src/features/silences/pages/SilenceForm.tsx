@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch, Controller } from 'react-hook-form';
 import { useParams, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -112,7 +112,6 @@ function SilenceForm() {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     reset,
   } = useForm<SilenceFormData>({
     resolver: zodResolver(SilenceFormSchema),
@@ -191,8 +190,8 @@ function SilenceForm() {
     }
   }, [isPrefillMode, prefillMatchers, reset]);
 
-  const matchers = watch('matchers');
-  const timeMode = watch('timeMode');
+  const matchers = useWatch({ control, name: 'matchers' });
+  const timeMode = useWatch({ control, name: 'timeMode' });
 
   const getOperatorOption = (matcher: MatcherFormData): ComboboxOption => {
     if (matcher.isRegex && matcher.isEqual === false) {
@@ -264,8 +263,8 @@ function SilenceForm() {
               {isEditMode
                 ? t('silences.edit.page-title', 'Edit Silence')
                 : isRecreateMode
-                ? t('silences.recreate.page-title', 'Recreate Silence')
-                : t('silences.create.page-title', 'Create Silence')}
+                  ? t('silences.recreate.page-title', 'Recreate Silence')
+                  : t('silences.create.page-title', 'Create Silence')}
             </h2>
 
             {loadError && (
@@ -303,8 +302,8 @@ function SilenceForm() {
                 {mutationError instanceof Error
                   ? mutationError.message
                   : isEditMode
-                  ? t('silences.edit.error-message', 'Failed to update silence')
-                  : t('silences.create.error-message', 'Failed to create silence')}
+                    ? t('silences.edit.error-message', 'Failed to update silence')
+                    : t('silences.create.error-message', 'Failed to create silence')}
               </Alert>
             )}
 
@@ -494,8 +493,8 @@ function SilenceForm() {
                         ? t('silences.edit.updating', 'Updating...')
                         : t('silences.create.creating', 'Creating...')
                       : isEditMode
-                      ? t('silences.edit.submit', 'Update Silence')
-                      : t('silences.create.submit', 'Create Silence')}
+                        ? t('silences.edit.submit', 'Update Silence')
+                        : t('silences.create.submit', 'Create Silence')}
                   </Button>
                   <Button variant="secondary" onClick={handleCancel} type="button" disabled={isLoading}>
                     {t('silences.create.cancel', 'Cancel')}

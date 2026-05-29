@@ -39,7 +39,7 @@ describe('Components/App', () => {
     const Wrapper = createTestWrapper();
     render(
       <Wrapper>
-        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <MemoryRouter>
           <Suspense fallback={null}>
             <App {...props} />
           </Suspense>

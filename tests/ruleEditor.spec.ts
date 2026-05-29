@@ -17,9 +17,7 @@ test.describe('RuleEditor Page - E2E', () => {
   test.describe('Alerting Rules', () => {
     test('should create a new alerting rule successfully', async ({ ruleEditorPage, page }) => {
       await ruleEditorPage.gotoNew('alerting');
-      await ruleEditorPage.waitForLoad();
-
-      expect(await ruleEditorPage.getPageTitle()).toBe('New alert rule');
+      await ruleEditorPage.waitForLoad('New alert rule');
 
       // Fill required fields
       await ruleEditorPage.fillRuleName('HighCPUUsage');
@@ -46,11 +44,9 @@ test.describe('RuleEditor Page - E2E', () => {
       const identifier = RuleBuilder.createTestEditRuleIdentifier();
 
       await ruleEditorPage.gotoEdit(identifier);
-      await ruleEditorPage.waitForLoad();
+      await ruleEditorPage.waitForLoad(/Edit/);
 
-      const pageTitle = await ruleEditorPage.getPageTitle();
-      expect(pageTitle).toContain('Edit');
-      expect(await ruleEditorPage.getRuleName()).toBe('TestEditRule');
+      await expect(ruleEditorPage.ruleNameInput).toHaveValue('TestEditRule');
 
       // Modify name
       await ruleEditorPage.fillRuleName('TestEditRule_Modified');
@@ -68,14 +64,11 @@ test.describe('RuleEditor Page - E2E', () => {
       const identifier = RuleBuilder.createTestCloneRuleIdentifier();
 
       await ruleEditorPage.gotoClone(identifier);
-      await ruleEditorPage.waitForLoad();
+      await ruleEditorPage.waitForLoad(/Clone/);
 
-      const pageTitle = await ruleEditorPage.getPageTitle();
-      expect(pageTitle).toContain('Clone');
-
-      // Verify name has copy suffix
-      const clonedName = await ruleEditorPage.getRuleName();
-      expect(clonedName).toContain('copy');
+      // Verify name has copy suffix. Use a web-first assertion so we retry until
+      // the form has populated the cloned name, rather than reading it once.
+      await expect(ruleEditorPage.ruleNameInput).toHaveValue(/copy/i);
 
       await ruleEditorPage.fillRuleName('TestCloneRule_Cloned');
       await ruleEditorPage.clickSave();
@@ -86,9 +79,7 @@ test.describe('RuleEditor Page - E2E', () => {
   test.describe('Recording Rules', () => {
     test('should create a new recording rule successfully', async ({ ruleEditorPage, page, mimirGroup }) => {
       await ruleEditorPage.gotoNew('recording');
-      await ruleEditorPage.waitForLoad();
-
-      expect(await ruleEditorPage.getPageTitle()).toBe('New recording rule');
+      await ruleEditorPage.waitForLoad('New recording rule');
 
       // Fill required fields
       await ruleEditorPage.fillRuleName('request_rate_sum');
@@ -113,9 +104,9 @@ test.describe('RuleEditor Page - E2E', () => {
       const identifier = RuleBuilder.createTestRecordingRuleIdentifier();
 
       await ruleEditorPage.gotoEdit(identifier);
-      await ruleEditorPage.waitForLoad();
+      await ruleEditorPage.waitForLoad(/Edit/);
 
-      expect(await ruleEditorPage.getRuleName()).toBe('test:recording:rule');
+      await expect(ruleEditorPage.ruleNameInput).toHaveValue('test:recording:rule');
 
       // Modify name
       await ruleEditorPage.fillRuleName('test:recording:rule_modified');
@@ -133,11 +124,11 @@ test.describe('RuleEditor Page - E2E', () => {
       const identifier = RuleBuilder.createTestRecordingRuleIdentifier();
 
       await ruleEditorPage.gotoClone(identifier);
-      await ruleEditorPage.waitForLoad();
+      await ruleEditorPage.waitForLoad(/Clone/);
 
-      // Verify name has copy suffix
-      const clonedName = await ruleEditorPage.getRuleName();
-      expect(clonedName).toContain('copy');
+      // Verify name has copy suffix. Use a web-first assertion so we retry until
+      // the form has populated the cloned name, rather than reading it once.
+      await expect(ruleEditorPage.ruleNameInput).toHaveValue(/copy/i);
 
       await ruleEditorPage.fillRuleName('test:recording:rule_cloned');
       await ruleEditorPage.clickSave();

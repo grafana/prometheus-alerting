@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { SelectableValue } from '@grafana/data';
 import { t, Trans } from '@grafana/i18n';
@@ -19,12 +19,9 @@ function RulesPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grouped');
   const { filterState, hasActiveFilters } = useRulesFilter();
 
-  // Automatically switch to list view when filters are applied
-  useEffect(() => {
-    if (hasActiveFilters) {
-      setViewMode('list');
-    }
-  }, [hasActiveFilters]);
+  // When filters are active, always show list view regardless of the user's preference.
+  // This avoids calling setState inside an effect and eliminates the double render.
+  const effectiveViewMode: ViewMode = hasActiveFilters ? 'list' : viewMode;
 
   const viewModeOptions: Array<SelectableValue<ViewMode>> = [
     { label: t('alerting.rule-list.view-mode.grouped', 'Grouped'), value: 'grouped' },
@@ -55,7 +52,7 @@ function RulesPage() {
             <Box flex={1}>
               <RulesFilter />
             </Box>
-            <RadioButtonGroup value={viewMode} options={viewModeOptions} onChange={setViewMode} />
+            <RadioButtonGroup value={effectiveViewMode} options={viewModeOptions} onChange={setViewMode} />
             <Dropdown overlay={newRuleMenu} placement="bottom-end">
               <Button icon="plus" variant="primary">
                 <Trans i18nKey="alerting.rule-list.new-rule">New rule</Trans>
@@ -67,7 +64,7 @@ function RulesPage() {
           <div style={{ display: 'flex', gap: '16px', minHeight: 0 }}>
             <RulesFilterSidebar />
             <div style={{ flex: 1, minWidth: 0 }}>
-              {viewMode === 'grouped' ? (
+              {effectiveViewMode === 'grouped' ? (
                 <GroupedView
                   groupFilter={filterState.groupName}
                   namespaceFilter={filterState.namespace}

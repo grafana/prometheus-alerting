@@ -147,11 +147,14 @@
     },
     "labels-editor-modal": {
       "add-label": "Add label",
+      "aria-label-key": "Key for label {{number}}",
+      "aria-label-value": "Value for label {{number}}",
       "label-key": "Key",
       "label-value": "Value",
       "placeholder-key": "Label key",
       "placeholder-value": "Label value",
       "remove-label": "Remove label",
+      "remove-label-numbered": "Remove label {{number}}",
       "title": "Edit labels"
     },
     "labels-field": {

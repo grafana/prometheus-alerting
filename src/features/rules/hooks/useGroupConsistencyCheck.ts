@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import type { PromRuleGroupDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { getRuleName } from '@grafana/external-rules/utils';
@@ -35,59 +35,65 @@ export function useGroupConsistencyCheck(
   rulerGroup: RulerRuleGroupDTO | null | undefined,
   rulerApiEnabled: boolean
 ): GroupConsistencyResult {
-  return useMemo(() => {
-    // If Ruler API is not enabled, we can't compare - assume in sync
-    if (!rulerApiEnabled) {
-      return { isInSync: true, canCheck: false };
-    }
+  return computeGroupConsistencyResult(promGroup, rulerGroup, rulerApiEnabled);
+}
 
-    // If we don't have both groups, we can't compare
-    if (!promGroup || !rulerGroup) {
-      // If we have ruler but not prom, the rule might be newly created
-      if (rulerGroup && !promGroup) {
-        return {
-          isInSync: false,
-          syncIssue: 'Group exists in configuration but not yet visible in Prometheus',
-          canCheck: true,
-        };
-      }
-      // If we have prom but not ruler, the rule might have been deleted
-      if (promGroup && !rulerGroup) {
-        return {
-          isInSync: false,
-          syncIssue: 'Group visible in Prometheus but not found in configuration',
-          canCheck: true,
-        };
-      }
-      return { isInSync: true, canCheck: false };
-    }
+function computeGroupConsistencyResult(
+  promGroup: PromRuleGroupDTO | undefined,
+  rulerGroup: RulerRuleGroupDTO | null | undefined,
+  rulerApiEnabled: boolean
+): GroupConsistencyResult {
+  // If Ruler API is not enabled, we can't compare - assume in sync
+  if (!rulerApiEnabled) {
+    return { isInSync: true, canCheck: false };
+  }
 
-    // Compare rule counts
-    if (promGroup.rules.length !== rulerGroup.rules.length) {
+  // If we don't have both groups, we can't compare
+  if (!promGroup || !rulerGroup) {
+    // If we have ruler but not prom, the rule might be newly created
+    if (rulerGroup && !promGroup) {
       return {
         isInSync: false,
-        syncIssue: `Rule count mismatch: ${promGroup.rules.length} in Prometheus, ${rulerGroup.rules.length} in configuration`,
+        syncIssue: 'Group exists in configuration but not yet visible in Prometheus',
         canCheck: true,
       };
     }
-
-    // Compare rule names (in order)
-    const promRuleNames = promGroup.rules.map((r) => r.name);
-    const rulerRuleNames = rulerGroup.rules.map(getRuleName);
-
-    for (let i = 0; i < promRuleNames.length; i++) {
-      if (promRuleNames[i] !== rulerRuleNames[i]) {
-        return {
-          isInSync: false,
-          syncIssue: `Rule order or names differ at position ${i + 1}`,
-          canCheck: true,
-        };
-      }
+    // If we have prom but not ruler, the rule might have been deleted
+    if (promGroup && !rulerGroup) {
+      return {
+        isInSync: false,
+        syncIssue: 'Group visible in Prometheus but not found in configuration',
+        canCheck: true,
+      };
     }
+    return { isInSync: true, canCheck: false };
+  }
 
-    // All checks passed
-    return { isInSync: true, canCheck: true };
-  }, [promGroup, rulerGroup, rulerApiEnabled]);
+  // Compare rule counts
+  if (promGroup.rules.length !== rulerGroup.rules.length) {
+    return {
+      isInSync: false,
+      syncIssue: `Rule count mismatch: ${promGroup.rules.length} in Prometheus, ${rulerGroup.rules.length} in configuration`,
+      canCheck: true,
+    };
+  }
+
+  // Compare rule names (in order)
+  const promRuleNames = promGroup.rules.map((r) => r.name);
+  const rulerRuleNames = rulerGroup.rules.map(getRuleName);
+
+  for (let i = 0; i < promRuleNames.length; i++) {
+    if (promRuleNames[i] !== rulerRuleNames[i]) {
+      return {
+        isInSync: false,
+        syncIssue: `Rule order or names differ at position ${i + 1}`,
+        canCheck: true,
+      };
+    }
+  }
+
+  // All checks passed
+  return { isInSync: true, canCheck: true };
 }
 
 /**
@@ -152,8 +158,8 @@ export function useWaitForGroupConsistency() {
   const [fetchPromGroups] = useLazyGetGroupsQuery();
   const [fetchRulerGroup] = useLazyGetRuleGroupQuery();
 
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Cleanup on unmount
   useEffect(() => {

@@ -1,10 +1,10 @@
 import { css } from '@emotion/css';
 import React from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { Field, Input, Select, useStyles2 } from '@grafana/ui';
+import { Combobox, Field, Input, useStyles2 } from '@grafana/ui';
 
 import { RuleFormType, RuleFormValues } from '../types';
 import { timeOptions } from '../timeOptions';
@@ -16,12 +16,11 @@ export const CloudEvaluationBehavior = () => {
   const {
     register,
     control,
-    watch,
     formState: { errors },
   } = useFormContext<RuleFormValues>();
 
-  const type = watch('type');
-  const dataSourceUid = watch('dataSourceUid');
+  const type = useWatch({ control, name: 'type' });
+  const dataSourceUid = useWatch({ control, name: 'dataSourceUid' });
 
   return (
     <RuleEditorSection
@@ -55,14 +54,16 @@ export const CloudEvaluationBehavior = () => {
           </Field>
           <Controller
             name="forTimeUnit"
-            render={({ field: { onChange, ref, ...field } }) => (
-              <Select
-                {...field}
-                options={timeOptions}
-                onChange={(value) => onChange(value?.value)}
-                width={15}
-                className={styles.timeUnit}
-              />
+            render={({ field: { onChange, value, onBlur } }) => (
+              <div className={styles.timeUnit}>
+                <Combobox
+                  value={value}
+                  options={timeOptions}
+                  onChange={(option) => onChange(option?.value)}
+                  onBlur={onBlur}
+                  width={15}
+                />
+              </div>
             )}
             control={control}
           />

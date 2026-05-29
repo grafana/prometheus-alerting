@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -70,7 +70,6 @@ export function SilenceFormFields({
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     reset,
   } = useForm<SilenceFormData>({
     resolver: zodResolver(SilenceFormSchema),
@@ -105,8 +104,8 @@ export function SilenceFormFields({
     }
   }, [silence, reset]);
 
-  const matchers = watch('matchers');
-  const timeMode = watch('timeMode');
+  const matchers = useWatch({ control, name: 'matchers' });
+  const timeMode = useWatch({ control, name: 'timeMode' });
 
   const getOperatorOption = (matcher: MatcherFormData): ComboboxOption => {
     if (matcher.isRegex && matcher.isEqual === false) {
@@ -141,8 +140,8 @@ export function SilenceFormFields({
               error instanceof Error
                 ? error.message
                 : isEditMode
-                ? t('silences.edit.error-message', 'Failed to update silence')
-                : t('silences.create.error-message', 'Failed to create silence')
+                  ? t('silences.edit.error-message', 'Failed to update silence')
+                  : t('silences.create.error-message', 'Failed to create silence')
             )}
           </Alert>
         )}
@@ -342,8 +341,8 @@ export function SilenceFormFields({
                   ? t('silences.edit.updating', 'Updating...')
                   : t('silences.create.creating', 'Creating...')
                 : isEditMode
-                ? t('silences.edit.submit', 'Update Silence')
-                : t('silences.create.submit', 'Create Silence'))}
+                  ? t('silences.edit.submit', 'Update Silence')
+                  : t('silences.create.submit', 'Create Silence'))}
           </Button>
           <Button type="button" variant="secondary" onClick={onCancel} disabled={isLoading}>
             {cancelButtonText || t('silences.create.cancel', 'Cancel')}

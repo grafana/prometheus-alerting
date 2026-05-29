@@ -27,7 +27,10 @@ export class RuleDetailsPage {
   readonly instancesTable: Locator;
   readonly detailsTable: Locator;
 
-  constructor(private page: Page, private pluginId: string) {
+  constructor(
+    private page: Page,
+    private pluginId: string
+  ) {
     // Scope selectors to page content
     const pageContent = page.locator('#pageContent');
 
@@ -65,15 +68,23 @@ export class RuleDetailsPage {
   }
 
   /**
-   * Wait for the page to finish loading (either success, error, or not found state)
+   * Wait for the page to finish loading (either success, error, or not found state).
+   *
+   * Pass the expected rule name to wait for the rule's own H1 specifically: the
+   * heading can briefly hold the "Rules" breadcrumb title before the rule title
+   * renders, so a content-aware assertion is needed to avoid reading stale text.
    */
-  async waitForLoad(): Promise<void> {
+  async waitForLoad(expectedTitle?: string | RegExp): Promise<void> {
     // Wait for network to be idle (all API calls complete)
     await this.page.waitForLoadState('networkidle');
     // Ensure the loading placeholder is gone and the H1 has mounted, so reads
     // after this don't return stale content from the previous route.
     await expect(this.loadingPlaceholder).toBeHidden();
-    await expect(this.pageTitle).toBeVisible();
+    if (expectedTitle !== undefined) {
+      await expect(this.pageTitle).toHaveText(expectedTitle);
+    } else {
+      await expect(this.pageTitle).toBeVisible();
+    }
   }
 
   /**

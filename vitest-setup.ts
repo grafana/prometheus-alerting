@@ -38,6 +38,19 @@ vi.mock('react-inlinesvg', () => {
 });
 
 /**
+ * ResizeObserver Mock
+ * Required for @grafana/ui components that use ResizeObserver (e.g. TruncatedText).
+ * vi.fn().mockImplementation is not constructable with `new` in Vitest 4.x, so we
+ * use a proper class instead.
+ */
+class ResizeObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
+
+/**
  * Canvas Mock
  * Required for @grafana/ui components that use measureText
  * Happy DOM provides HTMLCanvasElement but we need to mock getContext for testing

@@ -64,18 +64,10 @@ export function useMatchingPromRuleExists() {
 export function useRuleConsistencyCheck() {
   const { matchingPromRuleExists } = useMatchingPromRuleExists();
 
-  const removalIntervalRef = useRef<ReturnType<typeof setInterval>>();
-  const removalTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const creationIntervalRef = useRef<ReturnType<typeof setInterval>>();
-  const creationTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      clearRemovalInterval();
-      clearCreationInterval();
-    };
-  }, []);
+  const removalIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const removalTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const creationIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const creationTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const clearRemovalInterval = () => {
     if (removalIntervalRef.current) {
@@ -98,6 +90,14 @@ export function useRuleConsistencyCheck() {
       creationTimeoutRef.current = undefined;
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearRemovalInterval();
+      clearCreationInterval();
+    };
+  }, []);
 
   /**
    * Wait until a rule is removed from the Prometheus API.
@@ -202,12 +202,16 @@ export function useRuleCreationConsistencyCheck(
   const { matchingPromRuleExists } = useMatchingPromRuleExists();
   const { waitForCreation } = useRuleConsistencyCheck();
 
-  const [status, setStatus] = useState<ConsistencyCheckStatus>('idle');
+  // asyncStatus reflects only the outcome of the async check.
+  // The visible `status` is derived below, so no effect is needed to reset it.
+  const [asyncStatus, setAsyncStatus] = useState<ConsistencyCheckStatus>('idle');
   const [error, setError] = useState<Error | null>(null);
+
+  // Derive the visible status: while skipped or without an identifier, always idle.
+  const status: ConsistencyCheckStatus = !identifier || skip ? 'idle' : asyncStatus;
 
   useEffect(() => {
     if (!identifier || skip) {
-      setStatus('idle');
       return;
     }
 
@@ -224,12 +228,12 @@ export function useRuleCreationConsistencyCheck(
 
         if (exists) {
           // Rule already exists, no need to wait
-          setStatus('consistent');
+          setAsyncStatus('consistent');
           return;
         }
 
         // Rule doesn't exist yet, start waiting
-        setStatus('checking');
+        setAsyncStatus('checking');
 
         await waitForCreation(identifier);
 
@@ -237,7 +241,7 @@ export function useRuleCreationConsistencyCheck(
           return;
         }
 
-        setStatus('consistent');
+        setAsyncStatus('consistent');
       } catch (err) {
         if (cancelled) {
           return;
@@ -246,9 +250,9 @@ export function useRuleCreationConsistencyCheck(
         // Check if it's a timeout error
         const errorMessage = err instanceof Error ? err.message : '';
         if (errorMessage.includes('Timeout')) {
-          setStatus('timeout');
+          setAsyncStatus('timeout');
         } else {
-          setStatus('error');
+          setAsyncStatus('error');
         }
         setError(err instanceof Error ? err : new Error('Unknown error'));
       }
