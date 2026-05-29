@@ -9,6 +9,8 @@ runs:
         install: true # runs `mise install` using committed mise.lock
         cache: false # disabled — cached binaries skip checksum re-verification; paranoid mode + mise.lock already verify every download
         cache_save: false # disabled — see above
+      env:
+        MISE_ENV: ci # Skip loading mise.local.toml (dev-only tools)
 
     - name: Install dependencies
       shell: bash

@@ -30,6 +30,8 @@ jobs:
           install: true
           cache: false
           cache_save: false
+        env:
+          MISE_ENV: ci # Skip loading mise.local.toml (dev-only tools)
 
       - uses: grafana/plugin-actions/bundle-size@main # zizmor: ignore[unpinned-uses] provided by grafana
         with:

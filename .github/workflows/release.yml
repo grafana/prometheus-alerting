@@ -29,6 +29,8 @@ jobs:
           install: true
           cache: false
           cache_save: false
+        env:
+          MISE_ENV: ci # Skip loading mise.local.toml (dev-only tools)
 
       - uses: grafana/plugin-actions/build-plugin@62c2d322b176c9b104fae6b300029e08d0a0ee8e # build-plugin/v1.0.2
         with:

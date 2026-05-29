@@ -55,3 +55,6 @@ ci/
 .env
 .env.*
 !.env.example
+
+# mise local configuration (per-developer tools)
+mise.local.toml
