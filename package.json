@@ -18,6 +18,7 @@
     "//sign": "Pinned intentionally — runs with GRAFANA_ACCESS_POLICY_TOKEN in ci.yml. Do not change to @latest; let Renovate bump the version.",
     "sign": "npx --yes @grafana/sign-plugin@3.2.2",
     "i18n-extract": "i18next --config src/locales/i18next-parser.config.js",
+    "preinstall": "node scripts/check-mise.js",
     "prepare": "husky"
   },
   "author": "Grafana",
