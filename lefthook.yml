@@ -5,7 +5,7 @@ pre-commit:
       run: node scripts/check-mise.js
 
     - name: lint-ts
-      glob: "*.{ts,tsx}"
+      glob: '*.{ts,tsx}'
       run: pnpm exec eslint --cache --fix {staged_files}
       stage_fixed: true
 
@@ -14,15 +14,18 @@ pre-commit:
         parallel: true
         jobs:
           - name: format-ts
-            glob: "*.{ts,tsx}"
+            glob: '*.{ts,tsx}'
             run: pnpm exec prettier --write {staged_files}
             stage_fixed: true
           - name: format-other
-            glob: "*.{js,json,css,md}"
+            glob: '*.{js,json,css,md}'
             run: pnpm exec prettier --write {staged_files}
             stage_fixed: true
 
 pre-push:
-  setup:
-    - run: pnpm audit --audit-level=high
-    - run: trufflehog git file://. --since-commit HEAD~1 --only-verified --fail --log-level=-1 --no-update
+  parallel: true
+  jobs:
+    - name: audit node packages
+      run: pnpm audit --audit-level=high
+    - name: trugglehog
+      run: trufflehog git file://. --since-commit ${LEFTHOOK_REMOTE_REF:-origin/main} --only-verified --fail --log-level=-1 --no-update
