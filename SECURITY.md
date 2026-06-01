@@ -142,10 +142,10 @@ Secret scanning runs at two points so that the local hook catches secrets before
 ### Pre-push hook (local)
 
 ```
-trufflehog git file://. --since-commit HEAD~1 --only-verified --fail --log-level=-1 --no-update
+trufflehog git file://. --since-commit ${LEFTHOOK_REMOTE_REF:-origin/main} --only-verified --fail --log-level=-1 --no-update
 ```
 
-- Scans only the most recent commit delta — fast and incremental.
+- Scans all commits that are local but not yet on the remote — lefthook provides the remote ref via `LEFTHOOK_REMOTE_REF`, with `origin/main` as a fallback.
 - `--only-verified`: only confirmed live credentials block the push; unverified pattern matches are informational.
 - `--fail`: exits non-zero on any finding, blocking the push.
 - `--no-update`: prevents trufflehog from self-updating at runtime, ensuring the pinned version is always used.
