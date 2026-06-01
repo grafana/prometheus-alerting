@@ -1,6 +1,9 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
-  extends: ['github>grafana/grafana-renovate-config//presets/base'],
+  extends: [
+    'github>grafana/grafana-renovate-config//presets/base',
+    'github>grafana/grafana-renovate-config//presets/labels',
+  ],
   // Wait 7 days after a release before opening a PR — mirrors `.npmrc`
   // `min-release-age=7d` so we never pull a freshly published package.
   minimumReleaseAge: '7 days',
@@ -19,12 +22,6 @@
       pinDigests: true,
     },
   ],
-  lockFileMaintenance: {
-    enabled: true,
-    // Re-run `mise lock` weekly to keep mise.lock checksums fresh even when
-    // no version pins change — detects silent binary replacement attacks.
-    schedule: ['before 9am on Monday'],
-  },
   vulnerabilityAlerts: {
     // Security fixes bypass the 7-day age gate and land ASAP.
     minimumReleaseAge: null,
