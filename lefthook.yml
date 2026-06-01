@@ -27,5 +27,5 @@ pre-push:
   jobs:
     - name: audit node packages
       run: pnpm audit --audit-level=high
-    - name: trugglehog
+    - name: trufflehog
       run: trufflehog git file://. --since-commit ${LEFTHOOK_REMOTE_REF:-origin/main} --only-verified --fail --log-level=-1 --no-update
