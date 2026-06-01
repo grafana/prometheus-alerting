@@ -10,10 +10,14 @@ const BANNER = `
 |_|  |_|___|____/|_____| |_| \\_\\_____\\__\\_\\\\___/|___|_| \\_\\_____|____/
 `;
 
+const path = require('path');
 const execPath = process.execPath;
 const isCI = process.env.CI === 'true';
+// Use path-segment matching to avoid false positives from paths that merely
+// contain the substring "mise" (e.g. a home dir like /home/promiseuser/...).
+const miseManaged = execPath.split(path.sep).includes('mise');
 
-if (!execPath.includes('mise') && !isCI) {
+if (!miseManaged && !isCI) {
   process.stderr.write(BANNER + '\n');
   process.stderr.write('  ⚠️  WARNING: This repo recommends using mise to manage Node and pnpm versions.\n');
   process.stderr.write(`  Node is running from: ${execPath}\n\n`);
