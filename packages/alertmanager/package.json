@@ -17,8 +17,5 @@
     ".": "./src/common/index.ts",
     "./vanilla": "./src/vanilla/index.ts",
     "./mimir": "./src/mimir/index.ts"
-  },
-  "devDependencies": {
-    "vitest": "^4.0.0"
   }
 }

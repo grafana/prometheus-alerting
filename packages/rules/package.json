@@ -17,8 +17,5 @@
     "./utils": "./src/utils/index.ts",
     "./matching": "./src/matching.ts",
     "./vanilla": "./src/vanilla/index.ts"
-  },
-  "devDependencies": {
-    "vitest": "^4.0.0"
   }
 }
