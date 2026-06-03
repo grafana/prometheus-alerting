@@ -8,13 +8,42 @@ App plugins can let you create a custom out-of-the-box monitoring experience by 
 
 ## Requirements
 
-This project uses [Corepack](https://nodejs.org/api/corepack.html) to enforce the pnpm version declared in `package.json`. Before running any pnpm commands, enable Corepack once on your machine:
+### Recommended: Use mise (optional)
+
+This project recommends using [mise](https://mise.jdx.dev) to automatically manage the Node.js and pnpm versions declared in `mise.toml`. This ensures you're using the exact versions tested in CI.
+
+Install mise once on your machine:
 
 ```bash
-corepack enable pnpm
+# macOS
+brew install mise
+
+# or via the installer script
+curl https://mise.run | sh
 ```
 
-Corepack will automatically use the pinned pnpm version for this project. No manual pnpm upgrades are needed.
+Then, from the repo root, trust the config and install the pinned tool versions:
+
+```bash
+mise trust
+mise install
+```
+
+See the [mise installation docs](https://mise.jdx.dev/installing-mise.html) for other platforms and shell activation options.
+
+### Alternative: Manual installation
+
+If you prefer not to use mise, you can manually install the required versions:
+
+- **Node.js**: `>=24.16` (see `engines` in `package.json`)
+- **pnpm**: `>=11.4` (installed via `corepack enable` or standalone)
+
+Check your versions match the requirements:
+
+```bash
+node --version  # should be >= 24.16
+pnpm --version  # should be >= 11.4
+```
 
 ## Get started
 
@@ -23,6 +52,10 @@ Corepack will automatically use the pinned pnpm version for this project. No man
 1. Install dependencies
 
    ```bash
+   # If using mise (recommended):
+   mise trust && mise install  # installs pinned Node.js and pnpm
+
+   # Install project dependencies:
    pnpm install
    ```
 
@@ -86,6 +119,11 @@ To install and test the plugin in a local Grafana instance (outside of Docker):
    ```bash
    git clone https://github.com/grafana/prometheus-alerting
    cd prometheus-alerting
+
+   # If using mise (recommended):
+   mise trust && mise install
+
+   # Install dependencies and start development:
    pnpm install
    pnpm run dev
    ```

@@ -1,3 +1,13 @@
+[settings]
+minimum_release_age = "7d" # only install versions released more than 7 days ago
+
+lockfile = true
+paranoid = true
+not_found_auto_install = false
+yes = false
+
+# Shared tools for both CI and local development
+# Dev-only tools (lefthook, trufflehog) are in mise.development.toml, loaded via .miserc.toml
 [tools]
-node = "lts"
-pnpm = "latest"
+node = "24.16.0"
+pnpm = "11.4.0"

@@ -11,19 +11,19 @@ This is a Grafana App Plugin for managing Prometheus Alerting and Alertmanager c
 ### Build and Development
 
 ```bash
-npm run dev          # Build in development mode with watch
-npm run build        # Production build
-npm run typecheck    # Run TypeScript type checker
-npm run lint         # Run ESLint
-npm run lint:fix     # Run ESLint and Prettier to fix issues
+pnpm dev          # Build in development mode with watch
+pnpm build        # Production build
+pnpm typecheck    # Run TypeScript type checker
+pnpm lint         # Run ESLint
+pnpm lint:fix     # Run ESLint and Prettier to fix issues
 ```
 
 ### Testing
 
 ```bash
-npm run test         # Run tests in watch mode (requires git init)
-npm run test:ci      # Run all tests once and exit
-npm run e2e          # Run E2E tests with Playwright (requires npm run server first)
+pnpm test         # Run tests in watch mode (requires git init)
+pnpm test:ci      # Run all tests once and exit
+pnpm e2e          # Run E2E tests with Playwright (requires pnpm server first)
 ```
 
 **E2E Testing Setup:**
@@ -54,7 +54,6 @@ npm run e2e          # Run E2E tests with Playwright (requires npm run server fi
 Three data sources are auto-provisioned via `provisioning/datasources/test-datasources.yaml`:
 
 1. **Test Prometheus** (`test-prometheus`)
-
    - Type: `prometheus`
    - Implementation: `prometheus` (vanilla)
    - URL: `http://prometheus:9090`
@@ -63,7 +62,6 @@ Three data sources are auto-provisioned via `provisioning/datasources/test-datas
    - Use case: Testing read-only rule viewing
 
 2. **Test Alertmanager** (`test-alertmanager`)
-
    - Type: `alertmanager`
    - Implementation: `prometheus` (vanilla)
    - URL: `http://alertmanager:9093`
@@ -88,14 +86,14 @@ Three data sources are auto-provisioned via `provisioning/datasources/test-datas
 ### Development Server
 
 ```bash
-npm run server       # Start Grafana in Docker with the plugin loaded
-GRAFANA_VERSION=11.3.0 npm run server  # Start specific Grafana version
+pnpm server                         # Start Grafana in Docker with the plugin loaded
+GRAFANA_VERSION=11.3.0 pnpm server  # Start specific Grafana version
 ```
 
 ### Internationalization
 
 ```bash
-npm run i18n-extract # Extract translation strings after adding t() or <Trans />
+pnpm i18n-extract # Extract translation strings after adding t() or <Trans />
 ```
 
 ## Code Quality Standards
@@ -105,19 +103,19 @@ npm run i18n-extract # Extract translation strings after adding t() or <Trans />
 - Never use `as` to type cast unless it can't be avoided
 - Never use `any` and prefer `unknown` unless it can't be avoided
 - Try to use `satisfies` instead of `any`
-- Run `npm run typecheck` to verify types
+- Run `pnpm typecheck` to verify types
 
 ### Linting and Formatting
 
-- Verify code with `npm run lint` and `npm run typecheck`
-- Use Prettier to format code (runs with `npm run lint:fix`)
+- Verify code with `pnpm lint` and `pnpm typecheck`
+- Use Prettier to format code (runs with `pnpm lint:fix`)
 - ESLint configured with `@grafana/eslint-config`
 
 ### Internationalization
 
 - Use `t()` function from `@grafana/i18n` for all user-facing text
 - Use `<Trans />` component for JSX content that needs translation
-- Run `npm run i18n-extract` whenever new translations are added
+- Run `pnpm i18n-extract` whenever new translations are added
 
 ### Layout and Styling
 

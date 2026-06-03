@@ -1,15 +1,25 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
-  extends: ['github>grafana/grafana-renovate-config//presets/base'],
+  extends: [
+    'github>grafana/grafana-renovate-config//presets/base',
+    'github>grafana/grafana-renovate-config//presets/labels',
+  ],
   // Wait 7 days after a release before opening a PR — mirrors `.npmrc`
   // `min-release-age=7d` so we never pull a freshly published package.
   minimumReleaseAge: '7 days',
   internalChecksFilter: 'strict',
   packageRules: [
     {
-      // Pin the Node runtime exactly, mirroring `.nvmrc` (v24.16.0).
-      matchManagers: ['nvm'],
+      // Pin the Node and pnpm runtimes exactly, sourced from mise.toml.
+      matchManagers: ['mise'],
       rangeStrategy: 'pin',
+    },
+    {
+      // Pin Docker Compose image tags exactly and add SHA256 digests
+      // so images are pinned by content, not just by tag name.
+      matchManagers: ['docker-compose'],
+      rangeStrategy: 'pin',
+      pinDigests: true,
     },
   ],
   vulnerabilityAlerts: {
