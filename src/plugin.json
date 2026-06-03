@@ -4,8 +4,8 @@
   "name": "Prometheus Alerting",
   "id": "grafana-prometheusalerting-app",
   "info": {
-    "keywords": ["app"],
-    "description": "",
+    "keywords": ["prometheus", "mimir", "alerting", "alertmanager", "cortex", "loki", "rules", "silences", "receivers"],
+    "description": "Manage Prometheus alert rules and Alertmanager configuration — routes, receivers, templates, silences, time intervals, and inhibit rules — across Prometheus, Mimir, Cortex, and Loki data sources.",
     "author": {
       "name": "Grafana Labs"
     },
