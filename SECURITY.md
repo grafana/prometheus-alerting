@@ -41,7 +41,7 @@ provenance = "github-attestations"
 
 ### Renovate automation
 
-The `mise` manager in Renovate is configured with `rangeStrategy: 'pin'`, keeping Node and pnpm at exact versions. Weekly lock file maintenance re-runs `mise lock` every Monday, keeping checksums current even when no version pin changes — this detects silent binary replacement between Renovate update cycles.
+The `mise` manager in Renovate is configured with `rangeStrategy: 'pin'`, keeping Node and pnpm at exact versions.
 
 ---
 
@@ -103,10 +103,6 @@ Renovate configuration lives in `.github/renovate.json5` and extends Grafana's s
 
 - **mise manager**: `rangeStrategy: 'pin'` — Node and pnpm are always pinned to exact versions, never ranges.
 - **Docker Compose**: `rangeStrategy: 'pin'` plus `pinDigests: true` — container images are pinned by both tag and SHA256 digest.
-
-### Weekly lock file maintenance
-
-`lockFileMaintenance` is scheduled every Monday before 9am. Renovate re-runs `mise lock` to regenerate `mise.lock` checksums, catching any silent binary replacement even in weeks when no version pins change.
 
 ### Vulnerability alerts
 
