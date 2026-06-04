@@ -4,6 +4,12 @@
     'github>grafana/grafana-renovate-config//presets/base',
     'github>grafana/grafana-renovate-config//presets/labels',
   ],
+  env: {
+    // Trust mise config files in Renovate's sandbox so `mise lock` can run
+    // without failing on the untrusted `mise.development.toml` (paranoid = true
+    // in mise.toml requires explicit trust for env-specific config files).
+    MISE_TRUSTED_CONFIG_PATHS: '/tmp/renovate/repos/github/grafana/prometheus-alerting',
+  },
   // Wait 7 days after a release before opening a PR — mirrors `.npmrc`
   // `min-release-age=7d` so we never pull a freshly published package.
   minimumReleaseAge: '7 days',
