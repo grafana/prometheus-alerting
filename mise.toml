@@ -10,4 +10,4 @@ yes = false
 # Dev-only tools (lefthook, trufflehog) are in mise.development.toml, loaded via .miserc.toml
 [tools]
 node = "24.16.0"
-pnpm = "11.4.0"
+pnpm = "11.5.0"
