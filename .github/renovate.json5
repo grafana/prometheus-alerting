@@ -10,11 +10,18 @@
     // in mise.toml requires explicit trust for env-specific config files).
     MISE_TRUSTED_CONFIG_PATHS: '/tmp/renovate/repos/github/grafana/prometheus-alerting',
   },
-  // Wait 7 days after a release before opening a PR — mirrors `.npmrc`
-  // `min-release-age=7d` so we never pull a freshly published package.
   minimumReleaseAge: '7 days',
+  prCreation: 'not-pending',
   internalChecksFilter: 'strict',
   packageRules: [
+    {
+      // `config:best-practices` (via the grafana base preset) pulls in
+      // `security:minimumReleaseAgeNpm`, whose packageRule sets a 3-day npm
+      // gate that overrides the top-level 7 days (packageRules always beat
+      // top-level config). Re-assert 7 days for npm here so it actually wins.
+      matchDatasources: ['npm'],
+      minimumReleaseAge: '7 days',
+    },
     {
       // Pin the Node and pnpm runtimes exactly, sourced from mise.toml.
       matchManagers: ['mise'],
