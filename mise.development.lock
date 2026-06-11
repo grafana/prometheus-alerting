@@ -40,33 +40,33 @@ url = "https://github.com/evilmartians/lefthook/releases/download/v2.1.9/lefthoo
 provenance = "github-attestations"
 
 [[tools."aqua:trufflesecurity/trufflehog"]]
-version = "3.95.3"
+version = "3.95.5"
 backend = "aqua:trufflesecurity/trufflehog"
 
 [tools."aqua:trufflesecurity/trufflehog"."platforms.linux-arm64"]
-checksum = "sha256:8e205da06172db049129101d475dc4f7f43904d315384e4e32b9c5009cac27c8"
-url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.3/trufflehog_3.95.3_linux_arm64.tar.gz"
+checksum = "sha256:bb876c4e5a84fa4fdbda4fc24143ed2d12eac32cfd3f7e41c79cbd7d33607b4a"
+url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.5/trufflehog_3.95.5_linux_arm64.tar.gz"
 
 [tools."aqua:trufflesecurity/trufflehog"."platforms.linux-arm64-musl"]
-checksum = "sha256:8e205da06172db049129101d475dc4f7f43904d315384e4e32b9c5009cac27c8"
-url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.3/trufflehog_3.95.3_linux_arm64.tar.gz"
+checksum = "sha256:bb876c4e5a84fa4fdbda4fc24143ed2d12eac32cfd3f7e41c79cbd7d33607b4a"
+url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.5/trufflehog_3.95.5_linux_arm64.tar.gz"
 
 [tools."aqua:trufflesecurity/trufflehog"."platforms.linux-x64"]
-checksum = "sha256:5d836eae522540a32ca0f1a1e00efd4c3153a52462466a4b4008fac1e6c1a548"
-url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.3/trufflehog_3.95.3_linux_amd64.tar.gz"
+checksum = "sha256:8d151a19465973bec226be5992a2a11b053f4ab92c77861f642089892ae9aa58"
+url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.5/trufflehog_3.95.5_linux_amd64.tar.gz"
 
 [tools."aqua:trufflesecurity/trufflehog"."platforms.linux-x64-musl"]
-checksum = "sha256:5d836eae522540a32ca0f1a1e00efd4c3153a52462466a4b4008fac1e6c1a548"
-url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.3/trufflehog_3.95.3_linux_amd64.tar.gz"
+checksum = "sha256:8d151a19465973bec226be5992a2a11b053f4ab92c77861f642089892ae9aa58"
+url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.5/trufflehog_3.95.5_linux_amd64.tar.gz"
 
 [tools."aqua:trufflesecurity/trufflehog"."platforms.macos-arm64"]
-checksum = "sha256:17da7aa3412bb7f6220728a6e908480e734a69ea53c029a3153859f9fa1a22c8"
-url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.3/trufflehog_3.95.3_darwin_arm64.tar.gz"
+checksum = "sha256:0a08b46f63d48ccb894689b68b5e7b91ac5efa09b9684a3457d388456887c213"
+url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.5/trufflehog_3.95.5_darwin_arm64.tar.gz"
 
 [tools."aqua:trufflesecurity/trufflehog"."platforms.macos-x64"]
-checksum = "sha256:dc2a74d3cfdac2738aa83f7342a958b002e0dff99abbac460dffe6bacc4939a5"
-url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.3/trufflehog_3.95.3_darwin_amd64.tar.gz"
+checksum = "sha256:8091a92ad3ef6c46244f5b6b9683c72296381d77f63e8a979e913d8d58df595d"
+url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.5/trufflehog_3.95.5_darwin_amd64.tar.gz"
 
 [tools."aqua:trufflesecurity/trufflehog"."platforms.windows-x64"]
-checksum = "sha256:d13aa1c4e3654d873fb929ecd1215608dfcac2e83d60b86b510d34a7183cc34d"
-url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.3/trufflehog_3.95.3_windows_amd64.tar.gz"
+checksum = "sha256:4421ac2786b2a356d62d2f4c59798bba5069c7a9f4dc7af9558061568b642c4d"
+url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.95.5/trufflehog_3.95.5_windows_amd64.tar.gz"
