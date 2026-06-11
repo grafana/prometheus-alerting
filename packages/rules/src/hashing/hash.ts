@@ -26,15 +26,28 @@ export function hashLabelsOrAnnotations(item: Record<string, string> | undefined
 }
 
 /**
+ * Strips PromQL comments from a query string.
+ * Handles both full-line comments (lines starting with #) and inline comments
+ * (# appearing after code on the same line, e.g. `or # fallback condition`).
+ * Mimir normalizes expressions by stripping comments before storing them in
+ * Prometheus state, so the ruler expression and the Prometheus query must be
+ * processed identically before comparison.
+ */
+export function stripPromQLComments(query: string): string {
+  return query
+    .replace(/#[^\n]*/g, '') // strip from # to end of line (inline and full-line comments)
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => Boolean(line))
+    .join('\n');
+}
+
+/**
  * Hash a query string for fingerprinting
  */
 export function hashQuery(query: string): string {
-  // remove comments
-  query = query
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith('#'))
-    .join('\n');
+  // remove comments (full-line and inline)
+  query = stripPromQLComments(query);
 
   // one of them might be wrapped in parens
   if (query.length > 1 && query[0] === '(' && query[query.length - 1] === ')') {
