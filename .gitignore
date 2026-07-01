@@ -8,6 +8,10 @@ yarn-error.log*
 
 node_modules/
 
+# pnpm project-local store (created when the repo and pnpm's global store are on
+# different filesystems, e.g. a virtiofs-mounted repo inside a dev sandbox)
+.pnpm-store/
+
 # yarn
 .yarn/cache
 .yarn/unplugged
@@ -50,6 +54,10 @@ ci/
 
 # Git worktrees
 .worktrees/
+
+# Claude Code local settings (machine-specific, not for version control)
+.claude/settings.local.json
+.claude/worktrees/
 
 # Environment variable files (may contain secrets)
 .env
