@@ -34,9 +34,13 @@ test.describe('Inhibit Rules', () => {
     test('opens a read-only drawer with no edit/remove actions', async ({ inhibitRulesPage }) => {
       await inhibitRulesPage.openRuleByText(/severity\s*=\s*critical/i);
 
-      // Drawer shows the rule details...
-      await expect(inhibitRulesPage.page.getByText('Source Matchers').first()).toBeVisible();
-      await expect(inhibitRulesPage.page.getByText('Target Matchers').first()).toBeVisible();
+      const drawer = inhibitRulesPage.drawer;
+      // Drawer shows the rule details with labelled sections...
+      await expect(drawer.getByRole('term').filter({ hasText: 'Source Matchers' })).toBeVisible();
+      await expect(drawer.getByRole('term').filter({ hasText: 'Target Matchers' })).toBeVisible();
+      // ...and the actual matcher values for the first seeded rule.
+      await expect(drawer.getByText('severity = critical').first()).toBeVisible();
+      await expect(drawer.getByText('severity = warning').first()).toBeVisible();
       // ...but read-only Alertmanagers expose no Edit/Remove footer.
       await expect(inhibitRulesPage.editButton).toBeHidden();
       await expect(inhibitRulesPage.removeButton).toBeHidden();

@@ -27,6 +27,9 @@ export class InhibitRulesPage extends AlertmanagerPage {
   readonly editButton: Locator;
   readonly removeButton: Locator;
 
+  // View/edit drawer
+  readonly drawer: Locator;
+
   // Delete confirmation modal
   readonly confirmRemoveModal: Locator;
 
@@ -51,10 +54,12 @@ export class InhibitRulesPage extends AlertmanagerPage {
     this.updateButton = page.getByRole('button', { name: 'Update', exact: true });
     this.cancelButton = page.getByRole('button', { name: 'Cancel', exact: true });
 
+    this.drawer = page.getByRole('dialog', { name: /^inhibit rule/i });
+
     this.editButton = page.getByRole('button', { name: 'Edit', exact: true });
     this.removeButton = page.getByRole('button', { name: 'Remove', exact: true });
 
-    this.confirmRemoveModal = page.getByRole('dialog', { name: /remove inhibit rule/i });
+    this.confirmRemoveModal = page.getByRole('dialog', { name: /^remove inhibit rule$/i });
   }
 
   async goto() {
