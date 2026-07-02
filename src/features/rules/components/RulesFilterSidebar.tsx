@@ -162,7 +162,6 @@ function FilterSidebarForm() {
                     value={field.value}
                     onChange={(selections) => field.onChange(selections.map((s) => s.value))}
                     placeholder={t('alerting.rules-filter.labels-placeholder', 'Select labels')}
-                    portalContainer={document.body}
                   />
                 )}
               />
@@ -265,7 +264,6 @@ function FilterSidebarForm() {
                     value={field.value}
                     onChange={(selections) => field.onChange(selections.map((s) => s.value))}
                     placeholder={t('alerting.rules-filter.data-source-placeholder', 'Select data sources')}
-                    portalContainer={document.body}
                   />
                 )}
               />
