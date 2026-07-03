@@ -89,6 +89,7 @@ export function TemplateEditForm({
               },
             })}
             placeholder={t('templates.form.name-placeholder', 'e.g., slack-notification.tmpl')}
+            aria-label={t('templates.form.name', 'Name')}
           />
         </Field>
 
