@@ -8,7 +8,7 @@ type AlertmanagerTestFixture = {
   /**
    * Reset the (single, shared) Mimir Alertmanager config to empty. Returns a callable so
    * write specs can start each test from a clean slate; the config is also reset in teardown.
-   * Mimir Alertmanager write tests must run serially (see `00-shared-infra.md`).
+   * Mimir Alertmanager write tests must run serially.
    */
   resetMimirConfig: () => Promise<void>;
 };

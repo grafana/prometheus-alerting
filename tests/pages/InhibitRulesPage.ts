@@ -77,14 +77,6 @@ export class InhibitRulesPage extends AlertmanagerPage {
     await this.waitForLoad();
   }
 
-  /**
-   * One-shot count of the rendered rows. Prefer `expectRuleCount` in assertions — a bare
-   * `count()` is not web-first and races the table's initial render under parallel load.
-   */
-  async getRuleCount(): Promise<number> {
-    return this.rows.count();
-  }
-
   /** Web-first assertion on the number of inhibit-rule rows; retries until the table settles. */
   async expectRuleCount(count: number) {
     await expect(this.rows).toHaveCount(count);

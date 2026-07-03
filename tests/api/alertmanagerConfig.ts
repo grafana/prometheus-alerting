@@ -30,7 +30,7 @@ alertmanager_config: |
  *
  * NOTE: Mimir stores one config per tenant (`anonymous`), so it is a single shared mutable
  * resource. Write tests against the Mimir Alertmanager must run serially and reset here between
- * tests to stay isolated — see `00-shared-infra.md`.
+ * tests to stay isolated.
  */
 export async function resetMimirAlertmanagerConfig(): Promise<void> {
   const response = await fetch(MIMIR_ALERTMANAGER_CONFIG_URL, {
