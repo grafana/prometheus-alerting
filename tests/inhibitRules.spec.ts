@@ -1,4 +1,10 @@
-import { test, expect } from './fixtures/alertmanager';
+import {
+  test,
+  expect,
+  VANILLA_ALERTMANAGER_UID,
+  MIMIR_ALERTMANAGER_UID,
+  MIMIR_ALERTMANAGER_NAME,
+} from './fixtures/alertmanager';
 
 /**
  * Inhibit Rules e2e (`/inhibit-rules`).
@@ -10,14 +16,10 @@ import { test, expect } from './fixtures/alertmanager';
  * Inhibit rules are the plugin's flagship differentiator vs Grafana (which has no such UI).
  */
 
-const VANILLA_UID = 'test-alertmanager';
-const MIMIR_UID = 'test-mimir-alertmanager';
-const MIMIR_NAME = 'Test Mimir Alertmanager';
-
 test.describe('Inhibit Rules', () => {
   test.describe('Vanilla Alertmanager (read-only)', () => {
     test.beforeEach(async ({ inhibitRulesPage }) => {
-      await inhibitRulesPage.gotoWithAlertmanager(VANILLA_UID);
+      await inhibitRulesPage.gotoWithAlertmanager(VANILLA_ALERTMANAGER_UID);
     });
 
     test('shows the seeded inhibit rules', async ({ inhibitRulesPage }) => {
@@ -54,7 +56,7 @@ test.describe('Inhibit Rules', () => {
       await inhibitRulesPage.waitForLoad();
       await expect(inhibitRulesPage.addButton).toBeHidden();
 
-      await inhibitRulesPage.selectAlertmanager(MIMIR_NAME);
+      await inhibitRulesPage.selectAlertmanager(MIMIR_ALERTMANAGER_NAME);
       await expect(inhibitRulesPage.addButton).toBeVisible();
     });
   });
@@ -65,7 +67,7 @@ test.describe('Inhibit Rules', () => {
 
     test.beforeEach(async ({ inhibitRulesPage, resetMimirConfig }) => {
       await resetMimirConfig();
-      await inhibitRulesPage.gotoWithAlertmanager(MIMIR_UID);
+      await inhibitRulesPage.gotoWithAlertmanager(MIMIR_ALERTMANAGER_UID);
     });
 
     test('empty state offers to create a rule', async ({ inhibitRulesPage }) => {

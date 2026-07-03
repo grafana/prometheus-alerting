@@ -103,6 +103,7 @@ export function ReceiverEditForm({
                 },
               })}
               placeholder={t('receivers.form.name-placeholder', 'Enter receiver name')}
+              aria-label={t('receivers.form.name', 'Name')}
             />
           </Field>
 
@@ -207,6 +208,7 @@ function IntegrationEditor({
                 value={value}
                 onChange={(selected) => onChange(selected?.value ?? 'webhook')}
                 placeholder={t('receivers.form.select-type', 'Select integration type')}
+                aria-label={t('receivers.form.integration-type', 'Integration type')}
               />
             )}
           />
@@ -319,7 +321,11 @@ function OptionField({ option, index, control, register, basePath }: OptionField
           name={fieldPath as `integrations.${number}.settings.${string}`}
           control={control}
           render={({ field: { onChange, value } }) => (
-            <Checkbox checked={Boolean(value)} onChange={(e) => onChange(e.currentTarget.checked)} />
+            <Checkbox
+              checked={Boolean(value)}
+              onChange={(e) => onChange(e.currentTarget.checked)}
+              aria-label={option.label}
+            />
           )}
         />
       </Field>
@@ -339,6 +345,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
               options={selectOptions.map((opt) => ({ label: opt.label, value: opt.value }))}
               value={value as string}
               onChange={(selected) => onChange(selected?.value ?? '')}
+              aria-label={option.label}
             />
           )}
         />
@@ -354,6 +361,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
           {...register(fieldPath as `integrations.${number}.settings.${string}`)}
           placeholder={option.placeholder}
           rows={3}
+          aria-label={option.label}
         />
       </Field>
     );
@@ -368,6 +376,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
         })}
         type={option.inputType ?? 'text'}
         placeholder={option.placeholder}
+        aria-label={option.label}
       />
     </Field>
   );
