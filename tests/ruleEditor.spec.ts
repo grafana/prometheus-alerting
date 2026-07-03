@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures';
+import { test, expect } from './fixtures/ruler';
 import { RuleBuilder } from './factories/rules';
 
 /**
