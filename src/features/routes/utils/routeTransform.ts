@@ -139,7 +139,10 @@ export function mergeRouteIntoTree(routeTree: Route, routeId: string, updatedRou
     if (route.routes) {
       return {
         ...route,
-        routes: route.routes.map((child, index) => findAndReplace(child, `${parentIndex}-${index}`)),
+        // Dot-separated to match the IDs `addUniqueIdentifier` assigns to the client-side route
+        // tree (the IDs `routeId` actually comes from) — a dash here would never match, silently
+        // no-opping the update.
+        routes: route.routes.map((child, index) => findAndReplace(child, `${parentIndex}.${index}`)),
       };
     }
 
@@ -221,7 +224,8 @@ export function addRouteToTree(
 
       for (let i = 0; i < route.routes.length; i++) {
         const child = route.routes[i];
-        const childId = 'id' in child ? (child as RouteWithID).id : `${parentIndex}-${i}`;
+        // Dot-separated to match `addUniqueIdentifier`'s scheme, same as above.
+        const childId = 'id' in child ? (child as RouteWithID).id : `${parentIndex}.${i}`;
 
         if (childId === referenceRouteId && position !== 'child') {
           // Insert above or below this child
@@ -236,7 +240,7 @@ export function addRouteToTree(
           found = true;
         } else {
           // Recurse into this child
-          const result = findAndInsert(child, `${parentIndex}-${i}`);
+          const result = findAndInsert(child, `${parentIndex}.${i}`);
           newRoutes.push(result.route);
           if (result.found) {
             found = true;

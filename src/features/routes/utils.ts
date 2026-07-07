@@ -18,3 +18,17 @@ export function addUniqueIdentifier(route: Route, parentId = '0'): RouteWithID {
     routes: route.routes?.map((child, index) => addUniqueIdentifier(child, `${parentId}.${index}`)) ?? [],
   };
 }
+
+/** Find a route by its `addUniqueIdentifier`-assigned id within a route tree. */
+export function findRouteById(route: RouteWithID, id: string): RouteWithID | undefined {
+  if (route.id === id) {
+    return route;
+  }
+  for (const child of route.routes ?? []) {
+    const found = findRouteById(child as RouteWithID, id);
+    if (found) {
+      return found;
+    }
+  }
+  return undefined;
+}
