@@ -3,6 +3,7 @@ import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 
 import { MatcherOperator, FormAmRoute } from '../types';
 import {
+  addRouteToTree,
   amRouteToFormAmRoute,
   formAmRouteToAmRoute,
   mergeRouteIntoTree,
@@ -218,6 +219,96 @@ describe('mergeRouteIntoTree', () => {
     expect(result.receiver).toBe('new-receiver');
     // Timing values are undefined when not overriding (inherit from parent)
     expect(result.group_wait).toBeUndefined();
+  });
+
+  // Regression test for a real bug: `getUserConfiguration`/`getConfiguration` return a plain
+  // `Route` per `RoutesSchema`, which has no `id` field at all — routeIds must be reconstructed
+  // positionally to match `addUniqueIdentifier`'s scheme. A tree with explicit ids (like the
+  // fixtures above) never exercises that fallback and would not have caught the dash/dot mismatch
+  // that silently no-opped edits on any non-root route.
+  it('updates a non-root route in a tree with no explicit ids (real fetched-config shape)', () => {
+    const tree: Route = {
+      receiver: 'default',
+      routes: [{ receiver: 'slack' }, { receiver: 'email' }],
+    };
+
+    const result = mergeRouteIntoTree(tree, '0.1', { receiver: 'updated-email' });
+
+    expect(result.routes![0].receiver).toBe('slack');
+    expect(result.routes![1].receiver).toBe('updated-email');
+  });
+
+  it('updates a nested (grandchild) route in a tree with no explicit ids', () => {
+    const tree: Route = {
+      receiver: 'default',
+      routes: [
+        {
+          receiver: 'team-a',
+          routes: [{ receiver: 'team-a-critical' }, { receiver: 'team-a-warning' }],
+        },
+      ],
+    };
+
+    const result = mergeRouteIntoTree(tree, '0.0.1', { receiver: 'team-a-warning-updated' });
+
+    expect(result.routes![0].routes![0].receiver).toBe('team-a-critical');
+    expect(result.routes![0].routes![1].receiver).toBe('team-a-warning-updated');
+  });
+});
+
+describe('addRouteToTree', () => {
+  it('adds a child to a non-root route in a tree with no explicit ids', () => {
+    const tree: Route = {
+      receiver: 'default',
+      routes: [{ receiver: 'team-a' }, { receiver: 'team-b' }],
+    };
+
+    const result = addRouteToTree(tree, '0.0', { receiver: 'team-a-child' }, 'child');
+
+    expect(result.routes![0].routes).toHaveLength(1);
+    expect(result.routes![0].routes![0].receiver).toBe('team-a-child');
+    // Sibling untouched
+    expect(result.routes![1].routes).toBeUndefined();
+  });
+
+  it('adds a sibling below a non-root route in a tree with no explicit ids', () => {
+    const tree: Route = {
+      receiver: 'default',
+      routes: [{ receiver: 'team-a' }, { receiver: 'team-b' }],
+    };
+
+    const result = addRouteToTree(tree, '0.0', { receiver: 'new-sibling' }, 'below');
+
+    expect(result.routes).toHaveLength(3);
+    expect(result.routes!.map((r) => r.receiver)).toEqual(['team-a', 'new-sibling', 'team-b']);
+  });
+
+  it('adds a sibling above a non-root route in a tree with no explicit ids', () => {
+    const tree: Route = {
+      receiver: 'default',
+      routes: [{ receiver: 'team-a' }, { receiver: 'team-b' }],
+    };
+
+    const result = addRouteToTree(tree, '0.1', { receiver: 'new-sibling' }, 'above');
+
+    expect(result.routes!.map((r) => r.receiver)).toEqual(['team-a', 'new-sibling', 'team-b']);
+  });
+
+  it('adds a child to the root route', () => {
+    const tree: Route = { receiver: 'default' };
+
+    const result = addRouteToTree(tree, '0', { receiver: 'child' }, 'child');
+
+    expect(result.routes).toHaveLength(1);
+    expect(result.routes![0].receiver).toBe('child');
+  });
+
+  it('throws when the reference route is not found', () => {
+    const tree: Route = { receiver: 'default', routes: [{ receiver: 'team-a' }] };
+
+    expect(() => addRouteToTree(tree, '0.5', { receiver: 'x' }, 'child')).toThrow(
+      'Could not find reference route "0.5" in tree'
+    );
   });
 });
 

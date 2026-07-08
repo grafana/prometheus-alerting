@@ -2,6 +2,16 @@ import { Route } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 
 /**
+ * Build a child route's positional id from its parent's id and its index among siblings. This is
+ * the single source of truth for the scheme — `addUniqueIdentifier` (below) and the tree-walking
+ * functions in `routeTransform.ts` (which reconstruct ids over a fetched tree that has none) must
+ * agree on it exactly, or a route lookup silently fails to match.
+ */
+export function buildRouteId(parentId: string, index: number): string {
+  return `${parentId}.${index}`;
+}
+
+/**
  * Adds deterministic IDs to a route tree based on position.
  * IDs are stable across re-fetches as long as the tree structure doesn't change.
  *
@@ -15,7 +25,7 @@ export function addUniqueIdentifier(route: Route, parentId = '0'): RouteWithID {
   return {
     id: parentId,
     ...route,
-    routes: route.routes?.map((child, index) => addUniqueIdentifier(child, `${parentId}.${index}`)) ?? [],
+    routes: route.routes?.map((child, index) => addUniqueIdentifier(child, buildRouteId(parentId, index))) ?? [],
   };
 }
 

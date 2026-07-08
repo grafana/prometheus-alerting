@@ -1,6 +1,7 @@
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { FormAmRoute, InsertPosition, MatcherFieldValue, MatcherOperator, emptyRoute } from '../types';
+import { buildRouteId } from '../utils';
 import { isValidPrometheusDuration } from '../../../utils/time.utils';
 
 /**
@@ -139,10 +140,7 @@ export function mergeRouteIntoTree(routeTree: Route, routeId: string, updatedRou
     if (route.routes) {
       return {
         ...route,
-        // Dot-separated to match the IDs `addUniqueIdentifier` assigns to the client-side route
-        // tree (the IDs `routeId` actually comes from) — a dash here would never match, silently
-        // no-opping the update.
-        routes: route.routes.map((child, index) => findAndReplace(child, `${parentIndex}.${index}`)),
+        routes: route.routes.map((child, index) => findAndReplace(child, buildRouteId(parentIndex, index))),
       };
     }
 
@@ -224,8 +222,7 @@ export function addRouteToTree(
 
       for (let i = 0; i < route.routes.length; i++) {
         const child = route.routes[i];
-        // Dot-separated to match `addUniqueIdentifier`'s scheme, same as above.
-        const childId = 'id' in child ? (child as RouteWithID).id : `${parentIndex}.${i}`;
+        const childId = 'id' in child ? (child as RouteWithID).id : buildRouteId(parentIndex, i);
 
         if (childId === referenceRouteId && position !== 'child') {
           // Insert above or below this child
@@ -240,7 +237,7 @@ export function addRouteToTree(
           found = true;
         } else {
           // Recurse into this child
-          const result = findAndInsert(child, `${parentIndex}.${i}`);
+          const result = findAndInsert(child, childId);
           newRoutes.push(result.route);
           if (result.found) {
             found = true;
@@ -304,7 +301,7 @@ export function removeRouteFromTree(routeTree: Route, routeId: string): Route {
 
     for (let i = 0; i < route.routes.length; i++) {
       const child = route.routes[i];
-      const childId = 'id' in child ? (child as RouteWithID).id : `${parentIndex}.${i}`;
+      const childId = 'id' in child ? (child as RouteWithID).id : buildRouteId(parentIndex, i);
 
       if (childId === routeId) {
         // Found the route to delete - skip it (don't add to newRoutes)
