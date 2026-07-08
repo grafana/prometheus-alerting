@@ -373,6 +373,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
       <Input
         {...register(fieldPath as `integrations.${number}.settings.${string}`, {
           required: option.required ? t('receivers.form.field-required', 'This field is required') : false,
+          setValueAs: option.setValueAs,
         })}
         type={option.inputType ?? 'text'}
         placeholder={option.placeholder}

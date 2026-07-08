@@ -162,9 +162,56 @@ export class ReceiversPage extends AlertmanagerPage {
     }
   }
 
-  /** Fill a webhook integration's URL field. Same single-integration-type scoping caveat as above. */
-  async fillWebhookFields({ url }: { url: string }) {
-    await this.drawer.getByLabel('URL', { exact: true }).fill(url);
+  /**
+   * Fill a webhook integration's fields, including the optional `max_alerts` and nested
+   * `http_config` (proxy URL, basic auth, TLS server name / skip verify) settings. Same
+   * single-integration-type scoping caveat as `fillEmailFields`. TLS `ca_file`/`cert_file`/
+   * `key_file` are deliberately not exposed here: Mimir's Alertmanager rejects local file paths
+   * in TLS config outright ("setting TLS ca_file, cert_file, key_file, ca, cert or key is not
+   * allowed"), so they can never be exercised end-to-end against the test Mimir instance.
+   */
+  async fillWebhookFields({
+    url,
+    maxAlerts,
+    proxyUrl,
+    basicAuthUsername,
+    basicAuthPassword,
+    tlsServerName,
+    tlsSkipVerify,
+  }: {
+    url?: string;
+    maxAlerts?: string;
+    proxyUrl?: string;
+    basicAuthUsername?: string;
+    basicAuthPassword?: string;
+    tlsServerName?: string;
+    tlsSkipVerify?: boolean;
+  }) {
+    if (url !== undefined) {
+      await this.drawer.getByLabel('URL', { exact: true }).fill(url);
+    }
+    if (maxAlerts !== undefined) {
+      await this.drawer.getByLabel('Max alerts', { exact: true }).fill(maxAlerts);
+    }
+    if (proxyUrl !== undefined) {
+      await this.drawer.getByLabel('Proxy URL', { exact: true }).fill(proxyUrl);
+    }
+    if (basicAuthUsername !== undefined) {
+      await this.drawer.getByLabel('Username', { exact: true }).fill(basicAuthUsername);
+    }
+    if (basicAuthPassword !== undefined) {
+      await this.drawer.getByLabel('Password', { exact: true }).fill(basicAuthPassword);
+    }
+    if (tlsServerName !== undefined) {
+      await this.drawer.getByLabel('Server name', { exact: true }).fill(tlsServerName);
+    }
+    if (tlsSkipVerify) {
+      // Grafana's `Checkbox` renders a decorative `<span>` checkmark stacked (z-index) above the
+      // visually-hidden `<input>`, both wrapped in one `<label>`. A plain click on the input is
+      // never "actionable" per Playwright's overlap check (the span is always topmost), so force
+      // it — the browser still forwards the click to the input via the enclosing label.
+      await this.drawer.getByLabel('Skip verify', { exact: true }).click({ force: true });
+    }
   }
 
   async submitCreate() {

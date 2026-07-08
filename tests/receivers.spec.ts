@@ -128,6 +128,38 @@ test.describe('Receivers', () => {
       await receiversPage.expectReceiverCount(1); // only the undeletable default remains
     });
 
+    test('creates a webhook receiver with all optional fields and persists them', async ({ receiversPage }) => {
+      await receiversPage.openCreateDrawer();
+      await receiversPage.fillName('webhook-full-options');
+      await receiversPage.selectIntegrationType(0, 'Webhook');
+      await receiversPage.fillWebhookFields({
+        url: 'http://example.com/webhook-full',
+        maxAlerts: '5',
+        proxyUrl: 'http://proxy.example.com:8080',
+        basicAuthUsername: 'webhookuser',
+        basicAuthPassword: 'webhookpass',
+        tlsServerName: 'webhook.example.com',
+        tlsSkipVerify: true,
+      });
+      await receiversPage.submitCreate();
+
+      // Regression check for `max_alerts`: it's a number field, but react-hook-form registers
+      // number inputs as strings unless told otherwise. Without applying the option's
+      // `setValueAs`, the receiver is posted with `max_alerts: "5"` (a quoted string), which
+      // Mimir's Alertmanager rejects outright — the create request fails and the drawer never
+      // closes, so this row never appears.
+      await expect(receiversPage.getRow('webhook-full-options')).toBeVisible();
+
+      await receiversPage.openReceiverByName('webhook-full-options');
+      await expect(receiversPage.getViewFieldValue('url')).toHaveText('http://example.com/webhook-full');
+      await expect(receiversPage.getViewFieldValue('max_alerts')).toHaveText('5');
+      await expect(receiversPage.getViewFieldValue('proxy_url')).toHaveText('http://proxy.example.com:8080');
+      await expect(receiversPage.getViewFieldValue('username')).toHaveText('webhookuser');
+      await expect(receiversPage.getViewFieldValue('password')).toHaveText('webhookpass');
+      await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('webhook.example.com');
+      await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('Yes');
+    });
+
     test('creates a receiver with two integrations', async ({ receiversPage }) => {
       await receiversPage.openCreateDrawer();
       await receiversPage.fillName('multi-integration-receiver');
