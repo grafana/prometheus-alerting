@@ -1,10 +1,20 @@
 import { Locator } from '@playwright/test';
 
+export interface WebhookFormParams {
+  url?: string;
+  maxAlerts?: string;
+  proxyUrl?: string;
+  basicAuthUsername?: string;
+  basicAuthPassword?: string;
+  tlsServerName?: string;
+  tlsSkipVerify?: boolean;
+}
+
 /**
  * Sub-page-object for a webhook integration's fields within the receiver drawer's create/edit
  * form (`RouteEditForm`'s sibling, `ReceiverEditForm`). Scoped to the whole drawer, not a specific
- * integration index — safe as long as a form has at most one webhook integration, same caveat as
- * `ReceiversPage.fillEmailFields`. Obtained via `ReceiversPage.selectWebhookIntegration`.
+ * integration index — safe as long as a form has at most one webhook integration. Obtained via
+ * `ReceiversPage.selectWebhookIntegration`.
  */
 export class WebhookIntegrationForm {
   readonly urlInput: Locator;
@@ -34,15 +44,7 @@ export class WebhookIntegrationForm {
     basicAuthPassword,
     tlsServerName,
     tlsSkipVerify,
-  }: {
-    url?: string;
-    maxAlerts?: string;
-    proxyUrl?: string;
-    basicAuthUsername?: string;
-    basicAuthPassword?: string;
-    tlsServerName?: string;
-    tlsSkipVerify?: boolean;
-  }) {
+  }: WebhookFormParams) {
     if (url !== undefined) {
       await this.urlInput.fill(url);
     }
