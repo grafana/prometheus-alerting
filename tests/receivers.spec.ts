@@ -1,4 +1,29 @@
 import { test, expect, VANILLA_ALERTMANAGER_UID, MIMIR_ALERTMANAGER_UID } from './fixtures/alertmanager';
+import { postMimirAlertmanagerConfig } from './api/alertmanagerConfig';
+
+/**
+ * A webhook receiver with every optional field set, used as the starting point for the "update"
+ * test below — seeded directly via the Mimir config API so the test only has to drive the UI for
+ * the part it's actually verifying (the edit).
+ */
+const WEBHOOK_FULL_BEFORE_CONFIG = `template_files: {}
+alertmanager_config: |
+  route:
+    receiver: webhook-full-update
+  receivers:
+    - name: webhook-full-update
+      webhook_configs:
+        - url: 'http://example.com/webhook-before'
+          max_alerts: 5
+          http_config:
+            proxy_url: 'http://proxy.example.com:8080'
+            basic_auth:
+              username: 'before-user'
+              password: 'before-pass'
+            tls_config:
+              server_name: 'before.example.com'
+              insecure_skip_verify: true
+`;
 
 /**
  * Receivers e2e (`/receivers`).
@@ -158,6 +183,35 @@ test.describe('Receivers', () => {
       await expect(receiversPage.getViewFieldValue('password')).toHaveText('webhookpass');
       await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('webhook.example.com');
       await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('Yes');
+    });
+
+    test('updates a webhook receiver with all optional fields', async ({ receiversPage }) => {
+      await postMimirAlertmanagerConfig(WEBHOOK_FULL_BEFORE_CONFIG);
+      await receiversPage.gotoWithAlertmanager(MIMIR_ALERTMANAGER_UID);
+
+      await receiversPage.openReceiverByName('webhook-full-update');
+      await receiversPage.startEdit();
+      const editWebhook = await receiversPage.selectWebhookIntegration(0);
+      await editWebhook.fill({
+        url: 'http://example.com/webhook-after',
+        maxAlerts: '10',
+        proxyUrl: 'http://proxy2.example.com:9090',
+        basicAuthUsername: 'after-user',
+        basicAuthPassword: 'after-pass',
+        tlsServerName: 'after.example.com',
+        // Already checked in the seeded config — clicking again toggles it back off.
+        tlsSkipVerify: true,
+      });
+      await receiversPage.submitUpdate();
+
+      await receiversPage.openReceiverByName('webhook-full-update');
+      await expect(receiversPage.getViewFieldValue('url')).toHaveText('http://example.com/webhook-after');
+      await expect(receiversPage.getViewFieldValue('max_alerts')).toHaveText('10');
+      await expect(receiversPage.getViewFieldValue('proxy_url')).toHaveText('http://proxy2.example.com:9090');
+      await expect(receiversPage.getViewFieldValue('username')).toHaveText('after-user');
+      await expect(receiversPage.getViewFieldValue('password')).toHaveText('after-pass');
+      await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('after.example.com');
+      await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('No');
     });
 
     test('creates a receiver with two integrations', async ({ receiversPage }) => {

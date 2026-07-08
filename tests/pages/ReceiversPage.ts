@@ -1,6 +1,6 @@
 import { Locator, expect } from '@playwright/test';
 import { AlertmanagerPage } from './AlertmanagerPage';
-import { WebhookIntegrationForm } from './WebhookIntegrationForm';
+import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 
 /**
  * Page object for the Receivers view (`/receivers`).
