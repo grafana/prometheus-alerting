@@ -82,8 +82,8 @@ test.describe('Receivers', () => {
     test('creates a receiver with a webhook integration and views it', async ({ receiversPage }) => {
       await receiversPage.openCreateDrawer();
       await receiversPage.fillName('new-webhook-receiver');
-      await receiversPage.selectIntegrationType(0, 'Webhook');
-      await receiversPage.fillWebhookFields({ url: 'http://example.com/webhook' });
+      const webhook = await receiversPage.selectWebhookIntegration(0);
+      await webhook.fill({ url: 'http://example.com/webhook' });
       await receiversPage.submitCreate();
 
       await expect(receiversPage.getRow('new-webhook-receiver')).toBeVisible();
@@ -116,8 +116,8 @@ test.describe('Receivers', () => {
     test('deletes a receiver via the confirmation modal', async ({ receiversPage }) => {
       await receiversPage.openCreateDrawer();
       await receiversPage.fillName('delete-me-receiver');
-      await receiversPage.selectIntegrationType(0, 'Webhook');
-      await receiversPage.fillWebhookFields({ url: 'http://example.com/delete-me' });
+      const webhook = await receiversPage.selectWebhookIntegration(0);
+      await webhook.fill({ url: 'http://example.com/delete-me' });
       await receiversPage.submitCreate();
       await expect(receiversPage.getRow('delete-me-receiver')).toBeVisible();
 
@@ -131,8 +131,8 @@ test.describe('Receivers', () => {
     test('creates a webhook receiver with all optional fields and persists them', async ({ receiversPage }) => {
       await receiversPage.openCreateDrawer();
       await receiversPage.fillName('webhook-full-options');
-      await receiversPage.selectIntegrationType(0, 'Webhook');
-      await receiversPage.fillWebhookFields({
+      const webhook = await receiversPage.selectWebhookIntegration(0);
+      await webhook.fill({
         url: 'http://example.com/webhook-full',
         maxAlerts: '5',
         proxyUrl: 'http://proxy.example.com:8080',
@@ -163,8 +163,8 @@ test.describe('Receivers', () => {
     test('creates a receiver with two integrations', async ({ receiversPage }) => {
       await receiversPage.openCreateDrawer();
       await receiversPage.fillName('multi-integration-receiver');
-      await receiversPage.selectIntegrationType(0, 'Webhook');
-      await receiversPage.fillWebhookFields({ url: 'http://example.com/multi' });
+      const webhook = await receiversPage.selectWebhookIntegration(0);
+      await webhook.fill({ url: 'http://example.com/multi' });
 
       await receiversPage.addIntegrationButton.click();
       await receiversPage.selectIntegrationType(1, 'Email');
