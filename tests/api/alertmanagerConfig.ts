@@ -25,21 +25,28 @@ alertmanager_config: |
 `;
 
 /**
- * Reset the Mimir Alertmanager configuration back to an initialized-but-empty state (a valid
- * config with zero inhibit rules).
+ * Post a raw Alertmanager configuration (the same `template_files` + `alertmanager_config` YAML
+ * document accepted by Mimir's `/api/v1/alerts`) to the test tenant.
  *
  * NOTE: Mimir stores one config per tenant (`anonymous`), so it is a single shared mutable
- * resource. Write tests against the Mimir Alertmanager must run serially and reset here between
- * tests to stay isolated.
+ * resource. Write tests against the Mimir Alertmanager must run serially.
  */
-export async function resetMimirAlertmanagerConfig(): Promise<void> {
+export async function postMimirAlertmanagerConfig(config: string): Promise<void> {
   const response = await fetch(MIMIR_ALERTMANAGER_CONFIG_URL, {
     method: 'POST',
     headers: { ...MIMIR_ORG_HEADER, 'Content-Type': 'application/yaml' },
-    body: EMPTY_MIMIR_ALERTMANAGER_CONFIG,
+    body: config,
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to reset Mimir Alertmanager config: HTTP ${response.status}`);
+    throw new Error(`Failed to post Mimir Alertmanager config: HTTP ${response.status}`);
   }
+}
+
+/**
+ * Reset the Mimir Alertmanager configuration back to an initialized-but-empty state (a valid
+ * config with zero inhibit rules).
+ */
+export async function resetMimirAlertmanagerConfig(): Promise<void> {
+  await postMimirAlertmanagerConfig(EMPTY_MIMIR_ALERTMANAGER_CONFIG);
 }
