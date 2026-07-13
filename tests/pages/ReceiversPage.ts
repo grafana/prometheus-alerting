@@ -1,5 +1,8 @@
 import { Locator, expect } from '@playwright/test';
 import { AlertmanagerPage } from './AlertmanagerPage';
+import { EmailIntegrationForm } from './receivers/EmailIntegrationForm';
+import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
+import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 
 /**
  * Page object for the Receivers view (`/receivers`).
@@ -146,25 +149,35 @@ export class ReceiversPage extends AlertmanagerPage {
   }
 
   /**
-   * Fill an email integration's fields. Scoped to the drawer, not a specific integration index —
-   * safe as long as a form has at most one email integration (true for all planned test cases;
-   * "To"/"From"/"SMTP host" don't collide with any other integration type's field labels).
+   * Select 'Email' as the integration type at `index` and return a page object scoped to that
+   * integration's fields. TLS `ca_file`/`cert_file`/`key_file` are deliberately not exposed by
+   * `EmailIntegrationForm`, same reason as `selectWebhookIntegration`.
    */
-  async fillEmailFields({ to, from, smarthost }: { to?: string; from?: string; smarthost?: string }) {
-    if (to !== undefined) {
-      await this.drawer.getByLabel('To', { exact: true }).fill(to);
-    }
-    if (from !== undefined) {
-      await this.drawer.getByLabel('From', { exact: true }).fill(from);
-    }
-    if (smarthost !== undefined) {
-      await this.drawer.getByLabel('SMTP host', { exact: true }).fill(smarthost);
-    }
+  async selectEmailIntegration(index: number): Promise<EmailIntegrationForm> {
+    await this.selectIntegrationType(index, 'Email');
+    return new EmailIntegrationForm(this.drawer);
   }
 
-  /** Fill a webhook integration's URL field. Same single-integration-type scoping caveat as above. */
-  async fillWebhookFields({ url }: { url: string }) {
-    await this.drawer.getByLabel('URL', { exact: true }).fill(url);
+  /**
+   * Select 'Webhook' as the integration type at `index` and return a page object scoped to that
+   * integration's fields (URL, `max_alerts`, `http_config`). TLS `ca_file`/`cert_file`/`key_file`
+   * are deliberately not exposed by `WebhookIntegrationForm`: Mimir's Alertmanager rejects local
+   * file paths in TLS config outright ("setting TLS ca_file, cert_file, key_file, ca, cert or key
+   * is not allowed"), so they can never be exercised end-to-end against the test Mimir instance.
+   */
+  async selectWebhookIntegration(index: number): Promise<WebhookIntegrationForm> {
+    await this.selectIntegrationType(index, 'Webhook');
+    return new WebhookIntegrationForm(this.drawer);
+  }
+
+  /**
+   * Select 'Slack' as the integration type at `index` and return a page object scoped to that
+   * integration's top-level fields. `http_config` is deliberately not exposed, see
+   * `SlackIntegrationForm`.
+   */
+  async selectSlackIntegration(index: number): Promise<SlackIntegrationForm> {
+    await this.selectIntegrationType(index, 'Slack');
+    return new SlackIntegrationForm(this.drawer);
   }
 
   async submitCreate() {
