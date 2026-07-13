@@ -25,9 +25,10 @@ export function useReceivers() {
   const trigger = implementation === 'mimir' ? mimirTrigger : vanillaTrigger;
   const result = implementation === 'mimir' ? mimirResult : vanillaResult;
 
-  // memoize the trigger function so we avoid an infinite loop
+  // memoize the trigger function so we avoid an infinite loop. Returns the query promise so
+  // callers can await the refetch (e.g. before closing a drawer that just saved a change).
   const triggerFn = useCallback(() => {
-    trigger({ dataSourceUID });
+    return trigger({ dataSourceUID });
   }, [dataSourceUID, trigger]);
 
   return [
