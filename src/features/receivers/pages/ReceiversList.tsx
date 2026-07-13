@@ -43,9 +43,11 @@ function ReceiversPage() {
     setDrawerMode(DrawerMode.View);
   }, []);
 
-  const handleSaved = useCallback(() => {
-    // Refetch receivers after create/update/delete
-    triggerFetch();
+  const handleSaved = useCallback(async () => {
+    // Refetch receivers after create/update/delete, and wait for it to resolve before the
+    // drawer closes — otherwise a receiver reopened immediately after saving (e.g. by an
+    // automated test right after the "saved" toast) can still read the pre-update list.
+    await triggerFetch();
   }, [triggerFetch]);
 
   const clickableCellStyles = css({

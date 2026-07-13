@@ -112,7 +112,7 @@ interface ReceiverDrawerProps {
   receiver: Receiver | null;
   existingReceivers?: Receiver[];
   onClose: () => void;
-  onSaved?: () => void;
+  onSaved?: () => void | Promise<void>;
   showBackButton?: boolean;
   initialMode?: DrawerMode;
 }
@@ -166,7 +166,7 @@ export function ReceiverDrawer({
             payload: [t('receivers.update.success', 'Receiver updated successfully')],
           });
         }
-        onSaved?.();
+        await onSaved?.();
         onClose();
       } catch (err) {
         const errorMessage = extractErrorMessage(err);
@@ -194,7 +194,7 @@ export function ReceiverDrawer({
         type: AppEvents.alertSuccess.name,
         payload: [t('receivers.delete.success', 'Receiver deleted successfully')],
       });
-      onSaved?.();
+      await onSaved?.();
       onClose();
     } catch (err) {
       const errorMessage = extractErrorMessage(err);
