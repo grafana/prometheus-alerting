@@ -61,7 +61,10 @@ export class RoutesListPage extends AlertmanagerPage {
     this.deleteButton = this.routeDrawer.getByRole('button', { name: 'Delete', exact: true });
 
     this.addMatcherButton = this.routeDrawer.getByRole('button', { name: /add matcher/i });
-    this.receiverSelector = this.routeDrawer.getByRole('combobox', { name: 'Select a receiver' });
+    // Matches both the placeholder-only accessible name (no Field label association, e.g.
+    // Grafana 13.0.x) and the label+description form (Field label wired via aria-labelledby,
+    // e.g. Grafana 13.1.0+) — the two @grafana/ui behaviors observed across the e2e matrix.
+    this.receiverSelector = this.routeDrawer.getByRole('combobox', { name: /receiver/i });
     this.overrideGroupingToggle = this.routeDrawer.locator('#override-grouping-toggle');
     this.overrideTimingsToggle = this.routeDrawer.locator('#override-timings-toggle');
     this.groupByInput = this.routeDrawer.getByRole('combobox', { name: 'Group by' });
