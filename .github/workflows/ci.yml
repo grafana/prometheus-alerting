@@ -1,232 +1,31 @@
-name: CI
+# Shared workflow for building, testing and packaging the plugin.
+# Documentation: https://enghub.grafana-ops.net/docs/default/component/grafana-plugins-platform/plugins-ci-github-actions/010-plugins-ci-github-actions
+# All inputs are documented in the workflow file itself:
+# https://github.com/grafana/plugin-ci-workflows/blob/main/.github/workflows/ci.yml
+
+name: Plugins - CI
 
 on:
   push:
     branches:
-      - master
       - main
+      - master
   pull_request:
     branches:
-      - master
       - main
+      - master
+
+permissions: {}
 
 jobs:
-  build:
-    name: Build, lint and unit tests
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      plugin-id: ${{ steps.metadata.outputs.plugin-id }}
-      plugin-version: ${{ steps.metadata.outputs.plugin-version }}
-      has-e2e: ${{ steps.check-for-e2e.outputs.has-e2e }}
-    steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-        with:
-          persist-credentials: false
-      - name: Setup Node.js
-        uses: ./.github/actions/setup-node
-
-      - name: Check types
-        run: pnpm run typecheck
-      - name: Lint
-        run: pnpm run lint
-      - name: Unit tests
-        env:
-          I18NEXT_NO_SUPPORT_NOTICE: true
-        run: pnpm exec vitest run --coverage --passWithNoTests
-
-      - name: Upload coverage artifact
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: coverage-pull-request
-          path: coverage
-          retention-days: 1
-
-      - name: Build frontend
-        run: pnpm run build
-
-      - name: Check for E2E
-        id: check-for-e2e
-        run: |
-          if [ -f "playwright.config.ts" ]
-          then
-            echo "has-e2e=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Sign plugin
-        env:
-          GRAFANA_ACCESS_POLICY_TOKEN: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
-        if: ${{ env.GRAFANA_ACCESS_POLICY_TOKEN != '' }}
-        run: pnpm run sign
-
-      - name: Get plugin metadata
-        id: metadata
-        run: |
-          sudo apt-get install jq
-
-          export GRAFANA_PLUGIN_ID=$(cat dist/plugin.json | jq -r .id)
-          export GRAFANA_PLUGIN_VERSION=$(cat dist/plugin.json | jq -r .info.version)
-          export GRAFANA_PLUGIN_ARTIFACT=${GRAFANA_PLUGIN_ID}-${GRAFANA_PLUGIN_VERSION}.zip
-
-          echo "plugin-id=${GRAFANA_PLUGIN_ID}" >> $GITHUB_OUTPUT
-          echo "plugin-version=${GRAFANA_PLUGIN_VERSION}" >> $GITHUB_OUTPUT
-          echo "archive=${GRAFANA_PLUGIN_ARTIFACT}" >> $GITHUB_OUTPUT
-
-      - name: Package plugin
-        id: package-plugin
-        run: |
-          mv dist ${PLUGIN_ID}
-          zip ${ARCHIVE} ${PLUGIN_ID} -r
-        env:
-          ARCHIVE: ${{ steps.metadata.outputs.archive }}
-          PLUGIN_ID: ${{ steps.metadata.outputs.plugin-id }}
-
-      - name: Check plugin.json
-        run: |
-          docker run --pull=always \
-            -v $PWD/${ARCHIVE}:/archive.zip \
-            grafana/plugin-validator-cli@sha256:ba3f8f4916ca1ed50ee4b75bf9887efbd7bd05e10bb0b26629781d427b87fec5 \
-            -analyzer=metadatavalid /archive.zip
-        env:
-          ARCHIVE: ${{ steps.metadata.outputs.archive }}
-
-      - name: Archive Build
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}
-          path: ${{ steps.metadata.outputs.plugin-id }}
-          retention-days: 5
-
-  resolve-versions:
-    name: Resolve e2e images
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    timeout-minutes: 3
-    needs: build
-    if: ${{ needs.build.outputs.has-e2e == 'true' }}
-    outputs:
-      matrix: ${{ steps.resolve-versions.outputs.matrix }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-        with:
-          persist-credentials: false
-
-      - name: Resolve Grafana E2E versions
-        id: resolve-versions
-        uses: grafana/plugin-actions/e2e-version@1c101efc8e5bb6450d6b982ee1d0c668cb21d64f # pin before plugin-actions#228 broke @main
-        with:
-          version-resolver-type: plugin-grafana-dependency
-
-  playwright-tests:
-    needs: [resolve-versions, build]
-    timeout-minutes: 15
+  ci:
+    name: CI
+    uses: grafana/plugin-ci-workflows/.github/workflows/ci.yml@ci-cd-workflows/v10.1.0
     permissions:
       contents: read
       id-token: write
-      pull-requests: write
-    strategy:
-      fail-fast: false
-      matrix:
-        GRAFANA_IMAGE: ${{fromJson(needs.resolve-versions.outputs.matrix)}}
-    name: e2e test ${{ matrix.GRAFANA_IMAGE.name }}@${{ matrix.GRAFANA_IMAGE.VERSION }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-        with:
-          persist-credentials: false
-
-      - name: Download plugin
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          path: dist
-          name: ${{ needs.build.outputs.plugin-id }}-${{ needs.build.outputs.plugin-version }}
-
-      - name: Setup Node.js
-        uses: ./.github/actions/setup-node
-
-      - name: Verify test data exists
-        run: |
-          echo "Checking for Mimir test rules..."
-          ls -la test-data/mimir/rules/e2e-test-namespace/
-          cat test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml
-
-      - name: Start Grafana
-        run: |
-          docker compose pull
-          ANONYMOUS_AUTH_ENABLED=false DEVELOPMENT=false GRAFANA_VERSION=${{ matrix.GRAFANA_IMAGE.VERSION }} GRAFANA_IMAGE=${{ matrix.GRAFANA_IMAGE.NAME }} docker compose up -d
-
-      - name: Wait for grafana server
-        uses: grafana/plugin-actions/wait-for-grafana@main # zizmor: ignore[unpinned-uses] provided by grafana
-        with:
-          url: http://localhost:3000/login
-
-      - name: Wait for Mimir rules provisioner to complete
-        run: |
-          echo "Waiting for Mimir rules provisioner to complete..."
-          for i in {1..60}; do
-            STATUS=$(docker inspect mimir-rules-provisioner --format='{{.State.Status}}' 2>/dev/null || echo "not_found")
-            EXIT_CODE=$(docker inspect mimir-rules-provisioner --format='{{.State.ExitCode}}' 2>/dev/null || echo "999")
-
-            if [ "$STATUS" = "exited" ] && [ "$EXIT_CODE" = "0" ]; then
-              echo "✓ Rules provisioner completed successfully"
-              docker logs mimir-rules-provisioner 2>&1 | tail -10
-              break
-            fi
-
-            if [ "$STATUS" = "exited" ] && [ "$EXIT_CODE" != "0" ]; then
-              echo "ERROR: Rules provisioner failed with exit code $EXIT_CODE"
-              docker logs mimir-rules-provisioner 2>&1
-              exit 1
-            fi
-
-            if [ $i -eq 1 ] || [ $((i % 10)) -eq 0 ]; then
-              echo "  Waiting for provisioner... (attempt $i/60, status: $STATUS)"
-            fi
-
-            if [ $i -eq 60 ]; then
-              echo "ERROR: Provisioner did not complete after 120s"
-              docker logs mimir-rules-provisioner 2>&1
-              docker logs mimir-test 2>&1 | tail -50
-              exit 1
-            fi
-            sleep 2
-          done
-
-          echo "Verifying rules are loaded in Mimir..."
-          RESPONSE=$(curl -sS -H 'Accept: application/yaml' http://localhost:9009/prometheus/config/v1/rules/e2e-test-namespace)
-          if echo "$RESPONSE" | grep -q "e2e-test-group"; then
-            echo "✓ e2e-test-group found in Mimir"
-          else
-            echo "ERROR: e2e-test-group not found"
-            echo "Response: $RESPONSE"
-            exit 1
-          fi
-
-      - name: Setup Playwright
-        uses: ./.github/actions/setup-playwright
-
-      - name: Run Playwright tests
-        id: run-tests
-        env:
-          I18NEXT_NO_SUPPORT_NOTICE: true
-        run: pnpm run e2e
-
-      - name: Upload e2e test summary
-        uses: grafana/plugin-actions/playwright-gh-pages/upload-report-artifacts@main # zizmor: ignore[unpinned-uses] provided by grafana
-        if: ${{ always() && !cancelled() }}
-        with:
-          upload-report: false
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          test-outcome: ${{ steps.run-tests.outcome }}
-
-      - name: Docker logs
-        if: ${{ always() && steps.run-tests.outcome == 'failure' }}
-        run: |
-          docker logs grafana-prometheusalerting-app >& grafana-server.log
-
-      - name: Stop grafana docker
-        run: docker compose down
+    with:
+      # No .nvmrc in this repo — pin to the Node.js major version used in mise.lock
+      node-version: "24"
+      # Append the PR commit SHA so each PR build gets a unique, identifiable version
+      plugin-version-suffix: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || '' }}

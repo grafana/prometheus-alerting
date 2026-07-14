@@ -1,39 +1,49 @@
-# This GitHub Action automates the process of building Grafana plugins.
-# (For more information, see https://github.com/grafana/plugin-actions/blob/main/build-plugin/README.md)
-name: Release
+# Shared workflow for building, testing and publishing a plugin release to the catalog.
+# Documentation: https://enghub.grafana-ops.net/docs/default/component/grafana-plugins-platform/plugins-ci-github-actions/010-plugins-ci-github-actions
+# All inputs are documented in the workflow file itself:
+# https://github.com/grafana/plugin-ci-workflows/blob/main/.github/workflows/cd.yml
+
+name: Plugins - CD
+run-name: Deploy ${{ inputs.branch }} to ${{ inputs.environment }} by @${{ github.actor }}
 
 on:
-  push:
-    tags:
-      - 'v*' # Run workflow on version tags, e.g. v1.0.0.
-  workflow_dispatch: # Allow manual triggering from GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch or tag to publish from. Can be used to deploy PRs to dev
+        default: main
+      environment:
+        description: Environment to publish to
+        required: true
+        type: choice
+        options:
+          - "dev"
+          - "ops"
+          - "prod-canary"
+          - "prod"
+      docs-only:
+        description: Only publish docs, do not publish the plugin
+        default: false
+        type: boolean
 
-permissions: read-all
+permissions: {}
 
 jobs:
-  release:
+  cd:
+    name: CD
+    uses: grafana/plugin-ci-workflows/.github/workflows/cd.yml@ci-cd-workflows/v10.1.0
     permissions:
-      id-token: write
       contents: write
+      pull-requests: read
+      id-token: write
       attestations: write
-
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-        with:
-          persist-credentials: false
-
-      - name: Install mise tools
-        uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
-        with:
-          install: true
-          cache: false
-          cache_save: false
-        env:
-          MISE_ENV: ci # Skip loading mise.local.toml (dev-only tools)
-
-      - uses: grafana/plugin-actions/build-plugin@62c2d322b176c9b104fae6b300029e08d0a0ee8e # build-plugin/v1.0.2
-        with:
-          node-version: "24.16"
-          policy_token: ${{ secrets.PLUGIN_SIGN_TOKEN }}
-          attestation: true
+    with:
+      branch: ${{ github.event.inputs.branch }}
+      environment: ${{ github.event.inputs.environment }}
+      docs-only: ${{ fromJSON(github.event.inputs.docs-only) }}
+      # Scope for the plugin when publishing it to the catalog.
+      # Choose between:
+      # - 'universal': on-prem + cloud (default)
+      # - 'grafana_cloud': cloud only, hidden for on-prem users
+      scopes: universal
+      publish-to-catalog-as-pending: true # Plugin will be hidden from catalog but available for provisioning

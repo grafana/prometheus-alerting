@@ -1,0 +1,40 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: Loading
+        - progressbar [ref=e8]
+      - main [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]: Sign in with Google
+          - generic [ref=e27]:
+            - heading "Sign in" [level=1] [ref=e28]
+            - generic [ref=e30]:
+              - text: to continue to
+              - button "Grafana Labs" [ref=e31] [cursor=pointer]
+        - generic [ref=e39]:
+          - generic [ref=e44]:
+            - textbox "Email or phone" [active] [ref=e45]
+            - generic: Email or phone
+          - button "Forgot email?" [ref=e49] [cursor=pointer]
+        - generic [ref=e51]:
+          - button "Next" [ref=e55]
+          - button "Create account" [ref=e63]
+    - contentinfo [ref=e70]:
+      - combobox "Change language English (United States)" [ref=e74] [cursor=pointer]:
+        - generic: English (United States)
+      - list [ref=e76]:
+        - listitem [ref=e77]:
+          - link "Open Google Account Help Center (external, opens in a new window)" [ref=e78] [cursor=pointer]:
+            - /url: https://support.google.com/accounts?hl=en-US&p=account_iph
+            - text: Help
+        - listitem [ref=e79]:
+          - link "Privacy Policy (external, opens in a new window)" [ref=e80] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=BE&hl=en-US&privacy=true
+            - text: Privacy
+        - listitem [ref=e81]:
+          - link "Google Terms of Service (external, opens in a new window)" [ref=e82] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=BE&hl=en-US
+            - text: Terms
+  - iframe [ref=e83]:
+    
