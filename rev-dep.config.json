@@ -27,7 +27,8 @@
           "@vitest/**",
           "@grafana/tsconfig",
           "webpack-cli",
-          "@popperjs/core"
+          "@popperjs/core",
+          "@grafana/sign-plugin"
         ],
         "pkgJsonFieldsWithBinaries": ["scripts"],
         "filesWithBinaries": [".husky/pre-commit"],

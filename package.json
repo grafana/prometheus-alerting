@@ -16,7 +16,7 @@
     "e2e:ui": "playwright test --ui --project=e2e-tests",
     "server": "docker compose up --build --force-recreate",
     "//sign": "Pinned intentionally — runs with GRAFANA_ACCESS_POLICY_TOKEN in ci.yml. Do not change to @latest; let Renovate bump the version.",
-    "sign": "npx --yes @grafana/sign-plugin@3.2.2",
+    "sign": "sign-plugin",
     "i18n-extract": "i18next --config src/locales/i18next-parser.config.js",
     "preinstall": "node scripts/check-mise.js",
     "prepare": "lefthook install || true"
@@ -28,6 +28,7 @@
     "@grafana/external-alertmanager": "workspace:*",
     "@grafana/external-rules": "workspace:*",
     "@grafana/plugin-e2e": "^3.8.0",
+    "@grafana/sign-plugin": "^3.2.2",
     "@grafana/tsconfig": "^2.1.0",
     "@playwright/test": "^1.60.0",
     "@stylistic/eslint-plugin-ts": "^4.4.1",

@@ -1,0 +1,54 @@
+# Shared workflow for building, testing and publishing a plugin release to the catalog.
+# Documentation: https://enghub.grafana-ops.net/docs/default/component/grafana-plugins-platform/plugins-ci-github-actions/010-plugins-ci-github-actions
+# All inputs are documented in the workflow file itself:
+# https://github.com/grafana/plugin-ci-workflows/blob/main/.github/workflows/cd.yml
+
+name: Plugins - CD
+run-name: Deploy ${{ inputs.branch }} to ${{ inputs.environment }} by @${{ github.actor }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch or tag to publish from. Can be used to deploy PRs to dev
+        default: main
+      environment:
+        description: Environment to publish to
+        required: true
+        type: choice
+        options:
+          - "dev"
+          - "ops"
+          - "prod-canary"
+          - "prod"
+      docs-only:
+        description: Only publish docs, do not publish the plugin
+        default: false
+        type: boolean
+
+permissions: {}
+
+jobs:
+  cd:
+    name: CD
+    uses: grafana/plugin-ci-workflows/.github/workflows/cd.yml@ci-cd-workflows/v10.1.0
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write
+      attestations: write
+    with:
+      branch: ${{ github.event.inputs.branch }}
+      environment: ${{ github.event.inputs.environment }}
+      docs-only: ${{ fromJSON(github.event.inputs.docs-only) }}
+      # Scope for the plugin when publishing it to the catalog.
+      # Choose between:
+      # - 'universal': on-prem + cloud (default)
+      # - 'grafana_cloud': cloud only, hidden for on-prem users
+      scopes: universal
+      publish-to-catalog-as-pending: true # Plugin will be hidden from catalog but available for provisioning
+      # This will trigger the Argo Workflow to update your plugin version in Grafana Cloud via deployment_tools
+      # grafana-cloud-deployment-type: provisioned
+      # Trigger Argo Workflow only when deploying from main branch (do not deploy PRs to the whole cluster)
+      # trigger-argo: ${{ github.event.inputs.branch == 'main' }}
+      # argo-workflow-slack-channel: "#alerting-xl-prometheus-alerting-plugin"
