@@ -9,18 +9,20 @@
     "alwaysStrict": true,
     "declaration": false,
     "rootDir": "../src",
-    "baseUrl": "../src",
     "typeRoots": ["../node_modules/@types"],
     "resolveJsonModule": true,
     "module": "esnext",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "paths": {
+      "*": ["../src/*"]
+    }
   },
   "ts-node": {
     "compilerOptions": {
-      "module": "commonjs",
-      "target": "es5",
+      "module": "nodenext",
+      "target": "es2022",
       "esModuleInterop": true,
-      "moduleResolution": "node"
+      "moduleResolution": "nodenext"
     },
     "transpileOnly": true
   },
