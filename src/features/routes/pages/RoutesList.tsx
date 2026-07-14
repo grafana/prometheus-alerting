@@ -17,7 +17,7 @@ import { useAlertGroups } from '../hooks/useAlertGroups';
 import { useRouteMatching, getRouteMatchCount } from '../hooks/useRouteMatching';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { useDeleteRoute } from '../hooks/useDeleteRoute';
-import { addUniqueIdentifier, findRouteById } from '../utils';
+import { addUniqueIdentifier, findRouteById, RouteTreeWithID } from '../utils';
 import { InsertPosition } from '../types';
 
 function RoutesPage() {
@@ -49,7 +49,7 @@ function RoutesPage() {
   }, [triggerFetchReceivers]);
 
   // Compute the inherited tree to show all properties including inherited ones
-  const routeTree = useMemo((): RouteWithID | undefined => {
+  const routeTree = useMemo((): RouteTreeWithID | undefined => {
     if (!route) {
       return undefined;
     }

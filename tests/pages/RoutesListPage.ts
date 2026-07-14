@@ -1,7 +1,6 @@
 import { Locator, expect } from '@playwright/test';
 import { AlertmanagerPage } from './AlertmanagerPage';
-
-type MatcherOperatorLabel = '=' | '!=' | '=~' | '!~';
+import { MatcherOperator } from '../../src/features/routes/types';
 
 /**
  * Page object for the Routes / notification tree view (`/routes`).
@@ -22,8 +21,6 @@ export class RoutesListPage extends AlertmanagerPage {
   readonly childRoutes: Locator;
   readonly newChildRouteButton: Locator;
 
-  // Route drawer (view/edit/add) and the stacked receiver drawer it can open, disambiguated by
-  // title — both render as role="dialog" and can be visible simultaneously.
   readonly routeDrawer: Locator;
   readonly receiverDrawer: Locator;
   readonly routeDrawerCloseButton: Locator;
@@ -56,14 +53,7 @@ export class RoutesListPage extends AlertmanagerPage {
     this.childRoutes = page.getByTestId('am-route-container');
     this.newChildRouteButton = page.getByRole('button', { name: /new child route/i });
 
-    // RouteDrawer's accessible name is its subtitle ("Route" / "Editing Route" / "New Route")
-    // concatenated with the route's own matchers/receiver text (both live under one
-    // aria-labelledby). Anchoring at the start means this can never match the "Delete Route"
-    // ConfirmModal, which also contains the word "Route" but doesn't start with it.
     this.routeDrawer = page.getByRole('dialog', { name: /^(New |Editing )?Route\b/ });
-    // ReceiverDrawer optionally renders a "Back to route" IconButton as a sibling of the title
-    // Stack; since the whole wrapper shares one aria-labelledby, its tooltip text ends up folded
-    // into the accessible name ahead of "Receiver" whenever `showBackButton` is set (as it is here).
     this.receiverDrawer = page.getByRole('dialog', { name: /^(Back to route )?(New |Editing )?Receiver\b/ });
     this.routeDrawerCloseButton = this.routeDrawer.getByRole('button', { name: 'Close', exact: true });
 
@@ -71,9 +61,6 @@ export class RoutesListPage extends AlertmanagerPage {
     this.deleteButton = this.routeDrawer.getByRole('button', { name: 'Delete', exact: true });
 
     this.addMatcherButton = this.routeDrawer.getByRole('button', { name: /add matcher/i });
-    // The Receiver field's Combobox has no label association (Grafana `Field` only wires
-    // `htmlFor` to an explicit child `id`, which this component doesn't set), so its accessible
-    // name falls back to its placeholder text.
     this.receiverSelector = this.routeDrawer.getByRole('combobox', { name: 'Select a receiver' });
     this.overrideGroupingToggle = this.routeDrawer.locator('#override-grouping-toggle');
     this.overrideTimingsToggle = this.routeDrawer.locator('#override-timings-toggle');
@@ -126,11 +113,7 @@ export class RoutesListPage extends AlertmanagerPage {
     await expect(this.routeDrawer).toBeHidden();
   }
 
-  /**
-   * Click the receiver link in the (view-mode) route drawer, opening the ReceiverDrawer. This
-   * replaces (unmounts) the route drawer rather than stacking on top of it — `goBackToRoute()`
-   * is the only way back.
-   */
+  /** Click the receiver link in the route drawer, opening the ReceiverDrawer (see class doc). */
   async openReceiverLink(receiverName: string) {
     await this.routeDrawer.getByRole('link', { name: receiverName, exact: true }).click();
     await expect(this.receiverDrawer).toBeVisible();
@@ -171,18 +154,14 @@ export class RoutesListPage extends AlertmanagerPage {
     return this.routeDrawer.getByPlaceholder('value').nth(index);
   }
 
-  /**
-   * The operator Combobox for matcher row `index`. It has no accessible name either, but matcher
-   * rows are always the first Comboboxes rendered in the form (receiver/group-by/mute-timings
-   * come after in the DOM), so a plain positional index scoped to the drawer reliably targets
-   * the right row.
-   */
+  /** Operator Combobox for matcher row `index` — matcher rows render first in the form, so a
+   * positional index reliably targets the right row. */
   matcherOperatorCombobox(index: number): Locator {
     return this.routeDrawer.getByRole('combobox').nth(index);
   }
 
   /** Append a new matcher row and fill it in one call. */
-  async addMatcher(params: { label: string; operator?: MatcherOperatorLabel; value: string }) {
+  async addMatcher(params: { label: string; operator?: MatcherOperator; value: string }) {
     const index = await this.routeDrawer.getByPlaceholder('label').count();
     await this.addMatcherButton.click();
     await this.matcherLabelInput(index).fill(params.label);
