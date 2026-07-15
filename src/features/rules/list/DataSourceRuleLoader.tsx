@@ -7,7 +7,7 @@ import { rulerApi } from '../../../api/rules/mimir.endpoints';
 import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
 
 const { useGetRuleGroupQuery } = rulerApi;
-import { getMatchingRulerRule } from '@grafana/external-rules/matching';
+import { getMatchingRulerRule, RulePositionHash } from '@grafana/external-rules/matching';
 
 import { RuleExporter } from '../export';
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
@@ -18,6 +18,7 @@ import { useRuleActions } from './hooks/useRuleActions';
 interface DataSourceRuleLoaderProps {
   rule: Rule;
   groupIdentifier: DataSourceRuleGroupIdentifier;
+  rulePositionHash: RulePositionHash;
 }
 
 /**
@@ -32,6 +33,7 @@ interface DataSourceRuleLoaderProps {
 export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
   rule,
   groupIdentifier,
+  rulePositionHash,
 }: DataSourceRuleLoaderProps) {
   const { rulesSource, namespace, groupName } = groupIdentifier;
 
@@ -60,8 +62,8 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
       return undefined;
     }
 
-    return getMatchingRulerRule(rulerRuleGroup.rules, rule);
-  }, [rulerRuleGroup, rule, rulerApiEnabled]);
+    return getMatchingRulerRule(rulerRuleGroup.rules, rule, rulePositionHash);
+  }, [rulerRuleGroup, rule, rulerApiEnabled, rulePositionHash]);
 
   const { handleDuplicate, handleSilence, handleDelete, handleExport, deleteModal, exportingRule, closeExportDrawer } =
     useRuleActions();

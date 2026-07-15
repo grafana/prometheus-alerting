@@ -7,6 +7,7 @@ import { merge } from 'ix/asynciterable/merge';
 import { catchError, concatMap, withAbort } from 'ix/asynciterable/operators';
 
 import { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
+import { createRulePositionHash } from '@grafana/external-rules/matching';
 
 import {
   DataSourceNamespaceIdentifier,
@@ -61,9 +62,9 @@ export function useFilteredRulesIteratorProvider() {
             concatMap((groups: PromRuleGroupDTO[]) =>
               groups
                 .filter((group: PromRuleGroupDTO) => groupFilter(group, normalizedFilterState))
-                .flatMap((group: PromRuleGroupDTO) => group.rules.map((rule) => ({ group, rule })))
+                .flatMap((group: PromRuleGroupDTO) => group.rules.map((rule, index) => ({ group, rule, index })))
                 .filter(({ rule }) => ruleFilter(rule, normalizedFilterState))
-                .map(({ group, rule }) => mapRuleToRuleWithOrigin(dataSourceIdentifier, group, rule))
+                .map(({ group, rule, index }) => mapRuleToRuleWithOrigin(dataSourceIdentifier, group, rule, index))
             ),
             catchError(() => empty())
           );
@@ -96,7 +97,8 @@ function mergeIterables(iterables: Array<AsyncIterableX<PromRuleWithOrigin>>): A
 function mapRuleToRuleWithOrigin(
   rulesSource: DataSourceRulesSourceIdentifier,
   group: PromRuleGroupDTO,
-  rule: PromRuleGroupDTO['rules'][0]
+  rule: PromRuleGroupDTO['rules'][0],
+  ruleIndex: number
 ): PromRuleWithOrigin {
   const namespace: DataSourceNamespaceIdentifier = { name: group.file };
   const groupIdentifier: DataSourceRuleGroupIdentifier = {
@@ -110,5 +112,6 @@ function mapRuleToRuleWithOrigin(
     rule,
     groupIdentifier,
     origin: 'datasource',
+    rulePositionHash: createRulePositionHash(ruleIndex, group.rules.length),
   };
 }

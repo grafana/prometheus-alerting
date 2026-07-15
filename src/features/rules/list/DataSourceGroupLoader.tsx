@@ -13,7 +13,7 @@ import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../
 
 const { useGetRuleGroupQuery } = rulerApi;
 import { hashRule } from '@grafana/external-rules/hashing';
-import { getMatchingRulerRule } from '@grafana/external-rules/matching';
+import { createRulePositionHash, getMatchingRulerRule } from '@grafana/external-rules/matching';
 import type { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vanilla';
 
 import { RuleExporter } from '../export';
@@ -118,10 +118,15 @@ export function DataSourceGroupLoader({
 
     return (
       <>
-        {promGroup.rules.map((rule: PromRuleDTO) => {
-          // Match the prometheus rule with its corresponding ruler rule if available
+        {promGroup.rules.map((rule: PromRuleDTO, index: number) => {
+          // Match the prometheus rule with its corresponding ruler rule if available. The position
+          // hash disambiguates fully-identical duplicate rules within the same group (see
+          // getMatchingRulerRule in @grafana/external-rules/matching).
+          const rulePositionHash = createRulePositionHash(index, promGroup.rules.length);
           const rulerRule =
-            rulerRuleGroup && shouldFetchRuler ? getMatchingRulerRule(rulerRuleGroup.rules, rule) : undefined;
+            rulerRuleGroup && shouldFetchRuler
+              ? getMatchingRulerRule(rulerRuleGroup.rules, rule, rulePositionHash)
+              : undefined;
 
           const actions = (
             <RuleActionsButtons
@@ -139,7 +144,7 @@ export function DataSourceGroupLoader({
 
           return (
             <DataSourceRuleListItem
-              key={hashRule(rule)}
+              key={`${hashRule(rule)}-${index}`}
               rule={rule}
               rulerRule={rulerRule}
               groupIdentifier={groupIdentifier}

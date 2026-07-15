@@ -1,4 +1,5 @@
 import { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vanilla';
+import type { RulePositionHash } from '@grafana/external-rules/matching';
 
 export type { PromRuleGroupDTO, PromRuleDTO };
 
@@ -59,6 +60,12 @@ export interface PromRuleWithOrigin {
   rule: PromRuleDTO;
   groupIdentifier: DataSourceRuleGroupIdentifier;
   origin: 'datasource';
+  /**
+   * The rule's position within its own group, e.g. `"0:3"` for the first rule of a 3-rule group.
+   * Used to disambiguate fully-identical duplicate rules when matching against the Ruler API --
+   * see `getMatchingRulerRule` in `@grafana/external-rules/matching`.
+   */
+  rulePositionHash: RulePositionHash;
 }
 
 // Normalize Prometheus state strings to StateIcon state types

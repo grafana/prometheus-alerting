@@ -146,9 +146,16 @@ function FilterViewResults({ filterState }: FilterViewProps) {
     <Stack direction="column" gap={0}>
       <ul aria-label={t('alerting.filter-view-results.aria-label-filteredrulelist', 'filtered-rule-list')}>
         {rules.map((ruleWithOrigin) => {
-          const { key, rule, groupIdentifier } = ruleWithOrigin;
+          const { key, rule, groupIdentifier, rulePositionHash } = ruleWithOrigin;
 
-          return <DataSourceRuleLoader key={key} rule={rule} groupIdentifier={groupIdentifier} />;
+          return (
+            <DataSourceRuleLoader
+              key={key}
+              rule={rule}
+              groupIdentifier={groupIdentifier}
+              rulePositionHash={rulePositionHash}
+            />
+          );
         })}
         {loading && (
           <>
