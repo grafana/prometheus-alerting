@@ -7,26 +7,32 @@ import {
 import { z } from 'zod';
 import yaml from 'js-yaml';
 
+import { RulesSourceApplication, getRulerApiBasePath } from '../../types/rules';
+
 interface GetRuleGroupParams {
   dataSourceUid: string;
   namespace: string;
   groupName: string;
+  application?: RulesSourceApplication;
 }
 
 interface DeleteRuleGroupParams {
   dataSourceUid: string;
   namespace: string;
   groupName: string;
+  application?: RulesSourceApplication;
 }
 
 interface UpsertRuleGroupParams {
   dataSourceUid: string;
   namespace: string;
   payload: RulerRuleGroupDTO;
+  application?: RulesSourceApplication;
 }
 
 interface GetAllRulesParams {
   dataSourceUid: string;
+  application?: RulesSourceApplication;
 }
 
 // Ruler rules config is a map of namespace -> array of rule groups
@@ -39,8 +45,8 @@ export const rulerApi = createApi({
   tagTypes: ['RulerRuleGroup'],
   endpoints: (build) => ({
     getRuleGroup: build.query<RulerRuleGroupDTO | null, GetRuleGroupParams>({
-      query: ({ dataSourceUid, namespace, groupName }) => ({
-        url: `/${dataSourceUid}/config/v1/rules/${encodeURIComponent(namespace)}/${encodeURIComponent(groupName)}`,
+      query: ({ dataSourceUid, namespace, groupName, application }) => ({
+        url: `/${dataSourceUid}/${getRulerApiBasePath(application ?? 'mimir')}/${encodeURIComponent(namespace)}/${encodeURIComponent(groupName)}`,
         responseHandler: 'text',
       }),
       transformResponse: (response: string): RulerRuleGroupDTO | null => {
@@ -61,8 +67,8 @@ export const rulerApi = createApi({
       responseSchema: GetRulerRuleGroupApiResponseSchema,
     }),
     deleteRuleGroup: build.mutation<void, DeleteRuleGroupParams>({
-      query: ({ dataSourceUid, namespace, groupName }) => ({
-        url: `/${dataSourceUid}/config/v1/rules/${encodeURIComponent(namespace)}/${encodeURIComponent(groupName)}`,
+      query: ({ dataSourceUid, namespace, groupName, application }) => ({
+        url: `/${dataSourceUid}/${getRulerApiBasePath(application ?? 'mimir')}/${encodeURIComponent(namespace)}/${encodeURIComponent(groupName)}`,
         method: 'DELETE',
       }),
       invalidatesTags: (_result, _error, { dataSourceUid, namespace, groupName }) => [
@@ -70,8 +76,8 @@ export const rulerApi = createApi({
       ],
     }),
     upsertRuleGroup: build.mutation<void, UpsertRuleGroupParams>({
-      query: ({ dataSourceUid, namespace, payload }) => ({
-        url: `/${dataSourceUid}/config/v1/rules/${encodeURIComponent(namespace)}`,
+      query: ({ dataSourceUid, namespace, payload, application }) => ({
+        url: `/${dataSourceUid}/${getRulerApiBasePath(application ?? 'mimir')}/${encodeURIComponent(namespace)}`,
         method: 'POST',
         headers: {
           'Content-Type': 'application/yaml',
@@ -84,8 +90,8 @@ export const rulerApi = createApi({
       ],
     }),
     getAllRules: build.query<RulerRulesConfigDTO, GetAllRulesParams>({
-      query: ({ dataSourceUid }) => ({
-        url: `/${dataSourceUid}/config/v1/rules`,
+      query: ({ dataSourceUid, application }) => ({
+        url: `/${dataSourceUid}/${getRulerApiBasePath(application ?? 'mimir')}`,
         responseHandler: 'text',
       }),
       transformResponse: (response: string): RulerRulesConfigDTO => {

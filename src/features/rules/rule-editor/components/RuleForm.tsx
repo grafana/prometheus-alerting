@@ -1,5 +1,6 @@
 import { css } from '@emotion/css';
 import React, { useMemo, useState } from 'react';
+import { skipToken } from '@reduxjs/toolkit/query';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +15,7 @@ import type { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { hashRulerRule } from '@grafana/external-rules/hashing';
 import { getRuleName } from '@grafana/external-rules/utils';
 
+import { useDiscoverFeaturesQuery } from '../../../../api/rules/featureDiscovery.endpoints';
 import { rulerApi } from '../../../../api/rules/mimir.endpoints';
 import { rules as rulesNav } from '../../../../utils/navigation';
 
@@ -51,6 +53,10 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
   const initialUid = existingRuleIdentifier?.uid ?? prefill?.dataSourceUid ?? null;
 
   const [currentDataSourceUid, setCurrentDataSourceUid] = useState<string | null>(initialUid);
+
+  const { data: dsFeatures } = useDiscoverFeaturesQuery(
+    currentDataSourceUid ? { uid: currentDataSourceUid } : skipToken
+  );
 
   // Create default form values, merging with prefill if provided
   const defaultValues: RuleFormValues = useMemo(() => {
@@ -118,7 +124,8 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
         currentDataSourceUid,
         values.namespace,
         values.group,
-        [action] // Pass actions array
+        [action], // Pass actions array
+        dsFeatures?.application
       );
 
       console.log('New rule group produced with', newRuleGroup.rules.length, 'rules:', newRuleGroup);
@@ -129,6 +136,7 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
         dataSourceUid: currentDataSourceUid,
         namespace: values.namespace,
         payload: newRuleGroup,
+        application: dsFeatures?.application,
       }).unwrap();
       console.log('API call successful:', result);
 

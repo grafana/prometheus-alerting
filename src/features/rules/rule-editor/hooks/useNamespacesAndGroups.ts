@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from 'react';
+import { skipToken } from '@reduxjs/toolkit/query';
 
+import { useDiscoverFeaturesQuery } from '../../../../api/rules/featureDiscovery.endpoints';
 import { rulerApi, RulerRulesConfigDTO } from '../../../../api/rules/mimir.endpoints';
 
 const { useLazyGetAllRulesQuery } = rulerApi;
@@ -11,12 +13,14 @@ const { useLazyGetAllRulesQuery } = rulerApi;
 export function useNamespacesAndGroups(dataSourceUid: string | null) {
   const [fetchRules, { data: rulerRules, isLoading }] = useLazyGetAllRulesQuery();
 
-  // Fetch rules when data source changes
+  const { data: features } = useDiscoverFeaturesQuery(dataSourceUid ? { uid: dataSourceUid } : skipToken);
+
+  // Fetch rules when data source or discovered path changes
   useEffect(() => {
-    if (dataSourceUid) {
-      fetchRules({ dataSourceUid });
+    if (dataSourceUid && features?.application) {
+      fetchRules({ dataSourceUid, application: features.application });
     }
-  }, [dataSourceUid, fetchRules]);
+  }, [dataSourceUid, features?.application, fetchRules]);
 
   // Transform ruler rules config into namespace -> groups map
   const namespaceGroups = useMemo(() => {

@@ -7,6 +7,7 @@ import { RawQuery } from '@grafana/plugin-ui';
 import { Trans } from '@grafana/i18n';
 import { promqlGrammar, lokiGrammar } from '../../utils/prismGrammars';
 import { createExploreLink } from '../../../../utils/navigation';
+import { RulesSourceApplication } from '../../../../types/rules';
 import { QueryPreviewPanel } from '../QueryPreviewPanel';
 
 interface Props {
@@ -20,6 +21,7 @@ export function QueryTab({ query, dataSourceUid }: Props) {
   // Get datasource type to determine language
   const dsSettings = getDataSourceSrv().getInstanceSettings(dataSourceUid);
   const dataSourceType = dsSettings?.type ?? 'prometheus';
+  const application: RulesSourceApplication = dataSourceType === 'loki' ? 'loki' : 'prometheus';
 
   const language =
     dataSourceType === 'loki' ? { grammar: lokiGrammar, name: 'logql' } : { grammar: promqlGrammar, name: 'promql' };
@@ -49,7 +51,7 @@ export function QueryTab({ query, dataSourceUid }: Props) {
       <pre className={styles.codeBlock}>
         <RawQuery query={query} language={language} />
       </pre>
-      <QueryPreviewPanel dataSourceUid={dataSourceUid} expression={query} />
+      <QueryPreviewPanel dataSourceUid={dataSourceUid} expression={query} application={application} />
     </div>
   );
 }

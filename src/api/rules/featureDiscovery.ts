@@ -1,4 +1,5 @@
-import { getBackendSrv, getDataSourceSrv } from '@grafana/runtime';
+import { getBackendSrv } from '@grafana/runtime';
+import { getDataSourceInstanceSettings } from '@grafana/runtime/unstable';
 import { lastValueFrom } from 'rxjs';
 
 import { DataSourceFeatures, PromBuildInfoResponse } from '../../types/rules';
@@ -11,8 +12,7 @@ const RULER_NOT_SUPPORTED_MSG = 'ruler API is not enabled';
  * Main feature discovery function that determines what capabilities a data source has
  */
 export async function discoverDataSourceFeatures(uid: string): Promise<DataSourceFeatures> {
-  const dataSourceSrv = getDataSourceSrv();
-  const dsSettings = dataSourceSrv.getInstanceSettings(uid);
+  const dsSettings = await getDataSourceInstanceSettings(uid);
 
   if (!dsSettings) {
     throw new Error(`Data source with uid "${uid}" not found`);
@@ -25,17 +25,19 @@ export async function discoverDataSourceFeatures(uid: string): Promise<DataSourc
 
   // No buildinfo endpoint available (Cortex or Loki)
   if (!buildInfo) {
+    const application = type === 'loki' ? 'loki' : 'cortex';
+
     // Check if we can fetch rules via the prometheus compatible api
-    const hasPromRules = await testPromRulesSupport(uid);
+    const hasPromRules = await testPromRulesSupport(uid, type);
     if (!hasPromRules) {
       throw new Error(`Unable to fetch alert rules. Is the data source properly configured?`);
     }
 
     // Check if the ruler API is enabled
-    const hasRuler = await testRulerSupport(uid);
+    const hasRuler = await testRulerSupport(uid, type);
 
     return {
-      application: type === 'loki' ? 'loki' : 'cortex',
+      application,
       rulerApiEnabled: hasRuler,
     };
   }
@@ -87,11 +89,13 @@ async function fetchBuildInfo(uid: string): Promise<PromBuildInfoResponse | unde
 /**
  * Test if the data source supports fetching rules via Prometheus API
  */
-async function testPromRulesSupport(uid: string): Promise<boolean> {
+async function testPromRulesSupport(uid: string, type: string): Promise<boolean> {
+  // Loki exposes a Prometheus-compatible rules API at a different path
+  const path = type === 'loki' ? 'api/prom/rules' : 'api/v1/rules';
   try {
     await lastValueFrom(
       getBackendSrv().fetch({
-        url: `/api/datasources/proxy/uid/${uid}/api/v1/rules`,
+        url: `/api/datasources/proxy/uid/${uid}/${path}`,
         showErrorAlert: false,
         showSuccessAlert: false,
       })
@@ -105,7 +109,13 @@ async function testPromRulesSupport(uid: string): Promise<boolean> {
 /**
  * Test if the data source supports the Ruler API for editing rules
  */
-async function testRulerSupport(uid: string): Promise<boolean> {
+async function testRulerSupport(uid: string, type: string): Promise<boolean> {
+  // For Loki, the ruler API lives at the same path as the rules read API.
+  // If testPromRulesSupport passed, the ruler is available.
+  if (type === 'loki') {
+    return testPromRulesSupport(uid, type);
+  }
+
   try {
     await lastValueFrom(
       getBackendSrv().fetch({
