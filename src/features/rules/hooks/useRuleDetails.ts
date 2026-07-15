@@ -54,6 +54,7 @@ export function useRuleDetails(identifier: DataSourceRuleIdentifier): RuleDetail
           dataSourceUid: uid,
           namespace,
           groupName,
+          application: features?.application,
         }
       : skipToken
   );
@@ -65,7 +66,7 @@ export function useRuleDetails(identifier: DataSourceRuleIdentifier): RuleDetail
     const promGroup = promGroups.find((g: PromRuleGroupDTO) => g.file === namespace && g.name === groupName);
 
     // Get Ruler group (only for CRI)
-    const rulerGroup = isCloudRule ? rulerQuery.data ?? undefined : undefined;
+    const rulerGroup = isCloudRule ? (rulerQuery.data ?? undefined) : undefined;
 
     // Strategy: If Ruler API is available and we have ruler data, use it as source of truth
     if (isCloudRule) {

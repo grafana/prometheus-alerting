@@ -1,10 +1,12 @@
 import React from 'react';
+import { skipToken } from '@reduxjs/toolkit/query';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 
 import { DataSourceInstanceSettings } from '@grafana/data';
 import { t } from '@grafana/i18n';
 import { Field, Input, Stack, Alert } from '@grafana/ui';
 
+import { useDiscoverFeaturesQuery } from '../../../../api/rules/featureDiscovery.endpoints';
 import { QueryPreviewPanel } from '../../components/QueryPreviewPanel';
 import { RuleFormValues } from '../types';
 import { RuleEditorSection } from './RuleEditorSection';
@@ -31,6 +33,8 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
   });
 
   const isRecording = isCloudRecordingRuleByType(type);
+
+  const { data: dsFeatures } = useDiscoverFeaturesQuery(dataSourceUid ? { uid: dataSourceUid } : skipToken);
 
   return (
     <RuleEditorSection
@@ -141,7 +145,13 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
 
         {/* Query Preview */}
         {dataSourceUid && expression && (
-          <QueryPreviewPanel dataSourceUid={dataSourceUid} expression={expression} collapsible defaultCollapsed />
+          <QueryPreviewPanel
+            dataSourceUid={dataSourceUid}
+            expression={expression}
+            application={dsFeatures?.application}
+            collapsible
+            defaultCollapsed
+          />
         )}
       </Stack>
     </RuleEditorSection>
