@@ -52,6 +52,7 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
           dataSourceUid: rulesSource.uid,
           namespace: namespace.name,
           groupName,
+          application: dsFeatures?.application,
         }
       : skipToken
   );

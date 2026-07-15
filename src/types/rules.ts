@@ -33,6 +33,38 @@ export interface DataSourceFeatures {
   rulerApiEnabled: boolean;
 }
 
+/**
+ * Returns the ruler API base path for the given application type.
+ * Used to build URLs like /api/datasources/proxy/uid/{uid}/{rulerApiPath}/{namespace}/{group}
+ */
+export function getRulerApiBasePath(application: RulesSourceApplication): string {
+  switch (application) {
+    case 'loki':
+      return 'api/prom/rules';
+    case 'mimir':
+    case 'cortex':
+    case 'prometheus':
+    default:
+      return 'config/v1/rules';
+  }
+}
+
+/**
+ * Returns the instant query API path for the given application type.
+ * Used to build URLs like /api/datasources/proxy/uid/{uid}/{queryApiPath}
+ */
+export function getQueryApiPath(application: RulesSourceApplication): string {
+  switch (application) {
+    case 'loki':
+      return 'loki/api/v1/query';
+    case 'mimir':
+    case 'cortex':
+    case 'prometheus':
+    default:
+      return 'api/v1/query';
+  }
+}
+
 export interface DataSourceRulesSourceIdentifier {
   uid: string;
   name: string;

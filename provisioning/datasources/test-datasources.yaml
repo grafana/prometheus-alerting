@@ -58,3 +58,16 @@ datasources:
       customQueryParameters: ''
       disableRecordingRules: false
     version: 1
+
+  # Loki with Ruler API - for testing Loki rule creation/editing
+  - name: Test Loki
+    type: loki
+    uid: test-loki
+    url: http://loki:3100
+    access: proxy
+    isDefault: false
+    editable: true
+    jsonData:
+      manageAlerts: true
+      maxLines: 1000
+    version: 1

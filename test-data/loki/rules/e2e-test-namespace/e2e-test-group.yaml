@@ -1,0 +1,28 @@
+name: e2e-test-group
+interval: 1m
+rules:
+  - alert: TestEditRule
+    expr: sum(count_over_time({job="grafana"}[5m])) > 1000
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: Original summary for testing edit
+      description: This rule is used for testing the edit functionality
+
+  - alert: TestCloneRule
+    expr: sum(count_over_time({job="grafana"}[5m])) > 0
+    for: 2m
+    labels:
+      severity: info
+    annotations:
+      summary: Rule to be cloned
+
+  - alert: TestAlwaysPending
+    expr: sum(count_over_time({job="grafana"}[5m])) >= 0
+    for: 1h
+    labels:
+      severity: critical
+    annotations:
+      summary: Rule with long for duration to stay in pending state

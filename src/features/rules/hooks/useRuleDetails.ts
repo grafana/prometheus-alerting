@@ -59,6 +59,7 @@ export function useRuleDetails(identifier: DataSourceRuleIdentifier): RuleDetail
           dataSourceUid: uid,
           namespace,
           groupName,
+          application: features?.application,
         }
       : skipToken
   );

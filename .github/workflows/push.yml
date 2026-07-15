@@ -23,7 +23,5 @@ jobs:
       contents: read
       id-token: write
     with:
-      # No .nvmrc in this repo — pin to the Node.js major version used in mise.lock
-      node-version: "24"
       # Append the PR commit SHA so each PR build gets a unique, identifiable version
       plugin-version-suffix: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || '' }}
