@@ -117,39 +117,6 @@ export function formAmRouteToAmRoute(formAmRoute: Partial<FormAmRoute>): Route {
 }
 
 /**
- * Merge an updated route into an existing route tree
- */
-export function mergeRouteIntoTree(routeTree: Route, routeId: string, updatedRoute: Partial<FormAmRoute>): Route {
-  const mergedRoute = formAmRouteToAmRoute(updatedRoute);
-
-  function findAndReplace(route: Route, parentIndex = '0'): Route {
-    const currentId = 'id' in route ? (route as RouteWithID).id : parentIndex;
-
-    if (currentId === routeId) {
-      // Found the route to update - merge changes
-      return {
-        ...route,
-        ...mergedRoute,
-        // Preserve routes if not explicitly updating them
-        routes: mergedRoute.routes ?? route.routes,
-      };
-    }
-
-    // Recurse into child routes
-    if (route.routes) {
-      return {
-        ...route,
-        routes: route.routes.map((child, index) => findAndReplace(child, `${parentIndex}-${index}`)),
-      };
-    }
-
-    return route;
-  }
-
-  return findAndReplace(routeTree);
-}
-
-/**
  * Validate a Prometheus duration string (e.g., "5m", "1h30m")
  * Empty strings are valid (inherits from parent)
  *

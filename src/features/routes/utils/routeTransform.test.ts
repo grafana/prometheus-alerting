@@ -2,7 +2,7 @@ import { Route } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 
 import { MatcherOperator, FormAmRoute } from '../types';
-import { amRouteToFormAmRoute, formAmRouteToAmRoute, mergeRouteIntoTree, isValidPromDuration } from './routeTransform';
+import { amRouteToFormAmRoute, formAmRouteToAmRoute, isValidPromDuration } from './routeTransform';
 
 describe('amRouteToFormAmRoute', () => {
   it('returns empty route for undefined input', () => {
@@ -149,69 +149,6 @@ describe('formAmRouteToAmRoute', () => {
     const result = formAmRouteToAmRoute(form);
 
     expect(result.matchers).toEqual(['valid=yes']);
-  });
-});
-
-describe('mergeRouteIntoTree', () => {
-  it('updates a route by ID in a flat tree', () => {
-    const tree: RouteWithID = {
-      id: 'root',
-      receiver: 'default',
-      routes: [
-        { id: 'child-1', receiver: 'slack' } as RouteWithID,
-        { id: 'child-2', receiver: 'email' } as RouteWithID,
-      ],
-    };
-
-    const update: Partial<FormAmRoute> = {
-      receiver: 'updated-slack',
-    };
-
-    const result = mergeRouteIntoTree(tree, 'child-1', update);
-
-    expect((result.routes![0] as RouteWithID).receiver).toBe('updated-slack');
-    expect((result.routes![1] as RouteWithID).receiver).toBe('email');
-  });
-
-  it('preserves timing when overrideTimings is true', () => {
-    const tree: RouteWithID = {
-      id: 'root',
-      receiver: 'default',
-    };
-
-    const update: Partial<FormAmRoute> = {
-      receiver: 'new-receiver',
-      overrideTimings: true,
-      groupWaitValue: '30s',
-      groupIntervalValue: '5m',
-      repeatIntervalValue: '1h',
-    };
-
-    const result = mergeRouteIntoTree(tree, 'root', update);
-
-    expect(result.receiver).toBe('new-receiver');
-    expect(result.group_wait).toBe('30s');
-    expect(result.group_interval).toBe('5m');
-    expect(result.repeat_interval).toBe('1h');
-  });
-
-  it('clears timing values when overrideTimings is false (inherit from parent)', () => {
-    const tree: RouteWithID = {
-      id: 'root',
-      receiver: 'default',
-      group_wait: '30s',
-    };
-
-    const update: Partial<FormAmRoute> = {
-      receiver: 'new-receiver',
-      overrideTimings: false,
-    };
-
-    const result = mergeRouteIntoTree(tree, 'root', update);
-
-    expect(result.receiver).toBe('new-receiver');
-    // Timing values are undefined when not overriding (inherit from parent)
-    expect(result.group_wait).toBeUndefined();
   });
 });
 

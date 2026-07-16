@@ -10,8 +10,8 @@ import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints'
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { extractErrorMessage } from '../../../utils/errors';
 import { FormAmRoute, InsertPosition } from '../types';
+import { attachRouteIds } from '../utils';
 import { formAmRouteToAmRoute } from '../utils/routeTransform';
-import { addUniqueIdentifier } from '../utils';
 import { useRoutes } from './useRoutes';
 
 interface UseAddRouteResult {
@@ -59,7 +59,7 @@ export function useAddRoute(): UseAddRouteResult {
 
         // 2. Add deterministic IDs to the fetched tree (matching UI IDs)
         const currentRouteTree = currentConfig.alertmanager_config.route as Route;
-        const routeTreeWithIds = addUniqueIdentifier(currentRouteTree);
+        const routeTreeWithIds = attachRouteIds(currentRouteTree);
 
         // 3. Add the new route to the tree
         const routeToAdd = formAmRouteToAmRoute(newRoute);

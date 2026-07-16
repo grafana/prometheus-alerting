@@ -9,7 +9,7 @@ import { getAppEvents } from '@grafana/runtime';
 import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { extractErrorMessage } from '../../../utils/errors';
-import { addUniqueIdentifier } from '../utils';
+import { attachRouteIds } from '../utils';
 import { useRoutes } from './useRoutes';
 
 interface UseDeleteRouteResult {
@@ -57,7 +57,7 @@ export function useDeleteRoute(): UseDeleteRouteResult {
 
         // 2. Add deterministic IDs to the fetched tree (matching UI IDs), then remove the route
         const currentRouteTree = currentConfig.alertmanager_config.route as Route;
-        const routeTreeWithIds = addUniqueIdentifier(currentRouteTree);
+        const routeTreeWithIds = attachRouteIds(currentRouteTree);
         const updatedRouteTree = omitRouteFromRouteTree(routeId, routeTreeWithIds);
 
         // 3. Strip IDs before saving (Alertmanager doesn't need them) and build the updated configuration
