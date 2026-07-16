@@ -3,12 +3,12 @@ import { produce } from 'immer';
 import { addRouteAction, deleteRouteAction, routesReducer, updateRouteAction } from './routes';
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import {
-  addUniqueIdentifierToRoute,
   initialAlertmanagerConfiguration,
   PostableParsedUserConfiguration,
   PostableParsedUserConfigurationSchema,
   RouteWithID,
 } from '@grafana/external-alertmanager/mimir';
+import { attachRouteIds } from '../../features/routes/utils';
 
 describe('routes', () => {
   const defaultRoute: Route = {
@@ -39,7 +39,7 @@ describe('routes', () => {
     group_wait: '10s',
     group_interval: '1m',
   };
-  const rootRouteWithIdentifiers = addUniqueIdentifierToRoute(defaultRoute);
+  const rootRouteWithIdentifiers = attachRouteIds(defaultRoute);
   const ROOT_identifier = rootRouteWithIdentifiers.id;
   const A_identifier = rootRouteWithIdentifiers.routes![0].id;
 
@@ -53,7 +53,7 @@ describe('routes', () => {
     template_files: {},
   };
   it('Should add a new route with receiver E as a child of default route', () => {
-    const routeWithID = addUniqueIdentifierToRoute({
+    const routeWithID = attachRouteIds({
       receiver: 'E',
     });
     const newFormRoute: Partial<RouteWithID> = {
@@ -83,7 +83,7 @@ describe('routes', () => {
   });
 
   it('Should not add a new route with receiver E as a child of route with receiver A, if data has been updated by another user', () => {
-    const routeWithID = addUniqueIdentifierToRoute({
+    const routeWithID = attachRouteIds({
       receiver: 'E',
     });
     const newFormRoute: Partial<RouteWithID> = {
@@ -98,7 +98,7 @@ describe('routes', () => {
     const modifiedConfig = produce(initialConfig, (draft) => {
       draft.alertmanager_config.route!.routes = [];
     });
-    const rootRouteWithIdentifiers = addUniqueIdentifierToRoute(modifiedConfig.alertmanager_config.route!);
+    const rootRouteWithIdentifiers = attachRouteIds(modifiedConfig.alertmanager_config.route!);
     const modifiedConfigWithIdentifiers = produce(modifiedConfig, (draft) => {
       draft.alertmanager_config.route = rootRouteWithIdentifiers;
     });
@@ -130,7 +130,7 @@ describe('routes', () => {
     const modifiedConfig = produce(initialConfig, (draft) => {
       draft.alertmanager_config.route!.routes = [];
     });
-    const rootRouteWithIdentifiers = addUniqueIdentifierToRoute(modifiedConfig.alertmanager_config.route!);
+    const rootRouteWithIdentifiers = attachRouteIds(modifiedConfig.alertmanager_config.route!);
     const modifiedConfigWithIdentifiers = produce(modifiedConfig, (draft) => {
       draft.alertmanager_config.route = rootRouteWithIdentifiers;
     });

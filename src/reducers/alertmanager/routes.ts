@@ -1,7 +1,6 @@
 import { createAction, createReducer } from '@reduxjs/toolkit';
 
 import {
-  addUniqueIdentifierToRoute,
   addRouteToReferenceRoute,
   cleanRouteIDs,
   mergePartialRouteWithRouteTree,
@@ -10,6 +9,8 @@ import {
   RouteWithID,
   initialAlertmanagerConfiguration,
 } from '@grafana/external-alertmanager/mimir';
+
+import { attachRouteIds } from '../../features/routes/utils';
 
 export const updateRouteAction = createAction<{ update: Partial<RouteWithID> }>('routes/update');
 export const deleteRouteAction = createAction<{ id: string }>('routes/delete');
@@ -34,7 +35,7 @@ export const routesReducer = createReducer(initialAlertmanagerConfiguration, (bu
         return;
       }
 
-      const rootRouteWithIdentifiers = addUniqueIdentifierToRoute(alertmanager_config.route);
+      const rootRouteWithIdentifiers = attachRouteIds(alertmanager_config.route);
       const newRouteTree = mergePartialRouteWithRouteTree(update, rootRouteWithIdentifiers);
       alertmanager_config.route = cleanRouteIDs(newRouteTree);
     })
@@ -48,7 +49,7 @@ export const routesReducer = createReducer(initialAlertmanagerConfiguration, (bu
         return;
       }
 
-      const rootRouteWithIdentifiers = addUniqueIdentifierToRoute(alertmanager_config.route);
+      const rootRouteWithIdentifiers = attachRouteIds(alertmanager_config.route);
       const updatedRouteTree = omitRouteFromRouteTree(id, rootRouteWithIdentifiers);
       draft.alertmanager_config.route = cleanRouteIDs(updatedRouteTree);
     })
@@ -61,7 +62,7 @@ export const routesReducer = createReducer(initialAlertmanagerConfiguration, (bu
         return;
       }
 
-      const rootRouteWithIdentifiers = addUniqueIdentifierToRoute(alertmanager_config.route);
+      const rootRouteWithIdentifiers = attachRouteIds(alertmanager_config.route);
       const updatedRouteTree = addRouteToReferenceRoute(
         partialRoute,
         rootRouteWithIdentifiers,
