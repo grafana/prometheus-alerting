@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
+import { skipToken } from '@reduxjs/toolkit/query';
 import { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { matchRulerRuleById } from '@grafana/external-rules/matching';
 
+import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
 import { rulerApi } from '../../../api/rules/mimir.endpoints';
 
 const { useGetRuleGroupQuery } = rulerApi;
@@ -25,12 +27,19 @@ export interface RulerRuleResult {
 export function useRulerRule(identifier: CloudRuleIdentifier): RulerRuleResult {
   const { uid, namespace, groupName } = identifier;
 
+  const { data: features } = useDiscoverFeaturesQuery({ uid });
+
   // Fetch from Ruler API - this gives us the configuration
-  const rulerQuery = useGetRuleGroupQuery({
-    dataSourceUid: uid,
-    namespace,
-    groupName,
-  });
+  const rulerQuery = useGetRuleGroupQuery(
+    features
+      ? {
+          dataSourceUid: uid,
+          namespace,
+          groupName,
+          application: features.application,
+        }
+      : skipToken
+  );
 
   // Extract the specific rule from the group using matching logic
   const { rulerRule, rulerGroup } = useMemo(() => {

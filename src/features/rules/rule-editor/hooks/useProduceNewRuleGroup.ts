@@ -1,5 +1,6 @@
 import { Action } from '@reduxjs/toolkit';
 import { rulerApi } from '../../../../api/rules/mimir.endpoints';
+import { RulesSourceApplication } from '../../../../types/rules';
 import { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { ruleGroupReducer, addRuleAction } from '../ruleGroupReducer';
 import { isNotFoundError } from '../../../../utils/errors';
@@ -44,13 +45,15 @@ export function useProduceNewRuleGroup() {
     dataSourceUid: string,
     namespace: string,
     groupName: string,
-    actions: Action[]
+    actions: Action[],
+    application?: RulesSourceApplication
   ): Promise<RulerRuleGroupDTO> => {
     // Fetch the latest rule group definition
     const latestRuleGroupDefinition = await fetchRuleGroup({
       dataSourceUid,
       namespace,
       groupName,
+      application,
     })
       .unwrap()
       .catch((error: unknown) => {

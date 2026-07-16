@@ -1,0 +1,52 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: info
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    # Use local filesystem for chunks — avoids slow S3 GetChunkIDs fan-out
+    # that would cause every rule query to hit the 15s default timeout.
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+ruler:
+  # Ruler rule storage stays on S3 so the ruler HTTP API (push/delete) works.
+  storage:
+    type: s3
+    s3:
+      endpoint: minio:9000
+      bucketnames: loki-ruler
+      access_key_id: mimir
+      secret_access_key: mimirmimir
+      insecure: true
+      s3forcepathstyle: true
+  rule_path: /tmp/loki-ruler
+  alertmanager_url: http://alertmanager:9093
+  enable_api: true
+  enable_alertmanager_v2: true
+  # Speed up rule propagation for E2E tests
+  poll_interval: 2s
+
+limits_config:
+  allow_structured_metadata: true
+  volume_enabled: true

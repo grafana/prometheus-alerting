@@ -5,6 +5,7 @@ import { Trans, t } from '@grafana/i18n';
 import { getAppEvents } from '@grafana/runtime';
 import { Alert, Button, Modal } from '@grafana/ui';
 
+import { useDiscoverFeaturesQuery } from '../../../../api/rules/featureDiscovery.endpoints';
 import { rulerApi } from '../../../../api/rules/mimir.endpoints';
 import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { useRuleConsistencyCheck } from '../../hooks/useRuleConsistencyCheck';
@@ -19,6 +20,7 @@ interface DeleteRuleModalProps {
 export function DeleteRuleModal({ identifier, onClose }: DeleteRuleModalProps) {
   const [deleteRuleGroup, { isLoading: isDeleting }] = useDeleteRuleGroupMutation();
   const { waitForRemoval } = useRuleConsistencyCheck();
+  const { data: dsFeatures } = useDiscoverFeaturesQuery({ uid: identifier.uid });
   const [error, setError] = useState<string | null>(null);
   const [isWaitingForConsistency, setIsWaitingForConsistency] = useState(false);
 
@@ -31,6 +33,7 @@ export function DeleteRuleModal({ identifier, onClose }: DeleteRuleModalProps) {
         dataSourceUid: identifier.uid,
         namespace: identifier.namespace,
         groupName: identifier.groupName,
+        application: dsFeatures?.application,
       }).unwrap();
 
       // Step 2: Wait for Prometheus API to reflect the deletion
