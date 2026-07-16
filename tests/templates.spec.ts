@@ -1,19 +1,11 @@
-import {
-  test,
-  expect,
-  VANILLA_ALERTMANAGER_UID,
-  VANILLA_ALERTMANAGER_NAME,
-  MIMIR_ALERTMANAGER_UID,
-  MIMIR_ALERTMANAGER_NAME,
-} from './fixtures/alertmanager';
+import { test, expect, VANILLA_ALERTMANAGER_UID, VANILLA_ALERTMANAGER_NAME } from './fixtures/alertmanager';
 
 /**
  * Templates e2e (`/templates`).
  *
  * Vanilla `test-alertmanager` has no seeded templates and no configuration API — used only for
- * the empty-state / hidden-create-button checks. Write tests use the Mimir
- * `test-mimir-alertmanager` (editable). Resetting the Mimir config leaves zero templates (unlike
- * receivers/inhibit rules, the minimal reset config has no `templates` or `template_files` keys).
+ * the empty-state / hidden-create-button checks. Write tests use a dedicated, fixture-created
+ * Mimir tenant (editable). Its initialized config has no templates.
  */
 
 test.describe('Templates', () => {
@@ -29,12 +21,8 @@ test.describe('Templates', () => {
   });
 
   test.describe('Mimir Alertmanager (CRUD)', () => {
-    // Mimir stores one config per tenant → serialize and reset between tests.
-    test.describe.configure({ mode: 'serial' });
-
-    test.beforeEach(async ({ templatesPage, resetMimirConfig }) => {
-      await resetMimirConfig();
-      await templatesPage.gotoWithAlertmanager(MIMIR_ALERTMANAGER_UID);
+    test.beforeEach(async ({ templatesPage, mimirAlertmanager }) => {
+      await templatesPage.gotoWithAlertmanager(mimirAlertmanager.uid);
     });
 
     test('creates a template and shows it in the list', async ({ templatesPage }) => {
@@ -97,6 +85,7 @@ test.describe('Templates', () => {
 
     test('switching Alertmanager hides the Mimir template and shows it again on switch-back', async ({
       templatesPage,
+      mimirAlertmanager,
     }) => {
       await templatesPage.openCreateDrawer();
       await templatesPage.fillName('switch-test.tmpl');
@@ -107,7 +96,7 @@ test.describe('Templates', () => {
       await templatesPage.selectAlertmanager(VANILLA_ALERTMANAGER_NAME);
       await expect(templatesPage.emptyStateMessage).toBeVisible();
 
-      await templatesPage.selectAlertmanager(MIMIR_ALERTMANAGER_NAME);
+      await templatesPage.selectAlertmanager(mimirAlertmanager.name);
       await expect(templatesPage.getRow('switch-test.tmpl')).toBeVisible();
     });
   });
