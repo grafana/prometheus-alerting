@@ -2,13 +2,14 @@ import { useCallback, useState } from 'react';
 
 import { AppEvents } from '@grafana/data';
 import { Route } from '@grafana/external-alertmanager/vanilla';
+import { cleanRouteIDs, omitRouteFromRouteTree } from '@grafana/external-alertmanager/mimir';
 import { t } from '@grafana/i18n';
 import { getAppEvents } from '@grafana/runtime';
 
 import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { extractErrorMessage } from '../../../utils/errors';
-import { removeRouteFromTree } from '../utils/routeTransform';
+import { addUniqueIdentifier } from '../utils';
 import { useRoutes } from './useRoutes';
 
 interface UseDeleteRouteResult {
@@ -54,16 +55,18 @@ export function useDeleteRoute(): UseDeleteRouteResult {
           throw new Error('No route configuration found');
         }
 
-        // 2. Remove the route from the tree
+        // 2. Add deterministic IDs to the fetched tree (matching UI IDs), then remove the route
         const currentRouteTree = currentConfig.alertmanager_config.route as Route;
-        const updatedRouteTree = removeRouteFromTree(currentRouteTree, routeId);
+        const routeTreeWithIds = addUniqueIdentifier(currentRouteTree);
+        const updatedRouteTree = omitRouteFromRouteTree(routeId, routeTreeWithIds);
 
-        // 3. Build the updated configuration
+        // 3. Strip IDs before saving (Alertmanager doesn't need them) and build the updated configuration
+        const cleanRouteTree = cleanRouteIDs(updatedRouteTree);
         const updatedConfig = {
           ...currentConfig,
           alertmanager_config: {
             ...currentConfig.alertmanager_config,
-            route: updatedRouteTree,
+            route: cleanRouteTree,
           },
         };
 
