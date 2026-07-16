@@ -74,7 +74,12 @@ function RoutesPage() {
   // Type assertion needed for the same package type differences
   const matchingCounts = useRouteMatching(routeTree as Parameters<typeof useRouteMatching>[0], alertGroups);
 
-  const selectedRoute = selectedRouteId && routeTree ? (findExistingRoute(selectedRouteId, routeTree) ?? null) : null;
+  const selectedRoute = useMemo(() => {
+    if (!selectedRouteId || !routeTree) {
+      return null;
+    }
+    return findExistingRoute(selectedRouteId, routeTree) ?? null;
+  }, [selectedRouteId, routeTree]);
 
   // Find the selected receiver
   const selectedReceiver = useMemo(() => {
