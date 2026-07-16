@@ -9,7 +9,7 @@ import { t } from '@grafana/i18n';
 import { computeInheritedTree } from '@grafana/alerting';
 import { RouteCard } from '../components/RouteCard';
 import { Receiver } from '@grafana/external-alertmanager/vanilla';
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
+import { RouteWithID, findExistingRoute } from '@grafana/external-alertmanager/mimir';
 import { RouteDrawer, DrawerMode } from '../components/RouteDrawer';
 import { ReceiverDrawer } from '../../receivers/components/ReceiverDrawer';
 import { useReceivers } from '../../receivers/hooks/useReceivers';
@@ -24,7 +24,9 @@ function RoutesPage() {
   const { route, isLoading, error, isSuccess } = useRoutes();
   const { alertGroups, isLoading: isLoadingAlerts } = useAlertGroups();
   const { settings } = useAlertmanager();
-  const [selectedRoute, setSelectedRoute] = useState<RouteWithID | null>(null);
+  // Track the selected route by id rather than by object, so the drawer always renders the
+  // latest fetched data (e.g. right after a successful edit) instead of a stale snapshot.
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [selectedReceiverName, setSelectedReceiverName] = useState<string | null>(null);
   const [triggerFetchReceivers, { receivers = [] }] = useReceivers();
 
@@ -72,6 +74,13 @@ function RoutesPage() {
   // Type assertion needed for the same package type differences
   const matchingCounts = useRouteMatching(routeTree as Parameters<typeof useRouteMatching>[0], alertGroups);
 
+  const selectedRoute = useMemo(() => {
+    if (!selectedRouteId || !routeTree) {
+      return null;
+    }
+    return findExistingRoute(selectedRouteId, routeTree) ?? null;
+  }, [selectedRouteId, routeTree]);
+
   // Find the selected receiver
   const selectedReceiver = useMemo(() => {
     if (!selectedReceiverName) {
@@ -89,7 +98,7 @@ function RoutesPage() {
   };
 
   const handleRouteDrawerClose = () => {
-    setSelectedRoute(null);
+    setSelectedRouteId(null);
     setSelectedReceiverName(null);
     setDrawerMode(DrawerMode.View);
     setReferenceRouteId(undefined);
@@ -97,7 +106,7 @@ function RoutesPage() {
 
   // Handle clicking on a route to view it
   const handleRouteClick = useCallback((route: RouteWithID) => {
-    setSelectedRoute(route);
+    setSelectedRouteId(route.id);
     setDrawerMode(DrawerMode.View);
   }, []);
 
@@ -105,7 +114,7 @@ function RoutesPage() {
   const handleAddRoute = useCallback((referenceRoute: RouteWithID, position: InsertPosition) => {
     setReferenceRouteId(referenceRoute.id);
     setInsertPosition(position);
-    setSelectedRoute(null); // Clear selected route since we're adding new
+    setSelectedRouteId(null); // Clear selected route since we're adding new
     setDrawerMode(DrawerMode.Add);
   }, []);
 
@@ -121,12 +130,12 @@ function RoutesPage() {
       if (success) {
         setRouteToDelete(null);
         // Close drawer if the deleted route was selected
-        if (selectedRoute?.id === routeToDelete.id) {
-          setSelectedRoute(null);
+        if (selectedRouteId === routeToDelete.id) {
+          setSelectedRouteId(null);
         }
       }
     }
-  }, [routeToDelete, deleteRoute, selectedRoute]);
+  }, [routeToDelete, deleteRoute, selectedRouteId]);
 
   // Check if the currently selected route can be deleted (not the root route)
   const canDeleteSelectedRoute = Boolean(selectedRoute && selectedRoute.id !== routeTree?.id);
@@ -203,7 +212,7 @@ function RoutesPage() {
         confirmText={t('routes.delete.confirm-button', 'Delete')}
         onConfirm={handleConfirmDelete}
         onDismiss={() => setRouteToDelete(null)}
-        confirmButtonVariant="destructive"
+        confirmVariant="destructive"
         disabled={isDeleting}
       />
     </AlertmanagerPage>

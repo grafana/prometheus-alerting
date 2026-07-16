@@ -3,6 +3,7 @@ import pluginJson from '../../src/plugin.json';
 import { resetMimirAlertmanagerConfig } from '../api/alertmanagerConfig';
 import { InhibitRulesPage } from '../pages/InhibitRulesPage';
 import { ReceiversPage } from '../pages/ReceiversPage';
+import { RoutesListPage } from '../pages/RoutesListPage';
 import { TemplatesPage } from '../pages/TemplatesPage';
 
 /**
@@ -17,6 +18,7 @@ export const MIMIR_ALERTMANAGER_NAME = 'Test Mimir Alertmanager';
 type AlertmanagerTestFixture = {
   inhibitRulesPage: InhibitRulesPage;
   receiversPage: ReceiversPage;
+  routesListPage: RoutesListPage;
   templatesPage: TemplatesPage;
   /**
    * Reset the (single, shared) Mimir Alertmanager config to empty. Returns a callable so
@@ -34,6 +36,10 @@ export const test = base.extend<AlertmanagerTestFixture>({
   receiversPage: async ({ page }, use) => {
     const receiversPage = new ReceiversPage(page, pluginJson.id);
     await use(receiversPage);
+  },
+  routesListPage: async ({ page }, use) => {
+    const routesListPage = new RoutesListPage(page, pluginJson.id);
+    await use(routesListPage);
   },
   templatesPage: async ({ page }, use) => {
     const templatesPage = new TemplatesPage(page, pluginJson.id);
