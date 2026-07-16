@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import { AppEvents } from '@grafana/data';
+import { addRouteToReferenceRoute, cleanRouteIDs } from '@grafana/external-alertmanager/mimir';
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { getAppEvents } from '@grafana/runtime';
@@ -9,8 +10,8 @@ import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints'
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { extractErrorMessage } from '../../../utils/errors';
 import { FormAmRoute, InsertPosition } from '../types';
-import { addRouteToTree, stripRouteIds } from '../utils/routeTransform';
-import { addUniqueIdentifier } from '../utils';
+import { attachRouteIds } from '../utils';
+import { formAmRouteToAmRoute } from '../utils/routeTransform';
 import { useRoutes } from './useRoutes';
 
 interface UseAddRouteResult {
@@ -58,13 +59,14 @@ export function useAddRoute(): UseAddRouteResult {
 
         // 2. Add deterministic IDs to the fetched tree (matching UI IDs)
         const currentRouteTree = currentConfig.alertmanager_config.route as Route;
-        const routeTreeWithIds = addUniqueIdentifier(currentRouteTree);
+        const routeTreeWithIds = attachRouteIds(currentRouteTree);
 
         // 3. Add the new route to the tree
-        const updatedRouteTree = addRouteToTree(routeTreeWithIds, referenceRouteId, newRoute, position);
+        const routeToAdd = formAmRouteToAmRoute(newRoute);
+        const updatedRouteTree = addRouteToReferenceRoute(routeToAdd, routeTreeWithIds, position, referenceRouteId);
 
         // 4. Strip IDs before saving (Alertmanager doesn't need them)
-        const cleanRouteTree = stripRouteIds(updatedRouteTree);
+        const cleanRouteTree = cleanRouteIDs(updatedRouteTree);
 
         // 5. Build the updated configuration
         const updatedConfig = {
