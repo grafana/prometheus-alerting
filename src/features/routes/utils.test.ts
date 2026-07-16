@@ -1,44 +1,54 @@
 import { describe, it, expect } from 'vitest';
-import { addUniqueIdentifier } from './utils';
+import { computeInheritedTree } from '@grafana/alerting';
+import { attachRouteIds } from './utils';
 
-describe('addUniqueIdentifier', () => {
-  it('assigns "0" as the root id', () => {
-    const result = addUniqueIdentifier({ receiver: 'default' });
-    expect(result.id).toBe('0');
+describe('attachRouteIds', () => {
+  it('assigns content-hash ids to the root and its children', () => {
+    const result = attachRouteIds({ receiver: 'default', routes: [{ receiver: 'a' }, { receiver: 'b' }] });
+
+    expect(result.id).toMatch(/^0-/);
+    expect(result.routes![0].id).toMatch(/^0-0-/);
+    expect(result.routes![1].id).toMatch(/^0-1-/);
   });
 
-  it('assigns positional ids to children', () => {
-    const result = addUniqueIdentifier({
-      receiver: 'default',
-      routes: [{ receiver: 'a' }, { receiver: 'b' }],
-    });
-    expect(result.routes![0].id).toBe('0.0');
-    expect(result.routes![1].id).toBe('0.1');
+  it('assigns stable ids for the same raw route content', () => {
+    const route = { receiver: 'default', routes: [{ receiver: 'a' }] };
+
+    const first = attachRouteIds(route);
+    const second = attachRouteIds(route);
+
+    expect(first.id).toBe(second.id);
+    expect(first.routes![0].id).toBe(second.routes![0].id);
   });
 
-  it('assigns ids recursively to grandchildren', () => {
-    const result = addUniqueIdentifier({
-      receiver: 'default',
-      routes: [
-        {
-          receiver: 'a',
-          routes: [{ receiver: 'a1' }, { receiver: 'a2' }],
-        },
-      ],
-    });
-    expect(result.routes![0].routes![0].id).toBe('0.0.0');
-    expect(result.routes![0].routes![1].id).toBe('0.0.1');
+  it('defaults `continue` without changing other fields', () => {
+    const result = attachRouteIds({ receiver: 'default', matchers: ['foo=bar'] });
+
+    expect(result.continue).toBe(false);
+    expect(result.receiver).toBe('default');
+    expect(result.matchers).toEqual(['foo=bar']);
   });
 
-  it('returns empty routes array when no children', () => {
-    const result = addUniqueIdentifier({ receiver: 'default' });
+  it('returns empty routes array when there are no children', () => {
+    const result = attachRouteIds({ receiver: 'default' });
+
     expect(result.routes).toEqual([]);
   });
 
-  it('preserves all original route properties', () => {
-    const result = addUniqueIdentifier({ receiver: 'default', matchers: ['foo=bar'], continue: true });
-    expect(result.receiver).toBe('default');
-    expect(result.matchers).toEqual(['foo=bar']);
-    expect(result.continue).toBe(true);
+  it('preserves ids after being passed through computeInheritedTree', () => {
+    const route = {
+      receiver: 'default',
+      routes: [{ receiver: 'a' }, { receiver: 'b', routes: [{ receiver: 'b1' }] }],
+    };
+
+    const routeWithIds = attachRouteIds(route);
+    const inheritedTree = computeInheritedTree(
+      routeWithIds as Parameters<typeof computeInheritedTree>[0]
+    ) as unknown as typeof routeWithIds;
+
+    expect(inheritedTree.id).toBe(routeWithIds.id);
+    expect(inheritedTree.routes![0].id).toBe(routeWithIds.routes![0].id);
+    expect(inheritedTree.routes![1].id).toBe(routeWithIds.routes![1].id);
+    expect(inheritedTree.routes![1].routes![0].id).toBe(routeWithIds.routes![1].routes![0].id);
   });
 });

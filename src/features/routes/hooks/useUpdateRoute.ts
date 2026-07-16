@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import { AppEvents } from '@grafana/data';
+import { cleanRouteIDs, mergePartialRouteWithRouteTree } from '@grafana/external-alertmanager/mimir';
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { getAppEvents } from '@grafana/runtime';
@@ -9,7 +10,8 @@ import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints'
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { extractErrorMessage } from '../../../utils/errors';
 import { FormAmRoute } from '../types';
-import { mergeRouteIntoTree } from '../utils/routeTransform';
+import { attachRouteIds } from '../utils';
+import { formAmRouteToAmRoute } from '../utils/routeTransform';
 import { useRoutes } from './useRoutes';
 
 interface UseUpdateRouteResult {
@@ -55,16 +57,20 @@ export function useUpdateRoute(): UseUpdateRouteResult {
           throw new Error('No route configuration found');
         }
 
-        // 2. Merge the updated route into the tree
+        // 2. Add deterministic IDs to the fetched tree (matching UI IDs), then merge the update
         const currentRouteTree = currentConfig.alertmanager_config.route as Route;
-        const updatedRouteTree = mergeRouteIntoTree(currentRouteTree, routeId, update);
+        const routeTreeWithIds = attachRouteIds(currentRouteTree);
 
-        // 3. Build the updated configuration
+        const partialUpdatedRoute = { ...formAmRouteToAmRoute(update), id: routeId };
+        const updatedRouteTree = mergePartialRouteWithRouteTree(partialUpdatedRoute, routeTreeWithIds);
+
+        // 3. Strip IDs before saving (Alertmanager doesn't need them) and build the updated configuration
+        const cleanRouteTree = cleanRouteIDs(updatedRouteTree);
         const updatedConfig = {
           ...currentConfig,
           alertmanager_config: {
             ...currentConfig.alertmanager_config,
-            route: updatedRouteTree,
+            route: cleanRouteTree,
           },
         };
 
