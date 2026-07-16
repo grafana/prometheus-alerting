@@ -187,7 +187,7 @@ export function RouteDrawer({
     } else if (route) {
       const success = await updateRoute(route.id, values);
       if (success) {
-        setMode(DrawerMode.View);
+        onClose();
       }
     }
   };
