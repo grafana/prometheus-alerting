@@ -212,7 +212,7 @@ function RoutesPage() {
         confirmText={t('routes.delete.confirm-button', 'Delete')}
         onConfirm={handleConfirmDelete}
         onDismiss={() => setRouteToDelete(null)}
-        confirmButtonVariant="destructive"
+        confirmVariant="destructive"
         disabled={isDeleting}
       />
     </AlertmanagerPage>
