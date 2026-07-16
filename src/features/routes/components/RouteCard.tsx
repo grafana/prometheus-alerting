@@ -24,6 +24,7 @@ import { attachSkeleton } from '@grafana/ui/unstable';
 import { normalizeMatchers, ObjectMatcher, stringifyObjectMatcher } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { MetaText } from 'features/rules/list/components/MetaText';
+import MoreButton from 'features/rules/list/components/MoreButton';
 import { AlertLabel } from '@grafana/alerting';
 import { RouteMatchingCounts, getRouteMatchCount } from '../hooks/useRouteMatching';
 import { InsertPosition } from '../types';
@@ -38,6 +39,7 @@ interface Props {
   focussedRouteID?: string;
   matchingCounts?: RouteMatchingCounts;
   onAddRoute?: (referenceRoute: RouteWithID, position: InsertPosition) => void;
+  onEditRoute?: (route: RouteWithID) => void;
   onDeleteRoute?: (route: RouteWithID) => void;
   readOnly?: boolean;
 }
@@ -51,6 +53,7 @@ const RouteCard = (props: Props) => {
     focussedRouteID,
     matchingCounts,
     onAddRoute,
+    onEditRoute,
     onDeleteRoute,
     readOnly = false,
   } = props;
@@ -138,58 +141,89 @@ const RouteCard = (props: Props) => {
                   )}
                 </Stack>
 
-                {/* Add route actions */}
-                {!readOnly && onAddRoute && (
-                  <div onClick={(e) => e.stopPropagation()}>
-                    {isDefault ? (
-                      <Button
-                        size="sm"
-                        icon="plus"
-                        variant="secondary"
-                        onClick={() => onAddRoute(currentRoute, 'child')}
-                      >
-                        <Trans i18nKey="alerting.routes.new-child">New child route</Trans>
-                      </Button>
-                    ) : (
-                      <Dropdown
-                        overlay={
-                          <Menu>
-                            <Menu.Item
-                              label={t('alerting.route.label-new-sibling-above', 'New sibling above')}
-                              icon="arrow-up"
-                              onClick={() => onAddRoute(currentRoute, 'above')}
-                            />
-                            <Menu.Item
-                              label={t('alerting.route.label-new-sibling-below', 'New sibling below')}
-                              icon="arrow-down"
-                              onClick={() => onAddRoute(currentRoute, 'below')}
-                            />
-                            <Menu.Divider />
-                            <Menu.Item
-                              label={t('alerting.route.label-new-child-route', 'New child route')}
-                              icon="plus"
-                              onClick={() => onAddRoute(currentRoute, 'child')}
-                            />
-                            {onDeleteRoute && (
-                              <>
+                {/* Add / More route actions */}
+                {((!readOnly && onAddRoute) || onRouteClick || (!readOnly && (onEditRoute || onDeleteRoute))) && (
+                  <Stack direction="row" alignItems="center" gap={1}>
+                    {!readOnly && onAddRoute && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        {isDefault ? (
+                          <Button
+                            size="sm"
+                            icon="plus"
+                            variant="secondary"
+                            onClick={() => onAddRoute(currentRoute, 'child')}
+                          >
+                            <Trans i18nKey="alerting.routes.new-child">New child route</Trans>
+                          </Button>
+                        ) : (
+                          <Dropdown
+                            overlay={
+                              <Menu>
+                                <Menu.Item
+                                  label={t('alerting.route.label-new-sibling-above', 'New sibling above')}
+                                  icon="arrow-up"
+                                  onClick={() => onAddRoute(currentRoute, 'above')}
+                                />
+                                <Menu.Item
+                                  label={t('alerting.route.label-new-sibling-below', 'New sibling below')}
+                                  icon="arrow-down"
+                                  onClick={() => onAddRoute(currentRoute, 'below')}
+                                />
                                 <Menu.Divider />
                                 <Menu.Item
-                                  label={t('alerting.route.label-delete-route', 'Delete route')}
-                                  icon="trash-alt"
-                                  destructive
-                                  onClick={() => onDeleteRoute(currentRoute)}
+                                  label={t('alerting.route.label-new-child-route', 'New child route')}
+                                  icon="plus"
+                                  onClick={() => onAddRoute(currentRoute, 'child')}
                                 />
-                              </>
-                            )}
-                          </Menu>
-                        }
-                      >
-                        <Button size="sm" icon="plus" variant="secondary">
-                          <Trans i18nKey="alerting.routes.add-route">Add</Trans>
-                        </Button>
-                      </Dropdown>
+                              </Menu>
+                            }
+                          >
+                            <Button size="sm" icon="plus" variant="secondary">
+                              <Trans i18nKey="alerting.routes.add-route">Add</Trans>
+                            </Button>
+                          </Dropdown>
+                        )}
+                      </div>
                     )}
-                  </div>
+
+                    {(onRouteClick || (!readOnly && (onEditRoute || onDeleteRoute))) && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Dropdown
+                          overlay={
+                            <Menu>
+                              {onRouteClick && (
+                                <Menu.Item
+                                  label={t('alerting.route.label-details', 'Details')}
+                                  icon="eye"
+                                  onClick={() => onRouteClick(currentRoute)}
+                                />
+                              )}
+                              {!readOnly && onEditRoute && (
+                                <Menu.Item
+                                  label={t('alerting.route.label-edit-route', 'Edit')}
+                                  icon="pen"
+                                  onClick={() => onEditRoute(currentRoute)}
+                                />
+                              )}
+                              {!readOnly && onDeleteRoute && !isDefault && (
+                                <>
+                                  <Menu.Divider />
+                                  <Menu.Item
+                                    label={t('alerting.route.label-delete-route', 'Delete route')}
+                                    icon="trash-alt"
+                                    destructive
+                                    onClick={() => onDeleteRoute(currentRoute)}
+                                  />
+                                </>
+                              )}
+                            </Menu>
+                          }
+                        >
+                          <MoreButton size="sm" />
+                        </Dropdown>
+                      </div>
+                    )}
+                  </Stack>
                 )}
               </Stack>
             </div>
@@ -222,6 +256,7 @@ const RouteCard = (props: Props) => {
                 onRouteClick={onRouteClick}
                 focussedRouteID={focussedRouteID}
                 onAddRoute={onAddRoute}
+                onEditRoute={onEditRoute}
                 onDeleteRoute={onDeleteRoute}
                 readOnly={readOnly}
               />

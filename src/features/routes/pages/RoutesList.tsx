@@ -10,13 +10,15 @@ import { computeInheritedTree } from '@grafana/alerting';
 import { RouteCard } from '../components/RouteCard';
 import { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
-import { RouteDrawer, DrawerMode } from '../components/RouteDrawer';
+import { RouteViewDrawer } from '../components/RouteViewDrawer';
+import { RouteEditDrawer } from '../components/RouteEditDrawer';
 import { ReceiverDrawer } from '../../receivers/components/ReceiverDrawer';
 import { useReceivers } from '../../receivers/hooks/useReceivers';
 import { useAlertGroups } from '../hooks/useAlertGroups';
 import { useRouteMatching, getRouteMatchCount } from '../hooks/useRouteMatching';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { useDeleteRoute } from '../hooks/useDeleteRoute';
+import { useRouteDrawer } from '../hooks/useRouteDrawer';
 import { attachRouteIds } from '../utils';
 import { InsertPosition } from '../types';
 
@@ -24,16 +26,11 @@ function RoutesPage() {
   const { route, isLoading, error, isSuccess } = useRoutes();
   const { alertGroups, isLoading: isLoadingAlerts } = useAlertGroups();
   const { settings } = useAlertmanager();
-  const [selectedRoute, setSelectedRoute] = useState<RouteWithID | null>(null);
+  const [drawerState, dispatchDrawer] = useRouteDrawer();
   const [selectedReceiverName, setSelectedReceiverName] = useState<string | null>(null);
   const [triggerFetchReceivers, { receivers = [] }] = useReceivers();
 
-  // State for add mode
-  const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
-  const [referenceRouteId, setReferenceRouteId] = useState<string | undefined>(undefined);
-  const [insertPosition, setInsertPosition] = useState<InsertPosition>('child');
-
-  // State for delete confirmation from RouteCard
+  // State for delete confirmation (from the RouteCard menu or the view drawer)
   const [routeToDelete, setRouteToDelete] = useState<RouteWithID | null>(null);
   const { deleteRoute, isDeleting } = useDeleteRoute();
 
@@ -88,28 +85,37 @@ function RoutesPage() {
     setSelectedReceiverName(null);
   };
 
-  const handleRouteDrawerClose = () => {
-    setSelectedRoute(null);
-    setSelectedReceiverName(null);
-    setDrawerMode(DrawerMode.View);
-    setReferenceRouteId(undefined);
-  };
-
   // Handle clicking on a route to view it
-  const handleRouteClick = useCallback((route: RouteWithID) => {
-    setSelectedRoute(route);
-    setDrawerMode(DrawerMode.View);
-  }, []);
+  const handleRouteClick = useCallback(
+    (route: RouteWithID) => {
+      dispatchDrawer({ type: 'view', route });
+    },
+    [dispatchDrawer]
+  );
+
+  // Handle editing a route directly (from the RouteCard menu, or the view drawer's Edit button)
+  const handleEditRoute = useCallback(
+    (route: RouteWithID) => {
+      dispatchDrawer({ type: 'edit', route });
+    },
+    [dispatchDrawer]
+  );
 
   // Handle adding a new route
-  const handleAddRoute = useCallback((referenceRoute: RouteWithID, position: InsertPosition) => {
-    setReferenceRouteId(referenceRoute.id);
-    setInsertPosition(position);
-    setSelectedRoute(null); // Clear selected route since we're adding new
-    setDrawerMode(DrawerMode.Add);
-  }, []);
+  const handleAddRoute = useCallback(
+    (referenceRoute: RouteWithID, position: InsertPosition) => {
+      dispatchDrawer({ type: 'add', referenceRouteId: referenceRoute.id, insertPosition: position });
+    },
+    [dispatchDrawer]
+  );
 
-  // Handle deleting a route (from RouteCard menu)
+  // Closes whichever drawer (view/edit/add) is currently open
+  const handleDrawerClose = useCallback(() => {
+    dispatchDrawer({ type: 'close' });
+    setSelectedReceiverName(null);
+  }, [dispatchDrawer]);
+
+  // Handle deleting a route (from the RouteCard menu, or the view drawer's Delete button)
   const handleDeleteRoute = useCallback((route: RouteWithID) => {
     setRouteToDelete(route);
   }, []);
@@ -120,16 +126,17 @@ function RoutesPage() {
       const success = await deleteRoute(routeToDelete.id);
       if (success) {
         setRouteToDelete(null);
-        // Close drawer if the deleted route was selected
-        if (selectedRoute?.id === routeToDelete.id) {
-          setSelectedRoute(null);
+        // Close the view/edit drawer if the deleted route was open in it
+        const openRoute = drawerState.type === 'view' || drawerState.type === 'edit' ? drawerState.route : null;
+        if (openRoute?.id === routeToDelete.id) {
+          dispatchDrawer({ type: 'close' });
         }
       }
     }
-  }, [routeToDelete, deleteRoute, selectedRoute]);
+  }, [routeToDelete, deleteRoute, drawerState, dispatchDrawer]);
 
-  // Check if the currently selected route can be deleted (not the root route)
-  const canDeleteSelectedRoute = Boolean(selectedRoute && selectedRoute.id !== routeTree?.id);
+  // Check if the route currently open in the view drawer can be deleted (not the root route)
+  const canDeleteViewingRoute = drawerState.type === 'view' && drawerState.route.id !== routeTree?.id;
   const routeToDeleteHasChildren = routeToDelete?.routes && routeToDelete.routes.length > 0;
 
   return (
@@ -161,8 +168,11 @@ function RoutesPage() {
                 matchingCounts={isLoadingAlerts ? undefined : matchingCounts}
                 isDefault={true}
                 onRouteClick={handleRouteClick}
-                focussedRouteID={selectedRoute?.id}
+                focussedRouteID={
+                  drawerState.type === 'view' || drawerState.type === 'edit' ? drawerState.route.id : undefined
+                }
                 onAddRoute={canEdit ? handleAddRoute : undefined}
+                onEditRoute={canEdit ? handleEditRoute : undefined}
                 onDeleteRoute={canEdit ? handleDeleteRoute : undefined}
                 readOnly={!canEdit}
               />
@@ -170,24 +180,29 @@ function RoutesPage() {
           )}
         </ViewState>
       </div>
-      {/* Show drawer for viewing/editing selected route OR adding new route */}
-      {(selectedRoute || drawerMode === DrawerMode.Add) && (
-        <RouteDrawer
-          route={selectedRoute}
-          onClose={handleRouteDrawerClose}
+      {drawerState.type === 'view' && (
+        <RouteViewDrawer
+          route={drawerState.route}
+          onClose={handleDrawerClose}
           onReceiverClick={handleReceiverClick}
-          canEdit={canEdit}
-          canDelete={canEdit && canDeleteSelectedRoute}
-          mode={drawerMode}
-          referenceRouteId={referenceRouteId}
-          insertPosition={insertPosition}
+          onEdit={canEdit ? () => handleEditRoute(drawerState.route) : undefined}
+          onDelete={canEdit && canDeleteViewingRoute ? () => handleDeleteRoute(drawerState.route) : undefined}
+        />
+      )}
+      {drawerState.type === 'edit' && <RouteEditDrawer route={drawerState.route} onClose={handleDrawerClose} />}
+      {drawerState.type === 'add' && (
+        <RouteEditDrawer
+          route={null}
+          referenceRouteId={drawerState.referenceRouteId}
+          insertPosition={drawerState.insertPosition}
+          onClose={handleDrawerClose}
         />
       )}
       {selectedReceiverName && (
         <ReceiverDrawer receiver={selectedReceiver} onClose={handleReceiverDrawerClose} showBackButton={true} />
       )}
 
-      {/* Delete confirmation modal (from RouteCard menu) */}
+      {/* Delete confirmation modal (from the RouteCard menu or the view drawer) */}
       <ConfirmModal
         isOpen={routeToDelete !== null}
         title={t('routes.delete.confirm-title', 'Delete Route')}
