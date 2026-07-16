@@ -1,20 +1,25 @@
 import { Route } from '@grafana/external-alertmanager/vanilla';
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
+import { RouteWithID, addUniqueIdentifierToRoute } from '@grafana/external-alertmanager/mimir';
 
 /**
- * Adds deterministic IDs to a route tree based on position.
- * IDs are stable across re-fetches as long as the tree structure doesn't change.
- *
- * Example IDs:
- * - Root: "0"
- * - First child: "0.0"
- * - Second child: "0.1"
- * - First grandchild of first child: "0.0.0"
+ * Recursively defaults fields whose presence/absence would otherwise change the
+ * content hash (e.g. `continue`), so IDs stay stable regardless of whether a given
+ * fetch/response omits default values.
  */
-export function addUniqueIdentifier(route: Route, parentId = '0'): RouteWithID {
+function normalizeRoute(route: Route): Route {
   return {
-    id: parentId,
     ...route,
-    routes: route.routes?.map((child, index) => addUniqueIdentifier(child, `${parentId}.${index}`)) ?? [],
+    continue: route.continue ?? false,
+    routes: route.routes?.map(normalizeRoute),
   };
+}
+
+/**
+ * Normalizes and attaches deterministic (content-hash) IDs to a route tree. Must be
+ * used everywhere a route tree needs IDs — and called before any further processing
+ * (e.g. computeInheritedTree) — so hashes stay consistent between the UI's display
+ * tree and hooks' freshly-fetched trees.
+ */
+export function attachRouteIds(route: Route): RouteWithID {
+  return addUniqueIdentifierToRoute(normalizeRoute(route));
 }

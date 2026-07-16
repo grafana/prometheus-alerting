@@ -8,7 +8,7 @@ import { DataSourceError } from '../../../components/AlertmanagerError';
 import { t } from '@grafana/i18n';
 import { computeInheritedTree } from '@grafana/alerting';
 import { RouteCard } from '../components/RouteCard';
-import { Route, Receiver } from '@grafana/external-alertmanager/vanilla';
+import { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { RouteDrawer, DrawerMode } from '../components/RouteDrawer';
 import { ReceiverDrawer } from '../../receivers/components/ReceiverDrawer';
@@ -17,7 +17,7 @@ import { useAlertGroups } from '../hooks/useAlertGroups';
 import { useRouteMatching, getRouteMatchCount } from '../hooks/useRouteMatching';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { useDeleteRoute } from '../hooks/useDeleteRoute';
-import { addUniqueIdentifier } from '../utils';
+import { attachRouteIds } from '../utils';
 import { InsertPosition } from '../types';
 
 function RoutesPage() {
@@ -52,21 +52,20 @@ function RoutesPage() {
       return undefined;
     }
 
-    // Ensure route has required properties for computeInheritedTree
+    // Attach IDs to the raw tree first so they're based on the raw, fetched
+    // content — matching what the add/delete/update hooks compute — before
+    // computeInheritedTree fills in inherited display fields on child nodes.
+    const routeWithIds = attachRouteIds(route);
+
     // Type assertion needed due to package type differences between
-    // @grafana/external-alertmanager and @grafana/alerting
-    const normalizedRoute = {
-      ...route,
-      continue: route.continue ?? false,
-    } as Parameters<typeof computeInheritedTree>[0];
+    // @grafana/external-alertmanager and @grafana/alerting. computeInheritedTree
+    // returns a type from @grafana/alerting/unstable which has matchers as
+    // RoutingTreeMatcher[] instead of string[] - this is the one cross-package
+    // boundary where we need type assertions. IDs survive untouched since
+    // computeInheritedTree only ever spreads existing own-properties.
+    const inheritedTree = computeInheritedTree(routeWithIds);
 
-    // computeInheritedTree returns a type from @grafana/alerting/unstable
-    // which has matchers as RoutingTreeMatcher[]. We need to convert to
-    // @grafana/external-alertmanager Route type which uses matchers as string[].
-    // This is a cross-package boundary - the one place where we need type assertion.
-    const inheritedTree = computeInheritedTree(normalizedRoute) as unknown as Route;
-
-    return addUniqueIdentifier(inheritedTree);
+    return inheritedTree;
   }, [route]);
 
   // Compute matching counts for each route in the tree
@@ -130,7 +129,7 @@ function RoutesPage() {
   }, [routeToDelete, deleteRoute, selectedRoute]);
 
   // Check if the currently selected route can be deleted (not the root route)
-  const canDeleteSelectedRoute = Boolean(selectedRoute && selectedRoute.id !== '0');
+  const canDeleteSelectedRoute = Boolean(selectedRoute && selectedRoute.id !== routeTree?.id);
   const routeToDeleteHasChildren = routeToDelete?.routes && routeToDelete.routes.length > 0;
 
   return (
