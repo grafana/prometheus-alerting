@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 
 import { AppEvents } from '@grafana/data';
-import { cleanRouteIDs, omitRouteFromRouteTree } from '@grafana/external-alertmanager/mimir';
 import { Route } from '@grafana/external-alertmanager/vanilla';
+import { cleanRouteIDs, omitRouteFromRouteTree } from '@grafana/external-alertmanager/mimir';
 import { t } from '@grafana/i18n';
 import { getAppEvents } from '@grafana/runtime';
 
