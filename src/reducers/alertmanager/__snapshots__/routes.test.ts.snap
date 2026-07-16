@@ -11,6 +11,7 @@ exports[`routes > Should add a new route with receiver E as a child of default r
       },
     ],
     "route": {
+      "continue": false,
       "group_by": [
         "grafana_folder",
       ],
@@ -19,12 +20,14 @@ exports[`routes > Should add a new route with receiver E as a child of default r
       "receiver": "ROOT",
       "routes": [
         {
+          "continue": false,
           "matchers": [
             "team=operations",
           ],
           "receiver": "A",
           "routes": [
             {
+              "continue": false,
               "matchers": [
                 "region=europe",
               ],
@@ -32,6 +35,7 @@ exports[`routes > Should add a new route with receiver E as a child of default r
               "routes": [],
             },
             {
+              "continue": false,
               "matchers": [
                 "region=nasa",
               ],
@@ -41,6 +45,7 @@ exports[`routes > Should add a new route with receiver E as a child of default r
           ],
         },
         {
+          "continue": false,
           "matchers": [
             "foo=bar",
           ],
@@ -71,6 +76,7 @@ exports[`routes > Should delete route 1`] = `
       },
     ],
     "route": {
+      "continue": false,
       "group_by": [
         "grafana_folder",
       ],
@@ -79,6 +85,7 @@ exports[`routes > Should delete route 1`] = `
       "receiver": "ROOT",
       "routes": [
         {
+          "continue": false,
           "matchers": [
             "foo=bar",
           ],
@@ -105,6 +112,7 @@ exports[`routes > Should update an existing route A with receiver B 1`] = `
       },
     ],
     "route": {
+      "continue": false,
       "group_by": [
         "grafana_folder",
       ],
@@ -113,12 +121,14 @@ exports[`routes > Should update an existing route A with receiver B 1`] = `
       "receiver": "ROOT",
       "routes": [
         {
+          "continue": false,
           "matchers": [
             "team=operations",
           ],
           "receiver": "B",
           "routes": [
             {
+              "continue": false,
               "matchers": [
                 "region=europe",
               ],
@@ -126,6 +136,7 @@ exports[`routes > Should update an existing route A with receiver B 1`] = `
               "routes": [],
             },
             {
+              "continue": false,
               "matchers": [
                 "region=nasa",
               ],
@@ -135,6 +146,7 @@ exports[`routes > Should update an existing route A with receiver B 1`] = `
           ],
         },
         {
+          "continue": false,
           "matchers": [
             "foo=bar",
           ],

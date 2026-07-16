@@ -1,15 +1,12 @@
 import { useCallback, useState } from 'react';
 
 import { AppEvents } from '@grafana/data';
-import { Route } from '@grafana/external-alertmanager/vanilla';
-import { cleanRouteIDs, omitRouteFromRouteTree } from '@grafana/external-alertmanager/mimir';
 import { t } from '@grafana/i18n';
 import { getAppEvents } from '@grafana/runtime';
 
-import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints';
-import { useAlertmanager } from '../../../hooks/useAlertmanager';
+import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
+import { deleteRouteAction } from '../../../reducers/alertmanager/routes';
 import { extractErrorMessage } from '../../../utils/errors';
-import { attachRouteIds } from '../utils';
 import { useRoutes } from './useRoutes';
 
 interface UseDeleteRouteResult {
@@ -21,65 +18,22 @@ interface UseDeleteRouteResult {
 
 /**
  * Hook for deleting a route (and all its sub-routes) from the routing tree.
- *
- * This hook:
- * 1. Fetches the current Alertmanager configuration
- * 2. Removes the route from the tree
- * 3. Saves the updated configuration back to Alertmanager
  */
 export function useDeleteRoute(): UseDeleteRouteResult {
-  const { uid: dataSourceUID } = useAlertmanager();
   const { refetch: refetchRoutes } = useRoutes();
+  const [produceNewAlertmanagerConfiguration, { isLoading }] = useProduceNewAlertmanagerConfiguration();
 
-  const [getUserConfiguration] = mimirAlertmanagerApi.endpoints.getUserConfiguration.useLazyQuery();
-  const [updateUserConfiguration] = mimirAlertmanagerApi.endpoints.updateUserConfiguration.useMutation();
-
-  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const deleteRoute = useCallback(
     async (routeId: string) => {
-      setIsDeleting(true);
       setError(null);
 
       try {
-        // 1. Fetch current configuration
-        const configResult = await getUserConfiguration({ dataSourceUID });
+        await produceNewAlertmanagerConfiguration(deleteRouteAction({ id: routeId }));
 
-        if (configResult.error) {
-          throw new Error('Failed to fetch current configuration');
-        }
-
-        const currentConfig = configResult.data;
-        if (!currentConfig?.alertmanager_config?.route) {
-          throw new Error('No route configuration found');
-        }
-
-        // 2. Add deterministic IDs to the fetched tree (matching UI IDs), then remove the route
-        const currentRouteTree = currentConfig.alertmanager_config.route as Route;
-        const routeTreeWithIds = attachRouteIds(currentRouteTree);
-        const updatedRouteTree = omitRouteFromRouteTree(routeId, routeTreeWithIds);
-
-        // 3. Strip IDs before saving (Alertmanager doesn't need them) and build the updated configuration
-        const cleanRouteTree = cleanRouteIDs(updatedRouteTree);
-        const updatedConfig = {
-          ...currentConfig,
-          alertmanager_config: {
-            ...currentConfig.alertmanager_config,
-            route: cleanRouteTree,
-          },
-        };
-
-        // 4. Save the updated configuration
-        await updateUserConfiguration({
-          dataSourceUID,
-          configuration: updatedConfig,
-        }).unwrap();
-
-        // 5. Refetch routes to update the UI
         refetchRoutes();
 
-        // Show success notification
         getAppEvents().publish({
           type: AppEvents.alertSuccess.name,
           payload: [t('routes.delete.success', 'Successfully deleted route')],
@@ -87,7 +41,6 @@ export function useDeleteRoute(): UseDeleteRouteResult {
 
         return true;
       } catch (err) {
-        // Extract error message from various error formats
         const errorMessage = extractErrorMessage(err);
         const error = new Error(errorMessage);
         setError(error);
@@ -98,16 +51,14 @@ export function useDeleteRoute(): UseDeleteRouteResult {
         });
 
         return false;
-      } finally {
-        setIsDeleting(false);
       }
     },
-    [dataSourceUID, getUserConfiguration, updateUserConfiguration, refetchRoutes]
+    [produceNewAlertmanagerConfiguration, refetchRoutes]
   );
 
   return {
     deleteRoute,
-    isDeleting,
+    isDeleting: isLoading,
     error,
   };
 }

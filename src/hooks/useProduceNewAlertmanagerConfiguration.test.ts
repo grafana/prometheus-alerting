@@ -10,6 +10,8 @@ import {
 
 import { useProduceNewAlertmanagerConfiguration } from './useProduceNewAlertmanagerConfiguration';
 import { addTimeInterval } from '../reducers/alertmanager/timeIntervals';
+import { addRouteAction } from '../reducers/alertmanager/routes';
+import { attachRouteIds } from '../features/routes/utils';
 import { server } from '../test/server';
 import { createTestWrapper } from '../test/utils/test-wrapper';
 import {
@@ -247,6 +249,62 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
       await produceNewConfig(
         addTimeInterval({
           interval: { name: 'new-interval', time_intervals: [] },
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current[1].isSuccess).toBe(true);
+    });
+  });
+
+  it('should not change route content-hash IDs when the root route omits optional timing fields', async () => {
+    // Setup: a root route that (like a freshly reset Mimir tenant) doesn't set group_wait/
+    // group_interval/repeat_interval explicitly. If defaultsDeep backfilled those from
+    // initialAlertmanagerConfiguration before hashing, the root route's ID here would differ
+    // from the ID the UI computed against the raw fetched route, and the reducer would fail to
+    // find the reference route.
+    const existingConfig: PostableParsedUserConfiguration = {
+      template_files: {},
+      alertmanager_config: {
+        route: {
+          receiver: 'empty-default-receiver',
+        },
+        receivers: [{ name: 'empty-default-receiver' }],
+        time_intervals: [],
+        inhibit_rules: [],
+        templates: [],
+      },
+    };
+
+    const rootId = attachRouteIds(existingConfig.alertmanager_config.route!).id;
+
+    server.use(
+      http.get('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', () => {
+        return HttpResponse.text(YamlToParsedUserConfiguration.encode(existingConfig));
+      }),
+      http.post('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', async ({ request }) => {
+        const yamlBody = await request.text();
+        const updatedConfig = YamlToParsedUserConfiguration.decode(yamlBody);
+
+        expect(updatedConfig.alertmanager_config.route?.routes).toHaveLength(1);
+        expect(updatedConfig.alertmanager_config.route?.routes?.[0].receiver).toBe('empty-default-receiver');
+
+        return HttpResponse.json({ status: 'success' });
+      })
+    );
+
+    const { result } = renderHook(() => useProduceNewAlertmanagerConfiguration(), {
+      wrapper: createTestWrapper(),
+    });
+    const [produceNewConfig] = result.current;
+
+    await act(async () => {
+      await produceNewConfig(
+        addRouteAction({
+          partialRoute: { receiver: 'empty-default-receiver' },
+          referenceRouteIdentifier: rootId,
+          insertPosition: 'child',
         })
       );
     });
