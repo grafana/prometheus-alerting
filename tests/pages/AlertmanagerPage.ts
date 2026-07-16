@@ -12,8 +12,8 @@ import { STORAGE_KEYS } from '../../src/constants';
  * sessionStorage before navigation (`seedAlertmanager`).
  *
  * Test data source display names / UIDs (provisioning/datasources/test-datasources.yaml):
- *   "Test Alertmanager"       → test-alertmanager       (vanilla, read-only, seeded)
- *   "Test Mimir Alertmanager" → test-mimir-alertmanager (mimir, editable, starts empty)
+ *   "Test Alertmanager" → test-alertmanager (vanilla, read-only, seeded)
+ *   Fixture-created Mimir Alertmanagers use a per-test UID and tenant header.
  */
 export class AlertmanagerPage {
   readonly page: Page;

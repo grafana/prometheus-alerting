@@ -5,7 +5,7 @@ import { AlertmanagerPage } from './AlertmanagerPage';
  * Page object for the Templates view (`/templates`).
  *
  * Vanilla `test-alertmanager` has no seeded templates and no configuration API — use it only for
- * the empty-state / hidden-create-button checks. Write: Mimir `test-mimir-alertmanager`
+ * the empty-state / hidden-create-button checks. Write: a fixture-created Mimir Alertmanager
  * (create/edit/delete; Create button gated by `useHasConfigurationAPI()`).
  * See `src/features/templates/`.
  *

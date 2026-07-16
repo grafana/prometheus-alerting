@@ -334,7 +334,7 @@ test.describe('RuleEditor Page - E2E', () => {
       try {
         const { execSync } = require('child_process');
         execSync(
-          'curl -X POST -H "Content-Type: application/yaml" ' +
+          'curl -X POST -H "Content-Type: application/yaml" -H "X-Scope-OrgID: anonymous" ' +
             '--data-binary @test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml ' +
             'http://localhost:9009/prometheus/config/v1/rules/e2e-test-namespace',
           { stdio: 'ignore' }
