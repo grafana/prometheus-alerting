@@ -113,12 +113,15 @@ test.describe('Routes', () => {
       await routesListPage.matcherValueInput(0).fill('critical');
       await routesListPage.submitSave();
 
+      // Drawer closes on successful save; verify the card reflects the change then re-open to confirm
+      await expect(routesListPage.routeDrawer).toBeHidden();
+      await expect(routesListPage.getChildRoute(/severity\s*=\s*critical/)).toBeVisible();
+      await expect(routesListPage.getChildRoute(/severity\s*=\s*warning/)).toHaveCount(0);
+
+      await routesListPage.openChildRoute(/severity\s*=\s*critical/);
       await expect(
         routesListPage.routeDrawer.getByText(drawerMatcherText('severity', 'critical')).first()
       ).toBeVisible();
-      await routesListPage.closeDrawer();
-      await expect(routesListPage.getChildRoute(/severity\s*=\s*critical/)).toBeVisible();
-      await expect(routesListPage.getChildRoute(/severity\s*=\s*warning/)).toHaveCount(0);
     });
 
     test('deletes a route via the card menu', async ({ routesListPage }) => {
