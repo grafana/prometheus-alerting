@@ -109,9 +109,9 @@ test.describe('Routes', () => {
       await routesListPage.matcherValueInput(0).fill('critical');
       await routesListPage.submitSave();
 
-      // Editing returns to the route drawer with its stale route snapshot. Close it before
-      // asserting the refreshed card and opening the updated route.
-      await routesListPage.closeDrawer();
+      // A successful edit closes the drawer automatically (RouteDrawer.handleSave calls
+      // onClose()), so just wait for it to disappear before asserting the refreshed card.
+      await expect(routesListPage.routeDrawer).toBeHidden();
       await expect(routesListPage.getChildRoute(/severity\s*=\s*critical/)).toBeVisible();
       await expect(routesListPage.getChildRoute(/severity\s*=\s*warning/)).toHaveCount(0);
 
