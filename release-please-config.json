@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "include-v-in-tag": true,
+  "include-component-in-tag": false,
+  "changelog-sections": [
+    {
+      "type": "feat",
+      "section": "🎉 Features"
+    },
+    {
+      "type": "fix",
+      "section": "🐛 Bug Fixes"
+    },
+    {
+      "type": "docs",
+      "section": "📝 Documentation"
+    },
+    {
+      "type": "style",
+      "section": "💄 Styles"
+    },
+    {
+      "type": "refactor",
+      "section": "♻️ Code Refactoring"
+    },
+    {
+      "type": "perf",
+      "section": "⚡ Performance Improvements"
+    },
+    {
+      "type": "test",
+      "section": "✅ Tests"
+    },
+    {
+      "type": "build",
+      "section": "🏗️ Builds"
+    },
+    {
+      "type": "ci",
+      "section": "🤖 Continuous Integrations"
+    },
+    {
+      "type": "chore",
+      "section": "🔧 Chores"
+    },
+    {
+      "type": "revert",
+      "section": "⏪ Reverts"
+    }
+  ],
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "prometheus-alerting",
+      "changelog-path": "CHANGELOG.md"
+    }
+  }
+}
