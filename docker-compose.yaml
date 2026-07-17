@@ -106,17 +106,17 @@ services:
       - monitoring
 
   mimir-rules-provisioner:
-    image: curlimages/curl:8.20.0@sha256:b3f1fb2a51d923260350d21b8654bbc607164a987e2f7c84a0ac199a67df812a
+    image: node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd
     container_name: mimir-rules-provisioner
     depends_on:
       - mimir
     volumes:
       - ./test-data/mimir/rules:/rules:ro
-      - ./test-data/mimir/provision-rules.sh:/provision-rules.sh:ro
+      - ./test-data/mimir/provision-rules.mjs:/provision-rules.mjs:ro
     networks:
       - monitoring
     restart: on-failure
-    command: ['/provision-rules.sh']
+    command: ['node', '/provision-rules.mjs']
 
   loki:
     image: grafana/loki:3.2.0
@@ -137,14 +137,14 @@ services:
       - monitoring
 
   loki-rules-provisioner:
-    image: curlimages/curl:8.20.0@sha256:b3f1fb2a51d923260350d21b8654bbc607164a987e2f7c84a0ac199a67df812a
+    image: node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd
     container_name: loki-rules-provisioner
     depends_on:
       - loki
     volumes:
       - ./test-data/loki/rules:/rules:ro
-      - ./test-data/loki/provision-rules.sh:/provision-rules.sh:ro
+      - ./test-data/loki/provision-rules.mjs:/provision-rules.mjs:ro
     networks:
       - monitoring
     restart: on-failure
-    command: ['/provision-rules.sh']
+    command: ['node', '/provision-rules.mjs']
