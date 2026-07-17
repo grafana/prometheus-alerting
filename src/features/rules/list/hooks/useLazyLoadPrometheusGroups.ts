@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { useAsync } from '@react-hookz/web';
 
 import { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
-import { isLoading as isLoadingState, useAsync } from '../../../../hooks/useAsync';
+import { isLoading as isLoadingState } from '../../../../hooks/asyncStateGuards';
 
 /**
  * Provides lazy loading for rule groups.
@@ -21,7 +22,7 @@ export function useLazyLoadPrometheusGroups<TGroup extends PromRuleGroupDTO>(
   const [groups, setGroups] = useState<TGroup[]>([]);
   const [hasMoreGroups, setHasMoreGroups] = useState<boolean>(true);
 
-  const [{ execute: fetchMoreGroups }, groupsRequestState] = useAsync(async () => {
+  const [groupsRequestState, { execute: fetchMoreGroups }] = useAsync(async () => {
     let done = false;
     const currentGroups: TGroup[] = [];
 
