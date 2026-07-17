@@ -12,7 +12,6 @@ import type {
   RulerRuleGroupDTO,
   RulerAlertingRuleDTO,
   RulerRecordingRuleDTO,
-  PromAlertingRuleState,
 } from '@grafana/external-rules/vanilla';
 import { hashRule, hashRulerRule } from '@grafana/external-rules/hashing';
 

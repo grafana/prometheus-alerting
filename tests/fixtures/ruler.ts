@@ -21,11 +21,11 @@ type RulerTestFixture = {
 
 export const test = base.extend<RulerTestFixture>({
   ruleDetailsPage: async ({ page }, use) => {
-    const ruleDetailsPage = new RuleDetailsPage(page, pluginJson.id);
+    const ruleDetailsPage = new RuleDetailsPage(page);
     await use(ruleDetailsPage);
   },
   ruleEditorPage: async ({ page }, use) => {
-    const ruleEditorPage = new RuleEditorPage(page, pluginJson.id);
+    const ruleEditorPage = new RuleEditorPage(page);
     await use(ruleEditorPage);
   },
   rulesListPage: async ({ page }, use) => {

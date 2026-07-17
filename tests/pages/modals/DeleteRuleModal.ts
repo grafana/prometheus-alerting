@@ -11,7 +11,7 @@ export class DeleteRuleModal {
   readonly deleteButton: Locator;
   readonly errorMessage: Locator;
 
-  constructor(private page: Page) {
+  constructor(page: Page) {
     this.modal = page.getByRole('dialog', { name: /delete rule/i });
     this.title = this.modal.getByRole('heading', { name: /delete rule/i });
     this.message = this.modal.getByText(/are you sure/i);
