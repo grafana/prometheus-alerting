@@ -6,6 +6,12 @@ interface MimirAlertmanagerDataSource {
   tenantId: string;
 }
 
+interface MimirRulerDataSource {
+  uid: string;
+  name: string;
+  tenantId: string;
+}
+
 function getDataSourceUrl(uid: string): string {
   return `${GRAFANA_URL}/api/datasources/uid/${encodeURIComponent(uid)}`;
 }
@@ -43,6 +49,44 @@ export async function createMimirAlertmanagerDataSource({
   const readback = await fetch(getDataSourceUrl(uid));
   if (!readback.ok) {
     throw new Error(`Created Mimir Alertmanager datasource ${uid} could not be read back: HTTP ${readback.status}`);
+  }
+}
+
+/** Create a Mimir Prometheus datasource whose Ruler API requests use the given tenant header. */
+export async function createMimirRulerDataSource({ uid, name, tenantId }: MimirRulerDataSource): Promise<void> {
+  const response = await fetch(`${GRAFANA_URL}/api/datasources`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      uid,
+      name,
+      type: 'prometheus',
+      access: 'proxy',
+      url: 'http://mimir:9009/prometheus',
+      isDefault: false,
+      jsonData: {
+        manageAlerts: true,
+        prometheusType: 'Mimir',
+        prometheusVersion: '2.40.0',
+        implementation: 'mimir',
+        httpHeaderName1: 'X-Scope-OrgID',
+        httpMethod: 'POST',
+        customQueryParameters: '',
+        disableRecordingRules: false,
+      },
+      secureJsonData: {
+        httpHeaderValue1: tenantId,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to create Mimir Ruler datasource ${uid}: HTTP ${response.status}`);
+  }
+
+  const readback = await fetch(getDataSourceUrl(uid));
+  if (!readback.ok) {
+    throw new Error(`Created Mimir Ruler datasource ${uid} could not be read back: HTTP ${readback.status}`);
   }
 }
 
