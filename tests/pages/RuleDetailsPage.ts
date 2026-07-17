@@ -27,10 +27,7 @@ export class RuleDetailsPage {
   readonly instancesTable: Locator;
   readonly detailsTable: Locator;
 
-  constructor(
-    private page: Page,
-    private pluginId: string
-  ) {
+  constructor(private page: Page) {
     // Scope selectors to page content
     const pageContent = page.locator('#pageContent');
 

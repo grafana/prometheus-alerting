@@ -12,7 +12,6 @@ import type {
   RulerRuleGroupDTO,
   RulerAlertingRuleDTO,
   RulerRecordingRuleDTO,
-  PromAlertingRuleState,
 } from '@grafana/external-rules/vanilla';
 import { hashRule, hashRulerRule } from '@grafana/external-rules/hashing';
 
@@ -360,7 +359,7 @@ export class RuleBuilder {
    *
    * IMPORTANT: The hash must match the actual rule definition including labels and annotations
    */
-  static createTestEditRuleIdentifier(): CloudRuleIdentifier {
+  static createTestEditRuleIdentifier(uid = TEST_MIMIR_DATASOURCE_UID): CloudRuleIdentifier {
     // Must match test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml exactly
     const rule: RulerAlertingRuleDTO = {
       alert: 'TestEditRule',
@@ -378,7 +377,7 @@ export class RuleBuilder {
 
     return {
       type: 'cloud',
-      uid: TEST_MIMIR_DATASOURCE_UID,
+      uid,
       namespace: 'e2e-test-namespace',
       groupName: 'e2e-test-group',
       ruleName: 'TestEditRule',
@@ -390,7 +389,7 @@ export class RuleBuilder {
    * Create identifier for the TestCloneRule (pre-provisioned in Mimir)
    * This rule exists in test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml
    */
-  static createTestCloneRuleIdentifier(): CloudRuleIdentifier {
+  static createTestCloneRuleIdentifier(uid = TEST_MIMIR_DATASOURCE_UID): CloudRuleIdentifier {
     // Must match test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml exactly
     const rule: RulerAlertingRuleDTO = {
       alert: 'TestCloneRule',
@@ -406,7 +405,7 @@ export class RuleBuilder {
 
     return {
       type: 'cloud',
-      uid: TEST_MIMIR_DATASOURCE_UID,
+      uid,
       namespace: 'e2e-test-namespace',
       groupName: 'e2e-test-group',
       ruleName: 'TestCloneRule',
@@ -417,7 +416,7 @@ export class RuleBuilder {
   /**
    * Create identifier for the test recording rule (pre-provisioned in Mimir)
    */
-  static createTestRecordingRuleIdentifier(): CloudRuleIdentifier {
+  static createTestRecordingRuleIdentifier(uid = TEST_MIMIR_DATASOURCE_UID): CloudRuleIdentifier {
     // Must match test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml exactly
     const rule: RulerRecordingRuleDTO = {
       record: 'test:recording:rule',
@@ -429,7 +428,7 @@ export class RuleBuilder {
 
     return {
       type: 'cloud',
-      uid: TEST_MIMIR_DATASOURCE_UID,
+      uid,
       namespace: 'e2e-test-namespace',
       groupName: 'e2e-test-group',
       ruleName: 'test:recording:rule',

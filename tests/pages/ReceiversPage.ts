@@ -8,7 +8,7 @@ import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
  * Page object for the Receivers view (`/receivers`).
  *
  * Read: vanilla `test-alertmanager` (6 seeded receivers, read-only — no Create button).
- * Write: Mimir `test-mimir-alertmanager` (create/edit/delete; Create button gated by
+ * Write: a fixture-created Mimir Alertmanager (create/edit/delete; Create button gated by
  * `useHasConfigurationAPI()`). See `src/features/receivers/`.
  *
  * Clicking a receiver row opens the view drawer (`ReceiverDrawer`) — it does not navigate

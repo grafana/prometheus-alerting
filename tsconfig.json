@@ -1,8 +1,10 @@
 {
   "extends": "./.config/tsconfig.json",
   "compilerOptions": {
-    "ignoreDeprecations": "6.0"
+    "ignoreDeprecations": "6.0",
+    "rootDir": "."
   },
+  "include": ["src", "tests", ".config/types"],
   "ts-node": {
     "compilerOptions": {
       "module": "commonjs",
