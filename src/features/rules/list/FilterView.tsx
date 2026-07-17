@@ -1,12 +1,12 @@
 import React, { useCallback, useMemo, useRef, useState, useTransition } from 'react';
-import { useUnmountEffect } from '@react-hookz/web';
+import { useAsync, useUnmountEffect } from '@react-hookz/web';
 
 import { bufferCountOrTime, tap } from 'ix/asynciterable/operators';
 
 import { Trans, t } from '@grafana/i18n';
 import { EmptyState, Stack } from '@grafana/ui';
 
-import { isLoading, useAsync } from '../../../hooks/useAsync';
+import { isLoading } from '../../../hooks/asyncStateGuards';
 import { PromRuleWithOrigin } from '../../../types/rules';
 import { hashRule } from '@grafana/external-rules/hashing';
 
@@ -86,7 +86,7 @@ function FilterViewResults({ filterState }: FilterViewProps) {
   }, [filterState, getFilteredRulesIterator]);
 
   /* This function will fetch a page of results from the iterable */
-  const [{ execute: loadResultPage }, state] = useAsync(async () => {
+  const [state, { execute: loadResultPage }] = useAsync(async () => {
     const rulesIterator = getRulesBatchIterator();
 
     let loadedRulesCount = 0;
