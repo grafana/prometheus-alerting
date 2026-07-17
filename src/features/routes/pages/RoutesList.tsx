@@ -7,7 +7,7 @@ import { ViewState } from '../../../components/ViewState';
 import { DataSourceError } from '../../../components/AlertmanagerError';
 import { t } from '@grafana/i18n';
 import { computeInheritedTree } from '@grafana/alerting';
-import { RouteCard } from '../components/RouteCard';
+import { RouteCard, RouteCardActions } from '../components/RouteCard';
 import { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { RouteViewDrawer } from '../components/RouteViewDrawer';
@@ -139,6 +139,10 @@ function RoutesPage() {
   const canDeleteViewingRoute = drawerState.type === 'view' && drawerState.route.id !== routeTree?.id;
   const routeToDeleteHasChildren = routeToDelete?.routes && routeToDelete.routes.length > 0;
 
+  const routeCardActions: RouteCardActions = canEdit
+    ? { readOnly: false, onAddRoute: handleAddRoute, onEditRoute: handleEditRoute, onDeleteRoute: handleDeleteRoute }
+    : { readOnly: true };
+
   return (
     <AlertmanagerPage subTitle={t('routes.page-subtitle', 'Determine how alerts are routed to receivers')}>
       <div data-testid={testIds.routes.container}>
@@ -171,10 +175,7 @@ function RoutesPage() {
                 focussedRouteID={
                   drawerState.type === 'view' || drawerState.type === 'edit' ? drawerState.route.id : undefined
                 }
-                onAddRoute={canEdit ? handleAddRoute : undefined}
-                onEditRoute={canEdit ? handleEditRoute : undefined}
-                onDeleteRoute={canEdit ? handleDeleteRoute : undefined}
-                readOnly={!canEdit}
+                {...routeCardActions}
               />
             </div>
           )}

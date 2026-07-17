@@ -21,26 +21,26 @@ function RouteDetails({ route, onReceiverClick }: RouteDetailsProps) {
   const matchers = normalizeMatchers(route);
   const hasMatchers = matchers.length > 0;
 
-  const items = [
-    ...(route.group_by && route.group_by.length > 0
-      ? [{ label: t('routes.group-by-label', 'Group by'), value: route.group_by.join(', ') }]
-      : []),
-    ...(route.group_wait ? [{ label: t('routes.group-wait-label', 'Group wait'), value: route.group_wait }] : []),
-    ...(route.group_interval
-      ? [{ label: t('routes.group-interval-label', 'Group interval'), value: route.group_interval }]
-      : []),
-    ...(route.repeat_interval
-      ? [{ label: t('routes.repeat-interval-label', 'Repeat interval'), value: route.repeat_interval }]
-      : []),
-    ...(route.continue !== undefined
-      ? [
-          {
-            label: t('routes.continue-label', 'Continue'),
-            value: route.continue ? t('routes.yes', 'Yes') : t('routes.no', 'No'),
-          },
-        ]
-      : []),
-  ];
+  const items: Array<{ label: string; value: string }> = [];
+
+  if (route.group_by && route.group_by.length > 0) {
+    items.push({ label: t('routes.group-by-label', 'Group by'), value: route.group_by.join(', ') });
+  }
+  if (route.group_wait) {
+    items.push({ label: t('routes.group-wait-label', 'Group wait'), value: route.group_wait });
+  }
+  if (route.group_interval) {
+    items.push({ label: t('routes.group-interval-label', 'Group interval'), value: route.group_interval });
+  }
+  if (route.repeat_interval) {
+    items.push({ label: t('routes.repeat-interval-label', 'Repeat interval'), value: route.repeat_interval });
+  }
+  if (route.continue !== undefined) {
+    items.push({
+      label: t('routes.continue-label', 'Continue'),
+      value: route.continue ? t('routes.yes', 'Yes') : t('routes.no', 'No'),
+    });
+  }
 
   return (
     <Stack direction="column" gap={2}>
