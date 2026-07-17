@@ -71,4 +71,11 @@ export default defineConfig([
     },
   },
   ...baseConfig,
+  {
+    name: 'test-data/rules-provisioner-console',
+    files: ['test-data/**/*.mjs'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
 ]);
