@@ -13,8 +13,8 @@ const RULE_DETAILS_URL_PATTERN = /\/rules\/(?:cri|pri)%24/;
 
 test.describe('Mimir Rules - E2E', () => {
   test.describe('Rule Details with Ruler API', () => {
-    test('should show edit button for Mimir rules', async ({ ruleDetailsPage }) => {
-      const identifier = RuleBuilder.createTestEditRuleIdentifier();
+    test('should show edit button for Mimir rules', async ({ ruleDetailsPage, mimirRuler }) => {
+      const identifier = RuleBuilder.createTestEditRuleIdentifier(mimirRuler.uid);
 
       await ruleDetailsPage.goto(identifier);
       await ruleDetailsPage.waitForLoad();
@@ -31,8 +31,8 @@ test.describe('Mimir Rules - E2E', () => {
       expect(await ruleDetailsPage.hasEditButton()).toBe(true);
     });
 
-    test('should show delete and duplicate actions for Mimir rules', async ({ ruleDetailsPage, page }) => {
-      const identifier = RuleBuilder.createTestEditRuleIdentifier();
+    test('should show delete and duplicate actions for Mimir rules', async ({ ruleDetailsPage, page, mimirRuler }) => {
+      const identifier = RuleBuilder.createTestEditRuleIdentifier(mimirRuler.uid);
 
       await ruleDetailsPage.goto(identifier);
       await ruleDetailsPage.waitForLoad();
@@ -68,6 +68,7 @@ test.describe('Mimir Rules - E2E', () => {
       ruleDetailsPage,
       page,
       mimirGroup,
+      mimirRuler,
     }) => {
       // First, create a new rule to delete
       const uniqueRuleName = `DeleteTest_${Date.now()}`;
@@ -77,7 +78,7 @@ test.describe('Mimir Rules - E2E', () => {
       await ruleEditorPage.waitForLoad();
 
       await ruleEditorPage.fillRuleName(uniqueRuleName);
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('vector(1) > 0');
       await ruleEditorPage.selectNamespace(MIMIR_TEST_NAMESPACE);
       await ruleEditorPage.createGroup(groupName);
@@ -121,7 +122,12 @@ test.describe('Mimir Rules - E2E', () => {
   });
 
   test.describe('Create Rule - Consistency Warning', () => {
-    test('should redirect to details page after creating a rule', async ({ ruleEditorPage, page, mimirGroup }) => {
+    test('should redirect to details page after creating a rule', async ({
+      ruleEditorPage,
+      page,
+      mimirGroup,
+      mimirRuler,
+    }) => {
       const uniqueRuleName = `ConsistencyTest_${Date.now()}`;
       const groupName = mimirGroup('e2e-consistency-test-group');
 
@@ -129,7 +135,7 @@ test.describe('Mimir Rules - E2E', () => {
       await ruleEditorPage.waitForLoad();
 
       await ruleEditorPage.fillRuleName(uniqueRuleName);
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('vector(0) > 1'); // Always inactive
       await ruleEditorPage.selectNamespace(MIMIR_TEST_NAMESPACE);
       await ruleEditorPage.createGroup(groupName);
@@ -153,6 +159,7 @@ test.describe('Mimir Rules - E2E', () => {
       ruleDetailsPage,
       page,
       mimirGroup,
+      mimirRuler,
     }) => {
       const uniqueRuleName = `PropagationTest_${Date.now()}`;
       const groupName = mimirGroup('e2e-propagation-test-group');
@@ -161,7 +168,7 @@ test.describe('Mimir Rules - E2E', () => {
       await ruleEditorPage.waitForLoad();
 
       await ruleEditorPage.fillRuleName(uniqueRuleName);
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('vector(0) > 1');
       await ruleEditorPage.selectNamespace(MIMIR_TEST_NAMESPACE);
       await ruleEditorPage.createGroup(groupName);

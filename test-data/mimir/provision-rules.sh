@@ -6,7 +6,7 @@ set -e
 # Expected structure: /rules/<namespace>/<group>.yaml
 
 echo 'Waiting for Mimir Ruler API...'
-until curl -sS -f http://mimir:9009/prometheus/config/v1/rules >/dev/null 2>&1; do
+until curl -sS -f -H 'X-Scope-OrgID: anonymous' http://mimir:9009/prometheus/config/v1/rules >/dev/null 2>&1; do
   sleep 1
 done
 echo '✓ Mimir Ruler API ready'
@@ -27,7 +27,7 @@ for namespace_dir in /rules/*/; do
         GROUP=$(basename "$GROUP" .yml)
         echo "    - Provisioning group: $GROUP"
         
-        if curl -X POST -H 'Content-Type: application/yaml' \
+        if curl -X POST -H 'Content-Type: application/yaml' -H 'X-Scope-OrgID: anonymous' \
            --data-binary "@$rule_file" \
            -f "http://mimir:9009/prometheus/config/v1/rules/$NAMESPACE" >/dev/null 2>&1; then
           echo "      ✓ Provisioned $NAMESPACE/$GROUP"

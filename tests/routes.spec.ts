@@ -1,12 +1,12 @@
-import { test, expect, VANILLA_ALERTMANAGER_UID, MIMIR_ALERTMANAGER_UID } from './fixtures/alertmanager';
+import { test, expect, VANILLA_ALERTMANAGER_UID } from './fixtures/alertmanager';
 
 /**
  * Routes / notification tree e2e (`/routes`).
  *
  * Read tests use the vanilla `test-alertmanager` (root + 5 seeded child routes in
- * test-data/alertmanager/alertmanager.yml, read-only). Write tests use the Mimir
- * `test-mimir-alertmanager` (editable). Resetting the Mimir config leaves a root route with
- * receiver `empty-default-receiver` and zero child routes.
+ * test-data/alertmanager/alertmanager.yml, read-only). Write tests use a fixture-created Mimir
+ * Alertmanager tenant, initialized with a root route whose receiver is `empty-default-receiver`
+ * and which has zero child routes.
  */
 
 /**
@@ -83,12 +83,8 @@ test.describe('Routes', () => {
   });
 
   test.describe('Mimir Alertmanager (CRUD)', () => {
-    // Mimir stores one config per tenant → serialize and reset between tests.
-    test.describe.configure({ mode: 'serial' });
-
-    test.beforeEach(async ({ routesListPage, resetMimirConfig }) => {
-      await resetMimirConfig();
-      await routesListPage.gotoWithAlertmanager(MIMIR_ALERTMANAGER_UID);
+    test.beforeEach(async ({ routesListPage, mimirAlertmanager }) => {
+      await routesListPage.gotoWithAlertmanager(mimirAlertmanager.uid);
     });
 
     test('adds a child route from the root', async ({ routesListPage }) => {
@@ -113,7 +109,8 @@ test.describe('Routes', () => {
       await routesListPage.matcherValueInput(0).fill('critical');
       await routesListPage.submitSave();
 
-      // Drawer closes on successful save; verify the card reflects the change then re-open to confirm
+      // A successful edit closes the drawer automatically (RouteDrawer.handleSave calls
+      // onClose()), so just wait for it to disappear before asserting the refreshed card.
       await expect(routesListPage.routeDrawer).toBeHidden();
       await expect(routesListPage.getChildRoute(/severity\s*=\s*critical/)).toBeVisible();
       await expect(routesListPage.getChildRoute(/severity\s*=\s*warning/)).toHaveCount(0);

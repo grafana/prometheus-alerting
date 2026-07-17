@@ -15,13 +15,13 @@ test.describe('RuleEditor Page - E2E', () => {
   };
 
   test.describe('Alerting Rules', () => {
-    test('should create a new alerting rule successfully', async ({ ruleEditorPage, page }) => {
+    test('should create a new alerting rule successfully', async ({ ruleEditorPage, page, mimirRuler }) => {
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad('New alert rule');
 
       // Fill required fields
       await ruleEditorPage.fillRuleName('HighCPUUsage');
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('up == 0');
       await ruleEditorPage.setPendingPeriod(5, 'minutes');
       await ruleEditorPage.selectNamespace('e2e-test-namespace');
@@ -40,8 +40,8 @@ test.describe('RuleEditor Page - E2E', () => {
       await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
     });
 
-    test('should edit an existing alerting rule', async ({ ruleEditorPage, page }) => {
-      const identifier = RuleBuilder.createTestEditRuleIdentifier();
+    test('should edit an existing alerting rule', async ({ ruleEditorPage, page, mimirRuler }) => {
+      const identifier = RuleBuilder.createTestEditRuleIdentifier(mimirRuler.uid);
 
       await ruleEditorPage.gotoEdit(identifier);
       await ruleEditorPage.waitForLoad(/Edit/);
@@ -60,8 +60,8 @@ test.describe('RuleEditor Page - E2E', () => {
       await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
     });
 
-    test('should clone an existing alerting rule', async ({ ruleEditorPage, page }) => {
-      const identifier = RuleBuilder.createTestCloneRuleIdentifier();
+    test('should clone an existing alerting rule', async ({ ruleEditorPage, page, mimirRuler }) => {
+      const identifier = RuleBuilder.createTestCloneRuleIdentifier(mimirRuler.uid);
 
       await ruleEditorPage.gotoClone(identifier);
       await ruleEditorPage.waitForLoad(/Clone/);
@@ -77,13 +77,18 @@ test.describe('RuleEditor Page - E2E', () => {
   });
 
   test.describe('Recording Rules', () => {
-    test('should create a new recording rule successfully', async ({ ruleEditorPage, page, mimirGroup }) => {
+    test('should create a new recording rule successfully', async ({
+      ruleEditorPage,
+      page,
+      mimirGroup,
+      mimirRuler,
+    }) => {
       await ruleEditorPage.gotoNew('recording');
       await ruleEditorPage.waitForLoad('New recording rule');
 
       // Fill required fields
       await ruleEditorPage.fillRuleName('request_rate_sum');
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('sum(rate(http_requests_total[5m]))');
       await ruleEditorPage.selectNamespace('e2e-test-namespace');
       await ruleEditorPage.createGroup(mimirGroup('e2e-recording-group'));
@@ -100,8 +105,8 @@ test.describe('RuleEditor Page - E2E', () => {
       await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
     });
 
-    test('should edit an existing recording rule', async ({ ruleEditorPage, page }) => {
-      const identifier = RuleBuilder.createTestRecordingRuleIdentifier();
+    test('should edit an existing recording rule', async ({ ruleEditorPage, page, mimirRuler }) => {
+      const identifier = RuleBuilder.createTestRecordingRuleIdentifier(mimirRuler.uid);
 
       await ruleEditorPage.gotoEdit(identifier);
       await ruleEditorPage.waitForLoad(/Edit/);
@@ -120,8 +125,8 @@ test.describe('RuleEditor Page - E2E', () => {
       await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
     });
 
-    test('should clone an existing recording rule', async ({ ruleEditorPage, page }) => {
-      const identifier = RuleBuilder.createTestRecordingRuleIdentifier();
+    test('should clone an existing recording rule', async ({ ruleEditorPage, page, mimirRuler }) => {
+      const identifier = RuleBuilder.createTestRecordingRuleIdentifier(mimirRuler.uid);
 
       await ruleEditorPage.gotoClone(identifier);
       await ruleEditorPage.waitForLoad(/Clone/);
@@ -137,12 +142,12 @@ test.describe('RuleEditor Page - E2E', () => {
   });
 
   test.describe('Labels', () => {
-    test('should add labels via modal', async ({ ruleEditorPage, page }) => {
+    test('should add labels via modal', async ({ ruleEditorPage, page, mimirRuler }) => {
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
       await ruleEditorPage.fillRuleName('TestLabels');
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('up == 0');
 
       const labelsModal = await ruleEditorPage.openLabelsModal();
@@ -153,8 +158,8 @@ test.describe('RuleEditor Page - E2E', () => {
       await labelsModal.save();
     });
 
-    test('should edit existing labels', async ({ ruleEditorPage }) => {
-      const identifier = RuleBuilder.createTestEditRuleIdentifier();
+    test('should edit existing labels', async ({ ruleEditorPage, mimirRuler }) => {
+      const identifier = RuleBuilder.createTestEditRuleIdentifier(mimirRuler.uid);
 
       await ruleEditorPage.gotoEdit(identifier);
       await ruleEditorPage.waitForLoad();
@@ -166,12 +171,12 @@ test.describe('RuleEditor Page - E2E', () => {
       await labelsModal.save();
     });
 
-    test('should remove a label', async ({ ruleEditorPage }) => {
+    test('should remove a label', async ({ ruleEditorPage, mimirRuler }) => {
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
       await ruleEditorPage.fillRuleName('TestRemoveLabel');
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('up == 0');
 
       const labelsModal = await ruleEditorPage.openLabelsModal();
@@ -187,12 +192,12 @@ test.describe('RuleEditor Page - E2E', () => {
       await labelsModal.save();
     });
 
-    test('should discard label changes when canceling', async ({ ruleEditorPage }) => {
+    test('should discard label changes when canceling', async ({ ruleEditorPage, mimirRuler }) => {
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
       await ruleEditorPage.fillRuleName('TestCancelLabels');
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('up == 0');
 
       // Add labels and save
@@ -213,12 +218,12 @@ test.describe('RuleEditor Page - E2E', () => {
   });
 
   test.describe('Annotations', () => {
-    test('should add annotation to alerting rule', async ({ ruleEditorPage }) => {
+    test('should add annotation to alerting rule', async ({ ruleEditorPage, mimirRuler }) => {
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
       await ruleEditorPage.fillRuleName('TestAnnotations');
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('up == 0');
 
       // Verify annotations section is visible for alerting rules
@@ -228,12 +233,12 @@ test.describe('RuleEditor Page - E2E', () => {
       expect(await ruleEditorPage.getAnnotationCount()).toBe(1);
     });
 
-    test('should edit existing annotation', async ({ ruleEditorPage }) => {
+    test('should edit existing annotation', async ({ ruleEditorPage, mimirRuler }) => {
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
       await ruleEditorPage.fillRuleName('TestEditAnnotation');
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('up == 0');
 
       // Add an annotation
@@ -243,12 +248,12 @@ test.describe('RuleEditor Page - E2E', () => {
       await ruleEditorPage.editAnnotation('summary', 'Updated summary');
     });
 
-    test('should remove an annotation', async ({ ruleEditorPage }) => {
+    test('should remove an annotation', async ({ ruleEditorPage, mimirRuler }) => {
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
       await ruleEditorPage.fillRuleName('TestRemoveAnnotation');
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('up == 0');
 
       // Add multiple annotations
@@ -265,12 +270,12 @@ test.describe('RuleEditor Page - E2E', () => {
   });
 
   test.describe('Validation', () => {
-    test('should show error for empty rule name', async ({ ruleEditorPage, page }) => {
+    test('should show error for empty rule name', async ({ ruleEditorPage, page, mimirRuler }) => {
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
       // Fill required fields except name
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.fillExpression('up == 0');
       await ruleEditorPage.selectNamespace('e2e-test-namespace');
       await ruleEditorPage.selectGroup('e2e-test-group');
@@ -288,13 +293,13 @@ test.describe('RuleEditor Page - E2E', () => {
       expect(hasError).toBe(true);
     });
 
-    test('should show error for empty expression', async ({ ruleEditorPage, page }) => {
+    test('should show error for empty expression', async ({ ruleEditorPage, page, mimirRuler }) => {
       await ruleEditorPage.gotoNew('alerting');
       await ruleEditorPage.waitForLoad();
 
       // Fill required fields except expression
       await ruleEditorPage.fillRuleName('TestNoExpression');
-      await ruleEditorPage.selectDataSource('Test Mimir');
+      await ruleEditorPage.selectDataSource(mimirRuler.name);
       await ruleEditorPage.selectNamespace('e2e-test-namespace');
       await ruleEditorPage.selectGroup('e2e-test-group');
 
@@ -325,23 +330,5 @@ test.describe('RuleEditor Page - E2E', () => {
       await ruleEditorPage.clickCancel();
       await page.waitForURL('**/rules', { timeout: 5000 });
     });
-  });
-
-  // Cleanup: Restore pre-provisioned rules after Edit/Clone tests.
-  test.afterEach(async ({}, testInfo) => {
-    const title = testInfo.title.toLowerCase();
-    if (title.includes('edit') || title.includes('clone')) {
-      try {
-        const { execSync } = require('child_process');
-        execSync(
-          'curl -X POST -H "Content-Type: application/yaml" ' +
-            '--data-binary @test-data/mimir/rules/e2e-test-namespace/e2e-test-group.yaml ' +
-            'http://localhost:9009/prometheus/config/v1/rules/e2e-test-namespace',
-          { stdio: 'ignore' }
-        );
-      } catch (error) {
-        console.error('Failed to restore pre-provisioned rules:', error);
-      }
-    }
   });
 });

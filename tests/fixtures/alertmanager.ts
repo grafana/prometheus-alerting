@@ -1,31 +1,37 @@
 import { test as base } from '@grafana/plugin-e2e';
+import { randomUUID } from 'node:crypto';
 import pluginJson from '../../src/plugin.json';
-import { resetMimirAlertmanagerConfig } from '../api/alertmanagerConfig';
+import {
+  deleteMimirAlertmanagerConfig,
+  initializeMimirAlertmanagerConfig,
+  postMimirAlertmanagerConfig,
+} from '../api/alertmanagerConfig';
+import { createMimirAlertmanagerDataSource, deleteGrafanaDataSource } from '../api/grafana';
 import { InhibitRulesPage } from '../pages/InhibitRulesPage';
 import { ReceiversPage } from '../pages/ReceiversPage';
 import { RoutesListPage } from '../pages/RoutesListPage';
 import { TemplatesPage } from '../pages/TemplatesPage';
 
 /**
- * Test data source UID/display-name constants (provisioning/datasources/test-datasources.yaml),
- * shared across every Alertmanager-page spec (inhibit rules, receivers, ...).
+ * Test data source constants shared across every Alertmanager-page spec.
  */
 export const VANILLA_ALERTMANAGER_UID = 'test-alertmanager';
 export const VANILLA_ALERTMANAGER_NAME = 'Test Alertmanager';
-export const MIMIR_ALERTMANAGER_UID = 'test-mimir-alertmanager';
-export const MIMIR_ALERTMANAGER_NAME = 'Test Mimir Alertmanager';
+
+type MimirAlertmanagerFixture = {
+  uid: string;
+  name: string;
+  tenantId: string;
+  seedConfig: (config: string) => Promise<void>;
+};
 
 type AlertmanagerTestFixture = {
   inhibitRulesPage: InhibitRulesPage;
   receiversPage: ReceiversPage;
   routesListPage: RoutesListPage;
   templatesPage: TemplatesPage;
-  /**
-   * Reset the (single, shared) Mimir Alertmanager config to empty. Returns a callable so
-   * write specs can start each test from a clean slate; the config is also reset in teardown.
-   * Mimir Alertmanager write tests must run serially.
-   */
-  resetMimirConfig: () => Promise<void>;
+  /** A dedicated Mimir tenant and Grafana datasource, isolated for one test. */
+  mimirAlertmanager: MimirAlertmanagerFixture;
 };
 
 export const test = base.extend<AlertmanagerTestFixture>({
@@ -45,9 +51,29 @@ export const test = base.extend<AlertmanagerTestFixture>({
     const templatesPage = new TemplatesPage(page, pluginJson.id);
     await use(templatesPage);
   },
-  resetMimirConfig: async ({}, use) => {
-    await use(resetMimirAlertmanagerConfig);
-    await resetMimirAlertmanagerConfig();
+  mimirAlertmanager: async ({}, use) => {
+    const suffix = randomUUID().replaceAll('-', '');
+    const uid = `e2e-am-${suffix}`;
+    const tenantId = uid;
+    const name = `E2E Mimir ${suffix}`;
+
+    await createMimirAlertmanagerDataSource({ uid, name, tenantId });
+
+    try {
+      await initializeMimirAlertmanagerConfig(tenantId);
+      await use({
+        uid,
+        name,
+        tenantId,
+        seedConfig: (config) => postMimirAlertmanagerConfig(tenantId, config),
+      });
+    } finally {
+      try {
+        await deleteMimirAlertmanagerConfig(tenantId);
+      } finally {
+        await deleteGrafanaDataSource(uid);
+      }
+    }
   },
 });
 

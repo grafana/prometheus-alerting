@@ -29,18 +29,6 @@ datasources:
       implementation: prometheus
     version: 1
 
-  # Mimir Alertmanager data source - for testing alertmanager CRUD on Mimir
-  - name: Test Mimir Alertmanager
-    type: alertmanager
-    uid: test-mimir-alertmanager
-    url: http://mimir:9009
-    access: proxy
-    isDefault: false
-    editable: true
-    jsonData:
-      implementation: mimir
-    version: 1
-
   # Mimir with Ruler API - for testing rule creation/editing
   - name: Test Mimir
     type: prometheus
@@ -54,9 +42,12 @@ datasources:
       prometheusType: Mimir
       prometheusVersion: 2.40.0
       implementation: mimir
+      httpHeaderName1: X-Scope-OrgID
       httpMethod: POST
       customQueryParameters: ''
       disableRecordingRules: false
+    secureJsonData:
+      httpHeaderValue1: anonymous
     version: 1
 
   # Loki with Ruler API - for testing Loki rule creation/editing

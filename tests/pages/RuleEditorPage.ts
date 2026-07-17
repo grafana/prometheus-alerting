@@ -39,10 +39,7 @@ export class RuleEditorPage {
   readonly saveButton: Locator;
   readonly cancelButton: Locator;
 
-  constructor(
-    private page: Page,
-    private pluginId: string
-  ) {
+  constructor(private page: Page) {
     // Scope all selectors to page content
     this.pageContent = page.locator('#pageContent');
 

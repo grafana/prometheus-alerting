@@ -1,5 +1,4 @@
-import { test, expect, VANILLA_ALERTMANAGER_UID, MIMIR_ALERTMANAGER_UID } from './fixtures/alertmanager';
-import { postMimirAlertmanagerConfig } from './api/alertmanagerConfig';
+import { test, expect, VANILLA_ALERTMANAGER_UID } from './fixtures/alertmanager';
 
 /**
  * A webhook receiver with every optional field set, used as the starting point for the "update"
@@ -67,7 +66,7 @@ alertmanager_config: |
  *
  * Read tests use the vanilla `test-alertmanager` (6 seeded receivers in
  * test-data/alertmanager/alertmanager.yml, read-only). Write tests use the Mimir
- * `test-mimir-alertmanager` (editable). Resetting the Mimir config leaves a single
+ * a dedicated, fixture-created Mimir tenant (editable). Its initial config leaves a single
  * `empty-default-receiver` (the route's default receiver, undeletable) — not zero receivers.
  */
 
@@ -118,12 +117,8 @@ test.describe('Receivers', () => {
   });
 
   test.describe('Mimir Alertmanager (CRUD)', () => {
-    // Mimir stores one config per tenant → serialize and reset between tests.
-    test.describe.configure({ mode: 'serial' });
-
-    test.beforeEach(async ({ receiversPage, resetMimirConfig }) => {
-      await resetMimirConfig();
-      await receiversPage.gotoWithAlertmanager(MIMIR_ALERTMANAGER_UID);
+    test.beforeEach(async ({ receiversPage, mimirAlertmanager }) => {
+      await receiversPage.gotoWithAlertmanager(mimirAlertmanager.uid);
     });
 
     test('creates a receiver with a single email integration', async ({ receiversPage }) => {
@@ -223,9 +218,9 @@ test.describe('Receivers', () => {
       await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('Yes');
     });
 
-    test('updates a webhook receiver with all optional fields', async ({ receiversPage }) => {
-      await postMimirAlertmanagerConfig(WEBHOOK_FULL_BEFORE_CONFIG);
-      await receiversPage.gotoWithAlertmanager(MIMIR_ALERTMANAGER_UID);
+    test('updates a webhook receiver with all optional fields', async ({ receiversPage, mimirAlertmanager }) => {
+      await mimirAlertmanager.seedConfig(WEBHOOK_FULL_BEFORE_CONFIG);
+      await receiversPage.gotoWithAlertmanager(mimirAlertmanager.uid);
 
       await receiversPage.openReceiverByName('webhook-full-update');
       await receiversPage.startEdit();
@@ -287,9 +282,9 @@ test.describe('Receivers', () => {
       await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('Yes');
     });
 
-    test('updates an email receiver with all optional fields', async ({ receiversPage }) => {
-      await postMimirAlertmanagerConfig(EMAIL_FULL_BEFORE_CONFIG);
-      await receiversPage.gotoWithAlertmanager(MIMIR_ALERTMANAGER_UID);
+    test('updates an email receiver with all optional fields', async ({ receiversPage, mimirAlertmanager }) => {
+      await mimirAlertmanager.seedConfig(EMAIL_FULL_BEFORE_CONFIG);
+      await receiversPage.gotoWithAlertmanager(mimirAlertmanager.uid);
 
       await receiversPage.openReceiverByName('email-full-update');
       await receiversPage.startEdit();
@@ -353,9 +348,9 @@ test.describe('Receivers', () => {
       await expect(receiversPage.getViewFieldValue('text')).toHaveText('Full message body');
     });
 
-    test('updates a slack receiver with all optional fields', async ({ receiversPage }) => {
-      await postMimirAlertmanagerConfig(SLACK_FULL_BEFORE_CONFIG);
-      await receiversPage.gotoWithAlertmanager(MIMIR_ALERTMANAGER_UID);
+    test('updates a slack receiver with all optional fields', async ({ receiversPage, mimirAlertmanager }) => {
+      await mimirAlertmanager.seedConfig(SLACK_FULL_BEFORE_CONFIG);
+      await receiversPage.gotoWithAlertmanager(mimirAlertmanager.uid);
 
       await receiversPage.openReceiverByName('slack-full-update');
       await receiversPage.startEdit();
