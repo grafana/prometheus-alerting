@@ -8,13 +8,10 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 const LOKI_URL = 'http://loki:3100';
 const RULES_DIR = '/rules';
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 async function waitForRulerApi() {
   console.log('Waiting for Loki Ruler API...');

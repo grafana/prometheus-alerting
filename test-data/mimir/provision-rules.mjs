@@ -8,14 +8,11 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 const MIMIR_URL = 'http://mimir:9009';
 const ORG_HEADER = { 'X-Scope-OrgID': 'anonymous' };
 const RULES_DIR = '/rules';
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 async function waitForRulerApi() {
   console.log('Waiting for Mimir Ruler API...');
