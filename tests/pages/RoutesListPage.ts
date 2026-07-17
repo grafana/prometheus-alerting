@@ -139,11 +139,17 @@ export class RoutesListPage extends AlertmanagerPage {
    * Open a non-root route's "Add" dropdown menu and pick an action. The menu renders in a
    * floating overlay (not nested under the card), so its items are queried at the page level.
    */
-  async openAddMenu(
-    routeLocator: Locator,
-    action: 'New sibling above' | 'New sibling below' | 'New child route' | 'Delete route'
-  ) {
+  async openAddMenu(routeLocator: Locator, action: 'New sibling above' | 'New sibling below' | 'New child route') {
     await routeLocator.getByRole('button', { name: 'Add', exact: true }).click();
+    await this.page.getByRole('menuitem', { name: action, exact: true }).click();
+  }
+
+  /**
+   * Open a route's "More" dropdown menu (the kebab/overflow button) and pick an action. Like the
+   * "Add" menu, it renders in a floating overlay, so its items are queried at the page level.
+   */
+  async openMoreMenu(routeLocator: Locator, action: 'Details' | 'Edit' | 'Delete route') {
+    await routeLocator.getByRole('button', { name: 'More', exact: true }).click();
     await this.page.getByRole('menuitem', { name: action, exact: true }).click();
   }
 
@@ -193,9 +199,9 @@ export class RoutesListPage extends AlertmanagerPage {
 
   // ----- Delete -----
 
-  /** Delete a route via its card's "Add" menu (root has no such menu — it can't be deleted). */
+  /** Delete a route via its card's "More" menu (root has no such menu — it can't be deleted). */
   async deleteViaCardMenu(routeLocator: Locator) {
-    await this.openAddMenu(routeLocator, 'Delete route');
+    await this.openMoreMenu(routeLocator, 'Delete route');
     await this.confirmDelete();
   }
 
