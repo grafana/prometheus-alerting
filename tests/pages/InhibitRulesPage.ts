@@ -5,7 +5,7 @@ import { AlertmanagerPage } from './AlertmanagerPage';
  * Page object for the Inhibit Rules view (`/inhibit-rules`).
  *
  * Read: vanilla `test-alertmanager` (3 seeded rules, read-only — no Add button).
- * Write: Mimir `test-mimir-alertmanager` (create/edit/delete; Add button gated by
+ * Write: a fixture-created Mimir Alertmanager (create/edit/delete; Add button gated by
  * `useHasConfigurationAPI()`). See `src/features/inhibitRules/`.
  */
 export class InhibitRulesPage extends AlertmanagerPage {

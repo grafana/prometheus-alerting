@@ -66,6 +66,15 @@ export function useProduceNewAlertmanagerConfiguration() {
     // NOTE: We preserve currentConfig values and only use initialAlertmanagerConfiguration as fallback for missing fields
     const initialConfiguration = defaultsDeep({}, currentConfig, initialAlertmanagerConfiguration);
 
+    // defaultsDeep recursively backfills missing fields on an *existing* route tree too (e.g. group_wait,
+    // group_interval, repeat_interval), which changes the content-hash IDs routesReducer/attachRouteIds
+    // compute for it and breaks route lookups by ID. Only fall back to the initial default route when the
+    // fetched config has no route at all (e.g. a brand new Mimir tenant) — otherwise keep it byte-for-byte
+    // as fetched, matching what the UI hashed when it computed the route IDs used by the action payload.
+    if (currentConfig.alertmanager_config.route) {
+      initialConfiguration.alertmanager_config.route = currentConfig.alertmanager_config.route;
+    }
+
     // Apply the reducer to produce the new configuration
     const newConfig = configurationReducer(initialConfiguration, action);
 

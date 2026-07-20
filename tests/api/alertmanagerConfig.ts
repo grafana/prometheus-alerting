@@ -4,7 +4,10 @@
  */
 
 const MIMIR_ALERTMANAGER_CONFIG_URL = 'http://localhost:9009/api/v1/alerts';
-const MIMIR_ORG_HEADER = { 'X-Scope-OrgID': 'anonymous' } as const;
+
+function getMimirOrgHeader(tenantId: string) {
+  return { 'X-Scope-OrgID': tenantId } as const;
+}
 
 /**
  * A minimal, valid Alertmanager configuration with no inhibit rules. Posting this initializes the
@@ -26,27 +29,35 @@ alertmanager_config: |
 
 /**
  * Post a raw Alertmanager configuration (the same `template_files` + `alertmanager_config` YAML
- * document accepted by Mimir's `/api/v1/alerts`) to the test tenant.
- *
- * NOTE: Mimir stores one config per tenant (`anonymous`), so it is a single shared mutable
- * resource. Write tests against the Mimir Alertmanager must run serially.
+ * document accepted by Mimir's `/api/v1/alerts`) to the given test tenant.
  */
-export async function postMimirAlertmanagerConfig(config: string): Promise<void> {
+export async function postMimirAlertmanagerConfig(tenantId: string, config: string): Promise<void> {
   const response = await fetch(MIMIR_ALERTMANAGER_CONFIG_URL, {
     method: 'POST',
-    headers: { ...MIMIR_ORG_HEADER, 'Content-Type': 'application/yaml' },
+    headers: { ...getMimirOrgHeader(tenantId), 'Content-Type': 'application/yaml' },
     body: config,
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to post Mimir Alertmanager config: HTTP ${response.status}`);
+    throw new Error(`Failed to post Mimir Alertmanager config for ${tenantId}: HTTP ${response.status}`);
   }
 }
 
 /**
- * Reset the Mimir Alertmanager configuration back to an initialized-but-empty state (a valid
- * config with zero inhibit rules).
+ * Initialize a tenant with a valid config containing no templates or inhibit rules.
  */
-export async function resetMimirAlertmanagerConfig(): Promise<void> {
-  await postMimirAlertmanagerConfig(EMPTY_MIMIR_ALERTMANAGER_CONFIG);
+export async function initializeMimirAlertmanagerConfig(tenantId: string): Promise<void> {
+  await postMimirAlertmanagerConfig(tenantId, EMPTY_MIMIR_ALERTMANAGER_CONFIG);
+}
+
+/** Delete a test tenant's Alertmanager config. A missing config is already clean. */
+export async function deleteMimirAlertmanagerConfig(tenantId: string): Promise<void> {
+  const response = await fetch(MIMIR_ALERTMANAGER_CONFIG_URL, {
+    method: 'DELETE',
+    headers: getMimirOrgHeader(tenantId),
+  });
+
+  if (!response.ok && response.status !== 404) {
+    throw new Error(`Failed to delete Mimir Alertmanager config for ${tenantId}: HTTP ${response.status}`);
+  }
 }

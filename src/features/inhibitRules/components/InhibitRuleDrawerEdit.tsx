@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { t } from '@grafana/i18n';
 import type { NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
 import { useUpdateInhibitRule } from '../hooks/useInhibitRules';
@@ -33,7 +33,7 @@ export function InhibitRuleDrawerEdit({
     }
   };
 
-  const inhibitRuleForForm = normalizedInhibitRuleToInhibitRule(inhibitRule);
+  const inhibitRuleForForm = useMemo(() => normalizedInhibitRuleToInhibitRule(inhibitRule), [inhibitRule]);
 
   return (
     <InhibitRuleFormFields

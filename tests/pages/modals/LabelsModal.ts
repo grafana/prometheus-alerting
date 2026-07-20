@@ -11,7 +11,7 @@ export class LabelsModal {
   readonly cancelButton: Locator;
   readonly saveButton: Locator;
 
-  constructor(private page: Page) {
+  constructor(page: Page) {
     // Find the dialog/modal for labels editing
     this.modal = page.getByRole('dialog', { name: /labels/i });
 
