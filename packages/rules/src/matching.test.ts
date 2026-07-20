@@ -178,4 +178,21 @@ describe('getMatchingPromRule (inverse direction)', () => {
     );
     expect(result).toBe(promRules[1]);
   });
+
+  it('does not match via position hash when the group sizes differ', () => {
+    const promRules = [
+      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
+      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
+      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
+    ];
+
+    // The ruler-side group only has 2 rules ("0:2"), but the prom-side group has 3 -- a structural
+    // mismatch, so position matching must not fall back to a guess.
+    const result = getMatchingPromRule(
+      promRules,
+      rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
+      createRulePositionHash(0, 2)
+    );
+    expect(result).toBeUndefined();
+  });
 });
