@@ -169,3 +169,60 @@ test.describe('Rules List Filtering - Integration', () => {
     expect(hasNoRules).toBe(true);
   });
 });
+
+/**
+ * When multiple rules in the same Ruler group share a name, the list must still resolve each
+ * Prometheus-side row to its own Ruler-side rule (rather than dropping its actions) by falling
+ * through labels -> query -> position-within-group disambiguation. See
+ * `getMatchingRulerRule`/`createRulePositionHash` in `@grafana/external-rules/matching` and
+ * `packages/rules/src/matching.test.ts` for the underlying algorithm's unit coverage; these tests
+ * check its observable effect against a real Mimir backend.
+ *
+ * The duplicate-named rules live in the static `e2e-dup-*-group.yaml` files under
+ * `test-data/mimir/rules/e2e-test-namespace/`, provisioned once at stack startup and gated on by
+ * `global-setup.ts` (REQUIRED_MIMIR_GROUPS) before any test runs. These tests only read the rules
+ * list, never mutate these groups, so there's no per-test isolation concern -- and no need to
+ * provision-then-poll-for-readiness inside the test itself.
+ */
+test.describe('Duplicate Rule Name Disambiguation', () => {
+  test('disambiguates same-named rules that differ by labels', async ({ rulesListPage }) => {
+    await rulesListPage.goto();
+    await rulesListPage.waitForLoad();
+    await rulesListPage.filterByRuleName('DuplicateLabelRule');
+
+    await expect(rulesListPage.getRuleRows('DuplicateLabelRule')).toHaveCount(2, { timeout: 15000 });
+
+    const rows = await rulesListPage.getRuleRowObjects('DuplicateLabelRule');
+    const editHrefs = await Promise.all(rows.map((row) => row.getEditHref()));
+    // Distinct labels -> distinct rules -> distinct edit targets.
+    expect(new Set(editHrefs).size).toBe(2);
+  });
+
+  test('disambiguates same-named, same-labeled rules that differ by query', async ({ rulesListPage }) => {
+    await rulesListPage.goto();
+    await rulesListPage.waitForLoad();
+    await rulesListPage.filterByRuleName('DuplicateQueryRule');
+
+    await expect(rulesListPage.getRuleRows('DuplicateQueryRule')).toHaveCount(2, { timeout: 15000 });
+
+    const rows = await rulesListPage.getRuleRowObjects('DuplicateQueryRule');
+    const editHrefs = await Promise.all(rows.map((row) => row.getEditHref()));
+    // Identical labels but distinct queries -> distinct rules -> distinct edit targets.
+    expect(new Set(editHrefs).size).toBe(2);
+  });
+
+  test('disambiguates fully identical duplicate rules by position within the group', async ({ rulesListPage }) => {
+    await rulesListPage.goto();
+    await rulesListPage.waitForLoad();
+    await rulesListPage.filterByRuleName('DuplicatePositionRule');
+
+    await expect(rulesListPage.getRuleRows('DuplicatePositionRule')).toHaveCount(3, { timeout: 15000 });
+
+    // Name, labels, and query are all identical here, so matching can only succeed via position
+    // within the group. Each row must still get its own Edit action -- a row silently losing its
+    // actions (RuleActionsButtons falling back to read-only) is the pre-fix failure mode.
+    const rows = await rulesListPage.getRuleRowObjects('DuplicatePositionRule');
+    const editHrefs = await Promise.all(rows.map((row) => row.getEditHref()));
+    expect(editHrefs).toHaveLength(3);
+  });
+});

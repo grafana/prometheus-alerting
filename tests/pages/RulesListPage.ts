@@ -1,6 +1,31 @@
 import { Locator, Page, expect } from '@playwright/test';
 
 /**
+ * Wraps a single rule-list row (`role="treeitem"`), encapsulating row-level locators/behavior
+ * rather than exposing the raw `Locator` to callers. Each row can independently resolve -- or
+ * fail to resolve -- a matching Ruler-side rule; see `DataSourceRuleLoader`/`RuleActionsButtons`
+ * in `src/features/rules/list`.
+ */
+export class RuleRow {
+  constructor(private readonly locator: Locator) {}
+
+  /**
+   * The row's Edit link, if the app resolved a matching Ruler-side rule for it. Absent when
+   * Ruler-side matching (name/labels/query/position disambiguation) failed to resolve a unique
+   * rule -- see `getMatchingRulerRule` in `@grafana/external-rules/matching`.
+   */
+  get editLink(): Locator {
+    return this.locator.getByRole('link', { name: /^edit$/i });
+  }
+
+  /** Assert the row has a visible Edit link, then return its href. */
+  async getEditHref(): Promise<string | null> {
+    await expect(this.editLink).toBeVisible();
+    return this.editLink.getAttribute('href');
+  }
+}
+
+/**
  * Page object for the Rules List view.
  *
  * The filter UI is an always-visible sidebar (commit b1d48ba, 2026-03-06).
@@ -34,6 +59,7 @@ export class RulesListPage {
 
   // Rule list
   readonly ruleList: Locator;
+  readonly ruleRows: Locator;
 
   constructor(page: Page, pluginId: string) {
     this.page = page;
@@ -58,6 +84,7 @@ export class RulesListPage {
     this.typeRecordingButton = this.sidebar.getByRole('button', { name: /recording rule/i });
 
     this.ruleList = page.getByRole('list', { name: /rule/i });
+    this.ruleRows = page.getByRole('treeitem');
   }
 
   async goto() {
@@ -147,12 +174,11 @@ export class RulesListPage {
   // ----- Rule list inspection -----
 
   async getVisibleRuleNames(): Promise<string[]> {
-    const ruleItems = this.page.getByRole('treeitem');
-    await expect(ruleItems.first()).toBeVisible({ timeout: 10000 });
-    const count = await ruleItems.count();
+    await expect(this.ruleRows.first()).toBeVisible({ timeout: 10000 });
+    const count = await this.ruleRows.count();
     const names: string[] = [];
     for (let i = 0; i < count; i++) {
-      const text = await ruleItems.nth(i).textContent();
+      const text = await this.ruleRows.nth(i).textContent();
       if (text) {
         names.push(text);
       }
@@ -161,13 +187,28 @@ export class RulesListPage {
   }
 
   async getRuleCount(): Promise<number> {
-    const ruleItems = this.page.getByRole('treeitem');
-    await expect(ruleItems.first()).toBeVisible({ timeout: 10000 });
-    return ruleItems.count();
+    await expect(this.ruleRows.first()).toBeVisible({ timeout: 10000 });
+    return this.ruleRows.count();
   }
 
   async hasNoRulesMessage(): Promise<boolean> {
     const emptyState = this.page.getByText(/no matching rules found/i);
     return emptyState.isVisible();
+  }
+
+  /**
+   * Rule rows whose visible text contains `text` (e.g. to scope to one rule name among
+   * duplicates). Returns a `Locator`, not `RuleRow[]`, so callers can still use Playwright's
+   * auto-retrying locator assertions (e.g. `expect(...).toHaveCount(...)`); resolve individual
+   * rows via `getRuleRowObjects` once you're past that wait.
+   */
+  getRuleRows(text: string | RegExp): Locator {
+    return this.ruleRows.filter({ hasText: text });
+  }
+
+  /** Resolve `getRuleRows(text)` into individual `RuleRow` objects. */
+  async getRuleRowObjects(text: string | RegExp): Promise<RuleRow[]> {
+    const rows = await this.getRuleRows(text).all();
+    return rows.map((row) => new RuleRow(row));
   }
 }
