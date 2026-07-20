@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { createRulePositionHash, getMatchingRulerRule, getMatchingPromRule } from './matching';
-import type { PromRuleDTO, RulerRuleDTO } from './vanilla/api';
+import { RulerRuleDTOSchema, type PromRuleDTO, type RulerRuleDTO } from './vanilla/api';
 
 const promRule = (overrides: Partial<PromRuleDTO> = {}): PromRuleDTO => ({
   name: 'HighErrorRate',
@@ -14,12 +14,12 @@ const promRule = (overrides: Partial<PromRuleDTO> = {}): PromRuleDTO => ({
 });
 
 const rulerRule = (overrides: Partial<RulerRuleDTO> = {}): RulerRuleDTO =>
-  ({
+  RulerRuleDTOSchema.parse({
     alert: 'HighErrorRate',
     expr: 'up == 0',
     labels: { severity: 'warning' },
     ...overrides,
-  }) as RulerRuleDTO;
+  });
 
 /**
  * Regression tests for the rules-list duplicate-name bug found during a live bug-bash session:
@@ -36,9 +36,11 @@ const rulerRule = (overrides: Partial<RulerRuleDTO> = {}): RulerRuleDTO =>
  */
 describe('getMatchingRulerRule', () => {
   it('matches by unique name when only one ruler rule has that name', () => {
-    const rulerRules = [rulerRule({ alert: 'HighErrorRate' }), rulerRule({ alert: 'OtherRule' })];
+    const target = rulerRule({ alert: 'HighErrorRate' });
+    const rulerRules = [rulerRule({ alert: 'OtherRule' }), target];
+
     const result = getMatchingRulerRule(rulerRules, promRule({ name: 'HighErrorRate' }));
-    expect(result).toBe(rulerRules[0]);
+    expect(result).toBe(target);
   });
 
   it('returns undefined when no ruler rule has a matching name', () => {
@@ -69,8 +71,9 @@ describe('getMatchingRulerRule', () => {
   });
 
   it('returns undefined for a fully ambiguous duplicate when no position hash is given', () => {
+    const target = rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' });
     const rulerRules = [
-      rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
+      target,
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
     ];
 
@@ -82,8 +85,9 @@ describe('getMatchingRulerRule', () => {
   });
 
   it('resolves a fully ambiguous duplicate at position 0 via the position hash', () => {
+    const target = rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' });
     const rulerRules = [
-      rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
+      target,
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
     ];
 
@@ -92,13 +96,14 @@ describe('getMatchingRulerRule', () => {
       promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
       createRulePositionHash(0, 2)
     );
-    expect(result).toBe(rulerRules[0]);
+    expect(result).toBe(target);
   });
 
   it('resolves the middle rule of three fully ambiguous duplicates via the position hash', () => {
+    const target = rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' });
     const rulerRules = [
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
-      rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
+      target,
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
     ];
 
@@ -107,14 +112,31 @@ describe('getMatchingRulerRule', () => {
       promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
       createRulePositionHash(1, 3)
     );
-    expect(result).toBe(rulerRules[1]);
+    expect(result).toBe(target);
     expect(result).not.toBe(rulerRules[0]);
     expect(result).not.toBe(rulerRules[2]);
   });
 
-  it('does not match via position hash when the group sizes differ', () => {
+  it('uses a rule position within the full group, including nonmatching rules', () => {
+    const target = rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' });
     const rulerRules = [
+      rulerRule({ alert: 'UnrelatedRule' }),
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
+      target,
+    ];
+
+    const result = getMatchingRulerRule(
+      rulerRules,
+      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
+      createRulePositionHash(2, 3)
+    );
+    expect(result).toBe(target);
+  });
+
+  it('does not match via position hash when the group sizes differ', () => {
+    const target = rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' });
+    const rulerRules = [
+      target,
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
     ];
@@ -130,7 +152,7 @@ describe('getMatchingRulerRule', () => {
   });
 
   it('matches recording rules by name', () => {
-    const rulerRules = [{ record: 'job:requests:rate5m', expr: 'sum(rate(x[5m]))' } as RulerRuleDTO];
+    const rulerRules = [RulerRuleDTOSchema.parse({ record: 'job:requests:rate5m', expr: 'sum(rate(x[5m]))' })];
     const result = getMatchingRulerRule(
       rulerRules,
       promRule({ name: 'job:requests:rate5m', type: 'recording', state: undefined, query: 'sum(rate(x[5m]))' })
