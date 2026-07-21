@@ -21,6 +21,17 @@ const rulerRule = (overrides: Partial<RulerRuleDTO> = {}): RulerRuleDTO =>
     ...overrides,
   });
 
+type AlertRuleDefinition = {
+  name: string;
+  query: string;
+  labels?: Record<string, string>;
+};
+
+const createRulerAndPromRules = ({ name, query, labels }: AlertRuleDefinition) => ({
+  rulerRule: rulerRule({ alert: name, expr: query, labels }),
+  promRule: promRule({ name, query, labels }),
+});
+
 /**
  * Regression tests for the rules-list duplicate-name bug found during a live bug-bash session:
  * when a rule group contains multiple rules sharing an identical name (a valid, if unusual, Ruler
@@ -50,104 +61,110 @@ describe('getMatchingRulerRule', () => {
   });
 
   it('resolves a name collision via the labels+annotations fingerprint', () => {
-    const target = rulerRule({ alert: 'Dup', labels: { team: 'platform' } });
+    const { rulerRule: targetRulerRule, promRule } = createRulerAndPromRules({
+      name: 'Dup',
+      query: 'up == 0',
+      labels: { team: 'platform' },
+    });
     const other = rulerRule({ alert: 'Dup', labels: { team: 'sre' } });
-    const rulerRules = [other, target];
+    const rulerRules = [other, targetRulerRule];
 
-    const result = getMatchingRulerRule(rulerRules, promRule({ name: 'Dup', labels: { team: 'platform' } }));
-    expect(result).toBe(target);
+    const result = getMatchingRulerRule(rulerRules, promRule);
+    expect(result).toBe(targetRulerRule);
   });
 
   it('resolves a name+label collision via the query fingerprint as a last resort', () => {
-    const target = rulerRule({ alert: 'Dup', labels: { team: 'platform' }, expr: 'up == 0' });
+    const { rulerRule: targetRulerRule, promRule } = createRulerAndPromRules({
+      name: 'Dup',
+      query: 'up == 0',
+      labels: { team: 'platform' },
+    });
     const other = rulerRule({ alert: 'Dup', labels: { team: 'platform' }, expr: 'up == 1' });
-    const rulerRules = [other, target];
+    const rulerRules = [other, targetRulerRule];
 
-    const result = getMatchingRulerRule(
-      rulerRules,
-      promRule({ name: 'Dup', labels: { team: 'platform' }, query: 'up == 0' })
-    );
-    expect(result).toBe(target);
+    const result = getMatchingRulerRule(rulerRules, promRule);
+    expect(result).toBe(targetRulerRule);
   });
 
   it('returns undefined for a fully ambiguous duplicate when no position hash is given', () => {
-    const target = rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' });
+    const { rulerRule: targetRulerRule, promRule } = createRulerAndPromRules({
+      name: 'AmbiguousDuplicateRule',
+      query: 'up == 0',
+      labels: { team: 'platform' },
+    });
     const rulerRules = [
-      target,
+      targetRulerRule,
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
     ];
 
-    const result = getMatchingRulerRule(
-      rulerRules,
-      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' })
-    );
+    const result = getMatchingRulerRule(rulerRules, promRule);
     expect(result).toBeUndefined();
   });
 
   it('resolves a fully ambiguous duplicate at position 0 via the position hash', () => {
-    const target = rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' });
+    const { rulerRule: targetRulerRule, promRule } = createRulerAndPromRules({
+      name: 'AmbiguousDuplicateRule',
+      query: 'up == 0',
+      labels: { team: 'platform' },
+    });
     const rulerRules = [
-      target,
+      targetRulerRule,
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
     ];
 
-    const result = getMatchingRulerRule(
-      rulerRules,
-      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
-      createRulePositionHash(0, 2)
-    );
-    expect(result).toBe(target);
+    const result = getMatchingRulerRule(rulerRules, promRule, createRulePositionHash(0, 2));
+    expect(result).toBe(targetRulerRule);
   });
 
   it('resolves the middle rule of three fully ambiguous duplicates via the position hash', () => {
-    const target = rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' });
+    const { rulerRule: targetRulerRule, promRule } = createRulerAndPromRules({
+      name: 'AmbiguousDuplicateRule',
+      query: 'up == 0',
+      labels: { team: 'platform' },
+    });
     const rulerRules = [
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
-      target,
+      targetRulerRule,
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
     ];
 
-    const result = getMatchingRulerRule(
-      rulerRules,
-      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
-      createRulePositionHash(1, 3)
-    );
-    expect(result).toBe(target);
+    const result = getMatchingRulerRule(rulerRules, promRule, createRulePositionHash(1, 3));
+    expect(result).toBe(targetRulerRule);
     expect(result).not.toBe(rulerRules[0]);
     expect(result).not.toBe(rulerRules[2]);
   });
 
   it('uses a rule position within the full group, including nonmatching rules', () => {
-    const target = rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' });
+    const { rulerRule: targetRulerRule, promRule } = createRulerAndPromRules({
+      name: 'AmbiguousDuplicateRule',
+      query: 'up == 0',
+      labels: { team: 'platform' },
+    });
     const rulerRules = [
       rulerRule({ alert: 'UnrelatedRule' }),
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
-      target,
+      targetRulerRule,
     ];
 
-    const result = getMatchingRulerRule(
-      rulerRules,
-      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
-      createRulePositionHash(2, 3)
-    );
-    expect(result).toBe(target);
+    const result = getMatchingRulerRule(rulerRules, promRule, createRulePositionHash(2, 3));
+    expect(result).toBe(targetRulerRule);
   });
 
   it('does not match via position hash when the group sizes differ', () => {
-    const target = rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' });
+    const { rulerRule: targetRulerRule, promRule } = createRulerAndPromRules({
+      name: 'AmbiguousDuplicateRule',
+      query: 'up == 0',
+      labels: { team: 'platform' },
+    });
     const rulerRules = [
-      target,
+      targetRulerRule,
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
       rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
     ];
 
     // The prom-side group only has 2 rules ("0:2"), but the ruler-side group has 3 -- a structural
     // mismatch, so position matching must not fall back to a guess.
-    const result = getMatchingRulerRule(
-      rulerRules,
-      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
-      createRulePositionHash(0, 2)
-    );
+    const result = getMatchingRulerRule(rulerRules, promRule, createRulePositionHash(0, 2));
     expect(result).toBeUndefined();
   });
 
@@ -175,46 +192,50 @@ describe('getMatchingPromRule (inverse direction)', () => {
   });
 
   it('returns undefined for a fully ambiguous duplicate when no position hash is given', () => {
+    const { rulerRule, promRule: targetPromRule } = createRulerAndPromRules({
+      name: 'AmbiguousDuplicateRule',
+      query: 'up == 0',
+      labels: { team: 'platform' },
+    });
     const promRules = [
-      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
+      targetPromRule,
       promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
     ];
 
-    const result = getMatchingPromRule(
-      promRules,
-      rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' })
-    );
+    const result = getMatchingPromRule(promRules, rulerRule);
     expect(result).toBeUndefined();
   });
 
   it('resolves a fully ambiguous duplicate via the position hash', () => {
+    const { rulerRule, promRule: targetPromRule } = createRulerAndPromRules({
+      name: 'AmbiguousDuplicateRule',
+      query: 'up == 0',
+      labels: { team: 'platform' },
+    });
     const promRules = [
-      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
+      targetPromRule,
       promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
     ];
 
-    const result = getMatchingPromRule(
-      promRules,
-      rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
-      createRulePositionHash(1, 2)
-    );
+    const result = getMatchingPromRule(promRules, rulerRule, createRulePositionHash(1, 2));
     expect(result).toBe(promRules[1]);
   });
 
   it('does not match via position hash when the group sizes differ', () => {
+    const { rulerRule, promRule: targetPromRule } = createRulerAndPromRules({
+      name: 'AmbiguousDuplicateRule',
+      query: 'up == 0',
+      labels: { team: 'platform' },
+    });
     const promRules = [
-      promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
+      targetPromRule,
       promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
       promRule({ name: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, query: 'up == 0' }),
     ];
 
     // The ruler-side group only has 2 rules ("0:2"), but the prom-side group has 3 -- a structural
     // mismatch, so position matching must not fall back to a guess.
-    const result = getMatchingPromRule(
-      promRules,
-      rulerRule({ alert: 'AmbiguousDuplicateRule', labels: { team: 'platform' }, expr: 'up == 0' }),
-      createRulePositionHash(0, 2)
-    );
+    const result = getMatchingPromRule(promRules, rulerRule, createRulePositionHash(0, 2));
     expect(result).toBeUndefined();
   });
 });
