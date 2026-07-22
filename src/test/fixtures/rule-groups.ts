@@ -60,7 +60,7 @@ export const mockRuleGroup2: RulerRuleGroupDTO = {
 
 /**
  * Mock namespaces structure (maps namespace name to array of groups)
- * This is the format returned by GET /api/ruler/:uid/api/v1/rules
+ * This is the format returned by GET through the datasource proxy Ruler API.
  */
 export const mockNamespaces: Record<string, RulerRuleGroupDTO[]> = {
   'test-namespace': [mockRuleGroup, mockRuleGroup2],

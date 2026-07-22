@@ -52,6 +52,10 @@ describe('useMatchingPromRuleExists', () => {
     });
 
     expect(exists).toBe(true);
+    expect(mockFetchPrometheusGroups).toHaveBeenCalledWith(
+      expect.objectContaining({ ruleSource: { uid: 'test-ds' } }),
+      false
+    );
   });
 
   it('should return false when rule does not exist', async () => {

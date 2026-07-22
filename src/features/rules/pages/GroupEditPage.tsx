@@ -21,7 +21,6 @@ import {
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
 import { rulerApi } from '../../../api/rules/mimir.endpoints';
-import { RulesSourceApplication } from '../../../types/rules';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
 const { useGetRuleGroupQuery, useDeleteRuleGroupMutation, useUpsertRuleGroupMutation } = rulerApi;
@@ -66,7 +65,6 @@ function GroupEditPage() {
           dataSourceUid: dataSourceUid,
           namespace: namespace,
           groupName: groupName,
-          application: dsFeatures.application,
         }
       : { dataSourceUid: '', namespace: '', groupName: '' },
     { skip: !dsFeatures?.rulerApiEnabled }
@@ -145,7 +143,6 @@ function GroupEditPage() {
         originalNamespace={namespace}
         originalGroupName={groupName}
         rulerGroup={rulerGroup}
-        application={dsFeatures?.application ?? 'mimir'}
       />
     </PluginPage>
   );
@@ -156,7 +153,6 @@ interface GroupEditFormProps {
   originalNamespace: string;
   originalGroupName: string;
   rulerGroup: RulerRuleGroupDTO;
-  application: RulesSourceApplication;
 }
 
 function GroupEditForm({
@@ -164,7 +160,6 @@ function GroupEditForm({
   originalNamespace,
   originalGroupName,
   rulerGroup,
-  application,
 }: GroupEditFormProps) {
   const styles = useStyles2(getStyles);
   const { returnTo } = useReturnTo(groups.detailsPageLink(dataSourceUid, originalNamespace, originalGroupName));
@@ -227,7 +222,6 @@ function GroupEditForm({
         dataSourceUid,
         namespace: targetNamespace,
         payload: newGroupPayload,
-        application,
       }).unwrap();
 
       // Show success toast notification
@@ -249,7 +243,6 @@ function GroupEditForm({
           dataSourceUid,
           namespace: originalNamespace,
           groupName: originalGroupName,
-          application,
         });
       }
     } catch (error) {
@@ -264,7 +257,6 @@ function GroupEditForm({
         dataSourceUid,
         namespace: originalNamespace,
         groupName: originalGroupName,
-        application,
       }).unwrap();
 
       // Wait for Prometheus to reflect the deletion
@@ -273,7 +265,6 @@ function GroupEditForm({
         dataSourceUid,
         namespace: originalNamespace,
         groupName: originalGroupName,
-        application,
       });
       setIsWaitingForConsistency(false);
 

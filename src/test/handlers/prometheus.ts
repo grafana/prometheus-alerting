@@ -5,12 +5,8 @@
 
 import { http, HttpResponse } from 'msw';
 
-/**
- * GET /api/prometheus/:dataSourceUid/api/v1/rules
- * Returns Prometheus-format rules (used for rule state/health)
- */
 const getPrometheusRulesHandler = () =>
-  http.get('/api/prometheus/:dataSourceUid/api/v1/rules', () => {
+  http.get('/api/datasources/proxy/uid/:dataSourceUid/api/v1/rules', () => {
     return HttpResponse.json({
       status: 'success',
       data: {
@@ -19,18 +15,17 @@ const getPrometheusRulesHandler = () =>
     });
   });
 
-/**
- * GET /api/prometheus/:dataSourceUid/api/v1/alerts
- * Returns active alerts
- */
-const getPrometheusAlertsHandler = () =>
-  http.get('/api/prometheus/:dataSourceUid/api/v1/alerts', () => {
+const getLokiRulesHandler = () =>
+  http.get('/api/datasources/proxy/uid/:dataSourceUid/api/prom/rules', () => {
     return HttpResponse.json({
       status: 'success',
       data: {
-        alerts: [],
+        groups: [],
       },
     });
   });
 
-export const prometheusHandlers = [getPrometheusRulesHandler(), getPrometheusAlertsHandler()];
+export const prometheusHandlers = [
+  getPrometheusRulesHandler(),
+  getLokiRulesHandler(),
+];

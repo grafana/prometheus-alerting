@@ -36,7 +36,6 @@ export function useRulerRule(identifier: CloudRuleIdentifier): RulerRuleResult {
           dataSourceUid: uid,
           namespace,
           groupName,
-          application: features.application,
         }
       : skipToken
   );

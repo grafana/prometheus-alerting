@@ -5,16 +5,34 @@ import {
   DataSourceInstanceSettingsFactory,
 } from '../test/fixtures/datasources';
 
-import { getExternalRulesSources } from './datasource';
+import { getExternalRulesSources, getRulesApiPluginType } from './datasource';
 
 function setupSrv(list: ReturnType<typeof DataSourceInstanceSettingsFactory.buildList>) {
   setDataSourceSrv({
     getList: () => list,
-    getInstanceSettings: () => null,
+    getInstanceSettings: (uid: string) => list.find((dataSource) => dataSource.uid === uid) ?? null,
     get: () => Promise.resolve({} as any),
     reload: () => Promise.resolve(),
   } as any);
 }
+
+describe('getRulesApiPluginType', () => {
+  it('returns the configured Prometheus or Loki plugin type', () => {
+    const prometheus = DataSourceInstanceSettingsFactory.build({ uid: 'prom-1', type: 'prometheus' });
+    const loki = DataSourceInstanceSettingsFactory.build({ uid: 'loki-1', type: 'loki' });
+    setupSrv([prometheus, loki]);
+
+    expect(getRulesApiPluginType(prometheus.uid)).toBe('prometheus');
+    expect(getRulesApiPluginType(loki.uid)).toBe('loki');
+  });
+
+  it('throws for an unsupported datasource type', () => {
+    const graphite = DataSourceInstanceSettingsFactory.build({ uid: 'graphite-1', type: 'graphite' });
+    setupSrv([graphite]);
+
+    expect(() => getRulesApiPluginType(graphite.uid)).toThrow('Unsupported rules datasource type: graphite');
+  });
+});
 
 describe('getExternalRulesSources', () => {
   it('returns prometheus and loki data sources', () => {

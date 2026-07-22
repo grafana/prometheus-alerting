@@ -65,7 +65,6 @@ function GroupDetails() {
           dataSourceUid: dataSourceUid,
           namespace: namespace,
           groupName: groupName,
-          application: dsFeatures.application,
         }
       : skipToken
   );

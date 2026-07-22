@@ -77,7 +77,6 @@ export function DataSourceGroupLoader({
           dataSourceUid: groupIdentifier.rulesSource.uid,
           namespace: namespaceName,
           groupName,
-          application: dsFeatures?.application,
         }
       : skipToken
   );
