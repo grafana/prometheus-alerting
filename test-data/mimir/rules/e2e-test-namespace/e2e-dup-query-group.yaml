@@ -1,0 +1,12 @@
+name: e2e-dup-query-group
+interval: 1m
+rules:
+  - alert: DuplicateQueryRule
+    expr: up == 0
+    labels:
+      severity: warning
+
+  - alert: DuplicateQueryRule
+    expr: up == 1
+    labels:
+      severity: warning

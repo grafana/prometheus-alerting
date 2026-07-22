@@ -1,0 +1,17 @@
+name: e2e-dup-position-group
+interval: 1m
+rules:
+  - alert: DuplicatePositionRule
+    expr: up == 0
+    labels:
+      severity: warning
+
+  - alert: DuplicatePositionRule
+    expr: up == 0
+    labels:
+      severity: warning
+
+  - alert: DuplicatePositionRule
+    expr: up == 0
+    labels:
+      severity: warning

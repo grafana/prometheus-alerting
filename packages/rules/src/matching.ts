@@ -5,18 +5,39 @@ import { CloudRuleIdentifier, PrometheusRuleIdentifier } from './identifiers';
 import { hashRule, hashRulerRule } from './hashing';
 
 /**
+ * A rule's position within its group, encoded as `"<index>:<totalRules>"` (e.g. `"0:3"`).
+ *
+ * Used as a last-resort tiebreaker when two rules are otherwise indistinguishable (identical
+ * name, labels, annotations, and query): rules only match by position when both groups have the
+ * same number of rules, so a structural difference between the two sides never produces a false
+ * positive. Ported from the position-hash approach in grafana/grafana#112407.
+ */
+export type RulePositionHash = `${number}:${number}`;
+
+export function createRulePositionHash(ruleIndex: number, totalRules: number): RulePositionHash {
+  return `${ruleIndex}:${totalRules}`;
+}
+
+/**
  * Matches a Prometheus rule with its corresponding Ruler rule definition in a rule group.
  *
  * Matching logic:
  * 1. First tries to match by unique rule name
  * 2. If multiple rules have the same name, compares labels and annotations
- * 3. As a last resort, compares including the query expression
+ * 3. If still ambiguous, compares including the query expression
+ * 4. As a last resort, if `promRulePositionHash` is given, disambiguates fully-identical rules by
+ *    matching their position within the group
  *
  * @param rulerRules - Array of ruler rules from the Ruler API
  * @param promRule - The prometheus rule to find a match for
+ * @param promRulePositionHash - Position of `promRule` within its own group (see {@link createRulePositionHash})
  * @returns The matching RulerRuleDTO or undefined if no match is found
  */
-export function getMatchingRulerRule(rulerRules: RulerRuleDTO[], promRule: PromRuleDTO): RulerRuleDTO | undefined {
+export function getMatchingRulerRule(
+  rulerRules: RulerRuleDTO[],
+  promRule: PromRuleDTO,
+  promRulePositionHash?: RulePositionHash
+): RulerRuleDTO | undefined {
   const promRuleName = getRuleName(promRule);
 
   // If all rule names are unique, we can use the rule name to find the rule. We don't need to hash the rule
@@ -47,6 +68,18 @@ export function getMatchingRulerRule(rulerRules: RulerRuleDTO[], promRule: PromR
     return rulesByLabelsAndAnnotationsAndQuery[0];
   }
 
+  // If there are still multiple identical matches, use the position hash to disambiguate. This
+  // only succeeds when both sides have the same number of rules in the same order.
+  if (rulesByLabelsAndAnnotationsAndQuery.length > 1 && promRulePositionHash) {
+    const match = rulesByLabelsAndAnnotationsAndQuery.find((r) => {
+      const index = rulerRules.indexOf(r);
+      return createRulePositionHash(index, rulerRules.length) === promRulePositionHash;
+    });
+    if (match) {
+      return match;
+    }
+  }
+
   return undefined;
 }
 
@@ -57,13 +90,20 @@ export function getMatchingRulerRule(rulerRules: RulerRuleDTO[], promRule: PromR
  * Matching logic:
  * 1. First tries to match by unique rule name
  * 2. If multiple rules have the same name, compares labels and annotations
- * 3. As a last resort, compares including the query expression
+ * 3. If still ambiguous, compares including the query expression
+ * 4. As a last resort, if `rulerRulePositionHash` is given, disambiguates fully-identical rules by
+ *    matching their position within the group
  *
  * @param promRules - Array of prometheus rules from the Prometheus API
  * @param rulerRule - The ruler rule to find a match for
+ * @param rulerRulePositionHash - Position of `rulerRule` within its own group (see {@link createRulePositionHash})
  * @returns The matching PromRuleDTO or undefined if no match is found
  */
-export function getMatchingPromRule(promRules: PromRuleDTO[], rulerRule: RulerRuleDTO): PromRuleDTO | undefined {
+export function getMatchingPromRule(
+  promRules: PromRuleDTO[],
+  rulerRule: RulerRuleDTO,
+  rulerRulePositionHash?: RulePositionHash
+): PromRuleDTO | undefined {
   const rulerRuleName = getRuleName(rulerRule);
 
   // If all rule names are unique, we can use the rule name to find the rule
@@ -92,6 +132,18 @@ export function getMatchingPromRule(promRules: PromRuleDTO[], rulerRule: RulerRu
 
   if (rulesByLabelsAndAnnotationsAndQuery.length === 1) {
     return rulesByLabelsAndAnnotationsAndQuery[0];
+  }
+
+  // If there are still multiple identical matches, use the position hash to disambiguate. This
+  // only succeeds when both sides have the same number of rules in the same order.
+  if (rulesByLabelsAndAnnotationsAndQuery.length > 1 && rulerRulePositionHash) {
+    const match = rulesByLabelsAndAnnotationsAndQuery.find((r) => {
+      const index = promRules.indexOf(r);
+      return createRulePositionHash(index, promRules.length) === rulerRulePositionHash;
+    });
+    if (match) {
+      return match;
+    }
   }
 
   return undefined;

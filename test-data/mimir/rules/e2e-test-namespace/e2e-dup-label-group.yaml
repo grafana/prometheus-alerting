@@ -1,0 +1,14 @@
+name: e2e-dup-label-group
+interval: 1m
+rules:
+  - alert: DuplicateLabelRule
+    expr: up == 0
+    labels:
+      severity: warning
+      variant: alpha
+
+  - alert: DuplicateLabelRule
+    expr: up == 0
+    labels:
+      severity: warning
+      variant: beta
