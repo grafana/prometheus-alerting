@@ -60,7 +60,7 @@
         "src/matching.ts",
         "src/vanilla/index.ts"
       ],
-      "devEntryPoints": ["src/**/*.test.{ts,tsx}"],
+      "devEntryPoints": ["src/**.test.{ts,tsx}"],
       "unusedExportsDetection": { "enabled": true },
       "orphanFilesDetection": { "enabled": true },
       "circularImportsDetection": { "enabled": true, "ignoreTypeImports": true }

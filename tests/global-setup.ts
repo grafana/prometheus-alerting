@@ -76,6 +76,18 @@ async function checkPrometheusRules(): Promise<PrometheusResponse> {
   return data;
 }
 
+// mimir-rules-provisioner seeds each of these groups from test-data/mimir/rules/e2e-test-namespace/.
+// Mutation tests assume e2e-test-group exists before they run; the e2e-dup-*-group ones back the
+// duplicate-rule-name disambiguation tests in rulesList.spec.ts (see getMatchingRulerRule in
+// @grafana/external-rules/matching) -- gating test startup on them here means those tests can read
+// already-evaluated rules directly, with no per-test provisioning/polling of their own.
+const REQUIRED_MIMIR_GROUPS = [
+  'e2e-test-group',
+  'e2e-dup-label-group',
+  'e2e-dup-query-group',
+  'e2e-dup-position-group',
+];
+
 async function checkMimirRules(): Promise<PrometheusResponse> {
   const response = await fetch('http://localhost:9009/prometheus/api/v1/rules', {
     headers: { 'X-Scope-OrgID': 'anonymous' },
@@ -91,21 +103,21 @@ async function checkMimirRules(): Promise<PrometheusResponse> {
     throw new Error('No Mimir rule groups loaded yet');
   }
 
-  // mimir-rules-provisioner seeds e2e-test-group with TestEditRule + TestCloneRule.
-  // Mutation tests assume these exist before they run.
-  const testGroup = data.data.groups.find((g) => g.name === 'e2e-test-group');
-  if (!testGroup || !testGroup.rules || testGroup.rules.length === 0) {
-    throw new Error('Mimir e2e-test-group not yet provisioned');
-  }
+  for (const groupName of REQUIRED_MIMIR_GROUPS) {
+    const group = data.data.groups.find((g) => g.name === groupName);
+    if (!group || !group.rules || group.rules.length === 0) {
+      throw new Error(`Mimir ${groupName} not yet provisioned`);
+    }
 
-  const allRulesEvaluated = testGroup.rules.every((rule) => {
-    const hasHealth = rule.health && rule.health !== 'unknown';
-    const hasEvaluation = rule.lastEvaluation && rule.lastEvaluation !== '0001-01-01T00:00:00Z';
-    return hasHealth || hasEvaluation;
-  });
+    const allRulesEvaluated = group.rules.every((rule) => {
+      const hasHealth = rule.health && rule.health !== 'unknown';
+      const hasEvaluation = rule.lastEvaluation && rule.lastEvaluation !== '0001-01-01T00:00:00Z';
+      return hasHealth || hasEvaluation;
+    });
 
-  if (!allRulesEvaluated) {
-    throw new Error('Mimir rules not yet evaluated');
+    if (!allRulesEvaluated) {
+      throw new Error(`Mimir ${groupName} rules not yet evaluated`);
+    }
   }
 
   return data;

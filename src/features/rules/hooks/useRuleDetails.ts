@@ -6,7 +6,12 @@ import { PromRuleDTO, PromRuleGroupDTO, RulerRuleDTO, RulerRuleGroupDTO } from '
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { rulerApi } from '../../../api/rules/mimir.endpoints';
-import { getMatchingPromRule, matchPromRuleById, matchRulerRuleById } from '@grafana/external-rules/matching';
+import {
+  createRulePositionHash,
+  getMatchingPromRule,
+  matchPromRuleById,
+  matchRulerRuleById,
+} from '@grafana/external-rules/matching';
 
 const { useGetGroupsQuery } = prometheusApi;
 const { useGetRuleGroupQuery } = rulerApi;
@@ -72,8 +77,15 @@ export function useRuleDetails(identifier: DataSourceRuleIdentifier): RuleDetail
     if (isCloudRule) {
       const rulerRule = rulerGroup ? matchRulerRuleById(rulerGroup, identifier) : undefined;
 
-      // Match the corresponding Prometheus rule (for runtime state like alerts)
-      const promRule = rulerRule && promGroup ? getMatchingPromRule(promGroup.rules, rulerRule) : undefined;
+      // Match the corresponding Prometheus rule (for runtime state like alerts). The position hash
+      // disambiguates fully-identical duplicate rules within the same group -- rulerRule was
+      // already resolved to a specific rule instance, so its position in rulerGroup is exact.
+      const rulerRulePositionHash =
+        rulerGroup && rulerRule
+          ? createRulePositionHash(rulerGroup.rules.indexOf(rulerRule), rulerGroup.rules.length)
+          : undefined;
+      const promRule =
+        rulerRule && promGroup ? getMatchingPromRule(promGroup.rules, rulerRule, rulerRulePositionHash) : undefined;
 
       return { promRule, promGroup, rulerRule, rulerGroup };
     }
