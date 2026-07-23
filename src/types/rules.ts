@@ -36,11 +36,12 @@ export interface DataSourceFeatures {
 /**
  * Returns the API path for reading runtime rule state.
  *
- * Loki exposes its Prometheus-compatible rules endpoint at a different path
- * from Prometheus, Mimir, and Cortex.
+ * Loki exposes its Prometheus-compatible runtime rules endpoint at a different
+ * path from Prometheus, Mimir, and Cortex. Loki's Ruler CRUD API uses the
+ * separate /api/prom/rules path and returns YAML.
  */
 export function getPrometheusRulesApiBasePath(pluginType: 'prometheus' | 'loki'): string {
-  return pluginType === 'loki' ? 'api/prom/rules' : 'api/v1/rules';
+  return pluginType === 'loki' ? 'prometheus/api/v1/rules' : 'api/v1/rules';
 }
 
 /**

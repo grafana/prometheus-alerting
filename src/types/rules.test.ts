@@ -8,7 +8,7 @@ describe('getPrometheusRulesApiBasePath', () => {
   });
 
   it('uses the Loki Prometheus-compatible rules path', () => {
-    expect(getPrometheusRulesApiBasePath('loki')).toBe('api/prom/rules');
+    expect(getPrometheusRulesApiBasePath('loki')).toBe('prometheus/api/v1/rules');
   });
 });
 

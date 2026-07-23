@@ -43,6 +43,7 @@ ci/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+/.playwright-cli/
 
 # Mimir runtime storage (binary files, base64-encoded directories)
 /test-data/mimir/rules/rules/

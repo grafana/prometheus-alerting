@@ -2,7 +2,11 @@ import { getBackendSrv } from '@grafana/runtime';
 import { getDataSourceInstanceSettings } from '@grafana/runtime/unstable';
 import { lastValueFrom } from 'rxjs';
 
-import { DataSourceFeatures, PromBuildInfoResponse } from '../../types/rules';
+import {
+  DataSourceFeatures,
+  getPrometheusRulesApiBasePath,
+  PromBuildInfoResponse,
+} from '../../types/rules';
 
 export type { DataSourceFeatures };
 
@@ -90,8 +94,7 @@ async function fetchBuildInfo(uid: string): Promise<PromBuildInfoResponse | unde
  * Test if the data source supports fetching rules via Prometheus API
  */
 async function testPromRulesSupport(uid: string, type: string): Promise<boolean> {
-  // Loki exposes a Prometheus-compatible rules API at a different path
-  const path = type === 'loki' ? 'api/prom/rules' : 'api/v1/rules';
+  const path = getPrometheusRulesApiBasePath(type === 'loki' ? 'loki' : 'prometheus');
   try {
     await lastValueFrom(
       getBackendSrv().fetch({
@@ -110,10 +113,21 @@ async function testPromRulesSupport(uid: string, type: string): Promise<boolean>
  * Test if the data source supports the Ruler API for editing rules
  */
 async function testRulerSupport(uid: string, type: string): Promise<boolean> {
-  // For Loki, the ruler API lives at the same path as the rules read API.
-  // If testPromRulesSupport passed, the ruler is available.
+  // Loki's Ruler API uses the YAML /api/prom/rules endpoint. If it responds,
+  // the data source supports rule CRUD in addition to runtime rule reads.
   if (type === 'loki') {
-    return testPromRulesSupport(uid, type);
+    try {
+      await lastValueFrom(
+        getBackendSrv().fetch({
+          url: `/api/datasources/proxy/uid/${uid}/api/prom/rules`,
+          showErrorAlert: false,
+          showSuccessAlert: false,
+        })
+      );
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   try {

@@ -16,7 +16,7 @@ const getPrometheusRulesHandler = () =>
   });
 
 const getLokiRulesHandler = () =>
-  http.get('/api/datasources/proxy/uid/:dataSourceUid/api/prom/rules', () => {
+  http.get('/api/datasources/proxy/uid/:dataSourceUid/prometheus/api/v1/rules', () => {
     return HttpResponse.json({
       status: 'success',
       data: {

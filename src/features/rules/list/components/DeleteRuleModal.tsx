@@ -20,11 +20,11 @@ interface DeleteRuleModalProps {
 export function DeleteRuleModal({ identifier, onClose }: DeleteRuleModalProps) {
   const [deleteRuleGroup, { isLoading: isDeleting }] = useDeleteRuleGroupMutation();
   const { waitForRemoval } = useRuleConsistencyCheck();
-  const { data: dsFeatures, isLoading: isFeaturesLoading } = useDiscoverFeaturesQuery({ uid: identifier.uid });
+  const { data: dsFeatures, isLoading: areFeaturesLoading } = useDiscoverFeaturesQuery({ uid: identifier.uid });
   const [error, setError] = useState<string | null>(null);
   const [isWaitingForConsistency, setIsWaitingForConsistency] = useState(false);
 
-  const isLoading = isDeleting || isWaitingForConsistency || isFeaturesLoading;
+  const isLoading = isDeleting || isWaitingForConsistency || areFeaturesLoading;
 
   const handleDelete = async () => {
     if (!dsFeatures) {
