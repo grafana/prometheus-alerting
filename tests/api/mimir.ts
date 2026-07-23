@@ -1,3 +1,6 @@
+import { RulerRuleGroupDTO, RulerRuleGroupDTOSchema } from '@grafana/external-rules/vanilla';
+import yaml from 'js-yaml';
+
 const MIMIR_RULER_BASE_URL = 'http://localhost:9009/prometheus/config/v1/rules';
 function mimirOrgHeader(tenantId: string): Record<'X-Scope-OrgID', string> {
   return { 'X-Scope-OrgID': tenantId };
@@ -28,4 +31,21 @@ export async function deleteMimirRuleGroup(tenantId: string, namespace: string, 
   if (!response.ok && response.status !== 404) {
     throw new Error(`Failed to delete Mimir group ${namespace}/${group}: HTTP ${response.status}`);
   }
+}
+
+/** Read and decode a Mimir rule group through the Ruler API. */
+export async function getMimirRuleGroup(
+  tenantId: string,
+  namespace: string,
+  group: string
+): Promise<RulerRuleGroupDTO | null> {
+  const url = `${MIMIR_RULER_BASE_URL}/${encodeURIComponent(namespace)}/${encodeURIComponent(group)}`;
+  const response = await fetch(url, { headers: mimirOrgHeader(tenantId) });
+  if (response.status === 404) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Failed to read Mimir rules for ${namespace}/${group}: HTTP ${response.status}`);
+  }
+  return RulerRuleGroupDTOSchema.parse(yaml.load(await response.text()));
 }
