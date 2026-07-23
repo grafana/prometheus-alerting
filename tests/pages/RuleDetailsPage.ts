@@ -72,10 +72,8 @@ export class RuleDetailsPage {
    * renders, so a content-aware assertion is needed to avoid reading stale text.
    */
   async waitForLoad(expectedTitle?: string | RegExp): Promise<void> {
-    // Wait for network to be idle (all API calls complete)
-    await this.page.waitForLoadState('networkidle');
-    // Ensure the loading placeholder is gone and the H1 has mounted, so reads
-    // after this don't return stale content from the previous route.
+    // Loki background requests may outlive the details page's initial render,
+    // so wait for the rendered UI instead of network idle.
     await expect(this.loadingPlaceholder).toBeHidden();
     if (expectedTitle !== undefined) {
       await expect(this.pageTitle).toHaveText(expectedTitle);

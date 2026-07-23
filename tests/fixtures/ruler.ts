@@ -1,7 +1,8 @@
 import { test as base } from '@grafana/plugin-e2e';
 import { randomUUID } from 'node:crypto';
 import pluginJson from '../../src/plugin.json';
-import { deleteGrafanaDataSource, createMimirRulerDataSource } from '../api/grafana';
+import { createLokiRulerDataSource, createMimirRulerDataSource, deleteGrafanaDataSource } from '../api/grafana';
+import { deleteLokiRuleGroup, postLokiRuleGroup, waitForLokiRules } from '../api/loki';
 import { deleteMimirRuleGroup, postMimirRuleGroup } from '../api/mimir';
 import { RuleDetailsPage } from '../pages/RuleDetailsPage';
 import { RuleEditorPage } from '../pages/RuleEditorPage';
@@ -34,10 +35,47 @@ rules:
       environment: test
 `;
 
+function getLokiBaselineRules(groupName: string): string {
+  return `name: ${groupName}
+interval: 1m
+rules:
+  - alert: TestEditRule
+    expr: sum(count_over_time({job="grafana"}[5m])) > 1000
+    for: 5m
+    labels:
+      severity: warning
+      team: platform
+    annotations:
+      summary: Original summary for testing edit
+      description: This rule is used for testing the edit functionality
+  - alert: TestCloneRule
+    expr: sum(count_over_time({job="grafana"}[5m])) > 0
+    for: 2m
+    labels:
+      severity: info
+    annotations:
+      summary: Rule to be cloned
+  - alert: TestAlwaysPending
+    expr: sum(count_over_time({job="grafana"}[5m])) >= 0
+    for: 1h
+    labels:
+      severity: critical
+    annotations:
+      summary: Rule with long for duration to stay in pending state
+`;
+}
+
 type MimirRulerFixture = {
   uid: string;
   name: string;
   tenantId: string;
+};
+
+type LokiRulerFixture = {
+  uid: string;
+  name: string;
+  namespace: string;
+  groupName: string;
 };
 
 type RulerTestFixture = {
@@ -50,6 +88,8 @@ type RulerTestFixture = {
    * deletion in the fixture's teardown — safe under fullyParallel workers.
    */
   mimirGroup: (baseName: string) => string;
+  /** A dedicated Loki datasource and pre-seeded rule group, isolated for one test. */
+  lokiRuler: LokiRulerFixture;
   /** A dedicated Mimir Ruler tenant and Grafana datasource, isolated for one test. */
   mimirRuler: MimirRulerFixture;
 };
@@ -75,6 +115,27 @@ export const test = base.extend<RulerTestFixture>({
       return name;
     });
     await Promise.all(created.map((g) => deleteMimirRuleGroup(mimirRuler.tenantId, MIMIR_TEST_NAMESPACE, g)));
+  },
+  lokiRuler: async ({}, use) => {
+    const suffix = randomUUID().replaceAll('-', '');
+    // Grafana datasource UIDs are limited to 40 characters.
+    const uid = `e2el-${suffix}`;
+    const name = `E2E Loki Ruler ${suffix}`;
+    const namespace = `e2e-loki-${suffix}`;
+    const groupName = `e2e-loki-group-${suffix}`;
+    await createLokiRulerDataSource({ uid, name });
+
+    try {
+      await postLokiRuleGroup(namespace, getLokiBaselineRules(groupName));
+      await waitForLokiRules(namespace, groupName, ['TestEditRule', 'TestCloneRule', 'TestAlwaysPending']);
+      await use({ uid, name, namespace, groupName });
+    } finally {
+      try {
+        await deleteLokiRuleGroup(namespace, groupName);
+      } finally {
+        await deleteGrafanaDataSource(uid);
+      }
+    }
   },
   mimirRuler: async ({}, use) => {
     const suffix = randomUUID().replaceAll('-', '');

@@ -12,6 +12,11 @@ interface MimirRulerDataSource {
   tenantId: string;
 }
 
+interface LokiRulerDataSource {
+  uid: string;
+  name: string;
+}
+
 function getDataSourceUrl(uid: string): string {
   return `${GRAFANA_URL}/api/datasources/uid/${encodeURIComponent(uid)}`;
 }
@@ -87,6 +92,35 @@ export async function createMimirRulerDataSource({ uid, name, tenantId }: MimirR
   const readback = await fetch(getDataSourceUrl(uid));
   if (!readback.ok) {
     throw new Error(`Created Mimir Ruler datasource ${uid} could not be read back: HTTP ${readback.status}`);
+  }
+}
+
+/** Create a Loki datasource that supports the Ruler API. */
+export async function createLokiRulerDataSource({ uid, name }: LokiRulerDataSource): Promise<void> {
+  const response = await fetch(`${GRAFANA_URL}/api/datasources`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      uid,
+      name,
+      type: 'loki',
+      access: 'proxy',
+      url: 'http://loki:3100',
+      isDefault: false,
+      jsonData: {
+        manageAlerts: true,
+        maxLines: 1000,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to create Loki Ruler datasource ${uid}: HTTP ${response.status}`);
+  }
+
+  const readback = await fetch(getDataSourceUrl(uid));
+  if (!readback.ok) {
+    throw new Error(`Created Loki Ruler datasource ${uid} could not be read back: HTTP ${readback.status}`);
   }
 }
 

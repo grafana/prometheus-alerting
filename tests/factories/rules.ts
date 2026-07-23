@@ -22,6 +22,7 @@ import { hashRule, hashRulerRule } from '@grafana/external-rules/hashing';
 export const TEST_DATASOURCE_UID = 'test-prometheus';
 export const TEST_NAMESPACE = '/etc/prometheus/rules/test-rules.yml';
 export const TEST_MIMIR_DATASOURCE_UID = 'test-mimir';
+export const TEST_LOKI_DATASOURCE_UID = 'test-loki';
 
 /**
  * Helper class for building test data for rule tests
@@ -327,6 +328,38 @@ export class RuleBuilder {
       groupName,
       ruleName,
       rulerRuleHash,
+    };
+  }
+
+  /**
+   * Create identifier for the pre-seeded Loki TestEditRule.
+   */
+  static createLokiTestEditRuleIdentifier(
+    uid = TEST_LOKI_DATASOURCE_UID,
+    namespace = 'e2e-test-namespace',
+    groupName = 'e2e-test-group'
+  ): CloudRuleIdentifier {
+    const rule: RulerAlertingRuleDTO = {
+      alert: 'TestEditRule',
+      expr: 'sum(count_over_time({job="grafana"}[5m])) > 1000',
+      for: '5m',
+      labels: {
+        severity: 'warning',
+        team: 'platform',
+      },
+      annotations: {
+        summary: 'Original summary for testing edit',
+        description: 'This rule is used for testing the edit functionality',
+      },
+    };
+
+    return {
+      type: 'cloud',
+      uid,
+      namespace,
+      groupName,
+      ruleName: 'TestEditRule',
+      rulerRuleHash: hashRulerRule(rule),
     };
   }
 
