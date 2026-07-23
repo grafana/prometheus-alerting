@@ -6,6 +6,8 @@ import { deleteMimirRuleGroup, postMimirRuleGroup } from '../api/mimir';
 import { RuleDetailsPage } from '../pages/RuleDetailsPage';
 import { RuleEditorPage } from '../pages/RuleEditorPage';
 import { RulesListPage } from '../pages/RulesListPage';
+import { GroupDetailsPage } from '../pages/GroupDetailsPage';
+import { GroupEditPage } from '../pages/GroupEditPage';
 
 const MIMIR_TEST_NAMESPACE = 'e2e-test-namespace';
 const MIMIR_TEST_GROUP = 'e2e-test-group';
@@ -38,9 +40,15 @@ type MimirRulerFixture = {
   uid: string;
   name: string;
   tenantId: string;
+  /** Namespace of the baseline group seeded in this fixture's isolated tenant. */
+  namespace: string;
+  /** Name of the baseline group seeded in this fixture's isolated tenant. */
+  groupName: string;
 };
 
 type RulerTestFixture = {
+  groupDetailsPage: GroupDetailsPage;
+  groupEditPage: GroupEditPage;
   ruleDetailsPage: RuleDetailsPage;
   ruleEditorPage: RuleEditorPage;
   rulesListPage: RulesListPage;
@@ -55,6 +63,12 @@ type RulerTestFixture = {
 };
 
 export const test = base.extend<RulerTestFixture>({
+  groupDetailsPage: async ({ page }, use) => {
+    await use(new GroupDetailsPage(page, pluginJson.id));
+  },
+  groupEditPage: async ({ page }, use) => {
+    await use(new GroupEditPage(page, pluginJson.id));
+  },
   ruleDetailsPage: async ({ page }, use) => {
     const ruleDetailsPage = new RuleDetailsPage(page);
     await use(ruleDetailsPage);
@@ -84,8 +98,9 @@ export const test = base.extend<RulerTestFixture>({
     await createMimirRulerDataSource({ uid, name, tenantId });
 
     try {
+      // Seed the same baseline namespace and group in every isolated tenant.
       await postMimirRuleGroup(tenantId, MIMIR_TEST_NAMESPACE, MIMIR_BASELINE_RULES);
-      await use({ uid, name, tenantId });
+      await use({ uid, name, tenantId, namespace: MIMIR_TEST_NAMESPACE, groupName: MIMIR_TEST_GROUP });
     } finally {
       try {
         await deleteMimirRuleGroup(tenantId, MIMIR_TEST_NAMESPACE, MIMIR_TEST_GROUP);
