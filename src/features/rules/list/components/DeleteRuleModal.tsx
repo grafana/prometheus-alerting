@@ -20,20 +20,24 @@ interface DeleteRuleModalProps {
 export function DeleteRuleModal({ identifier, onClose }: DeleteRuleModalProps) {
   const [deleteRuleGroup, { isLoading: isDeleting }] = useDeleteRuleGroupMutation();
   const { waitForRemoval } = useRuleConsistencyCheck();
-  const { data: dsFeatures } = useDiscoverFeaturesQuery({ uid: identifier.uid });
+  const { data: dsFeatures, isLoading: areFeaturesLoading } = useDiscoverFeaturesQuery({ uid: identifier.uid });
   const [error, setError] = useState<string | null>(null);
   const [isWaitingForConsistency, setIsWaitingForConsistency] = useState(false);
 
-  const isLoading = isDeleting || isWaitingForConsistency;
+  const isLoading = isDeleting || isWaitingForConsistency || areFeaturesLoading;
 
   const handleDelete = async () => {
+    if (!dsFeatures) {
+      setError(t('alerting.delete-rule.features-pending', 'Data source capabilities are still loading.'));
+      return;
+    }
+
     try {
       // Step 1: Delete the rule from the Ruler API
       await deleteRuleGroup({
         dataSourceUid: identifier.uid,
         namespace: identifier.namespace,
         groupName: identifier.groupName,
-        application: dsFeatures?.application,
       }).unwrap();
 
       // Step 2: Wait for Prometheus API to reflect the deletion

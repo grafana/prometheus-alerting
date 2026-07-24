@@ -15,12 +15,12 @@ export function useNamespacesAndGroups(dataSourceUid: string | null) {
 
   const { data: features } = useDiscoverFeaturesQuery(dataSourceUid ? { uid: dataSourceUid } : skipToken);
 
-  // Fetch rules when data source or discovered path changes
+  // Fetch rules once feature discovery has completed for the selected data source.
   useEffect(() => {
-    if (dataSourceUid && features?.application) {
-      fetchRules({ dataSourceUid, application: features.application });
+    if (dataSourceUid && features) {
+      fetchRules({ dataSourceUid });
     }
-  }, [dataSourceUid, features?.application, fetchRules]);
+  }, [dataSourceUid, features, fetchRules]);
 
   // Transform ruler rules config into namespace -> groups map
   const namespaceGroups = useMemo(() => {

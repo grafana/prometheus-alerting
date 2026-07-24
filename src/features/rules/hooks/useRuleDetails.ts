@@ -44,7 +44,6 @@ export function useRuleDetails(identifier: DataSourceRuleIdentifier): RuleDetail
   // For PRI, we never use Ruler API
   const shouldFetchRulerData = isCloudRule && (features?.rulerApiEnabled ?? false);
 
-  // 2. Fetch from Prometheus API (always) - this gives us runtime state
   const promQuery = useGetGroupsQuery({
     ruleSource: { uid },
     namespace,
@@ -59,7 +58,6 @@ export function useRuleDetails(identifier: DataSourceRuleIdentifier): RuleDetail
           dataSourceUid: uid,
           namespace,
           groupName,
-          application: features?.application,
         }
       : skipToken
   );

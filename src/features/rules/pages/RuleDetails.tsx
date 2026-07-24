@@ -43,9 +43,7 @@ function RuleDetails() {
   // Check if the rule is newly created and not yet visible in Prometheus
   // This happens due to eventual consistency between Ruler and Prometheus APIs
   const isNewlyCreated = !loading && !promRule && !!rulerRule;
-  const { isConsistent, status: consistencyStatus } = useRuleCreationConsistencyCheck(
-    isNewlyCreated ? identifier : null
-  );
+  const { isConsistent, status: consistencyStatus } = useRuleCreationConsistencyCheck(isNewlyCreated ? identifier : null);
 
   // Refetch when consistency check completes
   useEffect(() => {

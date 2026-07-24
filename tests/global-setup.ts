@@ -88,6 +88,8 @@ const REQUIRED_MIMIR_GROUPS = [
   'e2e-dup-position-group',
 ];
 
+const LOKI_TEST_GROUP = 'e2e-test-group';
+
 async function checkMimirRules(): Promise<PrometheusResponse> {
   const response = await fetch('http://localhost:9009/prometheus/api/v1/rules', {
     headers: { 'X-Scope-OrgID': 'anonymous' },
@@ -118,6 +120,33 @@ async function checkMimirRules(): Promise<PrometheusResponse> {
     if (!allRulesEvaluated) {
       throw new Error(`Mimir ${groupName} rules not yet evaluated`);
     }
+  }
+
+  return data;
+}
+
+async function checkLokiRules(): Promise<PrometheusResponse> {
+  const response = await fetch('http://localhost:3100/prometheus/api/v1/rules');
+
+  if (!response.ok) {
+    throw new Error(`Loki not ready (HTTP ${response.status})`);
+  }
+
+  const data = (await response.json()) as PrometheusResponse;
+  const testGroup = data.data?.groups?.find((group) => group.name === LOKI_TEST_GROUP);
+
+  if (!testGroup || !testGroup.rules || testGroup.rules.length === 0) {
+    throw new Error(`Loki ${LOKI_TEST_GROUP} not yet provisioned`);
+  }
+
+  const allRulesEvaluated = testGroup.rules.every((rule) => {
+    const hasHealth = rule.health && rule.health !== 'unknown';
+    const hasEvaluation = rule.lastEvaluation && rule.lastEvaluation !== '0001-01-01T00:00:00Z';
+    return hasHealth || hasEvaluation;
+  });
+
+  if (!allRulesEvaluated) {
+    throw new Error(`Loki ${LOKI_TEST_GROUP} rules not yet evaluated`);
   }
 
   return data;
@@ -176,6 +205,22 @@ async function globalSetup() {
     const mimirTestGroup = mimirData.data.groups.find((g) => g.name === 'e2e-test-group')!;
     console.log(`  ✅ Mimir is ready with ${mimirData.data.groups.length} rule groups`);
     console.log(`  ✅ Mimir e2e-test-group has ${mimirTestGroup.rules.length} rules, all evaluated`);
+
+    // Step 4: Wait for Loki rules to be provisioned and evaluated. This is
+    // deliberately the Prometheus-compatible JSON endpoint used by the rule list.
+    console.log('  🔄 Waiting for Loki rules to be provisioned and evaluated...');
+    const lokiData = await pRetry(checkLokiRules, {
+      retries: 60,
+      minTimeout: 2000,
+      maxTimeout: 2000,
+      factor: 1,
+      onFailedAttempt: (context) => {
+        const message = context.error.message || String(context.error);
+        console.log(`    ⏳ Attempt ${context.attemptNumber}/60: ${message}`);
+      },
+    });
+    const lokiTestGroup = lokiData.data.groups.find((group) => group.name === LOKI_TEST_GROUP)!;
+    console.log(`  ✅ Loki ${LOKI_TEST_GROUP} has ${lokiTestGroup.rules.length} rules, all evaluated`);
     console.log('=============================================================');
     console.log('✅ Global Setup Complete - Ready to run tests');
     console.log('=============================================================\n');

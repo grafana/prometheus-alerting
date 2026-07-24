@@ -9,6 +9,8 @@ export type State = 'normal' | 'firing' | 'pending' | 'unknown' | 'recovering';
 
 export type RulesSourceApplication = 'prometheus' | 'mimir' | 'cortex' | 'loki';
 
+export type RulesPluginType = 'prometheus' | 'loki';
+
 export interface PromBuildInfoResponse {
   status: string;
   data: {
@@ -31,6 +33,17 @@ export interface PromBuildInfoResponse {
 export interface DataSourceFeatures {
   application: RulesSourceApplication;
   rulerApiEnabled: boolean;
+}
+
+/**
+ * Returns the API path for reading runtime rule state.
+ *
+ * Loki exposes its Prometheus-compatible runtime rules endpoint at a different
+ * path from Prometheus, Mimir, and Cortex. Loki's Ruler CRUD API uses the
+ * separate /api/prom/rules path and returns YAML.
+ */
+export function getPrometheusRulesApiBasePath(pluginType: RulesPluginType): string {
+  return pluginType === 'loki' ? 'prometheus/api/v1/rules' : 'api/v1/rules';
 }
 
 /**

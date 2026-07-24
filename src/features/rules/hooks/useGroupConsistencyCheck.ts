@@ -3,8 +3,6 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { PromRuleGroupDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { getRuleName } from '@grafana/external-rules/utils';
 
-import type { RulesSourceApplication } from '../../../types/rules';
-
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { rulerApi } from '../../../api/rules/mimir.endpoints';
 
@@ -138,7 +136,6 @@ export interface GroupIdentifier {
   dataSourceUid: string;
   namespace: string;
   groupName: string;
-  application?: RulesSourceApplication;
 }
 
 export interface WaitForConsistencyOptions {
@@ -178,7 +175,7 @@ export function useWaitForGroupConsistency() {
 
   const waitForGroupConsistency = useCallback(
     async (groupIdentifier: GroupIdentifier, options: WaitForConsistencyOptions = {}): Promise<void> => {
-      const { dataSourceUid, namespace, groupName, application } = groupIdentifier;
+      const { dataSourceUid, namespace, groupName } = groupIdentifier;
       const { requireExists = false } = options;
 
       // Clear any existing intervals
@@ -220,7 +217,6 @@ export function useWaitForGroupConsistency() {
                   dataSourceUid,
                   namespace,
                   groupName,
-                  application,
                 },
                 false
               ).unwrap(),

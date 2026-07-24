@@ -113,9 +113,8 @@ export class RuleEditorPage {
    * the editor title specifically, rather than just any mounted H1.
    */
   async waitForLoad(expectedTitle?: string | RegExp): Promise<void> {
-    await this.page.waitForLoadState('networkidle');
-    // Ensure the loading state is gone and the H1 has mounted, so reads after
-    // this don't return stale content from a layout-level heading.
+    // Wait for the form itself instead of network idle: Loki's background label
+    // requests may legitimately outlive the editor's initial render.
     await expect(this.loadingAlert).toBeHidden();
     if (expectedTitle !== undefined) {
       await expect(this.pageTitle).toHaveText(expectedTitle);

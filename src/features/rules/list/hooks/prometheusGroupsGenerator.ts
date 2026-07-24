@@ -22,7 +22,7 @@ export function usePrometheusGroupsGenerator() {
     ): AsyncGenerator<PromRuleGroupDTO[], void, unknown> {
       const getRuleSourceGroupsWithCache = async (fetchOptions: FetchGroupsOptions) => {
         const response = await getGroups({
-          ruleSource: { uid: ruleSource.uid },
+          ruleSource,
           ...fetchOptions,
         }).unwrap();
 

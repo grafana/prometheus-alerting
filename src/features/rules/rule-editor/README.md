@@ -69,7 +69,7 @@ The `CloneRuleEditor` component fetches the rule to clone using `useRuleDetails`
 
 ## API Integration
 
-The form uses the `upsertRuleGroup` mutation from `src/api/ruler.endpoints.ts` to save rules:
+The form uses the `upsertRuleGroup` mutation from `src/api/rules/mimir.endpoints.ts` to save rules:
 
 ```typescript
 upsertRuleGroup({
@@ -79,7 +79,8 @@ upsertRuleGroup({
 });
 ```
 
-The mutation POSTs to `/api/ruler/{uid}/api/v1/rules/{namespace}` with the rule group payload.
+The mutation POSTs through `/api/datasources/proxy/uid/{uid}/` to either
+`config/v1/rules/{namespace}` or Loki's `api/prom/rules/{namespace}` with the rule group payload.
 
 ## Form Flow
 

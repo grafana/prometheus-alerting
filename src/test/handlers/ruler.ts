@@ -28,21 +28,19 @@ export function setMockNamespaces(namespaces: typeof mockNamespaces) {
 }
 
 /**
- * GET /api/ruler/:dataSourceUid/api/v1/rules
- * Returns all rule groups for a datasource
+ * Datasource proxy Ruler API endpoints.
  */
-const getRulerRulesHandler = () =>
-  http.get('/api/ruler/:dataSourceUid/api/v1/rules', () => {
+const getRulerRulesHandler = (path: string) =>
+  http.get(path, () => {
     return HttpResponse.json(mockNamespaces);
   });
 
 /**
- * GET /api/ruler/:dataSourceUid/api/v1/rules/:namespace/:group
- * Returns a specific rule group
+ * Returns a specific rule group.
  */
-const getRulerRuleGroupHandler = () =>
+const getRulerRuleGroupHandler = (path: string) =>
   http.get<{ dataSourceUid: string; namespace: string; group: string }>(
-    '/api/ruler/:dataSourceUid/api/v1/rules/:namespace/:group',
+    path,
     ({ params }) => {
       const { namespace, group } = params;
 
@@ -65,11 +63,10 @@ const getRulerRuleGroupHandler = () =>
   );
 
 /**
- * POST /api/ruler/:dataSourceUid/api/v1/rules/:namespace
- * Creates or updates a rule group in a namespace
+ * Creates or updates a rule group in a namespace.
  */
-const upsertRulerRuleGroupHandler = () =>
-  http.post('/api/ruler/:dataSourceUid/api/v1/rules/:namespace', () => {
+const upsertRulerRuleGroupHandler = (path: string) =>
+  http.post(path, () => {
     return HttpResponse.json({
       status: 'success',
       data: null,
@@ -77,17 +74,27 @@ const upsertRulerRuleGroupHandler = () =>
   });
 
 /**
- * DELETE /api/ruler/:dataSourceUid/api/v1/rules/:namespace/:group
- * Deletes a rule group
+ * Deletes a rule group.
  */
-const deleteRulerRuleGroupHandler = () =>
-  http.delete('/api/ruler/:dataSourceUid/api/v1/rules/:namespace/:group', () => {
+const deleteRulerRuleGroupHandler = (path: string) =>
+  http.delete(path, () => {
     return HttpResponse.json({ message: 'Rules deleted' }, { status: 202 });
   });
 
-export const rulerHandlers = [
-  getRulerRulesHandler(),
-  getRulerRuleGroupHandler(),
-  upsertRulerRuleGroupHandler(),
-  deleteRulerRuleGroupHandler(),
+const datasourceProxyPath = '/api/datasources/proxy/uid/:dataSourceUid';
+
+const prometheusRulerHandlers = [
+  getRulerRulesHandler(`${datasourceProxyPath}/config/v1/rules`),
+  getRulerRuleGroupHandler(`${datasourceProxyPath}/config/v1/rules/:namespace/:group`),
+  upsertRulerRuleGroupHandler(`${datasourceProxyPath}/config/v1/rules/:namespace`),
+  deleteRulerRuleGroupHandler(`${datasourceProxyPath}/config/v1/rules/:namespace/:group`),
 ];
+
+const lokiRulerHandlers = [
+  getRulerRulesHandler(`${datasourceProxyPath}/api/prom/rules`),
+  getRulerRuleGroupHandler(`${datasourceProxyPath}/api/prom/rules/:namespace/:group`),
+  upsertRulerRuleGroupHandler(`${datasourceProxyPath}/api/prom/rules/:namespace`),
+  deleteRulerRuleGroupHandler(`${datasourceProxyPath}/api/prom/rules/:namespace/:group`),
+];
+
+export const rulerHandlers = [...prometheusRulerHandlers, ...lokiRulerHandlers];
