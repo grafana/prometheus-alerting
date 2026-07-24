@@ -9,6 +9,8 @@ export type State = 'normal' | 'firing' | 'pending' | 'unknown' | 'recovering';
 
 export type RulesSourceApplication = 'prometheus' | 'mimir' | 'cortex' | 'loki';
 
+export type RulesPluginType = 'prometheus' | 'loki';
+
 export interface PromBuildInfoResponse {
   status: string;
   data: {
@@ -40,7 +42,7 @@ export interface DataSourceFeatures {
  * path from Prometheus, Mimir, and Cortex. Loki's Ruler CRUD API uses the
  * separate /api/prom/rules path and returns YAML.
  */
-export function getPrometheusRulesApiBasePath(pluginType: 'prometheus' | 'loki'): string {
+export function getPrometheusRulesApiBasePath(pluginType: RulesPluginType): string {
   return pluginType === 'loki' ? 'prometheus/api/v1/rules' : 'api/v1/rules';
 }
 

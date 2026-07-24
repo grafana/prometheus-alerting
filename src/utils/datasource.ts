@@ -1,10 +1,11 @@
 import { getDataSourceSrv } from '@grafana/runtime';
 
 import { DataSourceRulesSourceIdentifier } from '../types/datasources';
+import type { RulesPluginType } from '../types/rules';
 
 const SUPPORTED_PROMETHEUS_TYPES = ['prometheus', 'loki'];
 
-export function getRulesApiPluginType(dataSourceUid: string): 'prometheus' | 'loki' {
+export function getRulesApiPluginType(dataSourceUid: string): RulesPluginType {
   const settings = getDataSourceSrv().getInstanceSettings(dataSourceUid);
 
   if (!settings) {
