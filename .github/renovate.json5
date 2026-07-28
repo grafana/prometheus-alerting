@@ -4,11 +4,7 @@
     'github>grafana/grafana-renovate-config//presets/base',
     'github>grafana/grafana-renovate-config//presets/labels',
   ],
-  // No MISE_TRUSTED_CONFIG_PATHS needed: renovatebot/renovate#44749 runs `mise lock`
-  // under MISE_SAFE=1 (mise >= v2026.7.12), which skips the trust check entirely. On
-  // the legacy allowlisted path Renovate runs `mise trust` itself, which now also
-  // covers mise.development.toml since `paranoid` was dropped from mise.toml.
-  minimumReleaseAge: '7 days',
+  minimumReleaseAge: '3 days',
   prCreation: 'not-pending',
   internalChecksFilter: 'strict',
   packageRules: [
@@ -18,7 +14,7 @@
       // gate that overrides the top-level 7 days (packageRules always beat
       // top-level config). Re-assert 7 days for npm here so it actually wins.
       matchDatasources: ['npm'],
-      minimumReleaseAge: '7 days',
+      minimumReleaseAge: '3 days',
     },
     {
       // Hold react-router on 6.x. It is a webpack external (see
