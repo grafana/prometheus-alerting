@@ -4,23 +4,28 @@
     'github>grafana/grafana-renovate-config//presets/base',
     'github>grafana/grafana-renovate-config//presets/labels',
   ],
-  env: {
-    // Trust mise config files in Renovate's sandbox so `mise lock` can run
-    // without failing on the untrusted `mise.development.toml` (paranoid = true
-    // in mise.toml requires explicit trust for env-specific config files).
-    MISE_TRUSTED_CONFIG_PATHS: '/tmp/renovate/repos/github/grafana/prometheus-alerting',
-  },
-  minimumReleaseAge: '7 days',
+  minimumReleaseAge: '3 days',
   prCreation: 'not-pending',
   internalChecksFilter: 'strict',
   packageRules: [
     {
       // `config:best-practices` (via the grafana base preset) pulls in
-      // `security:minimumReleaseAgeNpm`, whose packageRule sets a 3-day npm
-      // gate that overrides the top-level 7 days (packageRules always beat
-      // top-level config). Re-assert 7 days for npm here so it actually wins.
+      // `security:minimumReleaseAgeNpm`, whose packageRule sets the npm gate and
+      // would override the top-level value (packageRules always beat top-level
+      // config). Re-assert 3 days for npm here so the gate matches the top-level
+      // setting and mise.toml/pnpm-workspace.yaml no matter what the preset does.
       matchDatasources: ['npm'],
-      minimumReleaseAge: '7 days',
+      minimumReleaseAge: '3 days',
+    },
+    {
+      // Hold react-router on 6.x. It is a webpack external (see
+      // .config/bundler/externals.ts), so Grafana supplies the router at runtime and
+      // the version declared here only drives types and unit tests. @grafana/scenes
+      // peer-requires react-router-dom ^6.28.0, so 6.x is what keeps the declared
+      // version aligned with both that peer contract and the host router.
+      // 7.x/8.x resolve no runtime vulnerability and break the scenes peer.
+      matchPackageNames: ['react-router', 'react-router-dom'],
+      allowedVersions: '<7',
     },
     {
       // Pin the Node and pnpm runtimes exactly, sourced from mise.toml.
@@ -36,7 +41,7 @@
     },
   ],
   vulnerabilityAlerts: {
-    // Security fixes bypass the 7-day age gate and land ASAP.
+    // Security fixes bypass the 3-day age gate and land ASAP.
     minimumReleaseAge: null,
     labels: ['security'],
   },

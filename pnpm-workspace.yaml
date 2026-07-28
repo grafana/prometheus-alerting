@@ -3,15 +3,11 @@ blockExoticSubdeps: true # blocks git repositories etc. as dependencies
 strictDepBuilds: true # disable unverified post-install scripts
 dangerouslyAllowAllBuilds: false
 verifyDepsBeforeRun: install
-minimumReleaseAge: 10080 # 7 days, in minutes
+minimumReleaseAge: 4320 # 3 days, in minutes
 minimumReleaseAgeExclude:
   - '@grafana/*'
-  - react-router@6.30.4
-  - '@opentelemetry/core@2.8.0'
 
 overrides:
-  'immutable@5.1': '>=5.1.5'
-  'react-data-grid': '>=7.0.0-beta.57'
   'js-cookie': '>=3.0.6'
   'dompurify': '>=3.3.2'
   'uuid': '>=11.1.1'
@@ -19,6 +15,13 @@ overrides:
   '@types/react-dom': '18.3.7'
   '@opentelemetry/core@<2.8.0': ^2.8.0
   react-router@>=6.7.0 <6.30.4: ^6.30.4
+  # GHSA-mh99-v99m-4gvg is only fixed in brace-expansion 5.0.8; the 1.x line has no
+  # backport. brace-expansion 5 switched to a named export, which breaks minimatch 3's
+  # `require('brace-expansion')` ("expand is not a function", surfaced via eslint).
+  # Lifting every minimatch to 10 removes the last consumers of brace-expansion 1.x/2.x
+  # so the whole tree can sit on the single patched 5.0.8.
+  'brace-expansion': '>=5.0.8'
+  'minimatch@<10': '^10'
 
 registries:
   '@jsr': https://npm.jsr.io
