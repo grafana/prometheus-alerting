@@ -5,10 +5,10 @@ import { Trans, t } from '@grafana/i18n';
 import { getAppEvents } from '@grafana/runtime';
 import { Alert, Button, Modal } from '@grafana/ui';
 
-import { useDiscoverFeaturesQuery } from '../../../../api/rules/featureDiscovery.endpoints';
 import { rulerApi } from '../../../../api/rules/mimir.endpoints';
 import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { useRuleConsistencyCheck } from '../../hooks/useRuleConsistencyCheck';
+import { AlertingAction, isAbilityAllowed, useScopedAbilities } from '../../../../access-control/abilities';
 
 const { useDeleteRuleGroupMutation } = rulerApi;
 
@@ -18,17 +18,18 @@ interface DeleteRuleModalProps {
 }
 
 export function DeleteRuleModal({ identifier, onClose }: DeleteRuleModalProps) {
+  const deleteAbility = useScopedAbilities(identifier.uid)[AlertingAction.DeleteRule];
+  const canDeleteRules = isAbilityAllowed(deleteAbility);
   const [deleteRuleGroup, { isLoading: isDeleting }] = useDeleteRuleGroupMutation();
   const { waitForRemoval } = useRuleConsistencyCheck();
-  const { data: dsFeatures, isLoading: areFeaturesLoading } = useDiscoverFeaturesQuery({ uid: identifier.uid });
   const [error, setError] = useState<string | null>(null);
   const [isWaitingForConsistency, setIsWaitingForConsistency] = useState(false);
 
-  const isLoading = isDeleting || isWaitingForConsistency || areFeaturesLoading;
+  const isLoading = isDeleting || isWaitingForConsistency;
 
   const handleDelete = async () => {
-    if (!dsFeatures) {
-      setError(t('alerting.delete-rule.features-pending', 'Data source capabilities are still loading.'));
+    if (!canDeleteRules) {
+      setError(t('alerting.delete-rule.permission-denied', 'You do not have permission to delete rules.'));
       return;
     }
 
@@ -102,7 +103,7 @@ export function DeleteRuleModal({ identifier, onClose }: DeleteRuleModalProps) {
         <Button variant="secondary" onClick={onClose} disabled={isLoading}>
           <Trans i18nKey="alerting.delete-rule.cancel">Cancel</Trans>
         </Button>
-        <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
+        <Button variant="destructive" onClick={handleDelete} disabled={isLoading || !canDeleteRules}>
           {isDeleting ? (
             <Trans i18nKey="alerting.delete-rule.deleting">Deleting...</Trans>
           ) : isWaitingForConsistency ? (

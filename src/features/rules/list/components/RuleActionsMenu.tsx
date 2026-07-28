@@ -22,6 +22,9 @@ interface Props {
   onDuplicate: (identifier: DataSourceRuleIdentifier) => void;
   onSilence?: (identifier: DataSourceRuleIdentifier, ruleName: string) => void;
   onExport?: (rule: RulerRuleDTO) => void;
+  canCreateRules: boolean;
+  canDeleteRules: boolean;
+  canSilenceRules: boolean;
   buttonSize?: ComponentProps<typeof Button>['size'];
   fill?: ComponentProps<typeof Button>['fill'];
 }
@@ -35,6 +38,9 @@ export function RuleActionsMenu({
   onDuplicate,
   onSilence,
   onExport,
+  canCreateRules,
+  canDeleteRules,
+  canSilenceRules,
   buttonSize = 'md',
   fill,
 }: Props) {
@@ -66,16 +72,15 @@ export function RuleActionsMenu({
   const menuItems = (
     <>
       {/* Silence notifications - only for alerting rules */}
-      {isAlertingRule && (
+      {isAlertingRule && canSilenceRules && onSilence && (
         <Menu.Item
           label={t('alerting.rule-actions.silence', 'Silence notifications')}
           icon="bell-slash"
           onClick={handleSilence}
-          disabled={!onSilence}
         />
       )}
       {/* Duplicate - only with Ruler API */}
-      {rulerApiEnabled && rule && (
+      {rulerApiEnabled && rule && canCreateRules && (
         <Menu.Item label={t('alerting.rule-actions.duplicate', 'Duplicate')} icon="copy" onClick={handleDuplicate} />
       )}
       <Menu.Divider />
@@ -89,7 +94,7 @@ export function RuleActionsMenu({
         />
       )}
       {/* Delete - only with Ruler API */}
-      {rulerApiEnabled && rule && (
+      {rulerApiEnabled && rule && canDeleteRules && (
         <>
           <Menu.Divider />
           <Menu.Item

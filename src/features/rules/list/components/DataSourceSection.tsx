@@ -7,7 +7,7 @@ import { t, Trans } from '@grafana/i18n';
 import { Button, IconButton, LinkButton, Stack, Text, Toggletip, useStyles2 } from '@grafana/ui';
 
 import { RulesSourceApplication } from '../../../../types/rules';
-import { extractErrorMessage } from '../../../../utils/errors';
+import { extractErrorMessage, isForbiddenError } from '../../../../utils/errors';
 
 import { DataSourceIcon } from './DataSourceIcon';
 
@@ -35,6 +35,7 @@ export const DataSourceSection = ({
   const styles = useStyles2((theme) => getStyles(theme, isCollapsed));
 
   const configureLink = `/connections/datasources/edit/${String(uid)}`;
+  const isAccessDenied = isForbiddenError(error);
 
   return (
     <section aria-labelledby={`datasource-${String(uid)}-heading`} role="listitem">
@@ -65,8 +66,21 @@ export const DataSourceSection = ({
 
                 {Boolean(error) && (
                   <Toggletip
-                    title={t('rules.datasource-section.error-title', 'Cannot load rules for this datasource')}
-                    content={<Text color="error">{extractErrorMessage(error)}</Text>}
+                    title={
+                      isAccessDenied
+                        ? t('rules.datasource-section.permission-denied-title', 'Permission denied for this datasource')
+                        : t('rules.datasource-section.error-title', 'Cannot load rules for this datasource')
+                    }
+                    content={
+                      <Text color="error">
+                        {isAccessDenied
+                          ? t(
+                              'rules.datasource-section.permission-denied-description',
+                              'You do not have permission to read rules from this datasource.'
+                            )
+                          : extractErrorMessage(error)}
+                      </Text>
+                    }
                   >
                     <Button variant="destructive" fill="text" size="sm" icon="exclamation-circle">
                       <Trans i18nKey="rules.datasource-section.error">Error</Trans>

@@ -9,6 +9,7 @@ import { testIds } from '../../../components/testIds';
 import { PLUGIN_BASE_URL } from '../../../constants';
 import { RulesFilter } from '../components/RulesFilter';
 import { RulesFilterSidebar } from '../components/RulesFilterSidebar';
+import { AlertingAction, isAbilityAllowed, useUnscopedAbilities } from '../../../access-control/abilities';
 import { useRulesFilter } from '../hooks/useRulesFilter';
 import { FilterView } from '../list/FilterView';
 import { GroupedView } from '../list/GroupedView';
@@ -18,6 +19,7 @@ type ViewMode = 'grouped' | 'list';
 function RulesPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grouped');
   const { filterState, hasActiveFilters } = useRulesFilter();
+  const canCreateRules = isAbilityAllowed(useUnscopedAbilities()[AlertingAction.CreateRule]);
 
   // When filters are active, always show list view regardless of the user's preference.
   // This avoids calling setState inside an effect and eliminates the double render.
@@ -53,11 +55,13 @@ function RulesPage() {
               <RulesFilter />
             </Box>
             <RadioButtonGroup value={effectiveViewMode} options={viewModeOptions} onChange={setViewMode} />
-            <Dropdown overlay={newRuleMenu} placement="bottom-end">
-              <Button icon="plus" variant="primary">
-                <Trans i18nKey="alerting.rule-list.new-rule">New rule</Trans>
-              </Button>
-            </Dropdown>
+            {canCreateRules && (
+              <Dropdown overlay={newRuleMenu} placement="bottom-end">
+                <Button icon="plus" variant="primary">
+                  <Trans i18nKey="alerting.rule-list.new-rule">New rule</Trans>
+                </Button>
+              </Dropdown>
+            )}
           </Stack>
 
           {/* Sidebar + rule list */}

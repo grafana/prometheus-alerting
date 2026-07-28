@@ -9,6 +9,12 @@ import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { DataSourceRuleGroupIdentifier } from '../../../../types/rules';
 import { fromRuleAndGroup, fromRulerRuleAndGroup } from '../../../../utils/rule-id';
 import { rules as rulesNav } from '../../../../utils/navigation';
+import {
+  AlertingAction,
+  isAbilityAllowed,
+  useScopedAbilities,
+  useUnscopedAbilities,
+} from '../../../../access-control/abilities';
 
 import { RuleActionsMenu } from './RuleActionsMenu';
 
@@ -37,11 +43,22 @@ export function RuleActionsButtons({
 }: Props) {
   // Use Cloud Rule Identifier (cri) if we have a ruler rule, otherwise Prometheus Rule Identifier (pri)
   const identifier = rule ? fromRulerRuleAndGroup(rule, groupIdentifier) : fromRuleAndGroup(promRule, groupIdentifier);
+  const scopedAbilities = useScopedAbilities(identifier.uid);
+  const unscopedAbilities = useUnscopedAbilities();
+  const canViewRules = isAbilityAllowed(unscopedAbilities[AlertingAction.ViewRules]);
+  const canUpdateRules = isAbilityAllowed(scopedAbilities[AlertingAction.UpdateRule]);
+  const canCreateRules = isAbilityAllowed(scopedAbilities[AlertingAction.CreateRule]);
+  const canDeleteRules = isAbilityAllowed(scopedAbilities[AlertingAction.DeleteRule]);
+  const canSilenceRules = isAbilityAllowed(unscopedAbilities[AlertingAction.SilenceRule]);
+
+  if (!canViewRules) {
+    return null;
+  }
 
   const buttonSize = compact ? 'sm' : 'md';
 
   // If ruler API is enabled and we have a ruler rule, show Edit button + More menu
-  if (rulerApiEnabled && rule) {
+  if (rulerApiEnabled && rule && canUpdateRules) {
     const editUrl = rulesNav.editPageLink(identifier);
 
     return (
@@ -58,6 +75,9 @@ export function RuleActionsButtons({
           onDuplicate={onDuplicate}
           onSilence={onSilence}
           onExport={onExport}
+          canCreateRules={canCreateRules}
+          canDeleteRules={canDeleteRules}
+          canSilenceRules={canSilenceRules}
           buttonSize={buttonSize}
         />
       </Stack>
@@ -75,6 +95,9 @@ export function RuleActionsButtons({
       onDuplicate={onDuplicate}
       onSilence={onSilence}
       onExport={onExport}
+      canCreateRules={canCreateRules}
+      canDeleteRules={canDeleteRules}
+      canSilenceRules={canSilenceRules}
       buttonSize={buttonSize}
     />
   );
