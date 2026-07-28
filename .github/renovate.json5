@@ -5,9 +5,12 @@
     'github>grafana/grafana-renovate-config//presets/labels',
   ],
   env: {
-    // Trust mise config files in Renovate's sandbox so `mise lock` can run
-    // without failing on the untrusted `mise.development.toml` (paranoid = true
-    // in mise.toml requires explicit trust for env-specific config files).
+    // Trust mise config files in Renovate's sandbox so `mise lock` can run without
+    // failing on untrusted config. mise requires trust by default, so this is still
+    // needed even though `paranoid` was removed from mise.toml.
+    // MISE_SAFE=1 (jdx/mise#11151) would also skip the trust check, but safe mode
+    // ignores project [settings] — including `lockfile = true` — so we trust the
+    // path instead of running safe.
     MISE_TRUSTED_CONFIG_PATHS: '/tmp/renovate/repos/github/grafana/prometheus-alerting',
   },
   minimumReleaseAge: '7 days',

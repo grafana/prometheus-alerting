@@ -1,5 +1,5 @@
 [settings]
-minimum_release_age = "7d" # only install versions released more than 7 days ago
+minimum_release_age = "3d" # only install versions released more than 3 days ago
 
 lockfile = true
 not_found_auto_install = false
