@@ -78,6 +78,10 @@ function makeDataSourceAbility({
   error?: unknown;
   unscopedAbility: Ability;
 }): AsyncAbility {
+  if (!unscopedAbility.granted) {
+    return unscopedAbility;
+  }
+
   if (!dataSourceUid) {
     return notSupported;
   }
@@ -122,18 +126,19 @@ export function useUnscopedAbilities(): UnscopedAbilities {
  * additionally require the data source's Ruler configuration API.
  */
 export function useScopedAbilities(dataSourceUid: string | undefined): ScopedAbilities {
+  const rulesWriteAbility = makePermissionAbility(AlertingPermission.RulesWrite);
   const {
     data: features,
     isLoading,
     error,
-  } = useDiscoverFeaturesQuery(dataSourceUid ? { uid: dataSourceUid } : skipToken);
+  } = useDiscoverFeaturesQuery(dataSourceUid && rulesWriteAbility.granted ? { uid: dataSourceUid } : skipToken);
   const rulerConfigApiAvailable = features?.rulerApiEnabled ?? false;
   const scopedRulesWriteAbility = makeDataSourceAbility({
     dataSourceUid,
     rulerApiEnabled: rulerConfigApiAvailable,
     isLoading,
     error,
-    unscopedAbility: makePermissionAbility(AlertingPermission.RulesWrite),
+    unscopedAbility: rulesWriteAbility,
   });
 
   return {

@@ -7,6 +7,8 @@ import { isForbiddenError, isNotFoundError } from '../../utils/errors';
 
 export type { DataSourceFeatures };
 
+const RULER_NOT_SUPPORTED_MSG = 'ruler API is not enabled';
+
 /**
  * Main feature discovery function that determines what capabilities a data source has
  */
@@ -73,6 +75,10 @@ async function fetchBuildInfo(uid: string): Promise<PromBuildInfoResponse | unde
       })
     );
 
+    if (!response.ok) {
+      throw response;
+    }
+
     return response.data;
   } catch (error) {
     // 404 means the endpoint doesn't exist (Cortex or old Prometheus)
@@ -100,19 +106,32 @@ async function testRulerSupport(uid: string, type: string): Promise<boolean> {
   // Loki uses its YAML Ruler endpoint; Prometheus-compatible sources use the
   // rule-group probe Grafana Alerting uses for Ruler discovery.
   const path = type === 'loki' ? 'api/prom/rules' : 'api/v1/ruler/test/test';
-  return isEndpointAvailable(`/api/datasources/proxy/uid/${uid}/${path}`);
+
+  try {
+    await fetchEndpoint(`/api/datasources/proxy/uid/${uid}/${path}`);
+    return true;
+  } catch (error) {
+    if (isForbiddenError(error)) {
+      throw error;
+    }
+
+    // Keep known "Ruler unavailable" responses separate from permission failures.
+    // The previous implementation returned false for every remaining error, so
+    // removing this check did not change behavior; retaining it documents the
+    // backend responses that specifically mean the Ruler API is unsupported.
+    if (errorIndicatesMissingRulerSupport(error)) {
+      return false;
+    }
+
+    // Preserve the existing conservative behavior for unrecognized failures.
+    return false;
+  }
 }
 
 /** Returns whether an endpoint responds successfully, while preserving permission errors for the caller. */
 async function isEndpointAvailable(url: string): Promise<boolean> {
   try {
-    await lastValueFrom(
-      getBackendSrv().fetch({
-        url,
-        showErrorAlert: false,
-        showSuccessAlert: false,
-      })
-    );
+    await fetchEndpoint(url);
     return true;
   } catch (error) {
     if (isForbiddenError(error)) {
@@ -121,4 +140,41 @@ async function isEndpointAvailable(url: string): Promise<boolean> {
 
     return false;
   }
+}
+
+async function fetchEndpoint(url: string): Promise<void> {
+  const response = await lastValueFrom(
+    getBackendSrv().fetch({
+      url,
+      showErrorAlert: false,
+      showSuccessAlert: false,
+    })
+  );
+
+  if (!response.ok) {
+    throw response;
+  }
+}
+
+/**
+ * Check if an error indicates that the Ruler API is not supported.
+ */
+export function errorIndicatesMissingRulerSupport(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  if ('data' in error && error.data && typeof error.data === 'object' && 'message' in error.data) {
+    const message = error.data.message;
+
+    if (typeof message === 'string') {
+      return (
+        message.includes('GetRuleGroup unsupported in rule local store') ||
+        message.includes('page not found') ||
+        message.includes(RULER_NOT_SUPPORTED_MSG)
+      );
+    }
+  }
+
+  return error instanceof Error && error.message.includes('404 from rules config endpoint');
 }

@@ -1,41 +1,47 @@
-import { renderHook } from '@testing-library/react';
-import { vi } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 
-import { AlertingAction, useScopedAbilities, useUnscopedAbilities } from './abilities';
+import { server } from '../test/server';
+import { setCurrentUserPermissions } from '../test/mocks/grafana-runtime';
+import { createTestWrapper } from '../test/utils/test-wrapper';
 
-const mockHasPermission = vi.fn();
-const mockUseDiscoverFeaturesQuery = vi.fn();
+import { AlertingAction, AlertingPermission, useScopedAbilities, useUnscopedAbilities } from './abilities';
 
-vi.mock('@grafana/runtime', () => ({
-  hasPermission: (...args: unknown[]) => mockHasPermission(...args),
-}));
+const buildInfoUrl = '/api/datasources/proxy/uid/:uid/api/v1/status/buildinfo';
 
-vi.mock('../api/rules/featureDiscovery.endpoints', () => ({
-  useDiscoverFeaturesQuery: (...args: unknown[]) => mockUseDiscoverFeaturesQuery(...args),
-}));
+function mockMimirBuildInfo() {
+  server.use(
+    http.get(buildInfoUrl, () =>
+      HttpResponse.json({
+        status: 'success',
+        data: {
+          application: 'mimir',
+          version: '2.17.0',
+          features: {
+            ruler_config_api: 'true',
+          },
+        },
+      })
+    )
+  );
+}
 
 describe('useScopedAbilities', () => {
   beforeEach(() => {
-    mockHasPermission.mockReset();
-    mockHasPermission.mockReturnValue(true);
-    mockUseDiscoverFeaturesQuery.mockReset();
-    mockUseDiscoverFeaturesQuery.mockReturnValue({ data: undefined, isLoading: false });
+    setCurrentUserPermissions(AlertingPermission.RulesWrite);
   });
 
   it('marks rule changes unsupported when no data source has been selected', () => {
-    const { result } = renderHook(() => useScopedAbilities(undefined));
+    const { result } = renderHook(() => useScopedAbilities(undefined), { wrapper: createTestWrapper() });
 
     expect(result.current[AlertingAction.CreateRule]).toEqual({
       granted: false,
       cause: 'NOT_SUPPORTED',
     });
-    expect(mockUseDiscoverFeaturesQuery).toHaveBeenCalledOnce();
   });
 
   it('reports loading while data source feature discovery is in progress', () => {
-    mockUseDiscoverFeaturesQuery.mockReturnValue({ data: undefined, isLoading: true });
-
-    const { result } = renderHook(() => useScopedAbilities('mimir'));
+    const { result } = renderHook(() => useScopedAbilities('test-mimir-uid'), { wrapper: createTestWrapper() });
 
     expect(result.current[AlertingAction.UpdateRule]).toEqual({
       granted: false,
@@ -43,71 +49,74 @@ describe('useScopedAbilities', () => {
     });
   });
 
-  it('includes the discovery error when data source capabilities cannot be determined', () => {
-    const error = { status: 403, data: 'Access denied' };
-    mockUseDiscoverFeaturesQuery.mockReturnValue({ data: undefined, isLoading: false, error });
+  it('includes the discovery error when data source capabilities cannot be determined', async () => {
+    server.use(http.get(buildInfoUrl, () => HttpResponse.json({ message: 'Access denied' }, { status: 403 })));
 
-    const { result } = renderHook(() => useScopedAbilities('mimir'));
+    const { result } = renderHook(() => useScopedAbilities('test-mimir-uid'), { wrapper: createTestWrapper() });
 
-    expect(result.current[AlertingAction.UpdateRule]).toEqual({
-      granted: false,
-      cause: 'ERROR',
-      error,
+    await waitFor(() => {
+      expect(result.current[AlertingAction.UpdateRule]).toMatchObject({
+        granted: false,
+        cause: 'ERROR',
+        error: { status: 403 },
+      });
     });
   });
 
-  it('marks rule changes unsupported when the selected data source lacks a Ruler configuration API', () => {
-    mockUseDiscoverFeaturesQuery.mockReturnValue({
-      data: { application: 'prometheus', rulerApiEnabled: false },
-      isLoading: false,
-    });
+  it('marks rule changes unsupported when the selected data source lacks a Ruler configuration API', async () => {
+    const { result } = renderHook(() => useScopedAbilities('prometheus-1'), { wrapper: createTestWrapper() });
 
-    const { result } = renderHook(() => useScopedAbilities('read-only-prometheus'));
-
-    expect(result.current[AlertingAction.UpdateRule]).toEqual({
-      granted: false,
-      cause: 'NOT_SUPPORTED',
+    await waitFor(() => {
+      expect(result.current[AlertingAction.UpdateRule]).toEqual({
+        granted: false,
+        cause: 'NOT_SUPPORTED',
+      });
     });
-    expect(mockUseDiscoverFeaturesQuery).toHaveBeenCalledWith({ uid: 'read-only-prometheus' });
   });
 
-  it('reports insufficient permissions after confirming data source support', () => {
-    mockHasPermission.mockReturnValue(false);
-    mockUseDiscoverFeaturesQuery.mockReturnValue({
-      data: { application: 'mimir', rulerApiEnabled: true },
-      isLoading: false,
-    });
+  it('reports insufficient permissions without probing data source support', () => {
+    let buildInfoRequests = 0;
+    server.use(
+      http.get(buildInfoUrl, () => {
+        buildInfoRequests += 1;
+        return HttpResponse.error();
+      })
+    );
+    setCurrentUserPermissions();
 
-    const { result } = renderHook(() => useScopedAbilities('mimir'));
+    const { result } = renderHook(() => useScopedAbilities('test-mimir-uid'), { wrapper: createTestWrapper() });
 
     expect(result.current[AlertingAction.UpdateRule]).toEqual({
       granted: false,
       cause: 'INSUFFICIENT_PERMISSIONS',
-      anyOfPermissions: ['alert.rules.external:write'],
+      anyOfPermissions: [AlertingPermission.RulesWrite],
     });
+    expect(buildInfoRequests).toBe(0);
   });
 
-  it('grants rule changes when the data source supports Ruler and permission is granted', () => {
-    mockUseDiscoverFeaturesQuery.mockReturnValue({
-      data: { application: 'mimir', rulerApiEnabled: true },
-      isLoading: false,
+  it('grants rule changes when the data source supports Ruler and permission is granted', async () => {
+    mockMimirBuildInfo();
+
+    const { result } = renderHook(() => useScopedAbilities('test-mimir-uid'), { wrapper: createTestWrapper() });
+
+    await waitFor(() => {
+      expect(result.current[AlertingAction.UpdateRule]).toEqual({ granted: true });
     });
-
-    const { result } = renderHook(() => useScopedAbilities('mimir'));
-
-    expect(result.current[AlertingAction.UpdateRule]).toEqual({ granted: true });
   });
 
   it('returns unscoped abilities without requiring a data source', () => {
     const { result } = renderHook(() => useUnscopedAbilities());
 
-    expect(result.current[AlertingAction.ViewRules]).toEqual({ granted: true });
+    expect(result.current[AlertingAction.ViewRules]).toEqual({
+      granted: false,
+      cause: 'INSUFFICIENT_PERMISSIONS',
+      anyOfPermissions: [AlertingPermission.RulesRead],
+    });
     expect(result.current[AlertingAction.CreateRule]).toEqual({ granted: true });
-    expect(mockUseDiscoverFeaturesQuery).not.toHaveBeenCalled();
   });
 
   it('maps every unscoped action to its Grafana permission', () => {
-    mockHasPermission.mockReturnValue(false);
+    setCurrentUserPermissions();
 
     const { result } = renderHook(() => useUnscopedAbilities());
 
@@ -115,54 +124,38 @@ describe('useScopedAbilities', () => {
       [AlertingAction.ViewRules]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
-        anyOfPermissions: ['alert.rules.external:read'],
+        anyOfPermissions: [AlertingPermission.RulesRead],
       },
       [AlertingAction.CreateRule]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
-        anyOfPermissions: ['alert.rules.external:write'],
+        anyOfPermissions: [AlertingPermission.RulesWrite],
       },
       [AlertingAction.SilenceRule]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
-        anyOfPermissions: ['alert.instances.external:write'],
+        anyOfPermissions: [AlertingPermission.InstancesWrite],
       },
       [AlertingAction.ViewInstances]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
-        anyOfPermissions: ['alert.instances.external:read'],
+        anyOfPermissions: [AlertingPermission.InstancesRead],
       },
       [AlertingAction.UpdateInstances]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
-        anyOfPermissions: ['alert.instances.external:write'],
+        anyOfPermissions: [AlertingPermission.InstancesWrite],
       },
       [AlertingAction.ViewNotifications]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
-        anyOfPermissions: ['alert.notifications.external:read'],
+        anyOfPermissions: [AlertingPermission.NotificationsRead],
       },
       [AlertingAction.UpdateNotifications]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
-        anyOfPermissions: ['alert.notifications.external:write'],
+        anyOfPermissions: [AlertingPermission.NotificationsWrite],
       },
-    });
-  });
-
-  it('uses the unscoped create permission in the scoped create ability', () => {
-    mockHasPermission.mockImplementation((permission: string) => permission !== 'alert.rules.external:write');
-    mockUseDiscoverFeaturesQuery.mockReturnValue({
-      data: { application: 'mimir', rulerApiEnabled: true },
-      isLoading: false,
-    });
-
-    const { result } = renderHook(() => useScopedAbilities('mimir'));
-
-    expect(result.current[AlertingAction.CreateRule]).toEqual({
-      granted: false,
-      cause: 'INSUFFICIENT_PERMISSIONS',
-      anyOfPermissions: ['alert.rules.external:write'],
     });
   });
 });

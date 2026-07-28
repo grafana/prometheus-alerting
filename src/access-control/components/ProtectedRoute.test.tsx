@@ -1,27 +1,15 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { vi } from 'vitest';
 
+import { setCurrentUserPermissions } from '../../test/mocks/grafana-runtime';
 import { AlertingPermission } from '../abilities';
 
 import { ProtectedRoute } from './ProtectedRoute';
 
-const mockHasAllPermissions = vi.fn();
-
-vi.mock('@grafana/runtime', () => {
-  return {
-    hasAllPermissions: (...args: unknown[]) => mockHasAllPermissions(...args),
-  };
-});
-
 describe('ProtectedRoute', () => {
-  beforeEach(() => {
-    mockHasAllPermissions.mockReset();
-  });
-
   it('mounts child routes when all required permissions are granted', () => {
-    mockHasAllPermissions.mockReturnValue(true);
+    setCurrentUserPermissions(AlertingPermission.RulesWrite);
 
     render(
       <MemoryRouter initialEntries={['/rules/new']}>
@@ -37,8 +25,6 @@ describe('ProtectedRoute', () => {
   });
 
   it('renders permission feedback without mounting the child route when a required permission is denied', () => {
-    mockHasAllPermissions.mockReturnValue(false);
-
     render(
       <MemoryRouter initialEntries={['/rules']}>
         <Routes>
