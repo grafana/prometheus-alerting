@@ -38,6 +38,9 @@ export class RulesListPage {
 
   // Top-bar free-text search
   readonly searchInput: Locator;
+  readonly newRuleButton: Locator;
+  readonly silenceMenuItem: Locator;
+  readonly listViewRadio: Locator;
 
   // Filter sidebar (landmark + fields)
   readonly sidebar: Locator;
@@ -66,6 +69,9 @@ export class RulesListPage {
     this.pluginId = pluginId;
 
     this.searchInput = page.getByTestId('search-query-input');
+    this.newRuleButton = page.getByRole('button', { name: 'New rule', exact: true });
+    this.silenceMenuItem = page.getByRole('menuitem', { name: 'Silence notifications', exact: true });
+    this.listViewRadio = page.getByRole('radio', { name: 'List', exact: true });
 
     this.sidebar = page.getByRole('complementary', { name: /filter rules/i });
     this.ruleNameInput = this.sidebar.getByLabel(/rule name/i);
@@ -189,6 +195,16 @@ export class RulesListPage {
   async getRuleCount(): Promise<number> {
     await expect(this.ruleRows.first()).toBeVisible({ timeout: 10000 });
     return this.ruleRows.count();
+  }
+
+  async openRuleActions(ruleName: string | RegExp) {
+    const row = this.getRuleRows(ruleName).first();
+    await expect(row).toBeVisible({ timeout: 10000 });
+    await row.getByRole('button', { name: 'More', exact: true }).click();
+  }
+
+  async switchToListView() {
+    await this.listViewRadio.click();
   }
 
   async hasNoRulesMessage(): Promise<boolean> {

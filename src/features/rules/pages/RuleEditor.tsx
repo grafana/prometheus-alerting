@@ -14,6 +14,9 @@ import { rulerRuleToFormValues } from '../rule-editor/formTransform';
 import { useRulerRule } from '../hooks/useRulerRule';
 import { RuleFormValues, RuleFormType } from '../rule-editor/types';
 import { generateCopiedName } from '../rule-editor/duplicate';
+import { PermissionDenied } from '../../../access-control/components/PermissionDenied';
+import { AlertingAction, AsyncAbility, useScopedAbilities } from '../../../access-control/abilities';
+import { RulesErrorAlert } from '../components/RulesErrorAlert';
 
 export default function RuleEditor() {
   const { ruleIdentifier } = useParams<{ ruleIdentifier?: string }>();
@@ -26,6 +29,11 @@ export default function RuleEditor() {
       editRuleIdentifier: ruleIdentifier ? parseIdentifier(ruleIdentifier, true) : null,
     };
   }, [copyFromParam, ruleIdentifier]);
+  const sourceUid = copyFromIdentifier?.uid ?? editRuleIdentifier?.uid;
+
+  // App layout routes require write permission for new rules and read + write for edits
+  // before this component mounts. Scoped abilities only add datasource capability checks.
+  const abilities = useScopedAbilities(sourceUid);
 
   // Determine mode and render appropriate component
   if (copyFromParam) {
@@ -35,7 +43,12 @@ export default function RuleEditor() {
     if (!isCloudRuleIdentifier(copyFromIdentifier)) {
       return <UnsupportedRuleTypePage title={t('alerting.rule-editor.clone-rule', 'Clone rule')} action="cloned" />;
     }
-    return <CloneRuleEditor identifier={copyFromIdentifier} />;
+    const createAbility = abilities[AlertingAction.CreateRule];
+    return createAbility.granted ? (
+      <CloneRuleEditor identifier={copyFromIdentifier} />
+    ) : (
+      <RuleEditorUnavailablePage ability={createAbility} identifier={copyFromIdentifier} action="cloned" />
+    );
   }
 
   if (ruleIdentifier) {
@@ -45,7 +58,12 @@ export default function RuleEditor() {
     if (!isCloudRuleIdentifier(editRuleIdentifier)) {
       return <UnsupportedRuleTypePage title={t('alerting.rule-editor.edit-rule', 'Edit rule')} action="edited" />;
     }
-    return <EditRuleEditor identifier={editRuleIdentifier} />;
+    const updateAbility = abilities[AlertingAction.UpdateRule];
+    return updateAbility.granted ? (
+      <EditRuleEditor identifier={editRuleIdentifier} />
+    ) : (
+      <RuleEditorUnavailablePage ability={updateAbility} identifier={editRuleIdentifier} action="edited" />
+    );
   }
 
   return <NewRuleEditor />;
@@ -66,6 +84,36 @@ function NewRuleEditor() {
       <RuleForm ruleType={ruleType} />
     </PluginPage>
   );
+}
+
+interface RuleEditorUnavailablePageProps {
+  ability: Extract<
+    AsyncAbility,
+    {
+      granted: false;
+    }
+  >;
+  identifier: CloudRuleIdentifier;
+  action: 'edited' | 'cloned';
+}
+
+function RuleEditorUnavailablePage({ ability, identifier, action }: RuleEditorUnavailablePageProps) {
+  const title =
+    action === 'edited'
+      ? t('alerting.rule-editor.edit-rule', 'Edit rule')
+      : t('alerting.rule-editor.clone-rule', 'Clone rule');
+  const pageNav = { text: title, ...buildRuleNavigation(identifier) };
+
+  switch (ability.cause) {
+    case 'LOADING':
+      return <RuleLoadingPage pageNav={pageNav} />;
+    case 'ERROR':
+      return <RuleErrorPage pageNav={pageNav} error={ability.error} />;
+    case 'NOT_SUPPORTED':
+      return <UnsupportedRuleTypePage title={title} action={action} />;
+    case 'INSUFFICIENT_PERMISSIONS':
+      return <PermissionDenied />;
+  }
 }
 
 function EditRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
@@ -104,23 +152,11 @@ function EditRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
   }, [rulerRule, identifier]);
 
   if (loading) {
-    return (
-      <PluginPage pageNav={pageNav}>
-        <Alert severity="info" title={t('alerting.rule-editor.loading-rule', 'Loading rule...')}>
-          {t('alerting.rule-editor.loading-description', 'Fetching rule details and configuration...')}
-        </Alert>
-      </PluginPage>
-    );
+    return <RuleLoadingPage pageNav={pageNav} />;
   }
 
   if (error) {
-    return (
-      <PluginPage pageNav={pageNav}>
-        <Alert severity="error" title={t('alerting.rule-editor.failed-to-load', 'Failed to load rule')}>
-          {JSON.stringify(error)}
-        </Alert>
-      </PluginPage>
-    );
+    return <RuleErrorPage pageNav={pageNav} error={error} />;
   }
 
   if (!rulerRule) {
@@ -188,23 +224,11 @@ function CloneRuleEditor({ identifier }: { identifier: CloudRuleIdentifier }) {
   }, [rulerRule, rulerGroup, identifier]);
 
   if (loading) {
-    return (
-      <PluginPage pageNav={pageNav}>
-        <Alert severity="info" title={t('alerting.rule-editor.loading-rule', 'Loading rule...')}>
-          {t('alerting.rule-editor.loading-description', 'Fetching rule details and configuration...')}
-        </Alert>
-      </PluginPage>
-    );
+    return <RuleLoadingPage pageNav={pageNav} />;
   }
 
   if (error) {
-    return (
-      <PluginPage pageNav={pageNav}>
-        <Alert severity="error" title={t('alerting.rule-editor.failed-to-load', 'Failed to load rule')}>
-          {JSON.stringify(error)}
-        </Alert>
-      </PluginPage>
-    );
+    return <RuleErrorPage pageNav={pageNav} error={error} />;
   }
 
   if (!rulerRule) {
@@ -237,6 +261,24 @@ function InvalidIdentifierPage({ title }: { title: string }) {
   );
 }
 
+function RuleLoadingPage({ pageNav }: { pageNav: NavModelItem }) {
+  return (
+    <PluginPage pageNav={pageNav}>
+      <Alert severity="info" title={t('alerting.rule-editor.loading-rule', 'Loading rule...')}>
+        {t('alerting.rule-editor.loading-description', 'Fetching rule details and configuration...')}
+      </Alert>
+    </PluginPage>
+  );
+}
+
+function RuleErrorPage({ pageNav, error }: { pageNav: NavModelItem; error: unknown }) {
+  return (
+    <PluginPage pageNav={pageNav}>
+      <RulesErrorAlert error={error} title={t('alerting.rule-editor.failed-to-load', 'Failed to load rule')} />
+    </PluginPage>
+  );
+}
+
 function UnsupportedRuleTypePage({ title, action }: { title: string; action: 'edited' | 'cloned' }) {
   const message =
     action === 'edited'
@@ -251,7 +293,7 @@ function UnsupportedRuleTypePage({ title, action }: { title: string; action: 'ed
 
   return (
     <PluginPage pageNav={{ text: title }}>
-      <Alert severity="error" title={t('alerting.rule-editor.unsupported-rule-type', 'Unsupported rule type')}>
+      <Alert severity="error" title={t('alerting.rule-editor.unsupported-rule-type', 'Ruler API not supported')}>
         {message}
       </Alert>
     </PluginPage>

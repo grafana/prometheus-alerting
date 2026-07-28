@@ -27,9 +27,11 @@ const { useGetRuleGroupQuery, useDeleteRuleGroupMutation, useUpsertRuleGroupMuta
 import { useReturnTo } from '../../../hooks/useReturnTo';
 import { extractErrorMessage } from '../../../utils/errors';
 import { groups } from '../../../utils/navigation';
+import { AlertingAction, isAbilityAllowed, useScopedAbilities } from '../../../access-control/abilities';
 
 import { DraggableRulesTable, SwapOperation, applySwaps } from '../components/DraggableRulesTable';
 import { EvaluationIntervalInput } from '../components/EvaluationIntervalInput';
+import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { useWaitForGroupConsistency } from '../hooks/useGroupConsistencyCheck';
 
 type GroupEditPageRouteParams = {
@@ -113,11 +115,11 @@ function GroupEditPage() {
 
   const hasError = dsFeaturesError || rulerError;
   if (hasError) {
+    const error = dsFeaturesError || rulerError;
+
     return (
       <PluginPage pageNav={pageNav}>
-        <Alert severity="error" title={t('alerting.group-edit.error', 'Error loading group')}>
-          {extractErrorMessage(dsFeaturesError || rulerError)}
-        </Alert>
+        <RulesErrorAlert error={error} title={t('alerting.group-edit.error', 'Error loading group')} />
       </PluginPage>
     );
   }
@@ -155,14 +157,12 @@ interface GroupEditFormProps {
   rulerGroup: RulerRuleGroupDTO;
 }
 
-function GroupEditForm({
-  dataSourceUid,
-  originalNamespace,
-  originalGroupName,
-  rulerGroup,
-}: GroupEditFormProps) {
+function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, rulerGroup }: GroupEditFormProps) {
   const styles = useStyles2(getStyles);
   const { returnTo } = useReturnTo(groups.detailsPageLink(dataSourceUid, originalNamespace, originalGroupName));
+  const abilities = useScopedAbilities(dataSourceUid);
+  const canUpdateRules = isAbilityAllowed(abilities[AlertingAction.UpdateRule]);
+  const canDeleteRules = isAbilityAllowed(abilities[AlertingAction.DeleteRule]);
 
   const [upsertRuleGroup, { isLoading: isUpdating }] = useUpsertRuleGroupMutation();
   const [deleteRuleGroup, { isLoading: isDeleting }] = useDeleteRuleGroupMutation();
@@ -197,11 +197,19 @@ function GroupEditForm({
   };
 
   const onSubmit: SubmitHandler<GroupEditFormData> = async (data) => {
+    const isNamespaceChanged = dirtyFields.namespace && data.namespace !== originalNamespace;
+    const isGroupRenamed = dirtyFields.name && data.name !== originalGroupName;
+
+    if (!canUpdateRules || ((isNamespaceChanged || isGroupRenamed) && !canDeleteRules)) {
+      setSubmitError(
+        t('alerting.group-edit.permission-denied-save', 'You do not have permission to save rule groups.')
+      );
+      return;
+    }
+
     setSubmitError(null);
 
     try {
-      const isNamespaceChanged = dirtyFields.namespace && data.namespace !== originalNamespace;
-      const isGroupRenamed = dirtyFields.name && data.name !== originalGroupName;
       const hasSwaps = swapOperations.length > 0;
 
       // Apply rule reordering
@@ -252,6 +260,13 @@ function GroupEditForm({
   };
 
   const onDelete = async () => {
+    if (!canDeleteRules) {
+      setSubmitError(
+        t('alerting.group-edit.permission-denied-delete', 'You do not have permission to delete rule groups.')
+      );
+      return;
+    }
+
     try {
       await deleteRuleGroup({
         dataSourceUid,
@@ -340,7 +355,7 @@ function GroupEditForm({
         </Field>
 
         <Stack gap={2}>
-          <Button type="submit" disabled={isProcessing} icon={isProcessing ? 'spinner' : undefined}>
+          <Button type="submit" disabled={isProcessing || !canUpdateRules} icon={isProcessing ? 'spinner' : undefined}>
             <Trans i18nKey="alerting.group-edit.save">Save</Trans>
           </Button>
           <LinkButton variant="secondary" disabled={isProcessing} href={returnTo}>
@@ -350,7 +365,12 @@ function GroupEditForm({
       </form>
 
       <div className={styles.deleteSection}>
-        <Button type="button" variant="destructive" onClick={() => setConfirmDeleteOpen(true)} disabled={isProcessing}>
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={() => setConfirmDeleteOpen(true)}
+          disabled={isProcessing || !canDeleteRules}
+        >
           <Trans i18nKey="alerting.group-edit.delete">Delete group</Trans>
         </Button>
       </div>

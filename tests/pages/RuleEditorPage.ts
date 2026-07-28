@@ -15,6 +15,8 @@ export class RuleEditorPage {
   readonly loadingAlert: Locator;
   readonly errorAlert: Locator;
   readonly notFoundAlert: Locator;
+  readonly rulerApiNotSupportedAlert: Locator;
+  readonly permissionDeniedAlert: Locator;
 
   // Step 1: Definition
   readonly ruleNameInput: Locator;
@@ -50,6 +52,10 @@ export class RuleEditorPage {
     this.loadingAlert = this.pageContent.getByText(/loading/i);
     this.errorAlert = this.pageContent.getByRole('alert').filter({ hasText: /error/i });
     this.notFoundAlert = this.pageContent.getByRole('alert').filter({ hasText: /not found/i });
+    this.rulerApiNotSupportedAlert = this.pageContent
+      .getByRole('alert')
+      .filter({ hasText: /ruler api not supported/i });
+    this.permissionDeniedAlert = this.pageContent.getByRole('alert').filter({ hasText: /permission denied/i });
 
     // Step 1: Definition
     this.ruleNameInput = this.pageContent.locator('#rule-name');
