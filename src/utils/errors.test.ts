@@ -1,6 +1,6 @@
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { SerializedError } from '@reduxjs/toolkit';
-import { stringifyFetchError, isNotFoundError } from './errors';
+import { isForbiddenError, isNotFoundError, stringifyFetchError } from './errors';
 
 describe('stringifyFetchError', () => {
   describe('FetchBaseQueryError with numeric status', () => {
@@ -124,5 +124,24 @@ describe('isNotFoundError', () => {
   it('should return false for null or undefined', () => {
     expect(isNotFoundError(null)).toBe(false);
     expect(isNotFoundError(undefined)).toBe(false);
+  });
+});
+
+describe('isForbiddenError', () => {
+  it('returns true for an HTTP 403 error', () => {
+    const error: FetchBaseQueryError = {
+      status: 403,
+      data: { message: 'Forbidden' },
+    };
+
+    expect(isForbiddenError(error)).toBe(true);
+  });
+
+  it('returns true for a nested 403 status', () => {
+    expect(isForbiddenError({ data: { status: 403 } })).toBe(true);
+  });
+
+  it('returns false for errors that are not forbidden', () => {
+    expect(isForbiddenError({ status: 500 })).toBe(false);
   });
 });

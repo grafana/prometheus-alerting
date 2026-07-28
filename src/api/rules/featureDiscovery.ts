@@ -2,15 +2,10 @@ import { getBackendSrv } from '@grafana/runtime';
 import { getDataSourceInstanceSettings } from '@grafana/runtime/unstable';
 import { lastValueFrom } from 'rxjs';
 
-import {
-  DataSourceFeatures,
-  getPrometheusRulesApiBasePath,
-  PromBuildInfoResponse,
-} from '../../types/rules';
+import { DataSourceFeatures, getPrometheusRulesApiBasePath, PromBuildInfoResponse } from '../../types/rules';
+import { isForbiddenError, isNotFoundError } from '../../utils/errors';
 
 export type { DataSourceFeatures };
-
-const RULER_NOT_SUPPORTED_MSG = 'ruler API is not enabled';
 
 /**
  * Main feature discovery function that determines what capabilities a data source has
@@ -81,7 +76,7 @@ async function fetchBuildInfo(uid: string): Promise<PromBuildInfoResponse | unde
     return response.data;
   } catch (error) {
     // 404 means the endpoint doesn't exist (Cortex or old Prometheus)
-    if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
+    if (isNotFoundError(error)) {
       return undefined;
     }
 
@@ -95,86 +90,35 @@ async function fetchBuildInfo(uid: string): Promise<PromBuildInfoResponse | unde
  */
 async function testPromRulesSupport(uid: string, type: string): Promise<boolean> {
   const path = getPrometheusRulesApiBasePath(type === 'loki' ? 'loki' : 'prometheus');
-  try {
-    await lastValueFrom(
-      getBackendSrv().fetch({
-        url: `/api/datasources/proxy/uid/${uid}/${path}`,
-        showErrorAlert: false,
-        showSuccessAlert: false,
-      })
-    );
-    return true;
-  } catch (error) {
-    return false;
-  }
+  return isEndpointAvailable(`/api/datasources/proxy/uid/${uid}/${path}`);
 }
 
 /**
  * Test if the data source supports the Ruler API for editing rules
  */
 async function testRulerSupport(uid: string, type: string): Promise<boolean> {
-  // Loki's Ruler API uses the YAML /api/prom/rules endpoint. If it responds,
-  // the data source supports rule CRUD in addition to runtime rule reads.
-  if (type === 'loki') {
-    try {
-      await lastValueFrom(
-        getBackendSrv().fetch({
-          url: `/api/datasources/proxy/uid/${uid}/api/prom/rules`,
-          showErrorAlert: false,
-          showSuccessAlert: false,
-        })
-      );
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
+  // Loki uses its YAML Ruler endpoint; Prometheus-compatible sources use the
+  // rule-group probe Grafana Alerting uses for Ruler discovery.
+  const path = type === 'loki' ? 'api/prom/rules' : 'api/v1/ruler/test/test';
+  return isEndpointAvailable(`/api/datasources/proxy/uid/${uid}/${path}`);
+}
 
+/** Returns whether an endpoint responds successfully, while preserving permission errors for the caller. */
+async function isEndpointAvailable(url: string): Promise<boolean> {
   try {
     await lastValueFrom(
       getBackendSrv().fetch({
-        url: `/api/datasources/proxy/uid/${uid}/api/v1/ruler/test/test`,
+        url,
         showErrorAlert: false,
         showSuccessAlert: false,
       })
     );
     return true;
   } catch (error) {
-    // Check if the error indicates missing ruler support
-    if (errorIndicatesMissingRulerSupport(error)) {
-      return false;
+    if (isForbiddenError(error)) {
+      throw error;
     }
 
-    // Other errors might indicate the ruler is available but there's a different issue
-    // We'll be conservative and assume ruler is not available
     return false;
   }
-}
-
-/**
- * Check if an error indicates that the Ruler API is not supported
- */
-function errorIndicatesMissingRulerSupport(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-
-  // Check for fetch error with data.message
-  if ('data' in error && error.data && typeof error.data === 'object') {
-    const data = error.data as { message?: string };
-    if (data.message) {
-      return (
-        data.message.includes('GetRuleGroup unsupported in rule local store') ||
-        data.message.includes('page not found') ||
-        data.message.includes(RULER_NOT_SUPPORTED_MSG)
-      );
-    }
-  }
-
-  // Check for Error with message
-  if (error instanceof Error && error.message) {
-    return error.message.includes('404 from rules config endpoint');
-  }
-
-  return false;
 }
