@@ -6,6 +6,8 @@ verifyDepsBeforeRun: install
 minimumReleaseAge: 4320 # 3 days, in minutes
 minimumReleaseAgeExclude:
   - '@grafana/*'
+  # Renovate security update: react-router-dom@7.0.0
+  - react-router-dom@7.0.0
 
 overrides:
   'js-cookie': '>=3.0.6'
