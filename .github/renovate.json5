@@ -23,6 +23,16 @@
       minimumReleaseAge: '7 days',
     },
     {
+      // Hold react-router on 6.x. It is a webpack external (see
+      // .config/bundler/externals.ts), so Grafana supplies the router at runtime and
+      // the version declared here only drives types and unit tests. @grafana/scenes
+      // peer-requires react-router-dom ^6.28.0, so 6.x is what keeps the declared
+      // version aligned with both that peer contract and the host router.
+      // 7.x/8.x resolve no runtime vulnerability and break the scenes peer.
+      matchPackageNames: ['react-router', 'react-router-dom'],
+      allowedVersions: '<7',
+    },
+    {
       // Pin the Node and pnpm runtimes exactly, sourced from mise.toml.
       matchManagers: ['mise'],
       rangeStrategy: 'pin',
