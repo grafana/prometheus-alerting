@@ -119,8 +119,6 @@ export function DataSourceGroupLoader({
   );
 
   if (promGroup) {
-    const actualRulerApiEnabled = shouldFetchRuler && dsFeatures?.rulerApiEnabled;
-
     return (
       <>
         {promGroup.rules.map((rule: PromRuleDTO, index: number) => {
@@ -138,7 +136,6 @@ export function DataSourceGroupLoader({
               rule={rulerRule}
               promRule={rule}
               groupIdentifier={groupIdentifier}
-              rulerApiEnabled={actualRulerApiEnabled ?? false}
               onDelete={handleDelete}
               onDuplicate={handleDuplicate}
               onSilence={handleSilence}

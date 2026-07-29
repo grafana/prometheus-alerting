@@ -18,7 +18,7 @@ export interface RulerRuleResult {
  * Hook for fetching a single rule from the Ruler API config endpoint.
  * This hook is optimized for the Rule Editor which only needs configuration data
  * from the Ruler API and doesn't need runtime state from the Prometheus API.
- * Callers must confirm that the data source supports the Ruler API before using this hook.
+ * Unsupported data sources return an error from the Ruler API, which callers surface.
  *
  * @param identifier - CloudRuleIdentifier containing data source UID, namespace, group name, and rule identifiers
  * @returns Rule data, group data, metadata, and loading/error states

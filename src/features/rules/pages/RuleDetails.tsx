@@ -189,7 +189,6 @@ function RuleDetails() {
       rule={rulerRule}
       promRule={promRule}
       groupIdentifier={groupIdentifier}
-      rulerApiEnabled={meta.hasRulerApi}
       onDelete={showDeleteModal}
       onDuplicate={handleDuplicate}
       onSilence={handleSilence}

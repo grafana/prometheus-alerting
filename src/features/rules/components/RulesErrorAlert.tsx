@@ -1,9 +1,8 @@
 import React from 'react';
 
-import { t } from '@grafana/i18n';
 import { Alert } from '@grafana/ui';
 
-import { extractErrorMessage, isForbiddenError } from '../../../utils/errors';
+import { getRulesErrorFeedback } from '../utils/errorFeedback';
 
 interface RulesErrorAlertProps {
   error: unknown;
@@ -12,19 +11,17 @@ interface RulesErrorAlertProps {
 
 /** Consistent error feedback for datasource-backed rule requests. */
 export function RulesErrorAlert({ error, title }: RulesErrorAlertProps) {
-  const isAccessDenied = isForbiddenError(error);
+  const feedback = getRulesErrorFeedback(error, title);
 
   return (
-    <Alert
-      severity="error"
-      title={isAccessDenied ? t('alerting.rules-error.permission-denied', 'Permission denied') : title}
-    >
-      {isAccessDenied
-        ? t(
-            'alerting.rules-error.permission-denied-description',
-            'You do not have permission to access rules from this data source.'
-          )
-        : extractErrorMessage(error)}
+    <Alert severity="error" title={feedback.title}>
+      <span>{feedback.description}</span>
+      {feedback.detail && (
+        <>
+          <br />
+          <span>{feedback.detail}</span>
+        </>
+      )}
     </Alert>
   );
 }

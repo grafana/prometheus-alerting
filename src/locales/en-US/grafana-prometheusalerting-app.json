@@ -53,6 +53,7 @@
       "deleting": "Deleting...",
       "error-title": "Delete failed",
       "message": "Are you sure you want to delete rule <1>{{ ruleName }}</1> from group <4>{{ groupName }}</4> in namespace <6>{{ namespace }}</6>?",
+      "permission-denied": "You do not have permission to delete rules.",
       "success": "Rule deleted successfully",
       "title": "Delete rule",
       "unknown-error": "Unknown error",
@@ -323,6 +324,10 @@
         "alert": "Alert rule",
         "recording": "Recording rule"
       }
+    },
+    "rules-error": {
+      "permission-denied": "Permission denied",
+      "permission-denied-description": "You do not have permission to access rules from this data source."
     },
     "rules-filter": {
       "data-source-label": "Data source",
@@ -963,7 +968,7 @@
       "collapse": "Collapse",
       "configure": "Configure",
       "error": "Error",
-      "error-title": "Cannot load rules for this datasource"
+      "error-title": "Cannot load rules for this data source"
     },
     "error-boundary": {
       "message": "Check the data source configuration. Does the data source support Prometheus API?",
