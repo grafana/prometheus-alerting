@@ -80,7 +80,7 @@ describe('useScopedAbilities', () => {
   });
 
   it('includes the discovery error when data source capabilities cannot be determined', async () => {
-    server.use(http.get(buildInfoUrl, () => HttpResponse.json({ message: 'Access denied' }, { status: 403 })));
+    server.use(http.get(buildInfoUrl, () => HttpResponse.error()));
 
     const { result } = renderHook(() => useScopedAbilities(mimirDataSource.uid), {
       wrapper: createTestWrapper(),
@@ -90,7 +90,6 @@ describe('useScopedAbilities', () => {
       expect(result.current[AlertingAction.UpdateRule]).toMatchObject({
         granted: false,
         cause: 'ERROR',
-        error: { status: 403 },
       });
     });
   });

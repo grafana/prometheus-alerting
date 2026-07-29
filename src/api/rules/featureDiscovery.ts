@@ -75,10 +75,6 @@ async function fetchBuildInfo(uid: string): Promise<PromBuildInfoResponse | unde
       })
     );
 
-    if (!response.ok) {
-      throw response;
-    }
-
     return response.data;
   } catch (error) {
     // 404 means the endpoint doesn't exist (Cortex or old Prometheus)
