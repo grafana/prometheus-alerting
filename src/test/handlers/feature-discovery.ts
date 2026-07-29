@@ -5,16 +5,6 @@
 
 import { http, HttpResponse } from 'msw';
 
-import { mockDatasourcesConfig } from '../fixtures/datasources';
-
-const getFrontendSettingsHandler = () =>
-  http.get('/api/frontend/settings', () =>
-    HttpResponse.json({
-      datasources: mockDatasourcesConfig,
-      defaultDatasource: 'Prometheus',
-    })
-  );
-
 /**
  * GET /api/datasources/proxy/uid/:uid/api/v1/status/buildinfo
  * Returns build info for Prometheus/Mimir datasources
@@ -49,4 +39,4 @@ const getConfigHandler = () =>
     });
   });
 
-export const featureDiscoveryHandlers = [getFrontendSettingsHandler(), getBuildInfoHandler(), getConfigHandler()];
+export const featureDiscoveryHandlers = [getBuildInfoHandler(), getConfigHandler()];

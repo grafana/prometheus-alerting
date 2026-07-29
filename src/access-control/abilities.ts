@@ -49,66 +49,14 @@ export type AsyncAbility =
 export type UnscopedAbilities = Record<UnscopedAction, Ability>;
 export type ScopedAbilities = Record<ScopedAction, AsyncAbility>;
 
-const granted = { granted: true } satisfies Ability;
-const notSupported = { granted: false, cause: 'NOT_SUPPORTED' } satisfies Ability;
-const loading = { granted: false, cause: 'LOADING' } satisfies AsyncAbility;
-
-function insufficientPermissions(permission: AlertingPermission): Ability {
-  return {
-    granted: false,
-    cause: 'INSUFFICIENT_PERMISSIONS',
-    anyOfPermissions: [permission],
-  };
-}
-
-function makePermissionAbility(permission: AlertingPermission): Ability {
-  return hasPermission(permission) ? granted : insufficientPermissions(permission);
-}
-
-function makeDataSourceAbility({
-  dataSourceUid,
-  rulerApiEnabled,
-  isLoading,
-  error,
-  unscopedAbility,
-}: {
-  dataSourceUid?: string;
-  rulerApiEnabled: boolean;
-  isLoading: boolean;
-  error?: unknown;
-  unscopedAbility: Ability;
-}): AsyncAbility {
-  if (!unscopedAbility.granted) {
-    return unscopedAbility;
-  }
-
-  if (!dataSourceUid) {
-    return notSupported;
-  }
-
-  if (isLoading) {
-    return loading;
-  }
-
-  if (error) {
-    return { granted: false, cause: 'ERROR', error };
-  }
-
-  if (!rulerApiEnabled) {
-    return notSupported;
-  }
-
-  return unscopedAbility;
-}
-
 /** Returns abilities that only depend on Grafana RBAC permissions. */
 export function useUnscopedAbilities(): UnscopedAbilities {
-  const rulesRead = makePermissionAbility(AlertingPermission.RulesRead);
-  const rulesWrite = makePermissionAbility(AlertingPermission.RulesWrite);
-  const instancesRead = makePermissionAbility(AlertingPermission.InstancesRead);
-  const instancesWrite = makePermissionAbility(AlertingPermission.InstancesWrite);
-  const notificationsRead = makePermissionAbility(AlertingPermission.NotificationsRead);
-  const notificationsWrite = makePermissionAbility(AlertingPermission.NotificationsWrite);
+  const rulesRead = permissionToAbility(AlertingPermission.RulesRead);
+  const rulesWrite = permissionToAbility(AlertingPermission.RulesWrite);
+  const instancesRead = permissionToAbility(AlertingPermission.InstancesRead);
+  const instancesWrite = permissionToAbility(AlertingPermission.InstancesWrite);
+  const notificationsRead = permissionToAbility(AlertingPermission.NotificationsRead);
+  const notificationsWrite = permissionToAbility(AlertingPermission.NotificationsWrite);
 
   return {
     [AlertingAction.ViewRules]: rulesRead,
@@ -125,20 +73,19 @@ export function useUnscopedAbilities(): UnscopedAbilities {
  * Returns the actions available for a data source. Actions that change rules
  * additionally require the data source's Ruler configuration API.
  */
-export function useScopedAbilities(dataSourceUid: string | undefined): ScopedAbilities {
-  const rulesWriteAbility = makePermissionAbility(AlertingPermission.RulesWrite);
-  const {
-    data: features,
-    isLoading,
-    error,
-  } = useDiscoverFeaturesQuery(dataSourceUid && rulesWriteAbility.granted ? { uid: dataSourceUid } : skipToken);
+export function useScopedAbilities(dataSourceUid: string): ScopedAbilities {
+  const hasRulesWritePermission = hasPermission(AlertingPermission.RulesWrite);
+
+  const featureDiscoveryOptions = hasRulesWritePermission ? { uid: dataSourceUid } : skipToken;
+  const { data: features, isLoading, error } = useDiscoverFeaturesQuery(featureDiscoveryOptions);
+
   const rulerConfigApiAvailable = features?.rulerApiEnabled ?? false;
-  const scopedRulesWriteAbility = makeDataSourceAbility({
-    dataSourceUid,
+
+  const scopedRulesWriteAbility = makeRuleMutationAbility({
+    hasRulesWritePermission,
     rulerApiEnabled: rulerConfigApiAvailable,
     isLoading,
     error,
-    unscopedAbility: rulesWriteAbility,
   });
 
   return {
@@ -150,4 +97,50 @@ export function useScopedAbilities(dataSourceUid: string | undefined): ScopedAbi
 
 export function isAbilityAllowed(ability: AsyncAbility): boolean {
   return ability.granted;
+}
+
+const granted = { granted: true } satisfies Ability;
+const notSupported = { granted: false, cause: 'NOT_SUPPORTED' } satisfies Ability;
+const loading = { granted: false, cause: 'LOADING' } satisfies AsyncAbility;
+
+function permissionToAbility(permission: AlertingPermission): Ability {
+  return hasPermission(permission) ? granted : insufficientPermissions(permission);
+}
+
+function makeRuleMutationAbility({
+  hasRulesWritePermission,
+  rulerApiEnabled,
+  isLoading,
+  error,
+}: {
+  hasRulesWritePermission: boolean;
+  rulerApiEnabled: boolean;
+  isLoading: boolean;
+  error?: unknown;
+}): AsyncAbility {
+  if (!hasRulesWritePermission) {
+    return insufficientPermissions(AlertingPermission.RulesWrite);
+  }
+
+  if (isLoading) {
+    return loading;
+  }
+
+  if (error) {
+    return { granted: false, cause: 'ERROR', error };
+  }
+
+  if (!rulerApiEnabled) {
+    return notSupported;
+  }
+
+  return granted;
+}
+
+function insufficientPermissions(permission: AlertingPermission): Ability {
+  return {
+    granted: false,
+    cause: 'INSUFFICIENT_PERMISSIONS',
+    anyOfPermissions: [permission],
+  };
 }

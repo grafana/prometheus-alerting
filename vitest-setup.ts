@@ -9,11 +9,7 @@ import '@testing-library/jest-dom/vitest';
 import { server } from './src/test/server';
 
 // Import mocks
-import {
-  loadMockDataSourceSettings,
-  setupGrafanaRuntimeMocks,
-  resetGrafanaRuntimeMocks,
-} from './src/test/mocks/grafana-runtime';
+import { setupGrafanaRuntimeMocks, resetGrafanaRuntimeMocks } from './src/test/mocks/grafana-runtime';
 
 // Import handler reset functions
 import { resetRulerState } from './src/test/handlers/ruler';
@@ -92,7 +88,7 @@ if (typeof HTMLCanvasElement !== 'undefined') {
  * The server starts before all tests and closes after all tests.
  * Handlers are reset after each test to ensure isolation.
  */
-beforeAll(async () => {
+beforeAll(() => {
   // Start MSW server
   server.listen({
     // Only warn about unhandled requests to our API routes
@@ -105,8 +101,6 @@ beforeAll(async () => {
       // Silently bypass everything else (assets, etc.)
     },
   });
-
-  await loadMockDataSourceSettings();
 });
 
 afterEach(() => {

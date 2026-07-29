@@ -3,37 +3,46 @@
  * These are for synchronous config/service lookups that don't make HTTP requests.
  */
 
-import { firstValueFrom } from 'rxjs';
-import { MockBackendSrv } from '@grafana/api-clients';
 import { CurrentUser, OrgRole } from '@grafana/data';
-import {
-  BackendSrv,
-  config,
-  DataSourceSrv,
-  setBackendSrv,
-  setCurrentUser,
-  setDataSourceSrv,
-} from '@grafana/runtime';
-import { reloadDataSourceInstanceSettings } from '@grafana/runtime/unstable';
+import { config, DataSourceSrv, setCurrentUser } from '@grafana/runtime';
 
-import { mockDatasourcesConfig, mockAlertmanagerDs, mockMimirDs, mockPrometheusDs } from '../fixtures/datasources';
+import {
+  DataSourceInstanceSettingsFactory,
+  mockDatasourcesConfig,
+  mockAlertmanagerDs,
+  mockMimirDs,
+  mockPrometheusDs,
+} from '../fixtures/datasources';
 
 /**
  * Mock implementation of getDataSourceSrv().getInstanceSettings()
  * Returns mock datasource settings by UID
  */
-export function createMockDataSourceSrv() {
+export function createMockDataSourceSrv(): DataSourceSrv {
+  const dataSources = Object.values(mockDatasourcesConfig).map((settings) =>
+    DataSourceInstanceSettingsFactory.build(settings)
+  );
+
+  const getInstanceSettings: DataSourceSrv['getInstanceSettings'] = (ref) => {
+    const uidOrName = typeof ref === 'string' ? ref : ref?.uid;
+    return dataSources.find((dataSource) => dataSource.uid === uidOrName || dataSource.name === uidOrName);
+  };
+
   return {
-    getInstanceSettings: (uid: string) => {
-      return mockDatasourcesConfig[uid] || null;
+    get: async () => {
+      throw new Error('Data source instances are not available in this test mock');
     },
-    getList: () => {
-      return Object.values(mockDatasourcesConfig);
+    getInstanceSettings,
+    getList: (filters) => {
+      if (!filters?.type) {
+        return dataSources;
+      }
+
+      const types = Array.isArray(filters.type) ? filters.type : [filters.type];
+      return dataSources.filter((dataSource) => types.includes(dataSource.type));
     },
-    get: (name: string) => {
-      const ds = Object.values(mockDatasourcesConfig).find((d) => d.name === name);
-      return ds || null;
-    },
+    reload: async () => {},
+    registerRuntimeDataSource: () => {},
   };
 }
 
@@ -82,12 +91,6 @@ const mockCurrentUser = {
 
 let originalDatasources: typeof config.datasources;
 
-class MockBackendSrvWithGet extends MockBackendSrv {
-  async get<T>(url: string): Promise<T> {
-    return (await firstValueFrom(this.fetch<T>({ url }))).data;
-  }
-}
-
 /**
  * Set up Grafana runtime mocks.
  * Call this in beforeAll or at the top of jest-setup.
@@ -97,17 +100,7 @@ export function setupGrafanaRuntimeMocks() {
 
   // Apply mocks
   (config as any).datasources = mockDatasourcesConfig;
-  setDataSourceSrv(createMockDataSourceSrv() as any);
-  setBackendSrv(new MockBackendSrvWithGet() as BackendSrv);
   setCurrentUser(mockCurrentUser);
-}
-
-export async function loadMockDataSourceSettings() {
-  // Exercise the real runtime reload path against the MSW /api/frontend/settings
-  // handler instead of delegating to the legacy DataSourceSrv singleton.
-  setDataSourceSrv(undefined as unknown as DataSourceSrv);
-  await reloadDataSourceInstanceSettings();
-  setDataSourceSrv(createMockDataSourceSrv() as any);
 }
 
 /**
