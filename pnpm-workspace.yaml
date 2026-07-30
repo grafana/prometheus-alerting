@@ -6,6 +6,8 @@ verifyDepsBeforeRun: install
 minimumReleaseAge: 4320 # 3 days, in minutes
 minimumReleaseAgeExclude:
   - '@grafana/*'
+  # Renovate security update: pnpm@11.8.0
+  - pnpm@11.8.0
 
 overrides:
   'js-cookie': '>=3.0.6'
