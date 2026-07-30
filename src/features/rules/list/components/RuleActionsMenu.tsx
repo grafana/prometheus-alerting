@@ -4,7 +4,7 @@ import { t } from '@grafana/i18n';
 import { Button, Dropdown, Menu } from '@grafana/ui';
 
 import { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
-import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
+import { CloudRuleIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 
 import { DataSourceRuleGroupIdentifier } from '../../../../types/rules';
 import { copyToClipboard } from '../../../../utils/clipboard';
@@ -18,7 +18,8 @@ interface Props {
   promRule: PromRuleDTO; // The read-only rule from Prometheus API
   groupIdentifier: DataSourceRuleGroupIdentifier;
   rulerApiEnabled: boolean;
-  onDelete: (identifier: DataSourceRuleIdentifier) => void;
+  /** Deleting requires the Ruler API, so it always works on a Cloud (ruler) identifier */
+  onDelete: (identifier: CloudRuleIdentifier) => void;
   onDuplicate: (identifier: DataSourceRuleIdentifier) => void;
   onSilence?: (identifier: DataSourceRuleIdentifier, ruleName: string) => void;
   onExport?: (rule: RulerRuleDTO) => void;
@@ -39,7 +40,8 @@ export function RuleActionsMenu({
   fill,
 }: Props) {
   // Use Cloud Rule Identifier (cri) if we have a ruler rule, otherwise Prometheus Rule Identifier (pri)
-  const identifier = rule ? fromRulerRuleAndGroup(rule, groupIdentifier) : fromRuleAndGroup(promRule, groupIdentifier);
+  const rulerIdentifier = rule ? fromRulerRuleAndGroup(rule, groupIdentifier) : undefined;
+  const identifier = rulerIdentifier ?? fromRuleAndGroup(promRule, groupIdentifier);
 
   // Check if this is an alerting rule (not recording rule) - silence only applies to alerting rules
   const isAlertingRule = promRule.type === 'alerting';
@@ -54,7 +56,10 @@ export function RuleActionsMenu({
   };
 
   const handleDelete = () => {
-    onDelete(identifier);
+    // The Delete item is only rendered when we have a ruler rule
+    if (rulerIdentifier) {
+      onDelete(rulerIdentifier);
+    }
   };
 
   const handleSilence = () => {

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { parseIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import type { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
 import { Alert, LoadingPlaceholder, Spinner, Stack, Text } from '@grafana/ui';
-import { PluginPage } from '@grafana/runtime';
+import { locationService, PluginPage } from '@grafana/runtime';
 import { Trans, t } from '@grafana/i18n';
 import { AlertLabels } from '@grafana/alerting/unstable';
 
@@ -22,6 +22,7 @@ import {
   silences as silencesNav,
 } from '../../../utils/navigation';
 import { extractErrorMessage } from '../../../utils/errors';
+import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 
 function RuleDetails() {
@@ -43,7 +44,9 @@ function RuleDetails() {
   // Check if the rule is newly created and not yet visible in Prometheus
   // This happens due to eventual consistency between Ruler and Prometheus APIs
   const isNewlyCreated = !loading && !promRule && !!rulerRule;
-  const { isConsistent, status: consistencyStatus } = useRuleCreationConsistencyCheck(isNewlyCreated ? identifier : null);
+  const { isConsistent, status: consistencyStatus } = useRuleCreationConsistencyCheck(
+    isNewlyCreated ? identifier : null
+  );
 
   // Refetch when consistency check completes
   useEffect(() => {
@@ -52,7 +55,12 @@ function RuleDetails() {
     }
   }, [isNewlyCreated, isConsistent, refetch]);
 
-  const [deleteModal, showDeleteModal] = useDeleteRuleModal();
+  // After deleting, the rule URL no longer resolves – go back to the rules list
+  const handleDeleted = useCallback(() => {
+    locationService.push(`${PLUGIN_BASE_URL}/${ROUTES.Rules}`);
+  }, []);
+
+  const [deleteModal, showDeleteModal] = useDeleteRuleModal(handleDeleted);
   const [exportingRule, setExportingRule] = useState<RulerRuleDTO | null>(null);
 
   const handleDuplicate = useCallback((identifier: DataSourceRuleIdentifier) => {

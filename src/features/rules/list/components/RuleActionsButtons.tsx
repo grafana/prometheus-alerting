@@ -4,7 +4,7 @@ import { Trans } from '@grafana/i18n';
 import { LinkButton, Stack } from '@grafana/ui';
 
 import { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
-import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
+import { CloudRuleIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 
 import { DataSourceRuleGroupIdentifier } from '../../../../types/rules';
 import { fromRuleAndGroup, fromRulerRuleAndGroup } from '../../../../utils/rule-id';
@@ -17,7 +17,8 @@ interface Props {
   promRule: PromRuleDTO; // The read-only rule from Prometheus API
   groupIdentifier: DataSourceRuleGroupIdentifier;
   rulerApiEnabled: boolean;
-  onDelete: (identifier: DataSourceRuleIdentifier) => void;
+  /** Deleting requires the Ruler API, so it always works on a Cloud (ruler) identifier */
+  onDelete: (identifier: CloudRuleIdentifier) => void;
   onDuplicate: (identifier: DataSourceRuleIdentifier) => void;
   onSilence?: (identifier: DataSourceRuleIdentifier, ruleName: string) => void;
   onExport?: (rule: RulerRuleDTO) => void;
