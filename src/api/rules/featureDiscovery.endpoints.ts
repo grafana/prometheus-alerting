@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { isFetchError } from '@grafana/runtime';
 
 import { extractErrorMessage } from '../../utils/errors';
 
@@ -25,10 +26,10 @@ export const featureDiscoveryApi = createApi({
 export const { useDiscoverFeaturesQuery, useLazyDiscoverFeaturesQuery } = featureDiscoveryApi;
 
 export function toFeatureDiscoveryError(error: unknown): FetchBaseQueryError {
-  if (error && typeof error === 'object' && 'status' in error && typeof error.status === 'number') {
+  if (isFetchError(error)) {
     return {
       status: error.status,
-      data: 'data' in error ? error.data : extractErrorMessage(error),
+      data: error.data,
     };
   }
 
