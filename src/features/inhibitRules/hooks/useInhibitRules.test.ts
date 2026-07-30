@@ -1,9 +1,11 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { vi, describe, it, expect, afterEach } from 'vitest';
+import { setDataSourceSrv } from '@grafana/runtime';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { YamlToParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 
 import { server } from '../../../test/server';
+import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 import { basicConfig, configWithInhibitRules } from '../../../test/fixtures/alertmanager-config';
 import { setVanillaAlertmanagerConfig } from '../../../test/handlers/alertmanager';
@@ -20,6 +22,10 @@ vi.mock('../../../hooks/useAlertmanager', () => ({
 
 // Import after vi.mock so we get the mocked version
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
+
+beforeEach(() => {
+  setDataSourceSrv(createMockDataSourceSrv());
+});
 
 afterEach(() => {
   // Restore the default Mimir implementation after each test

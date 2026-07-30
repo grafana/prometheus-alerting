@@ -6,6 +6,8 @@ import { SkeletonTheme } from 'react-loading-skeleton';
 import { ROUTES } from '../../constants';
 import { StoreProvider } from '../StoreProvider/StoreProvider';
 import { sharedStore } from '../../store/store';
+import { AlertingPermission } from '../../access-control/abilities';
+import { ProtectedRoute } from '../../access-control/components/ProtectedRoute';
 
 const Alerts = React.lazy(() => import('../../features/alerts/pages/Alerts'));
 const Rules = React.lazy(() => import('../../features/rules/pages/RulesList'));
@@ -37,12 +39,20 @@ function App(_props: AppRootProps) {
           <Route path="/" element={<Navigate to={ROUTES.Alerts} replace />} />
           <Route path={ROUTES.Alerts} element={<Alerts />} />
           <Route path={ROUTES.Routes} element={<RouteTree />} />
-          <Route path={ROUTES.Rules} element={<Rules />} />
-          <Route path={ROUTES.RuleView} element={<RuleDetails />} />
-          <Route path={ROUTES.RuleEdit} element={<RuleEditor />} />
-          <Route path={ROUTES.RuleNew} element={<RuleEditor />} />
-          <Route path={ROUTES.GroupView} element={<GroupDetails />} />
-          <Route path={ROUTES.GroupEdit} element={<GroupEditPage />} />
+          <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesRead]} />}>
+            <Route path={ROUTES.Rules} element={<Rules />} />
+            <Route path={ROUTES.RuleView} element={<RuleDetails />} />
+            <Route path={ROUTES.GroupView} element={<GroupDetails />} />
+          </Route>
+          <Route
+            element={<ProtectedRoute requirements={[AlertingPermission.RulesRead, AlertingPermission.RulesWrite]} />}
+          >
+            <Route path={ROUTES.RuleEdit} element={<RuleEditor />} />
+            <Route path={ROUTES.GroupEdit} element={<GroupEditPage />} />
+          </Route>
+          <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesWrite]} />}>
+            <Route path={ROUTES.RuleNew} element={<RuleEditor />} />
+          </Route>
           <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
           <Route path={ROUTES.Receivers} element={<Receivers />} />
           <Route path={ROUTES.Templates} element={<Templates />} />

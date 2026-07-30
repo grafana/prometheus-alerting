@@ -1,4 +1,5 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
+import { setDataSourceSrv } from '@grafana/runtime';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
 
@@ -13,6 +14,7 @@ import { addTimeInterval } from '../reducers/alertmanager/timeIntervals';
 import { addRouteAction } from '../reducers/alertmanager/routes';
 import { attachRouteIds } from '../features/routes/utils';
 import { server } from '../test/server';
+import { createMockDataSourceSrv } from '../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../test/utils/test-wrapper';
 import {
   configWithCustomRoutes,
@@ -38,6 +40,7 @@ vi.mock('./useAlertmanager', () => ({
 
 describe('useProduceNewAlertmanagerConfiguration', () => {
   beforeEach(() => {
+    setDataSourceSrv(createMockDataSourceSrv());
     vi.clearAllMocks();
   });
 

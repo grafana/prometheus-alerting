@@ -1,7 +1,10 @@
 import React from 'react';
+import { setDataSourceSrv } from '@grafana/runtime';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
+
+import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 
 import GroupDetails from './GroupDetails';
 
@@ -112,6 +115,7 @@ function renderGroupDetails(path = '/groups/prometheus-1/my-namespace/my-group')
 
 describe('GroupDetails', () => {
   beforeEach(() => {
+    setDataSourceSrv(createMockDataSourceSrv());
     vi.clearAllMocks();
 
     // Default mock implementations

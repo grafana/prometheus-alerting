@@ -3,26 +3,46 @@
  * These are for synchronous config/service lookups that don't make HTTP requests.
  */
 
-import { config, setDataSourceSrv } from '@grafana/runtime';
+import { CurrentUser, OrgRole } from '@grafana/data';
+import { config, DataSourceSrv, setCurrentUser } from '@grafana/runtime';
 
-import { mockDatasourcesConfig, mockAlertmanagerDs, mockMimirDs, mockPrometheusDs } from '../fixtures/datasources';
+import {
+  DataSourceInstanceSettingsFactory,
+  mockDatasourcesConfig,
+  mockAlertmanagerDs,
+  mockMimirDs,
+  mockPrometheusDs,
+} from '../fixtures/datasources';
 
 /**
  * Mock implementation of getDataSourceSrv().getInstanceSettings()
  * Returns mock datasource settings by UID
  */
-export function createMockDataSourceSrv() {
+export function createMockDataSourceSrv(): DataSourceSrv {
+  const dataSources = Object.values(mockDatasourcesConfig).map((settings) =>
+    DataSourceInstanceSettingsFactory.build(settings)
+  );
+
+  const getInstanceSettings: DataSourceSrv['getInstanceSettings'] = (ref) => {
+    const uidOrName = typeof ref === 'string' ? ref : ref?.uid;
+    return dataSources.find((dataSource) => dataSource.uid === uidOrName || dataSource.name === uidOrName);
+  };
+
   return {
-    getInstanceSettings: (uid: string) => {
-      return mockDatasourcesConfig[uid] || null;
+    get: async () => {
+      throw new Error('Data source instances are not available in this test mock');
     },
-    getList: () => {
-      return Object.values(mockDatasourcesConfig);
+    getInstanceSettings,
+    getList: (filters) => {
+      if (!filters?.type) {
+        return dataSources;
+      }
+
+      const types = Array.isArray(filters.type) ? filters.type : [filters.type];
+      return dataSources.filter((dataSource) => types.includes(dataSource.type));
     },
-    get: (name: string) => {
-      const ds = Object.values(mockDatasourcesConfig).find((d) => d.name === name);
-      return ds || null;
-    },
+    reload: async () => {},
+    registerRuntimeDataSource: () => {},
   };
 }
 
@@ -46,7 +66,29 @@ export const mockGrafanaConfig = {
   unifiedAlertingEnabled: true,
 };
 
-// Store original config values for reset
+const mockCurrentUser = {
+  isSignedIn: true,
+  id: 1,
+  uid: 'test-user',
+  externalUserId: '',
+  login: 'test-user',
+  email: 'test-user@example.com',
+  name: 'Test User',
+  theme: 'dark',
+  orgCount: 1,
+  orgId: 1,
+  orgName: 'Main Org.',
+  orgRole: OrgRole.Admin,
+  isGrafanaAdmin: false,
+  gravatarUrl: '',
+  timezone: 'browser',
+  weekStart: '',
+  language: 'en-US',
+  permissions: {},
+  analytics: { identifier: 'test-user' },
+  authenticatedBy: 'password',
+} satisfies CurrentUser;
+
 let originalDatasources: typeof config.datasources;
 
 /**
@@ -54,12 +96,11 @@ let originalDatasources: typeof config.datasources;
  * Call this in beforeAll or at the top of jest-setup.
  */
 export function setupGrafanaRuntimeMocks() {
-  // Store originals
   originalDatasources = config.datasources;
 
   // Apply mocks
   (config as any).datasources = mockDatasourcesConfig;
-  setDataSourceSrv(createMockDataSourceSrv() as any);
+  setCurrentUser(mockCurrentUser);
 }
 
 /**
@@ -67,10 +108,12 @@ export function setupGrafanaRuntimeMocks() {
  * Call this in afterEach to ensure test isolation.
  */
 export function resetGrafanaRuntimeMocks() {
-  // Restore original config (if it was set)
-  if (originalDatasources !== undefined) {
-    (config as any).datasources = originalDatasources;
-  }
+  (config as any).datasources = originalDatasources;
+  mockCurrentUser.permissions = {};
+}
+
+export function setCurrentUserPermissions(...permissions: string[]) {
+  mockCurrentUser.permissions = Object.fromEntries(permissions.map((permission) => [permission, true]));
 }
 
 /**
