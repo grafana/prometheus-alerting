@@ -106,13 +106,6 @@ describe('isNotFoundError', () => {
     expect(isNotFoundError(error)).toBe(true);
   });
 
-  it('should return true for error with nested data.status 404', () => {
-    const error = {
-      data: { status: 404 },
-    };
-    expect(isNotFoundError(error)).toBe(true);
-  });
-
   it('should return false for non-404 errors', () => {
     const error: FetchBaseQueryError = {
       status: 500,
@@ -135,10 +128,6 @@ describe('isForbiddenError', () => {
     };
 
     expect(isForbiddenError(error)).toBe(true);
-  });
-
-  it('returns true for a nested 403 status', () => {
-    expect(isForbiddenError({ data: { status: 403 } })).toBe(true);
   });
 
   it('returns false for errors that are not forbidden', () => {

@@ -1,24 +1,8 @@
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { SerializedError } from '@reduxjs/toolkit';
+import { isFetchError } from '@grafana/runtime';
 
 export type ErrorLike = FetchBaseQueryError | SerializedError;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-/** Extracts a direct or nested HTTP status from common Grafana and RTK Query error shapes. */
-export function getErrorStatus(error: unknown): unknown {
-  if (!isRecord(error)) {
-    return undefined;
-  }
-
-  if ('status' in error) {
-    return error.status;
-  }
-
-  return isRecord(error.data) ? error.data.status : undefined;
-}
 
 /**
  * Converts an RTK Query error into a human-readable string with status codes and details.
@@ -109,17 +93,14 @@ export function stringifyFetchError(error: ErrorLike): string {
   return 'Unknown error occurred';
 }
 
-/**
- * Type guard to check if an error is a 404 (Not Found) error from RTK Query.
- * Handles both FetchBaseQueryError and SerializedError formats.
- */
+/** Returns true for Grafana or RTK Query fetch errors with a 404 status. */
 export function isNotFoundError(error: unknown): boolean {
-  return getErrorStatus(error) === 404;
+  return isFetchError(error) && error.status === 404;
 }
 
 /** Returns true when a datasource-proxy request was denied by Grafana RBAC. */
 export function isForbiddenError(error: unknown): boolean {
-  return getErrorStatus(error) === 403;
+  return isFetchError(error) && error.status === 403;
 }
 
 /**
