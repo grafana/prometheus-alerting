@@ -8,4 +8,4 @@ not_found_auto_install = false
 # Dev-only tools (lefthook, trufflehog) are in mise.development.toml, loaded via .miserc.toml
 [tools]
 node = "26.5.0"
-pnpm = "11.15.1"
+pnpm = "11.17.0"
