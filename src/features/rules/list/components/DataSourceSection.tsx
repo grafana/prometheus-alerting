@@ -72,12 +72,6 @@ export const DataSourceSection = ({
                     content={
                       <Text color="error">
                         <span>{errorFeedback?.description}</span>
-                        {errorFeedback?.detail && (
-                          <>
-                            <br />
-                            <span>{errorFeedback.detail}</span>
-                          </>
-                        )}
                       </Text>
                     }
                   >

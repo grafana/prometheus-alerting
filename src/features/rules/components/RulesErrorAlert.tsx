@@ -16,12 +16,6 @@ export function RulesErrorAlert({ error, title }: RulesErrorAlertProps) {
   return (
     <Alert severity="error" title={feedback.title}>
       <span>{feedback.description}</span>
-      {feedback.detail && (
-        <>
-          <br />
-          <span>{feedback.detail}</span>
-        </>
-      )}
     </Alert>
   );
 }
