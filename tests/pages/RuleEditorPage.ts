@@ -207,9 +207,14 @@ export class RuleEditorPage {
     // Click to focus the editor
     await queryField.click();
 
-    // Clear and type new expression
-    await this.page.keyboard.press('ControlOrMeta+A');
-    await queryField.fill(expression);
+    // Monaco manages its own text model, so locator.fill() inserts text
+    // without replacing the editor selection. Clear and type via keyboard
+    // events to update the model exactly as a user would.
+    await queryField.press('Control+A');
+    await queryField.press('Backspace');
+    await expect(queryField).toHaveValue('');
+    await this.page.keyboard.insertText(expression);
+    await expect(queryField).toHaveValue(expression);
 
     // Blur the editor to trigger onChange and commit the value
     await queryField.blur();

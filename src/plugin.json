@@ -29,6 +29,7 @@
       "type": "page",
       "name": "Rules",
       "path": "/a/%PLUGIN_ID%/rules",
+      "action": "alert.rules.external:read",
       "addToNav": true,
       "defaultNav": false
     },
