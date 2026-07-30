@@ -47,7 +47,7 @@ export function DeleteRuleModal({ identifier, onClose, onDeleted }: DeleteRuleMo
       setIsWaitingForConsistency(false);
 
       // Step 3: Evict the cached Prometheus rules, or the list keeps showing the deleted rule
-      invalidatePromRules();
+      invalidatePromRules(identifier.uid);
 
       // Step 4: Show success and close
       const appEvents = getAppEvents();

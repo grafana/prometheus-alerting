@@ -266,7 +266,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
       setIsWaitingForConsistency(false);
 
       // Evict the cached Prometheus rules, or the list still shows the deleted group
-      invalidatePromRules();
+      invalidatePromRules(dataSourceUid);
 
       // Navigate back to rules list
       locationService.push(`${PLUGIN_BASE_URL}/${ROUTES.Rules}`);

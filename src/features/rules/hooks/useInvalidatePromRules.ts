@@ -4,7 +4,8 @@ import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { useAppDispatch } from '../../../store/hooks';
 
 /**
- * Evict the cached Prometheus rules that the rule list, group and details views read from.
+ * Evict the cached Prometheus rules that the rule list, group and details views read from,
+ * for a single data source.
  *
  * Writes go to the Ruler API, and those mutations can only invalidate tags within `rulerApi`.
  * `prometheusApi` is a separate RTK Query instance with no mutations of its own, so nothing
@@ -14,11 +15,16 @@ import { useAppDispatch } from '../../../store/hooks';
  * Call this *after* waiting for the write to propagate to the Prometheus API (see
  * `useRuleConsistencyCheck` / `useGroupConsistencyCheck`), otherwise the refetch triggered
  * here just re-caches the pre-write state.
+ *
+ * @param dataSourceUid - Only queries for this data source are refetched
  */
 export function useInvalidatePromRules() {
   const dispatch = useAppDispatch();
 
-  return useCallback(() => {
-    dispatch(prometheusApi.util.invalidateTags(['Rules']));
-  }, [dispatch]);
+  return useCallback(
+    (dataSourceUid: string) => {
+      dispatch(prometheusApi.util.invalidateTags([{ type: 'Rules', id: dataSourceUid }]));
+    },
+    [dispatch]
+  );
 }
