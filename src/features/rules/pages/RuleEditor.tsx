@@ -29,12 +29,6 @@ export default function RuleEditor() {
       editRuleIdentifier: ruleIdentifier ? parseIdentifier(ruleIdentifier, true) : null,
     };
   }, [copyFromParam, ruleIdentifier]);
-  const sourceUid = copyFromIdentifier?.uid ?? editRuleIdentifier?.uid;
-
-  // App layout routes require write permission for new rules and read + write for edits
-  // before this component mounts. Scoped abilities only add datasource capability checks.
-  const abilities = useScopedAbilities(sourceUid);
-
   // Determine mode and render appropriate component
   if (copyFromParam) {
     if (!copyFromIdentifier) {
@@ -43,12 +37,7 @@ export default function RuleEditor() {
     if (!isCloudRuleIdentifier(copyFromIdentifier)) {
       return <UnsupportedRuleTypePage title={t('alerting.rule-editor.clone-rule', 'Clone rule')} action="cloned" />;
     }
-    const createAbility = abilities[AlertingAction.CreateRule];
-    return createAbility.granted ? (
-      <CloneRuleEditor identifier={copyFromIdentifier} />
-    ) : (
-      <RuleEditorUnavailablePage ability={createAbility} identifier={copyFromIdentifier} action="cloned" />
-    );
+    return <ScopedRuleEditor identifier={copyFromIdentifier} action="cloned" />;
   }
 
   if (ruleIdentifier) {
@@ -58,15 +47,28 @@ export default function RuleEditor() {
     if (!isCloudRuleIdentifier(editRuleIdentifier)) {
       return <UnsupportedRuleTypePage title={t('alerting.rule-editor.edit-rule', 'Edit rule')} action="edited" />;
     }
-    const updateAbility = abilities[AlertingAction.UpdateRule];
-    return updateAbility.granted ? (
-      <EditRuleEditor identifier={editRuleIdentifier} />
-    ) : (
-      <RuleEditorUnavailablePage ability={updateAbility} identifier={editRuleIdentifier} action="edited" />
-    );
+    return <ScopedRuleEditor identifier={editRuleIdentifier} action="edited" />;
   }
 
   return <NewRuleEditor />;
+}
+
+/**
+ * Gates editing an existing rule on the source data source's abilities.
+ *
+ * App layout routes require write permission for new rules and read + write for edits
+ * before this component mounts. Scoped abilities only add datasource capability checks.
+ */
+function ScopedRuleEditor({ identifier, action }: { identifier: CloudRuleIdentifier; action: 'edited' | 'cloned' }) {
+  const abilities = useScopedAbilities(identifier.uid);
+  const alertingAction = action === 'cloned' ? AlertingAction.CreateRule : AlertingAction.UpdateRule;
+  const ability = abilities[alertingAction];
+
+  if (!ability.granted) {
+    return <RuleEditorUnavailablePage ability={ability} identifier={identifier} action={action} />;
+  }
+
+  return action === 'cloned' ? <CloneRuleEditor identifier={identifier} /> : <EditRuleEditor identifier={identifier} />;
 }
 
 function NewRuleEditor() {

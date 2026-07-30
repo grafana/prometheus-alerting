@@ -72,6 +72,9 @@ export function useUnscopedAbilities(): UnscopedAbilities {
 /**
  * Returns the actions available for a data source. Actions that change rules
  * additionally require the data source's Ruler configuration API.
+ *
+ * Callers must have a data source to scope to — where there is none (creating a
+ * rule from scratch) use {@link useUnscopedAbilities} instead.
  */
 export function useScopedAbilities(dataSourceUid: string): ScopedAbilities {
   const hasRulesWritePermission = hasPermission(AlertingPermission.RulesWrite);
