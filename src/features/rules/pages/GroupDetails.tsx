@@ -14,11 +14,11 @@ import type { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
-import { extractErrorMessage } from '../../../utils/errors';
 import { groups, createListFilterLink } from '../../../utils/navigation';
 import { DataSourceGroupLoader } from '../list/DataSourceGroupLoader';
 import { GroupDetailsTitle } from '../components/GroupDetailsTitle';
 import { GroupDetailsActions } from '../components/GroupDetailsActions';
+import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { useGroupConsistencyCheck } from '../hooks/useGroupConsistencyCheck';
 
 const { useGetGroupsQuery } = prometheusApi;
@@ -136,11 +136,11 @@ function GroupDetails() {
 
   const hasError = dsFeaturesError || promError || rulerError;
   if (hasError) {
+    const error = dsFeaturesError || promError || rulerError;
+
     return (
       <PluginPage pageNav={pageNav}>
-        <Alert severity="error" title={t('alerting.group-details.error', 'Error loading group')}>
-          {extractErrorMessage(dsFeaturesError || promError || rulerError)}
-        </Alert>
+        <RulesErrorAlert error={error} title={t('alerting.group-details.error', 'Error loading group')} />
       </PluginPage>
     );
   }
@@ -170,7 +170,7 @@ function GroupDetails() {
         { label: t('alerting.group-details.namespace', 'Namespace'), value: namespace },
         { label: t('alerting.group-details.interval', 'Interval'), value: groupInterval },
       ]}
-      actions={<GroupDetailsActions editLink={editPageLink} canEdit={dsFeatures?.rulerApiEnabled ?? false} />}
+      actions={<GroupDetailsActions editLink={editPageLink} dataSourceUid={dataSourceUid} />}
     >
       <Stack direction="column" gap={2}>
         {/* Consistency check warning */}

@@ -12,6 +12,7 @@ import { useRuleCreationConsistencyCheck } from '../hooks/useRuleConsistencyChec
 import { RuleDetailsView } from '../components/RuleDetailsView';
 import { RuleDetailsTitle } from '../components/RuleDetailsTitle';
 import { RuleDetailsSubtitle } from '../components/RuleDetailsSubtitle';
+import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { RuleActionsButtons } from '../list/components/RuleActionsButtons';
 import { useDeleteRuleModal } from '../list/components/DeleteRuleModal';
 import { RuleExporter } from '../export';
@@ -21,7 +22,6 @@ import {
   createListFilterLink,
   silences as silencesNav,
 } from '../../../utils/navigation';
-import { extractErrorMessage } from '../../../utils/errors';
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 
 function RuleDetails() {
@@ -43,7 +43,9 @@ function RuleDetails() {
   // Check if the rule is newly created and not yet visible in Prometheus
   // This happens due to eventual consistency between Ruler and Prometheus APIs
   const isNewlyCreated = !loading && !promRule && !!rulerRule;
-  const { isConsistent, status: consistencyStatus } = useRuleCreationConsistencyCheck(isNewlyCreated ? identifier : null);
+  const { isConsistent, status: consistencyStatus } = useRuleCreationConsistencyCheck(
+    isNewlyCreated ? identifier : null
+  );
 
   // Refetch when consistency check completes
   useEffect(() => {
@@ -106,9 +108,7 @@ function RuleDetails() {
   if (error) {
     return (
       <PluginPage>
-        <Alert severity="error" title={t('rule-details.error.loading', 'Error loading rule')}>
-          {extractErrorMessage(error)}
-        </Alert>
+        <RulesErrorAlert error={error} title={t('rule-details.error.loading', 'Error loading rule')} />
       </PluginPage>
     );
   }
@@ -189,7 +189,6 @@ function RuleDetails() {
       rule={rulerRule}
       promRule={promRule}
       groupIdentifier={groupIdentifier}
-      rulerApiEnabled={meta.hasRulerApi}
       onDelete={showDeleteModal}
       onDuplicate={handleDuplicate}
       onSilence={handleSilence}

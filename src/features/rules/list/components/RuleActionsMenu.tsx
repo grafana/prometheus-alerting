@@ -10,6 +10,12 @@ import { DataSourceRuleGroupIdentifier } from '../../../../types/rules';
 import { copyToClipboard } from '../../../../utils/clipboard';
 import { fromRuleAndGroup, fromRulerRuleAndGroup } from '../../../../utils/rule-id';
 import { rules as rulesNav } from '../../../../utils/navigation';
+import {
+  AlertingAction,
+  isAbilityAllowed,
+  useScopedAbilities,
+  useUnscopedAbilities,
+} from '../../../../access-control/abilities';
 
 import MoreButton from './MoreButton';
 
@@ -17,7 +23,6 @@ interface Props {
   rule?: RulerRuleDTO; // The editable rule from Ruler API (undefined if Ruler API not supported)
   promRule: PromRuleDTO; // The read-only rule from Prometheus API
   groupIdentifier: DataSourceRuleGroupIdentifier;
-  rulerApiEnabled: boolean;
   onDelete: (identifier: DataSourceRuleIdentifier) => void;
   onDuplicate: (identifier: DataSourceRuleIdentifier) => void;
   onSilence?: (identifier: DataSourceRuleIdentifier, ruleName: string) => void;
@@ -30,7 +35,6 @@ export function RuleActionsMenu({
   rule,
   promRule,
   groupIdentifier,
-  rulerApiEnabled,
   onDelete,
   onDuplicate,
   onSilence,
@@ -40,9 +44,16 @@ export function RuleActionsMenu({
 }: Props) {
   // Use Cloud Rule Identifier (cri) if we have a ruler rule, otherwise Prometheus Rule Identifier (pri)
   const identifier = rule ? fromRulerRuleAndGroup(rule, groupIdentifier) : fromRuleAndGroup(promRule, groupIdentifier);
+  const scopedAbilities = useScopedAbilities(identifier.uid);
+  const unscopedAbilities = useUnscopedAbilities();
+  const canCreateRules = isAbilityAllowed(scopedAbilities[AlertingAction.CreateRule]);
+  const canDeleteRules = isAbilityAllowed(scopedAbilities[AlertingAction.DeleteRule]);
+  const canSilenceRules = isAbilityAllowed(unscopedAbilities[AlertingAction.SilenceRule]);
 
   // Check if this is an alerting rule (not recording rule) - silence only applies to alerting rules
   const isAlertingRule = promRule.type === 'alerting';
+  const hasSilenceAction = isAlertingRule && canSilenceRules && Boolean(onSilence);
+  const hasDuplicateAction = Boolean(rule && canCreateRules);
 
   const handleCopyLink = () => {
     const shareUrl = rulesNav.shareLink(identifier);
@@ -66,30 +77,27 @@ export function RuleActionsMenu({
   const menuItems = (
     <>
       {/* Silence notifications - only for alerting rules */}
-      {isAlertingRule && (
+      {hasSilenceAction && (
         <Menu.Item
           label={t('alerting.rule-actions.silence', 'Silence notifications')}
           icon="bell-slash"
           onClick={handleSilence}
-          disabled={!onSilence}
         />
       )}
-      {/* Duplicate - only with Ruler API */}
-      {rulerApiEnabled && rule && (
+      {hasDuplicateAction && (
         <Menu.Item label={t('alerting.rule-actions.duplicate', 'Duplicate')} icon="copy" onClick={handleDuplicate} />
       )}
-      <Menu.Divider />
+      {(hasSilenceAction || hasDuplicateAction) && <Menu.Divider />}
       <Menu.Item label={t('alerting.rule-actions.copy-link', 'Copy link')} icon="share-alt" onClick={handleCopyLink} />
       {/* Export - only shown when we have the ruler rule */}
-      {rulerApiEnabled && rule && onExport && (
+      {rule && onExport && (
         <Menu.Item
           label={t('alerting.rule-actions.export', 'Export')}
           icon="download-alt"
           onClick={() => onExport(rule)}
         />
       )}
-      {/* Delete - only with Ruler API */}
-      {rulerApiEnabled && rule && (
+      {rule && canDeleteRules && (
         <>
           <Menu.Divider />
           <Menu.Item

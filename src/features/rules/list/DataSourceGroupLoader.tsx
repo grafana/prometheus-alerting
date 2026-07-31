@@ -17,6 +17,7 @@ import { createRulePositionHash, getMatchingRulerRule } from '@grafana/external-
 import type { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vanilla';
 
 import { RuleExporter } from '../export';
+import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 import { RuleActionsButtons } from './components/RuleActionsButtons';
 import { useRuleActions } from './hooks/useRuleActions';
@@ -53,6 +54,7 @@ export function DataSourceGroupLoader({
     data: promResponse,
     isLoading: isPromLoading,
     isError: isPromError,
+    error: promError,
   } = useGetGroupsQuery({
     ruleSource: { uid: groupIdentifier.rulesSource.uid },
     namespace: namespaceName,
@@ -71,6 +73,7 @@ export function DataSourceGroupLoader({
     data: rulerRuleGroup,
     isLoading: isRulerLoading,
     isError: isRulerError,
+    error: rulerError,
   } = useGetRuleGroupQuery(
     shouldFetchRuler
       ? {
@@ -96,13 +99,15 @@ export function DataSourceGroupLoader({
   }
 
   if (isPromError || (shouldFetchRuler && isRulerError)) {
+    const error = promError ?? rulerError;
+
     return (
-      <Alert
+      <RulesErrorAlert
+        error={error}
         title={t('rules.group-loader.error', 'Failed to load rules from group {{groupName}} in {{namespaceName}}', {
           groupName,
           namespaceName,
         })}
-        severity="error"
       />
     );
   }
@@ -114,8 +119,6 @@ export function DataSourceGroupLoader({
   );
 
   if (promGroup) {
-    const actualRulerApiEnabled = shouldFetchRuler && dsFeatures?.rulerApiEnabled;
-
     return (
       <>
         {promGroup.rules.map((rule: PromRuleDTO, index: number) => {
@@ -133,7 +136,6 @@ export function DataSourceGroupLoader({
               rule={rulerRule}
               promRule={rule}
               groupIdentifier={groupIdentifier}
-              rulerApiEnabled={actualRulerApiEnabled ?? false}
               onDelete={handleDelete}
               onDuplicate={handleDuplicate}
               onSilence={handleSilence}

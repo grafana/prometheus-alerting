@@ -3,13 +3,17 @@ import React from 'react';
 import { Trans } from '@grafana/i18n';
 import { LinkButton, Stack } from '@grafana/ui';
 
+import { AlertingAction, isAbilityAllowed, useScopedAbilities } from '../../../access-control/abilities';
+
 interface GroupDetailsActionsProps {
   editLink: string;
-  canEdit: boolean;
+  dataSourceUid: string;
 }
 
-export function GroupDetailsActions({ editLink, canEdit }: GroupDetailsActionsProps) {
-  if (!canEdit) {
+export function GroupDetailsActions({ editLink, dataSourceUid }: GroupDetailsActionsProps) {
+  const updateAbility = useScopedAbilities(dataSourceUid)[AlertingAction.UpdateRule];
+
+  if (!isAbilityAllowed(updateAbility)) {
     return null;
   }
 

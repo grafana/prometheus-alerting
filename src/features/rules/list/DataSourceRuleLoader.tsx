@@ -84,7 +84,6 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
         rule={rulerRule} // Pass the actual RulerRuleDTO
         promRule={rule} // Pass the PromRuleDTO
         groupIdentifier={groupIdentifier}
-        rulerApiEnabled={rulerApiEnabled}
         onDelete={handleDelete}
         onDuplicate={handleDuplicate}
         onSilence={handleSilence}
