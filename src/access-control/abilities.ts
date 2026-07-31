@@ -46,6 +46,9 @@ export type AsyncAbility =
   | { granted: false; cause: 'LOADING' }
   | { granted: false; cause: 'ERROR'; error: unknown };
 
+/** An ability that is not available, narrowed so callers can switch on `cause`. */
+export type DeniedAbility = Extract<AsyncAbility, { granted: false }>;
+
 export type UnscopedAbilities = Record<UnscopedAction, Ability>;
 export type ScopedAbilities = Record<ScopedAction, AsyncAbility>;
 
@@ -72,6 +75,9 @@ export function useUnscopedAbilities(): UnscopedAbilities {
 /**
  * Returns the actions available for a data source. Actions that change rules
  * additionally require the data source's Ruler configuration API.
+ *
+ * Callers must have a data source to scope to — where there is none (creating a
+ * rule from scratch) use {@link useUnscopedAbilities} instead.
  */
 export function useScopedAbilities(dataSourceUid: string): ScopedAbilities {
   const hasRulesWritePermission = hasPermission(AlertingPermission.RulesWrite);
@@ -95,7 +101,7 @@ export function useScopedAbilities(dataSourceUid: string): ScopedAbilities {
   };
 }
 
-export function isAbilityAllowed(ability: AsyncAbility): boolean {
+export function isAbilityAllowed(ability: AsyncAbility): ability is { granted: true } {
   return ability.granted;
 }
 

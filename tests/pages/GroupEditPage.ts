@@ -9,8 +9,12 @@ export class GroupEditPage {
   readonly saveButton: Locator;
   readonly cancelLink: Locator;
   readonly deleteButton: Locator;
+  readonly permissionDeniedAlert: Locator;
 
-  constructor(private readonly page: Page, private readonly pluginId: string) {
+  constructor(
+    private readonly page: Page,
+    private readonly pluginId: string
+  ) {
     this.pageContent = page.locator('#pageContent');
     this.namespaceInput = this.pageContent.getByRole('textbox', { name: /^Namespace/ });
     this.nameInput = this.pageContent.getByRole('textbox', { name: /^Evaluation group name/ });
@@ -19,6 +23,7 @@ export class GroupEditPage {
     this.saveButton = this.pageContent.getByRole('button', { name: 'Save', exact: true });
     this.cancelLink = this.pageContent.getByRole('link', { name: 'Cancel', exact: true });
     this.deleteButton = this.pageContent.getByRole('button', { name: 'Delete group', exact: true });
+    this.permissionDeniedAlert = this.pageContent.getByRole('alert').filter({ hasText: /permission denied/i });
   }
 
   async goto(dataSourceUid: string, namespace: string, groupName: string) {

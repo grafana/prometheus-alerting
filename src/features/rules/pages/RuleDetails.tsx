@@ -12,6 +12,7 @@ import { useRuleCreationConsistencyCheck } from '../hooks/useRuleConsistencyChec
 import { RuleDetailsView } from '../components/RuleDetailsView';
 import { RuleDetailsTitle } from '../components/RuleDetailsTitle';
 import { RuleDetailsSubtitle } from '../components/RuleDetailsSubtitle';
+import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { RuleActionsButtons } from '../list/components/RuleActionsButtons';
 import { useDeleteRuleModal } from '../list/components/DeleteRuleModal';
 import { RuleExporter } from '../export';
@@ -21,7 +22,6 @@ import {
   createListFilterLink,
   silences as silencesNav,
 } from '../../../utils/navigation';
-import { extractErrorMessage } from '../../../utils/errors';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 
@@ -114,9 +114,7 @@ function RuleDetails() {
   if (error) {
     return (
       <PluginPage>
-        <Alert severity="error" title={t('rule-details.error.loading', 'Error loading rule')}>
-          {extractErrorMessage(error)}
-        </Alert>
+        <RulesErrorAlert error={error} title={t('rule-details.error.loading', 'Error loading rule')} />
       </PluginPage>
     );
   }
@@ -197,7 +195,6 @@ function RuleDetails() {
       rule={rulerRule}
       promRule={promRule}
       groupIdentifier={groupIdentifier}
-      rulerApiEnabled={meta.hasRulerApi}
       onDelete={showDeleteModal}
       onDuplicate={handleDuplicate}
       onSilence={handleSilence}
