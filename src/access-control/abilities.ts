@@ -46,6 +46,9 @@ export type AsyncAbility =
   | { granted: false; cause: 'LOADING' }
   | { granted: false; cause: 'ERROR'; error: unknown };
 
+/** An ability that is not available, narrowed so callers can switch on `cause`. */
+export type DeniedAbility = Extract<AsyncAbility, { granted: false }>;
+
 export type UnscopedAbilities = Record<UnscopedAction, Ability>;
 export type ScopedAbilities = Record<ScopedAction, AsyncAbility>;
 
@@ -98,7 +101,7 @@ export function useScopedAbilities(dataSourceUid: string): ScopedAbilities {
   };
 }
 
-export function isAbilityAllowed(ability: AsyncAbility): boolean {
+export function isAbilityAllowed(ability: AsyncAbility): ability is { granted: true } {
   return ability.granted;
 }
 

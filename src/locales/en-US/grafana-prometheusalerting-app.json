@@ -265,8 +265,8 @@
       "rule-not-found": "Rule not found",
       "rule-not-found-clone-message": "The requested rule could not be found or does not support cloning. Only rules with Ruler API support can be cloned.",
       "rule-not-found-edit-message": "The requested rule could not be found or does not support editing. Only rules with Ruler API support can be edited.",
-      "rules": "Rules",
-      "unsupported-rule-type": "Ruler API not supported"
+      "ruler-api-not-supported": "Ruler API not supported",
+      "rules": "Rules"
     },
     "rule-editor-section": {
       "label-advanced-options": "Advanced options"

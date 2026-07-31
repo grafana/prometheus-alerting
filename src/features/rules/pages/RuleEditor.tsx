@@ -15,8 +15,16 @@ import { useRulerRule } from '../hooks/useRulerRule';
 import { RuleFormValues, RuleFormType } from '../rule-editor/types';
 import { generateCopiedName } from '../rule-editor/duplicate';
 import { PermissionDenied } from '../../../access-control/components/PermissionDenied';
-import { AlertingAction, AsyncAbility, useScopedAbilities } from '../../../access-control/abilities';
+import { AlertingAction, DeniedAbility, isAbilityAllowed, useScopedAbilities } from '../../../access-control/abilities';
 import { RulesErrorAlert } from '../components/RulesErrorAlert';
+
+type RuleEditorAction = 'edited' | 'cloned';
+
+function getRuleEditorTitle(action: RuleEditorAction): string {
+  return action === 'edited'
+    ? t('alerting.rule-editor.edit-rule', 'Edit rule')
+    : t('alerting.rule-editor.clone-rule', 'Clone rule');
+}
 
 export default function RuleEditor() {
   const { ruleIdentifier } = useParams<{ ruleIdentifier?: string }>();
@@ -29,23 +37,24 @@ export default function RuleEditor() {
       editRuleIdentifier: ruleIdentifier ? parseIdentifier(ruleIdentifier, true) : null,
     };
   }, [copyFromParam, ruleIdentifier]);
+
   // Determine mode and render appropriate component
   if (copyFromParam) {
     if (!copyFromIdentifier) {
-      return <InvalidIdentifierPage title={t('alerting.rule-editor.clone-rule', 'Clone rule')} />;
+      return <InvalidIdentifierPage title={getRuleEditorTitle('cloned')} />;
     }
     if (!isCloudRuleIdentifier(copyFromIdentifier)) {
-      return <UnsupportedRuleTypePage title={t('alerting.rule-editor.clone-rule', 'Clone rule')} action="cloned" />;
+      return <UnsupportedRuleTypePage title={getRuleEditorTitle('cloned')} action="cloned" />;
     }
     return <ScopedRuleEditor identifier={copyFromIdentifier} action="cloned" />;
   }
 
   if (ruleIdentifier) {
     if (!editRuleIdentifier) {
-      return <InvalidIdentifierPage title={t('alerting.rule-editor.edit-rule', 'Edit rule')} />;
+      return <InvalidIdentifierPage title={getRuleEditorTitle('edited')} />;
     }
     if (!isCloudRuleIdentifier(editRuleIdentifier)) {
-      return <UnsupportedRuleTypePage title={t('alerting.rule-editor.edit-rule', 'Edit rule')} action="edited" />;
+      return <UnsupportedRuleTypePage title={getRuleEditorTitle('edited')} action="edited" />;
     }
     return <ScopedRuleEditor identifier={editRuleIdentifier} action="edited" />;
   }
@@ -59,12 +68,12 @@ export default function RuleEditor() {
  * App layout routes require write permission for new rules and read + write for edits
  * before this component mounts. Scoped abilities only add datasource capability checks.
  */
-function ScopedRuleEditor({ identifier, action }: { identifier: CloudRuleIdentifier; action: 'edited' | 'cloned' }) {
+function ScopedRuleEditor({ identifier, action }: { identifier: CloudRuleIdentifier; action: RuleEditorAction }) {
   const abilities = useScopedAbilities(identifier.uid);
   const alertingAction = action === 'cloned' ? AlertingAction.CreateRule : AlertingAction.UpdateRule;
   const ability = abilities[alertingAction];
 
-  if (!ability.granted) {
+  if (!isAbilityAllowed(ability)) {
     return <RuleEditorUnavailablePage ability={ability} identifier={identifier} action={action} />;
   }
 
@@ -89,21 +98,13 @@ function NewRuleEditor() {
 }
 
 interface RuleEditorUnavailablePageProps {
-  ability: Extract<
-    AsyncAbility,
-    {
-      granted: false;
-    }
-  >;
+  ability: DeniedAbility;
   identifier: CloudRuleIdentifier;
-  action: 'edited' | 'cloned';
+  action: RuleEditorAction;
 }
 
 function RuleEditorUnavailablePage({ ability, identifier, action }: RuleEditorUnavailablePageProps) {
-  const title =
-    action === 'edited'
-      ? t('alerting.rule-editor.edit-rule', 'Edit rule')
-      : t('alerting.rule-editor.clone-rule', 'Clone rule');
+  const title = getRuleEditorTitle(action);
   const pageNav = { text: title, ...buildRuleNavigation(identifier) };
 
   switch (ability.cause) {
@@ -281,7 +282,7 @@ function RuleErrorPage({ pageNav, error }: { pageNav: NavModelItem; error: unkno
   );
 }
 
-function UnsupportedRuleTypePage({ title, action }: { title: string; action: 'edited' | 'cloned' }) {
+function UnsupportedRuleTypePage({ title, action }: { title: string; action: RuleEditorAction }) {
   const message =
     action === 'edited'
       ? t(
@@ -295,7 +296,7 @@ function UnsupportedRuleTypePage({ title, action }: { title: string; action: 'ed
 
   return (
     <PluginPage pageNav={{ text: title }}>
-      <Alert severity="error" title={t('alerting.rule-editor.unsupported-rule-type', 'Ruler API not supported')}>
+      <Alert severity="error" title={t('alerting.rule-editor.ruler-api-not-supported', 'Ruler API not supported')}>
         {message}
       </Alert>
     </PluginPage>
