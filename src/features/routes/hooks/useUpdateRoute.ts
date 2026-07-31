@@ -3,15 +3,12 @@ import { useCallback } from 'react';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { t } from '@grafana/i18n';
 
-import { isAbilityAllowed } from '../../../access-control/abilities';
-import { RouteAction } from '../../../access-control/abilities.routes';
 import { useAppNotifications } from '../../../hooks/useAppNotifications';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { updateRouteAction } from '../../../reducers/alertmanager/routes';
 import { FormAmRoute } from '../types';
 import { formAmRouteToAmRoute } from '../utils/routeTransform';
-import { getRouteAbilityErrorFeedback, getRouteMutationErrorFeedback } from '../utils/errorFeedback';
-import { useRouteAbilities } from './useRouteAbilities';
+import { getRouteMutationErrorFeedback } from '../utils/errorFeedback';
 import { useRoutes } from './useRoutes';
 
 interface UseUpdateRouteResult {
@@ -26,17 +23,10 @@ interface UseUpdateRouteResult {
 export function useUpdateRoute(): UseUpdateRouteResult {
   const { refetch: refetchRoutes } = useRoutes();
   const [produceNewAlertmanagerConfiguration, { isLoading }] = useProduceNewAlertmanagerConfiguration();
-  const updateAbility = useRouteAbilities()[RouteAction.UpdateRoute];
   const { error: notifyError, success: notifySuccess } = useAppNotifications();
 
   const updateRoute = useCallback(
     async (routeId: string, update: Partial<FormAmRoute>) => {
-      if (!isAbilityAllowed(updateAbility)) {
-        const feedback = getRouteAbilityErrorFeedback(updateAbility);
-        notifyError(feedback.title, feedback.description);
-        return false;
-      }
-
       try {
         const partialUpdatedRoute: Partial<RouteWithID> = { ...formAmRouteToAmRoute(update), id: routeId };
         await produceNewAlertmanagerConfiguration(updateRouteAction({ update: partialUpdatedRoute }));
@@ -53,7 +43,7 @@ export function useUpdateRoute(): UseUpdateRouteResult {
         return false;
       }
     },
-    [notifyError, notifySuccess, produceNewAlertmanagerConfiguration, refetchRoutes, updateAbility]
+    [notifyError, notifySuccess, produceNewAlertmanagerConfiguration, refetchRoutes]
   );
 
   return {

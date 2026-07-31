@@ -14,7 +14,7 @@ import { addTimeInterval } from '../reducers/alertmanager/timeIntervals';
 import { addRouteAction } from '../reducers/alertmanager/routes';
 import { attachRouteIds } from '../features/routes/utils';
 import { server } from '../test/server';
-import { createMockDataSourceSrv } from '../test/mocks/grafana-runtime';
+import { createMockDataSourceSrv, setCurrentUserPermissions } from '../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../test/utils/test-wrapper';
 import {
   configWithCustomRoutes,
@@ -22,6 +22,12 @@ import {
   emptyConfig,
   configWithSpecificRoutes,
 } from '../test/fixtures/alertmanager-config';
+import { AlertingPermission } from '../access-control/abilities';
+import { PermissionDeniedError, UnsupportedOperationError } from '../access-control/errors';
+
+const mocks = vi.hoisted(() => ({
+  hasConfigurationAPI: true,
+}));
 
 // Mock the Alertmanager hook to provide test data source UID
 vi.mock('./useAlertmanager', () => ({
@@ -32,7 +38,7 @@ vi.mock('./useAlertmanager', () => ({
       name: 'Test Mimir',
       type: 'prometheus',
       jsonData: {
-        implementation: 'mimir',
+        implementation: mocks.hasConfigurationAPI ? 'mimir' : 'prometheus',
       },
     },
   }),
@@ -40,8 +46,58 @@ vi.mock('./useAlertmanager', () => ({
 
 describe('useProduceNewAlertmanagerConfiguration', () => {
   beforeEach(() => {
+    mocks.hasConfigurationAPI = true;
     setDataSourceSrv(createMockDataSourceSrv());
+    setCurrentUserPermissions(AlertingPermission.NotificationsWrite);
     vi.clearAllMocks();
+  });
+
+  it('rejects before fetching configuration when notification write permission is missing', async () => {
+    setCurrentUserPermissions();
+    const fetchConfiguration = vi.fn(() => HttpResponse.text(''));
+    const updateConfiguration = vi.fn(() => HttpResponse.json({ status: 'success' }));
+    server.use(
+      http.get('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', fetchConfiguration),
+      http.post('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', updateConfiguration)
+    );
+
+    const { result } = renderHook(() => useProduceNewAlertmanagerConfiguration(), {
+      wrapper: createTestWrapper(),
+    });
+    const [produceNewConfig] = result.current;
+
+    await act(async () => {
+      await expect(
+        produceNewConfig(addTimeInterval({ interval: { name: 'business-hours', time_intervals: [] } }))
+      ).rejects.toBeInstanceOf(PermissionDeniedError);
+    });
+
+    expect(fetchConfiguration).not.toHaveBeenCalled();
+    expect(updateConfiguration).not.toHaveBeenCalled();
+  });
+
+  it('rejects before fetching configuration when the configuration API is unsupported', async () => {
+    mocks.hasConfigurationAPI = false;
+    const fetchConfiguration = vi.fn(() => HttpResponse.text(''));
+    const updateConfiguration = vi.fn(() => HttpResponse.json({ status: 'success' }));
+    server.use(
+      http.get('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', fetchConfiguration),
+      http.post('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', updateConfiguration)
+    );
+
+    const { result } = renderHook(() => useProduceNewAlertmanagerConfiguration(), {
+      wrapper: createTestWrapper(),
+    });
+    const [produceNewConfig] = result.current;
+
+    await act(async () => {
+      await expect(
+        produceNewConfig(addTimeInterval({ interval: { name: 'business-hours', time_intervals: [] } }))
+      ).rejects.toBeInstanceOf(UnsupportedOperationError);
+    });
+
+    expect(fetchConfiguration).not.toHaveBeenCalled();
+    expect(updateConfiguration).not.toHaveBeenCalled();
   });
 
   it('should preserve existing routes when adding a time interval', async () => {

@@ -2,15 +2,12 @@ import { useCallback } from 'react';
 
 import { t } from '@grafana/i18n';
 
-import { isAbilityAllowed } from '../../../access-control/abilities';
-import { RouteAction } from '../../../access-control/abilities.routes';
 import { useAppNotifications } from '../../../hooks/useAppNotifications';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { addRouteAction } from '../../../reducers/alertmanager/routes';
 import { FormAmRoute, InsertPosition } from '../types';
 import { formAmRouteToAmRoute } from '../utils/routeTransform';
-import { getRouteAbilityErrorFeedback, getRouteMutationErrorFeedback } from '../utils/errorFeedback';
-import { useRouteAbilities } from './useRouteAbilities';
+import { getRouteMutationErrorFeedback } from '../utils/errorFeedback';
 import { useRoutes } from './useRoutes';
 
 interface UseAddRouteResult {
@@ -25,17 +22,10 @@ interface UseAddRouteResult {
 export function useAddRoute(): UseAddRouteResult {
   const { refetch: refetchRoutes } = useRoutes();
   const [produceNewAlertmanagerConfiguration, { isLoading }] = useProduceNewAlertmanagerConfiguration();
-  const createAbility = useRouteAbilities()[RouteAction.CreateRoute];
   const { error: notifyError, success: notifySuccess } = useAppNotifications();
 
   const addRoute = useCallback(
     async (referenceRouteId: string, newRoute: Partial<FormAmRoute>, position: InsertPosition): Promise<boolean> => {
-      if (!isAbilityAllowed(createAbility)) {
-        const feedback = getRouteAbilityErrorFeedback(createAbility);
-        notifyError(feedback.title, feedback.description);
-        return false;
-      }
-
       try {
         const partialRoute = formAmRouteToAmRoute(newRoute);
         await produceNewAlertmanagerConfiguration(
@@ -58,7 +48,7 @@ export function useAddRoute(): UseAddRouteResult {
         return false;
       }
     },
-    [createAbility, notifyError, notifySuccess, produceNewAlertmanagerConfiguration, refetchRoutes]
+    [notifyError, notifySuccess, produceNewAlertmanagerConfiguration, refetchRoutes]
   );
 
   return {

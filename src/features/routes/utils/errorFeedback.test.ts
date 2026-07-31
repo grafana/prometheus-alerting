@@ -1,31 +1,23 @@
-import { AlertingPermission } from '../../../access-control/abilities';
-import { getRouteAbilityErrorFeedback, getRouteMutationErrorFeedback } from './errorFeedback';
+import { PermissionDeniedError, UnsupportedOperationError } from '../../../access-control/errors';
+import { getRouteMutationErrorFeedback } from './errorFeedback';
 
 describe('route error feedback', () => {
-  it('shows permission feedback for denied abilities and datasource 403s', () => {
-    const deniedAbilityFeedback = getRouteAbilityErrorFeedback({
-      granted: false,
-      cause: 'INSUFFICIENT_PERMISSIONS',
-      anyOfPermissions: [AlertingPermission.NotificationsWrite],
-    });
-    const forbiddenRequestFeedback = getRouteMutationErrorFeedback(
-      { status: 403, data: { message: 'Forbidden' } },
-      'Failed to update route'
-    );
+  it.each([new PermissionDeniedError('Insufficient permissions'), { status: 403, data: { message: 'Forbidden' } }])(
+    'shows permission feedback for local denials and datasource 403s',
+    (error) => {
+      expect(getRouteMutationErrorFeedback(error, 'Failed to update route')).toEqual({
+        title: 'Permission denied',
+        description: 'You do not have permission to change routes for this data source.',
+      });
+    }
+  );
 
-    expect(deniedAbilityFeedback).toEqual({
-      title: 'Permission denied',
-      description: 'You do not have permission to change routes for this data source.',
-    });
-    expect(forbiddenRequestFeedback).toEqual(deniedAbilityFeedback);
-  });
-
-  it('distinguishes unsupported configuration APIs from permission failures', () => {
+  it('shows unavailable feedback for unsupported configuration mutations', () => {
     expect(
-      getRouteAbilityErrorFeedback({
-        granted: false,
-        cause: 'NOT_SUPPORTED',
-      })
+      getRouteMutationErrorFeedback(
+        new UnsupportedOperationError('Configuration updates are unsupported'),
+        'Failed to update route'
+      )
     ).toEqual({
       title: 'Route changes unavailable',
       description: 'This Alertmanager does not support updating routes.',

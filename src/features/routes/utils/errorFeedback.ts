@@ -1,6 +1,6 @@
 import { t } from '@grafana/i18n';
 
-import { Ability } from '../../../access-control/abilities';
+import { isPermissionDeniedError, isUnsupportedOperationError } from '../../../access-control/errors';
 import { extractErrorMessage, isForbiddenError } from '../../../utils/errors';
 
 export interface RouteErrorFeedback {
@@ -8,24 +8,20 @@ export interface RouteErrorFeedback {
   description: string;
 }
 
-type UnavailableRouteAbility = Extract<Ability, { granted: false }>;
-
-/** Returns user-facing feedback when a route mutation is unavailable before a request is sent. */
-export function getRouteAbilityErrorFeedback(ability: UnavailableRouteAbility): RouteErrorFeedback {
-  if (ability.cause === 'INSUFFICIENT_PERMISSIONS') {
+/** Returns user-facing feedback for a failed datasource-backed route mutation. */
+export function getRouteMutationErrorFeedback(error: unknown, fallbackTitle: string): RouteErrorFeedback {
+  if (isPermissionDeniedError(error) || isForbiddenError(error)) {
     return getRoutePermissionDeniedFeedback();
   }
 
-  return {
-    title: t('routes.mutation-not-supported.title', 'Route changes unavailable'),
-    description: t('routes.mutation-not-supported.description', 'This Alertmanager does not support updating routes.'),
-  };
-}
-
-/** Returns user-facing feedback for a failed datasource-backed route mutation. */
-export function getRouteMutationErrorFeedback(error: unknown, fallbackTitle: string): RouteErrorFeedback {
-  if (isForbiddenError(error)) {
-    return getRoutePermissionDeniedFeedback();
+  if (isUnsupportedOperationError(error)) {
+    return {
+      title: t('routes.mutation-not-supported.title', 'Route changes unavailable'),
+      description: t(
+        'routes.mutation-not-supported.description',
+        'This Alertmanager does not support updating routes.'
+      ),
+    };
   }
 
   return {

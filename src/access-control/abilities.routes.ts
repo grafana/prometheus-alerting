@@ -1,4 +1,5 @@
 import { Ability, AlertingPermission, makeAbility } from './abilities';
+import { getAlertmanagerConfigMutationAbility } from './abilities.alertmanager';
 
 export enum RouteAction {
   ViewRoutes = 'view-routes',
@@ -20,10 +21,7 @@ export function getRoutesAbilities(hasConfigurationAPI: boolean): RouteAbilities
     permission: AlertingPermission.InstancesRead,
     supported: true,
   });
-  const mutateRoutes = makeAbility({
-    permission: AlertingPermission.NotificationsWrite,
-    supported: hasConfigurationAPI,
-  });
+  const mutateRoutes = getAlertmanagerConfigMutationAbility(hasConfigurationAPI);
 
   return {
     [RouteAction.ViewRoutes]: viewRoutes,

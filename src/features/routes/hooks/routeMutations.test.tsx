@@ -3,8 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppEvents } from '@grafana/data';
 
+import { PermissionDeniedError } from '../../../access-control/errors';
 import { mockMimirAlertmanagerDs } from '../../../test/fixtures/datasources';
-import { setCurrentUserPermissions, setMockGrafanaDataSources } from '../../../test/mocks/grafana-runtime';
+import { setMockGrafanaDataSources } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 import { useAddRoute } from './useAddRoute';
 import { useDeleteRoute } from './useDeleteRoute';
@@ -33,14 +34,14 @@ vi.mock('./useRoutes', () => ({
   useRoutes: () => ({ refetch: mocks.refetchRoutes }),
 }));
 
-describe('route mutation permission guards', () => {
+describe('route mutation permission feedback', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setMockGrafanaDataSources();
-    setCurrentUserPermissions();
+    mocks.produceConfiguration.mockRejectedValue(new PermissionDeniedError('Insufficient permissions'));
   });
 
-  it('does not produce a configuration when adding a route is denied', async () => {
+  it('shows permission feedback when adding a route is denied', async () => {
     const { result } = renderHook(() => useAddRoute(), {
       wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
     });
@@ -49,14 +50,14 @@ describe('route mutation permission guards', () => {
       expect(await result.current.addRoute('root', {}, 'child')).toBe(false);
     });
 
-    expect(mocks.produceConfiguration).not.toHaveBeenCalled();
+    expect(mocks.produceConfiguration).toHaveBeenCalledOnce();
     expect(mocks.publish).toHaveBeenCalledWith({
       type: AppEvents.alertError.name,
       payload: ['Permission denied', 'You do not have permission to change routes for this data source.'],
     });
   });
 
-  it('does not produce a configuration when updating a route is denied', async () => {
+  it('shows permission feedback when updating a route is denied', async () => {
     const { result } = renderHook(() => useUpdateRoute(), {
       wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
     });
@@ -65,14 +66,14 @@ describe('route mutation permission guards', () => {
       expect(await result.current.updateRoute('route-1', {})).toBe(false);
     });
 
-    expect(mocks.produceConfiguration).not.toHaveBeenCalled();
+    expect(mocks.produceConfiguration).toHaveBeenCalledOnce();
     expect(mocks.publish).toHaveBeenCalledWith({
       type: AppEvents.alertError.name,
       payload: ['Permission denied', 'You do not have permission to change routes for this data source.'],
     });
   });
 
-  it('does not produce a configuration when deleting a route is denied', async () => {
+  it('shows permission feedback when deleting a route is denied', async () => {
     const { result } = renderHook(() => useDeleteRoute(), {
       wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
     });
@@ -81,7 +82,7 @@ describe('route mutation permission guards', () => {
       expect(await result.current.deleteRoute('route-1')).toBe(false);
     });
 
-    expect(mocks.produceConfiguration).not.toHaveBeenCalled();
+    expect(mocks.produceConfiguration).toHaveBeenCalledOnce();
     expect(mocks.publish).toHaveBeenCalledWith({
       type: AppEvents.alertError.name,
       payload: ['Permission denied', 'You do not have permission to change routes for this data source.'],
