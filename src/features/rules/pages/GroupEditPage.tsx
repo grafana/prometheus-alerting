@@ -113,10 +113,8 @@ function GroupEditPage() {
     );
   }
 
-  const hasError = dsFeaturesError || rulerError;
-  if (hasError) {
-    const error = dsFeaturesError || rulerError;
-
+  const error = dsFeaturesError || rulerError;
+  if (error) {
     return (
       <PluginPage pageNav={pageNav}>
         <RulesErrorAlert error={error} title={t('alerting.group-edit.error', 'Error loading group')} />
@@ -200,7 +198,11 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
     const isNamespaceChanged = dirtyFields.namespace && data.namespace !== originalNamespace;
     const isGroupRenamed = dirtyFields.name && data.name !== originalGroupName;
 
-    if (!canUpdateRules || ((isNamespaceChanged || isGroupRenamed) && !canDeleteRules)) {
+    // Renaming a group or moving it to another namespace creates the new group and deletes the old one.
+    const requiresRecreate = isNamespaceChanged || isGroupRenamed;
+    const canSave = canUpdateRules && (!requiresRecreate || canDeleteRules);
+
+    if (!canSave) {
       setSubmitError(
         t('alerting.group-edit.permission-denied-save', 'You do not have permission to save rule groups.')
       );
