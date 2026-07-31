@@ -9,7 +9,7 @@ const RBAC_ROLES = ['None', 'Viewer', 'Editor'] as const;
 
 /**
  * Every RBAC role gets an auth project that provisions and logs in a dedicated user, plus a test
- * project that runs `rbac.<role>.spec.ts` with the resulting session. The `e2e-tests` project
+ * project that runs `rbac[.<feature>].<role>.spec.ts` with the resulting session. The `e2e-tests` project
  * continues to use the admin session and ignores the RBAC specs.
  */
 const rbacProjects = RBAC_ROLES.flatMap((role) => {
@@ -27,7 +27,7 @@ const rbacProjects = RBAC_ROLES.flatMap((role) => {
     },
     {
       name: `rbac-${name}`,
-      testMatch: new RegExp(`rbac\\.${name}\\.spec\\.ts`),
+      testMatch: new RegExp(`rbac(?:\\.[^.]+)*\\.${name}\\.spec\\.ts`),
       use: {
         ...devices['Desktop Chrome'],
         storageState: `playwright/.auth/${user}.json`,

@@ -149,8 +149,13 @@ export class RoutesListPage extends AlertmanagerPage {
    * "Add" menu, it renders in a floating overlay, so its items are queried at the page level.
    */
   async openMoreMenu(routeLocator: Locator, action: 'Details' | 'Edit' | 'Delete route') {
-    await routeLocator.getByRole('button', { name: 'More', exact: true }).click();
+    await this.openMoreActions(routeLocator);
     await this.page.getByRole('menuitem', { name: action, exact: true }).click();
+  }
+
+  /** Open a route's "More" menu without selecting an item, for action-visibility assertions. */
+  async openMoreActions(routeLocator: Locator) {
+    await routeLocator.getByRole('button', { name: 'More', exact: true }).click();
   }
 
   // ----- Matchers (add/edit form) -----

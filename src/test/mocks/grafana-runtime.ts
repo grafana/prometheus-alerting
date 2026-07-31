@@ -91,6 +91,11 @@ const mockCurrentUser = {
 
 let originalDatasources: typeof config.datasources;
 
+/** Restore the standard datasource configuration used by most unit tests. */
+export function setMockGrafanaDataSources() {
+  (config as any).datasources = mockDatasourcesConfig;
+}
+
 /**
  * Set up Grafana runtime mocks.
  * Call this in beforeAll or at the top of jest-setup.
@@ -99,7 +104,7 @@ export function setupGrafanaRuntimeMocks() {
   originalDatasources = config.datasources;
 
   // Apply mocks
-  (config as any).datasources = mockDatasourcesConfig;
+  setMockGrafanaDataSources();
   setCurrentUser(mockCurrentUser);
 }
 
