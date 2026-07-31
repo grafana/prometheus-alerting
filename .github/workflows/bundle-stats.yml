@@ -35,4 +35,4 @@ jobs:
 
       - uses: grafana/plugin-actions/bundle-size@main # zizmor: ignore[unpinned-uses] provided by grafana
         with:
-          node-version: "24.16"
+          node-version: "24.18"
