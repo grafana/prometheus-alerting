@@ -7,5 +7,5 @@ not_found_auto_install = false
 # Shared tools for both CI and local development
 # Dev-only tools (lefthook, trufflehog) are in mise.development.toml, loaded via .miserc.toml
 [tools]
-node = "26.5.0"
+node = "24.18.0"
 pnpm = "11.17.0"
