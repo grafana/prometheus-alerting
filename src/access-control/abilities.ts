@@ -87,9 +87,9 @@ export function useScopedAbilities(dataSourceUid: string): ScopedAbilities {
 
   const rulerConfigApiAvailable = features?.rulerApiEnabled ?? false;
 
-  const scopedRulesWriteAbility = makeRuleMutationAbility({
-    hasRulesWritePermission,
-    rulerApiEnabled: rulerConfigApiAvailable,
+  const scopedRulesWriteAbility = makeAsyncAbility({
+    permission: AlertingPermission.RulesWrite,
+    supported: rulerConfigApiAvailable,
     isLoading,
     error,
   });
@@ -110,22 +110,37 @@ const notSupported = { granted: false, cause: 'NOT_SUPPORTED' } satisfies Abilit
 const loading = { granted: false, cause: 'LOADING' } satisfies AsyncAbility;
 
 function permissionToAbility(permission: AlertingPermission): Ability {
-  return hasPermission(permission) ? granted : insufficientPermissions(permission);
+  return makeAbility({ permission, supported: true });
 }
 
-function makeRuleMutationAbility({
-  hasRulesWritePermission,
-  rulerApiEnabled,
+/** Returns a synchronous ability from a Grafana permission and optional capability support. */
+export function makeAbility({
+  permission,
+  supported,
+}: {
+  permission: AlertingPermission;
+  supported: boolean;
+}): Ability {
+  if (!hasPermission(permission)) {
+    return insufficientPermissions(permission);
+  }
+
+  return supported ? granted : notSupported;
+}
+
+export function makeAsyncAbility({
+  permission,
+  supported,
   isLoading,
   error,
 }: {
-  hasRulesWritePermission: boolean;
-  rulerApiEnabled: boolean;
+  permission: AlertingPermission;
+  supported: boolean;
   isLoading: boolean;
   error?: unknown;
 }): AsyncAbility {
-  if (!hasRulesWritePermission) {
-    return insufficientPermissions(AlertingPermission.RulesWrite);
+  if (!hasPermission(permission)) {
+    return insufficientPermissions(permission);
   }
 
   if (isLoading) {
@@ -136,7 +151,7 @@ function makeRuleMutationAbility({
     return { granted: false, cause: 'ERROR', error };
   }
 
-  if (!rulerApiEnabled) {
+  if (!supported) {
     return notSupported;
   }
 

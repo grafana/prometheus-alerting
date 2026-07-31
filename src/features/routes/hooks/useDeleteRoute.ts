@@ -1,19 +1,20 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
-import { AppEvents } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { getAppEvents } from '@grafana/runtime';
 
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { RouteAction } from '../../../access-control/abilities.routes';
+import { useAppNotifications } from '../../../hooks/useAppNotifications';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { deleteRouteAction } from '../../../reducers/alertmanager/routes';
-import { extractErrorMessage } from '../../../utils/errors';
+import { getRouteAbilityErrorFeedback, getRouteMutationErrorFeedback } from '../utils/errorFeedback';
+import { useRouteAbilities } from './useRouteAbilities';
 import { useRoutes } from './useRoutes';
 
 interface UseDeleteRouteResult {
   /** Deletes a route. Returns true on success, false on failure. */
   deleteRoute: (routeId: string) => Promise<boolean>;
   isDeleting: boolean;
-  error: Error | null;
 }
 
 /**
@@ -22,43 +23,37 @@ interface UseDeleteRouteResult {
 export function useDeleteRoute(): UseDeleteRouteResult {
   const { refetch: refetchRoutes } = useRoutes();
   const [produceNewAlertmanagerConfiguration, { isLoading }] = useProduceNewAlertmanagerConfiguration();
-
-  const [error, setError] = useState<Error | null>(null);
+  const deleteAbility = useRouteAbilities()[RouteAction.DeleteRoute];
+  const { error: notifyError, success: notifySuccess } = useAppNotifications();
 
   const deleteRoute = useCallback(
     async (routeId: string) => {
-      setError(null);
+      if (!isAbilityAllowed(deleteAbility)) {
+        const feedback = getRouteAbilityErrorFeedback(deleteAbility);
+        notifyError(feedback.title, feedback.description);
+        return false;
+      }
 
       try {
         await produceNewAlertmanagerConfiguration(deleteRouteAction({ id: routeId }));
 
         refetchRoutes();
 
-        getAppEvents().publish({
-          type: AppEvents.alertSuccess.name,
-          payload: [t('routes.delete.success', 'Successfully deleted route')],
-        });
+        notifySuccess(t('routes.delete.success', 'Successfully deleted route'));
 
         return true;
       } catch (err) {
-        const errorMessage = extractErrorMessage(err);
-        const error = new Error(errorMessage);
-        setError(error);
-
-        getAppEvents().publish({
-          type: AppEvents.alertError.name,
-          payload: [t('routes.delete.error', 'Failed to delete route'), errorMessage],
-        });
+        const feedback = getRouteMutationErrorFeedback(err, t('routes.delete.error', 'Failed to delete route'));
+        notifyError(feedback.title, feedback.description);
 
         return false;
       }
     },
-    [produceNewAlertmanagerConfiguration, refetchRoutes]
+    [deleteAbility, notifyError, notifySuccess, produceNewAlertmanagerConfiguration, refetchRoutes]
   );
 
   return {
     deleteRoute,
     isDeleting: isLoading,
-    error,
   };
 }

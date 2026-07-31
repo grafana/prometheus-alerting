@@ -1,22 +1,23 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
-import { AppEvents } from '@grafana/data';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { t } from '@grafana/i18n';
-import { getAppEvents } from '@grafana/runtime';
 
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { RouteAction } from '../../../access-control/abilities.routes';
+import { useAppNotifications } from '../../../hooks/useAppNotifications';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { updateRouteAction } from '../../../reducers/alertmanager/routes';
-import { extractErrorMessage } from '../../../utils/errors';
 import { FormAmRoute } from '../types';
 import { formAmRouteToAmRoute } from '../utils/routeTransform';
+import { getRouteAbilityErrorFeedback, getRouteMutationErrorFeedback } from '../utils/errorFeedback';
+import { useRouteAbilities } from './useRouteAbilities';
 import { useRoutes } from './useRoutes';
 
 interface UseUpdateRouteResult {
   /** Updates a route. Returns true on success, false on failure. */
   updateRoute: (routeId: string, update: Partial<FormAmRoute>) => Promise<boolean>;
   isUpdating: boolean;
-  error: Error | null;
 }
 
 /**
@@ -25,12 +26,16 @@ interface UseUpdateRouteResult {
 export function useUpdateRoute(): UseUpdateRouteResult {
   const { refetch: refetchRoutes } = useRoutes();
   const [produceNewAlertmanagerConfiguration, { isLoading }] = useProduceNewAlertmanagerConfiguration();
-
-  const [error, setError] = useState<Error | null>(null);
+  const updateAbility = useRouteAbilities()[RouteAction.UpdateRoute];
+  const { error: notifyError, success: notifySuccess } = useAppNotifications();
 
   const updateRoute = useCallback(
     async (routeId: string, update: Partial<FormAmRoute>) => {
-      setError(null);
+      if (!isAbilityAllowed(updateAbility)) {
+        const feedback = getRouteAbilityErrorFeedback(updateAbility);
+        notifyError(feedback.title, feedback.description);
+        return false;
+      }
 
       try {
         const partialUpdatedRoute: Partial<RouteWithID> = { ...formAmRouteToAmRoute(update), id: routeId };
@@ -38,31 +43,21 @@ export function useUpdateRoute(): UseUpdateRouteResult {
 
         refetchRoutes();
 
-        getAppEvents().publish({
-          type: AppEvents.alertSuccess.name,
-          payload: [t('routes.update.success', 'Successfully updated route')],
-        });
+        notifySuccess(t('routes.update.success', 'Successfully updated route'));
 
         return true;
       } catch (err) {
-        const errorMessage = extractErrorMessage(err);
-        const error = new Error(errorMessage);
-        setError(error);
-
-        getAppEvents().publish({
-          type: AppEvents.alertError.name,
-          payload: [t('routes.update.error', 'Failed to update route'), errorMessage],
-        });
+        const feedback = getRouteMutationErrorFeedback(err, t('routes.update.error', 'Failed to update route'));
+        notifyError(feedback.title, feedback.description);
 
         return false;
       }
     },
-    [produceNewAlertmanagerConfiguration, refetchRoutes]
+    [notifyError, notifySuccess, produceNewAlertmanagerConfiguration, refetchRoutes, updateAbility]
   );
 
   return {
     updateRoute,
     isUpdating: isLoading,
-    error,
   };
 }

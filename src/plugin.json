@@ -37,6 +37,7 @@
       "type": "page",
       "name": "Routes",
       "path": "/a/%PLUGIN_ID%/routes",
+      "action": "alert.notifications.external:read",
       "addToNav": true,
       "defaultNav": false
     },

@@ -1,7 +1,9 @@
 import { renderHook } from '@testing-library/react';
 import { beforeEach } from 'vitest';
 
-import { AlertingAction, AlertingPermission } from '../../../access-control/abilities';
+import { AlertingPermission } from '../../../access-control/abilities';
+import { RouteAction } from '../../../access-control/abilities.routes';
+import { mockAlertmanagerDs, mockMimirAlertmanagerDs } from '../../../test/fixtures/datasources';
 import { setCurrentUserPermissions, setMockGrafanaDataSources } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 import { useRouteAbilities } from './useRouteAbilities';
@@ -15,31 +17,31 @@ describe('useRouteAbilities', () => {
     setCurrentUserPermissions();
 
     const { result } = renderHook(() => useRouteAbilities(), {
-      wrapper: createTestWrapper('alertmanager-1'),
+      wrapper: createTestWrapper(mockAlertmanagerDs.uid),
     });
 
     expect(result.current).toEqual({
-      [AlertingAction.ViewNotifications]: {
+      [RouteAction.ViewRoutes]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
         anyOfPermissions: [AlertingPermission.NotificationsRead],
       },
-      [AlertingAction.ViewInstances]: {
+      [RouteAction.ViewInstances]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
         anyOfPermissions: [AlertingPermission.InstancesRead],
       },
-      [AlertingAction.CreateRoute]: {
+      [RouteAction.CreateRoute]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
         anyOfPermissions: [AlertingPermission.NotificationsWrite],
       },
-      [AlertingAction.UpdateRoute]: {
+      [RouteAction.UpdateRoute]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
         anyOfPermissions: [AlertingPermission.NotificationsWrite],
       },
-      [AlertingAction.DeleteRoute]: {
+      [RouteAction.DeleteRoute]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
         anyOfPermissions: [AlertingPermission.NotificationsWrite],
@@ -51,18 +53,18 @@ describe('useRouteAbilities', () => {
     setCurrentUserPermissions(AlertingPermission.NotificationsWrite);
 
     const { result } = renderHook(() => useRouteAbilities(), {
-      wrapper: createTestWrapper('alertmanager-1'),
+      wrapper: createTestWrapper(mockAlertmanagerDs.uid),
     });
 
-    expect(result.current[AlertingAction.CreateRoute]).toEqual({
+    expect(result.current[RouteAction.CreateRoute]).toEqual({
       granted: false,
       cause: 'NOT_SUPPORTED',
     });
-    expect(result.current[AlertingAction.UpdateRoute]).toEqual({
+    expect(result.current[RouteAction.UpdateRoute]).toEqual({
       granted: false,
       cause: 'NOT_SUPPORTED',
     });
-    expect(result.current[AlertingAction.DeleteRoute]).toEqual({
+    expect(result.current[RouteAction.DeleteRoute]).toEqual({
       granted: false,
       cause: 'NOT_SUPPORTED',
     });
@@ -76,15 +78,15 @@ describe('useRouteAbilities', () => {
     );
 
     const { result } = renderHook(() => useRouteAbilities(), {
-      wrapper: createTestWrapper('mimir-alertmanager-1'),
+      wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
     });
 
     expect(result.current).toEqual({
-      [AlertingAction.ViewNotifications]: { granted: true },
-      [AlertingAction.ViewInstances]: { granted: true },
-      [AlertingAction.CreateRoute]: { granted: true },
-      [AlertingAction.UpdateRoute]: { granted: true },
-      [AlertingAction.DeleteRoute]: { granted: true },
+      [RouteAction.ViewRoutes]: { granted: true },
+      [RouteAction.ViewInstances]: { granted: true },
+      [RouteAction.CreateRoute]: { granted: true },
+      [RouteAction.UpdateRoute]: { granted: true },
+      [RouteAction.DeleteRoute]: { granted: true },
     });
   });
 });

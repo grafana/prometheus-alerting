@@ -6,8 +6,8 @@ import { MatcherOperator } from '../../src/features/routes/types';
  * Page object for the Routes / notification tree view (`/routes`).
  *
  * Read: vanilla `test-alertmanager` (root + 5 seeded child routes, read-only — no Add button).
- * Write: Mimir `test-mimir-alertmanager` (add/edit/delete; gated by `useHasConfigurationAPI()`
- * via `canEdit`). See `src/features/routes/`.
+ * Write: Mimir `test-mimir-alertmanager` (add/edit/delete; gated by Alertmanager capability
+ * and route abilities). See `src/access-control/abilities.routes.ts`.
  *
  * Clicking a route opens `RouteDrawer`; clicking its receiver link opens `ReceiverDrawer`, which
  * *replaces* it (the route drawer unmounts, not just visually hides) — "Back to route" is the
