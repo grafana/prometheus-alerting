@@ -1,8 +1,11 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { setDataSourceSrv } from '@grafana/runtime';
 
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { server } from '../../../test';
+import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 
 import { useInvalidatePromRules } from './useInvalidatePromRules';
@@ -43,6 +46,11 @@ function renderSubscribedViews() {
 }
 
 describe('useInvalidatePromRules', () => {
+  beforeEach(() => {
+    // The Prometheus URL builder resolves the data source type to pick the API base path
+    setDataSourceSrv(createMockDataSourceSrv());
+  });
+
   afterEach(() => {
     server.events.removeAllListeners();
   });

@@ -1,8 +1,9 @@
 import { act, renderHook } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import yaml from 'js-yaml';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
+import { setDataSourceSrv } from '@grafana/runtime';
 import { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { hashRulerRule } from '@grafana/external-rules/hashing';
 import { getRuleName } from '@grafana/external-rules/utils';
@@ -10,6 +11,7 @@ import { RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla
 
 import { server } from '../../../../test';
 import { setMockNamespaces } from '../../../../test/handlers/ruler';
+import { createMockDataSourceSrv } from '../../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../../test/utils/test-wrapper';
 
 import { useDeleteRuleFromGroup } from './useDeleteRuleFromGroup';
@@ -67,6 +69,11 @@ function renderDeleteRuleFromGroup() {
 }
 
 describe('useDeleteRuleFromGroup', () => {
+  beforeEach(() => {
+    // The Ruler URL builder resolves the data source type to pick the API base path
+    setDataSourceSrv(createMockDataSourceSrv());
+  });
+
   afterEach(() => {
     server.events.removeAllListeners();
   });
