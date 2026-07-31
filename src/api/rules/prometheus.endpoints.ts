@@ -46,7 +46,10 @@ export const prometheusApi = createApi({
       transformResponse: (response: GetPromRulesApiResponse) => {
         return { ...response, data: { ...response.data, groups: response.data.groups.map(normalizeRuleGroup) } };
       },
-      providesTags: ['Rules'],
+      // Tagged per data source so a write to one data source doesn't refetch the rules of
+      // every other one. Invalidate with { type: 'Rules', id: <uid> } – a type-only
+      // invalidation of 'Rules' does not match these entries.
+      providesTags: (_result, _error, { ruleSource }) => [{ type: 'Rules' as const, id: ruleSource.uid }],
       responseSchema: GetPromRulesApiResponseSchema,
     }),
   }),
