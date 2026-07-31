@@ -4,6 +4,39 @@ import { dirname } from 'node:path';
 
 const pluginE2eAuth = `${dirname(require.resolve('@grafana/plugin-e2e'))}/auth`;
 
+const RBAC_PASSWORD = 'e2e-rbac-password';
+const RBAC_ROLES = ['None', 'Viewer', 'Editor'] as const;
+
+/**
+ * Every RBAC role gets an auth project that provisions and logs in a dedicated user, plus a test
+ * project that runs `rbac.<role>.spec.ts` with the resulting session. The `e2e-tests` project
+ * continues to use the admin session and ignores the RBAC specs.
+ */
+const rbacProjects = RBAC_ROLES.flatMap((role) => {
+  const name = role.toLowerCase();
+  const user = `e2e-rbac-${name}`;
+
+  return [
+    {
+      name: `rbac-${name}-auth`,
+      testDir: pluginE2eAuth,
+      testMatch: [/.*\.js/],
+      use: {
+        user: { user, password: RBAC_PASSWORD, role },
+      },
+    },
+    {
+      name: `rbac-${name}`,
+      testMatch: new RegExp(`rbac\\.${name}\\.spec\\.ts`),
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: `playwright/.auth/${user}.json`,
+      },
+      dependencies: [`rbac-${name}-auth`],
+    },
+  ];
+});
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -45,7 +78,7 @@ export default defineConfig<PluginOptions>({
         storageState: 'playwright/.auth/admin.json',
       },
       dependencies: ['auth'],
-      testIgnore: /rbac(?:Editor)?\.spec\.ts/,
+      testIgnore: /rbac\..*\.spec\.ts/,
     },
     // 2. Auth setup - runs automatically before e2e-tests via dependency
     {
@@ -53,71 +86,6 @@ export default defineConfig<PluginOptions>({
       testDir: pluginE2eAuth,
       testMatch: [/.*\.js/],
     },
-    {
-      name: 'rbac-none-auth',
-      testDir: pluginE2eAuth,
-      testMatch: [/.*\.js/],
-      use: {
-        user: {
-          user: 'e2e-rbac-none',
-          password: 'e2e-rbac-password',
-          role: 'None',
-        },
-      },
-    },
-    {
-      name: 'rbac-reader-auth',
-      testDir: pluginE2eAuth,
-      testMatch: [/.*\.js/],
-      use: {
-        user: {
-          user: 'e2e-rbac-reader',
-          password: 'e2e-rbac-password',
-          role: 'Viewer',
-        },
-      },
-    },
-    {
-      name: 'rbac-editor-auth',
-      testDir: pluginE2eAuth,
-      testMatch: [/.*\.js/],
-      use: {
-        user: {
-          user: 'e2e-rbac-editor',
-          password: 'e2e-rbac-password',
-          role: 'Editor',
-        },
-      },
-    },
-    // Each role project consumes the session state produced by its auth project.
-    // This runs every RBAC spec as a real Grafana user while the usual E2E project
-    // continues to use the admin session.
-    {
-      name: 'rbac-none',
-      testMatch: /rbac\.spec\.ts/,
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'playwright/.auth/e2e-rbac-none.json',
-      },
-      dependencies: ['rbac-none-auth'],
-    },
-    {
-      name: 'rbac-reader',
-      testMatch: /rbac\.spec\.ts/,
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'playwright/.auth/e2e-rbac-reader.json',
-      },
-      dependencies: ['rbac-reader-auth'],
-    },
-    {
-      name: 'rbac-editor',
-      testMatch: /rbac(?:Editor)?\.spec\.ts/,
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'playwright/.auth/e2e-rbac-editor.json',
-      },
-      dependencies: ['rbac-editor-auth'],
-    },
+    ...rbacProjects,
   ],
 });

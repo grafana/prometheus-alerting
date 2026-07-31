@@ -40,7 +40,7 @@ export class RulesListPage {
   readonly searchInput: Locator;
   readonly newRuleButton: Locator;
   readonly silenceMenuItem: Locator;
-  readonly listViewRadio: Locator;
+  readonly editLinks: Locator;
 
   // Filter sidebar (landmark + fields)
   readonly sidebar: Locator;
@@ -71,7 +71,7 @@ export class RulesListPage {
     this.searchInput = page.getByTestId('search-query-input');
     this.newRuleButton = page.getByRole('button', { name: 'New rule', exact: true });
     this.silenceMenuItem = page.getByRole('menuitem', { name: 'Silence notifications', exact: true });
-    this.listViewRadio = page.getByRole('radio', { name: 'List', exact: true });
+    this.editLinks = page.getByRole('link', { name: 'Edit', exact: true });
 
     this.sidebar = page.getByRole('complementary', { name: /filter rules/i });
     this.ruleNameInput = this.sidebar.getByLabel(/rule name/i);
@@ -204,7 +204,7 @@ export class RulesListPage {
   }
 
   async switchToListView() {
-    await this.listViewRadio.click();
+    await this.page.getByRole('radio', { name: 'List', exact: true }).click();
   }
 
   async hasNoRulesMessage(): Promise<boolean> {
