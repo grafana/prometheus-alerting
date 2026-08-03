@@ -39,6 +39,15 @@ export function useReturnTo(fallback?: string): { returnTo: string | undefined }
       return emptyResult;
     }
 
+    // An origin match alone is not enough: the URL parser puts everything after the authority in
+    // `pathname`, so `https://<grafana-origin>//evil.com` parses to a same-origin URL with the
+    // pathname `//evil.com`. Browsers treat that as a protocol-relative URL when it's used as an
+    // href, so we only accept paths rooted at a single slash.
+    if (!isRootRelativePath(pathname)) {
+      console.warn('Malformed returnTo parameter', { returnTo });
+      return emptyResult;
+    }
+
     return { returnTo: `${pathname}${search}` };
   }, [searchParams, fallback]);
 }
@@ -49,6 +58,14 @@ export function useReturnTo(fallback?: string): { returnTo: string | undefined }
 export function createReturnTo(includeSearch = true): string {
   const { pathname, search } = locationService.getLocation();
   return pathname + (includeSearch ? search : '');
+}
+
+/**
+ * Checks that a path is rooted at a single slash, rejecting protocol-relative forms such as
+ * `//evil.com` and `/\evil.com` which browsers resolve to a different site.
+ */
+function isRootRelativePath(pathname: string): boolean {
+  return pathname.startsWith('/') && !['/', '\\'].includes(pathname[1]);
 }
 
 /**
