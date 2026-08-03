@@ -2,7 +2,7 @@ import React from 'react';
 
 import { t } from '@grafana/i18n';
 import { AlertLabel } from '@grafana/alerting';
-import { Stack } from '@grafana/ui';
+import { Stack, TextLink } from '@grafana/ui';
 import type { GettableAlert } from '@grafana/external-alertmanager/vanilla';
 
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
@@ -83,10 +83,12 @@ export function AlertDrawer({ alert, onClose }: AlertDrawerProps) {
                   ? [
                       {
                         label: t('alerts.drawer.generator-url', 'Generator URL'),
+                        // TextLink sanitizes the href for us – generatorURL comes from
+                        // untrusted alert data (any client that can POST /api/v2/alerts).
                         value: (
-                          <a href={alert.generatorURL} target="_blank" rel="noreferrer">
+                          <TextLink href={alert.generatorURL} external>
                             {alert.generatorURL}
-                          </a>
+                          </TextLink>
                         ),
                       },
                     ]
