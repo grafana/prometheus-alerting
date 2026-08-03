@@ -27,9 +27,7 @@ import { InsertPosition } from '../types';
 function RoutesPage() {
   const { route, isLoading, error, isSuccess } = useRoutes();
   const abilities = useRouteAbilities();
-  const canCreateRoutes = isAbilityAllowed(abilities[RouteAction.CreateRoute]);
-  const canUpdateRoutes = isAbilityAllowed(abilities[RouteAction.UpdateRoute]);
-  const canDeleteRoutes = isAbilityAllowed(abilities[RouteAction.DeleteRoute]);
+  const canMutateRoutes = isAbilityAllowed(abilities[RouteAction.MutateRoutes]);
   const canViewInstances = isAbilityAllowed(abilities[RouteAction.ViewInstances]);
   const {
     alertGroups,
@@ -146,11 +144,13 @@ function RoutesPage() {
   const canDeleteViewingRoute = drawerState.type === 'view' && drawerState.route.id !== routeTree?.id;
   const routeToDeleteHasChildren = routeToDelete?.routes && routeToDelete.routes.length > 0;
 
-  const routeCardActions: RouteCardActions = {
-    onAddRoute: canCreateRoutes ? handleAddRoute : undefined,
-    onEditRoute: canUpdateRoutes ? handleEditRoute : undefined,
-    onDeleteRoute: canDeleteRoutes ? handleDeleteRoute : undefined,
-  };
+  const routeCardActions: RouteCardActions = canMutateRoutes
+    ? {
+        onAddRoute: handleAddRoute,
+        onEditRoute: handleEditRoute,
+        onDeleteRoute: handleDeleteRoute,
+      }
+    : { readOnly: true };
 
   return (
     <AlertmanagerPage subTitle={t('routes.page-subtitle', 'Determine how alerts are routed to receivers')}>
@@ -193,14 +193,14 @@ function RoutesPage() {
           route={drawerState.route}
           onClose={handleDrawerClose}
           onReceiverClick={handleReceiverClick}
-          onEdit={canUpdateRoutes ? () => handleEditRoute(drawerState.route) : undefined}
-          onDelete={canDeleteRoutes && canDeleteViewingRoute ? () => handleDeleteRoute(drawerState.route) : undefined}
+          onEdit={canMutateRoutes ? () => handleEditRoute(drawerState.route) : undefined}
+          onDelete={canMutateRoutes && canDeleteViewingRoute ? () => handleDeleteRoute(drawerState.route) : undefined}
         />
       )}
-      {drawerState.type === 'edit' && canUpdateRoutes && (
+      {drawerState.type === 'edit' && canMutateRoutes && (
         <RouteEditDrawer route={drawerState.route} onClose={handleDrawerClose} />
       )}
-      {drawerState.type === 'add' && canCreateRoutes && (
+      {drawerState.type === 'add' && canMutateRoutes && (
         <RouteEditDrawer
           route={null}
           referenceRouteId={drawerState.referenceRouteId}
@@ -214,7 +214,7 @@ function RoutesPage() {
 
       {/* Delete confirmation modal (from the RouteCard menu or the view drawer) */}
       <ConfirmModal
-        isOpen={canDeleteRoutes && routeToDelete !== null}
+        isOpen={canMutateRoutes && routeToDelete !== null}
         title={t('routes.delete.confirm-title', 'Delete Route')}
         body={
           routeToDeleteHasChildren

@@ -9,16 +9,6 @@ import { server } from '../../../test/server';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 import { useAlertGroups } from './useAlertGroups';
 
-function requireDataSourceUID(dataSource: { uid?: string }): string {
-  if (!dataSource.uid) {
-    throw new Error('Expected the test data source to have a UID');
-  }
-
-  return dataSource.uid;
-}
-
-const alertmanagerUID = requireDataSourceUID(mockAlertmanagerDs);
-
 describe('useAlertGroups', () => {
   beforeEach(() => {
     setMockGrafanaDataSources();
@@ -30,7 +20,7 @@ describe('useAlertGroups', () => {
     server.use(http.get('/api/datasources/proxy/uid/:uid/api/v2/alerts/groups', getAlertGroups));
 
     const { result } = renderHook(() => useAlertGroups({ skip: true }), {
-      wrapper: createTestWrapper(alertmanagerUID),
+      wrapper: createTestWrapper(mockAlertmanagerDs.uid),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -43,7 +33,7 @@ describe('useAlertGroups', () => {
     server.use(http.get('/api/datasources/proxy/uid/:uid/api/v2/alerts/groups', getAlertGroups));
 
     const { result } = renderHook(() => useAlertGroups(), {
-      wrapper: createTestWrapper(alertmanagerUID),
+      wrapper: createTestWrapper(mockAlertmanagerDs.uid),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));

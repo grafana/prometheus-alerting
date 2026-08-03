@@ -4,9 +4,7 @@ import { getAlertmanagerConfigMutationAbility } from './abilities.alertmanager';
 export enum RouteAction {
   ViewRoutes = 'view-routes',
   ViewInstances = 'view-route-instances',
-  CreateRoute = 'create-route',
-  UpdateRoute = 'update-route',
-  DeleteRoute = 'delete-route',
+  MutateRoutes = 'mutate-routes',
 }
 
 export type RouteAbilities = Record<RouteAction, Ability>;
@@ -26,8 +24,6 @@ export function getRoutesAbilities(hasConfigurationAPI: boolean): RouteAbilities
   return {
     [RouteAction.ViewRoutes]: viewRoutes,
     [RouteAction.ViewInstances]: viewInstances,
-    [RouteAction.CreateRoute]: mutateRoutes,
-    [RouteAction.UpdateRoute]: mutateRoutes,
-    [RouteAction.DeleteRoute]: mutateRoutes,
+    [RouteAction.MutateRoutes]: mutateRoutes,
   };
 }

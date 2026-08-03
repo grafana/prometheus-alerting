@@ -43,10 +43,26 @@ export const BuiltInDataSourceInstanceSettingsFactory = DataSourceInstanceSettin
   meta: { builtIn: true } as DataSourceInstanceSettings['meta'],
 });
 
+const AlertmanagerDataSourceInstanceSettingsFactory = Factory.define<
+  DataSourceInstanceSettings<AlertManagerDataSourceJsonData>
+>(() => ({
+  ...DataSourceInstanceSettingsFactory.build(),
+  jsonData: {},
+}));
+
+const mimirDataSourceJsonData = {
+  manageAlerts: true,
+  implementation: 'mimir',
+};
+
+const mimirAlertmanagerJsonData = {
+  implementation: 'mimir',
+} satisfies AlertManagerDataSourceJsonData;
+
 /**
  * A mock Prometheus datasource
  */
-export const mockPrometheusDs: Partial<DataSourceInstanceSettings> = {
+export const mockPrometheusDs = DataSourceInstanceSettingsFactory.build({
   uid: 'prometheus-1',
   name: 'Prometheus',
   type: 'prometheus',
@@ -67,12 +83,12 @@ export const mockPrometheusDs: Partial<DataSourceInstanceSettings> = {
     baseUrl: '',
   },
   jsonData: {},
-};
+});
 
 /**
  * A mock Mimir datasource with ruler API enabled
  */
-export const mockMimirDs: Partial<DataSourceInstanceSettings> = {
+export const mockMimirDs = DataSourceInstanceSettingsFactory.build({
   uid: 'test-mimir-uid',
   name: 'Test Mimir',
   type: 'prometheus',
@@ -92,16 +108,13 @@ export const mockMimirDs: Partial<DataSourceInstanceSettings> = {
     module: '',
     baseUrl: '',
   },
-  jsonData: {
-    manageAlerts: true,
-    implementation: 'mimir',
-  } as any,
-};
+  jsonData: mimirDataSourceJsonData,
+});
 
 /**
  * A mock Mimir Alertmanager datasource
  */
-export const mockMimirAlertmanagerDs: Partial<DataSourceInstanceSettings<AlertManagerDataSourceJsonData>> = {
+export const mockMimirAlertmanagerDs = AlertmanagerDataSourceInstanceSettingsFactory.build({
   uid: 'mimir-alertmanager-1',
   name: 'Mimir Alertmanager',
   type: 'alertmanager',
@@ -121,15 +134,13 @@ export const mockMimirAlertmanagerDs: Partial<DataSourceInstanceSettings<AlertMa
     module: '',
     baseUrl: '',
   },
-  jsonData: {
-    implementation: 'mimir',
-  },
-};
+  jsonData: mimirAlertmanagerJsonData,
+});
 
 /**
  * A mock Alertmanager datasource
  */
-export const mockAlertmanagerDs: Partial<DataSourceInstanceSettings> = {
+export const mockAlertmanagerDs = AlertmanagerDataSourceInstanceSettingsFactory.build({
   uid: 'alertmanager-1',
   name: 'Alertmanager',
   type: 'alertmanager',
@@ -150,15 +161,15 @@ export const mockAlertmanagerDs: Partial<DataSourceInstanceSettings> = {
     baseUrl: '',
   },
   jsonData: {},
-};
+});
 
 /**
  * All mock datasources as a config object
  * Use this to mock @grafana/runtime config.datasources
  */
 export const mockDatasourcesConfig = {
-  [mockPrometheusDs.uid!]: mockPrometheusDs,
-  [mockMimirDs.uid!]: mockMimirDs,
-  [mockAlertmanagerDs.uid!]: mockAlertmanagerDs,
-  [mockMimirAlertmanagerDs.uid!]: mockMimirAlertmanagerDs,
+  [mockPrometheusDs.uid]: mockPrometheusDs,
+  [mockMimirDs.uid]: mockMimirDs,
+  [mockAlertmanagerDs.uid]: mockAlertmanagerDs,
+  [mockMimirAlertmanagerDs.uid]: mockMimirAlertmanagerDs,
 };

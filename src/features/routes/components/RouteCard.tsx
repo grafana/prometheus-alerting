@@ -31,11 +31,20 @@ import { InsertPosition } from '../types';
 
 const ROUTES_PER_PAGE = 20;
 
-export interface RouteCardActions {
-  onAddRoute?: (referenceRoute: RouteWithID, position: InsertPosition) => void;
-  onEditRoute?: (route: RouteWithID) => void;
-  onDeleteRoute?: (route: RouteWithID) => void;
-}
+// Route mutations share one permission, so editable cards require all mutation handlers.
+export type RouteCardActions =
+  | {
+      readOnly: true;
+      onAddRoute?: undefined;
+      onEditRoute?: undefined;
+      onDeleteRoute?: undefined;
+    }
+  | {
+      readOnly?: false;
+      onAddRoute: (referenceRoute: RouteWithID, position: InsertPosition) => void;
+      onEditRoute: (route: RouteWithID) => void;
+      onDeleteRoute: (route: RouteWithID) => void;
+    };
 
 type Props = RouteCardActions & {
   numberOfMatchingInstances?: number;
@@ -59,11 +68,13 @@ const RouteCard = (props: Props) => {
     onDeleteRoute,
   } = props;
 
-  const routeActions: RouteCardActions = {
-    onAddRoute,
-    onEditRoute,
-    onDeleteRoute,
-  };
+  const routeActions: RouteCardActions = props.readOnly
+    ? { readOnly: true }
+    : {
+        onAddRoute: props.onAddRoute,
+        onEditRoute: props.onEditRoute,
+        onDeleteRoute: props.onDeleteRoute,
+      };
 
   const styles = useStyles2(getStyles);
 

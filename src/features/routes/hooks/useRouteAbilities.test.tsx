@@ -31,17 +31,7 @@ describe('useRouteAbilities', () => {
         cause: 'INSUFFICIENT_PERMISSIONS',
         anyOfPermissions: [AlertingPermission.InstancesRead],
       },
-      [RouteAction.CreateRoute]: {
-        granted: false,
-        cause: 'INSUFFICIENT_PERMISSIONS',
-        anyOfPermissions: [AlertingPermission.NotificationsWrite],
-      },
-      [RouteAction.UpdateRoute]: {
-        granted: false,
-        cause: 'INSUFFICIENT_PERMISSIONS',
-        anyOfPermissions: [AlertingPermission.NotificationsWrite],
-      },
-      [RouteAction.DeleteRoute]: {
+      [RouteAction.MutateRoutes]: {
         granted: false,
         cause: 'INSUFFICIENT_PERMISSIONS',
         anyOfPermissions: [AlertingPermission.NotificationsWrite],
@@ -56,15 +46,7 @@ describe('useRouteAbilities', () => {
       wrapper: createTestWrapper(mockAlertmanagerDs.uid),
     });
 
-    expect(result.current[RouteAction.CreateRoute]).toEqual({
-      granted: false,
-      cause: 'NOT_SUPPORTED',
-    });
-    expect(result.current[RouteAction.UpdateRoute]).toEqual({
-      granted: false,
-      cause: 'NOT_SUPPORTED',
-    });
-    expect(result.current[RouteAction.DeleteRoute]).toEqual({
+    expect(result.current[RouteAction.MutateRoutes]).toEqual({
       granted: false,
       cause: 'NOT_SUPPORTED',
     });
@@ -84,9 +66,7 @@ describe('useRouteAbilities', () => {
     expect(result.current).toEqual({
       [RouteAction.ViewRoutes]: { granted: true },
       [RouteAction.ViewInstances]: { granted: true },
-      [RouteAction.CreateRoute]: { granted: true },
-      [RouteAction.UpdateRoute]: { granted: true },
-      [RouteAction.DeleteRoute]: { granted: true },
+      [RouteAction.MutateRoutes]: { granted: true },
     });
   });
 });

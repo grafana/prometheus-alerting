@@ -54,12 +54,12 @@ export type ScopedAbilities = Record<ScopedAction, AsyncAbility>;
 
 /** Returns abilities that only depend on Grafana RBAC permissions. */
 export function useUnscopedAbilities(): UnscopedAbilities {
-  const rulesRead = permissionToAbility(AlertingPermission.RulesRead);
-  const rulesWrite = permissionToAbility(AlertingPermission.RulesWrite);
-  const instancesRead = permissionToAbility(AlertingPermission.InstancesRead);
-  const instancesWrite = permissionToAbility(AlertingPermission.InstancesWrite);
-  const notificationsRead = permissionToAbility(AlertingPermission.NotificationsRead);
-  const notificationsWrite = permissionToAbility(AlertingPermission.NotificationsWrite);
+  const rulesRead = makeSupportedAbility(AlertingPermission.RulesRead);
+  const rulesWrite = makeSupportedAbility(AlertingPermission.RulesWrite);
+  const instancesRead = makeSupportedAbility(AlertingPermission.InstancesRead);
+  const instancesWrite = makeSupportedAbility(AlertingPermission.InstancesWrite);
+  const notificationsRead = makeSupportedAbility(AlertingPermission.NotificationsRead);
+  const notificationsWrite = makeSupportedAbility(AlertingPermission.NotificationsWrite);
 
   return {
     [AlertingAction.ViewRules]: rulesRead,
@@ -109,7 +109,7 @@ const granted = { granted: true } satisfies Ability;
 const notSupported = { granted: false, cause: 'NOT_SUPPORTED' } satisfies Ability;
 const loading = { granted: false, cause: 'LOADING' } satisfies AsyncAbility;
 
-function permissionToAbility(permission: AlertingPermission): Ability {
+function makeSupportedAbility(permission: AlertingPermission): Ability {
   return makeAbility({ permission, supported: true });
 }
 
