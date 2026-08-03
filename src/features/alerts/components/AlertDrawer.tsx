@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { t } from '@grafana/i18n';
+import { textUtil } from '@grafana/data';
 import { AlertLabel } from '@grafana/alerting';
 import { Stack } from '@grafana/ui';
 import type { GettableAlert } from '@grafana/external-alertmanager/vanilla';
@@ -13,6 +14,30 @@ import { AlertStateBadge } from './AlertStateBadge';
 interface AlertDrawerProps {
   alert: GettableAlert;
   onClose: () => void;
+}
+
+/**
+ * The generator URL originates from untrusted alert data (an Alertmanager's
+ * POST /api/v2/alerts accepts an arbitrary generatorURL from any client that can
+ * reach the ingestion API) and is rendered as an anchor href. React does not
+ * sanitize href attributes, so a non-navigational scheme such as `javascript:`
+ * would execute in the Grafana origin when clicked. Run the value through the
+ * shared sanitizer and enforce an http/https allowlist so only navigational URLs
+ * are ever used as an href.
+ */
+function getSafeGeneratorURL(url: string): string | undefined {
+  const sanitized = textUtil.sanitizeUrl(url);
+
+  try {
+    const { protocol } = new URL(sanitized, window.location.origin);
+    if (protocol === 'http:' || protocol === 'https:') {
+      return sanitized;
+    }
+  } catch {
+    // Unparseable URL; fall through and treat as unsafe.
+  }
+
+  return undefined;
 }
 
 export function AlertDrawer({ alert, onClose }: AlertDrawerProps) {
@@ -33,6 +58,8 @@ export function AlertDrawer({ alert, onClose }: AlertDrawerProps) {
   ];
 
   const receiverItems = alert.receivers.map((r) => ({ label: t('alerts.drawer.receiver', 'Receiver'), value: r.name }));
+
+  const safeGeneratorURL = alert.generatorURL ? getSafeGeneratorURL(alert.generatorURL) : undefined;
 
   const statusItems = [
     ...(alert.status.silencedBy.length > 0
@@ -83,10 +110,12 @@ export function AlertDrawer({ alert, onClose }: AlertDrawerProps) {
                   ? [
                       {
                         label: t('alerts.drawer.generator-url', 'Generator URL'),
-                        value: (
-                          <a href={alert.generatorURL} target="_blank" rel="noreferrer">
+                        value: safeGeneratorURL ? (
+                          <a href={safeGeneratorURL} target="_blank" rel="noreferrer">
                             {alert.generatorURL}
                           </a>
+                        ) : (
+                          alert.generatorURL
                         ),
                       },
                     ]
