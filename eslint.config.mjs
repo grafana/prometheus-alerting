@@ -70,6 +70,24 @@ export default defineConfig([
       '@typescript-eslint/no-non-null-assertion': 'error',
     },
   },
+  {
+    name: 'grafana/safe-links',
+    files: ['src/**/*.tsx', 'packages/**/*.tsx'],
+    ignores: ['**/*.test.tsx', '**/test/**/*.tsx'],
+    rules: {
+      // Raw anchors bypass URL sanitization: React does not sanitize href, so an
+      // attacker-controlled `javascript:` URL executes in the Grafana origin.
+      // TextLink / LinkButton / Link run the href through textUtil.sanitizeUrl.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'JSXOpeningElement[name.name="a"]:has(JSXAttribute[name.name="href"])',
+          message:
+            'Do not use <a href>. Use TextLink (or LinkButton / Link) from @grafana/ui — they sanitize the href and prevent javascript: URL XSS.',
+        },
+      ],
+    },
+  },
   ...baseConfig,
   {
     name: 'test-data/rules-provisioner-console',
