@@ -350,6 +350,11 @@
   "alertmanager": {
     "error": {
       "data-source": "Data source: {{name}}"
+    },
+    "none-configured": {
+      "add-data-source": "Add Alertmanager data source",
+      "body": "This app needs at least one Alertmanager data source to show alerts, notification routing and silences.",
+      "title": "No Alertmanager data sources configured"
     }
   },
   "alerts": {

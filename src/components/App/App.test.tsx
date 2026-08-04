@@ -4,9 +4,12 @@ import { AppRootProps, PluginType } from '@grafana/data';
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 
+import { config } from '@grafana/runtime';
+
 import App from './App';
 import { testIds } from '../testIds';
 import { createTestWrapper } from '../../test/utils/test-wrapper';
+import { setMockGrafanaDataSources } from '../../test/mocks/grafana-runtime';
 
 vi.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
   AlertmanagerPicker: () => <div data-testid="alertmanager-picker" />,
@@ -19,6 +22,7 @@ describe('Components/App', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    setMockGrafanaDataSources();
 
     props = {
       basename: 'a/sample-app',
@@ -54,5 +58,25 @@ describe('Components/App', () => {
       },
       { timeout: 2000 }
     );
+  });
+
+  test('renders an empty state instead of crashing when no Alertmanager is configured', async () => {
+    (config as any).datasources = {};
+
+    const Wrapper = createTestWrapper();
+    render(
+      <Wrapper>
+        <MemoryRouter>
+          <Suspense fallback={null}>
+            <App {...props} />
+          </Suspense>
+        </MemoryRouter>
+      </Wrapper>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId(testIds.noAlertmanager.container)).toBeInTheDocument();
+    });
+    expect(screen.getByText('No Alertmanager data sources configured')).toBeInTheDocument();
   });
 });

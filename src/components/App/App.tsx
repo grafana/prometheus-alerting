@@ -8,6 +8,8 @@ import { StoreProvider } from '../StoreProvider/StoreProvider';
 import { sharedStore } from '../../store/store';
 import { AlertingPermission } from '../../access-control/abilities';
 import { ProtectedRoute } from '../../access-control/components/ProtectedRoute';
+import { NoAlertmanagerConfigured } from '../NoAlertmanagerConfigured';
+import { useAvailableAlertmanagers } from '../../hooks/useAvailableAlertmanager';
 
 const Alerts = React.lazy(() => import('../../features/alerts/pages/Alerts'));
 const Rules = React.lazy(() => import('../../features/rules/pages/RulesList'));
@@ -28,6 +30,13 @@ const InhibitRules = React.lazy(() => import('../../features/inhibitRules/pages/
 
 function App(_props: AppRootProps) {
   const theme = useTheme2();
+  const availableAlertmanagers = useAvailableAlertmanagers();
+
+  // Every page depends on an Alertmanager data source – bail out early with a helpful page instead of
+  // letting each route throw.
+  if (availableAlertmanagers.length === 0) {
+    return <NoAlertmanagerConfigured />;
+  }
 
   return (
     <StoreProvider store={sharedStore}>
