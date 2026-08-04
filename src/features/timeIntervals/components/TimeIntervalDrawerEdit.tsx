@@ -3,6 +3,9 @@ import { t } from '@grafana/i18n';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { useUpdateTimeInterval } from '../hooks/useTimeIntervals';
 import { TimeIntervalFormFields, type TimeIntervalFormData } from './TimeIntervalFormFields';
+import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
+import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
+import { isAbilityAllowed } from '../../../access-control/abilities';
 
 interface TimeIntervalDrawerEditProps {
   timeInterval: TimeInterval;
@@ -12,8 +15,14 @@ interface TimeIntervalDrawerEditProps {
 
 export function TimeIntervalDrawerEdit({ timeInterval, onCancel, onSuccess }: TimeIntervalDrawerEditProps) {
   const [updateTimeInterval, { isLoading: isUpdating, error: updateError }] = useUpdateTimeInterval();
+  const hasConfigurationAPI = useHasConfigurationAPI();
+  const canMutateTimeIntervals = isAbilityAllowed(getAlertmanagerConfigMutationAbility(hasConfigurationAPI));
 
   const handleSave = async (data: TimeIntervalFormData) => {
+    if (!canMutateTimeIntervals) {
+      return;
+    }
+
     const updatedTimeInterval = {
       name: data.name,
       time_intervals: [
@@ -40,6 +49,10 @@ export function TimeIntervalDrawerEdit({ timeInterval, onCancel, onSuccess }: Ti
       console.error('Failed to update time interval:', err);
     }
   };
+
+  if (!canMutateTimeIntervals) {
+    return null;
+  }
 
   return (
     <TimeIntervalFormFields

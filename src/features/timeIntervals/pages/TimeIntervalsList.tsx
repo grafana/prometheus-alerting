@@ -10,14 +10,17 @@ import { DEFAULT_PAGE_SIZE, ROUTES } from '../../../constants';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
-import { DataSourceError } from '../../../components/AlertmanagerError';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { TimeIntervalDrawer } from '../components/TimeIntervalDrawer';
+import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { TimeIntervalsError } from '../components/TimeIntervalsError';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error, isSuccess } = useTimeIntervals();
   const hasConfigurationAPI = useHasConfigurationAPI();
+  const canMutateTimeIntervals = isAbilityAllowed(getAlertmanagerConfigMutationAbility(hasConfigurationAPI));
 
   const [selectedTimeInterval, setSelectedTimeInterval] = useState<TimeInterval | null>(null);
 
@@ -96,7 +99,7 @@ function TimeIntervalsPage() {
     <AlertmanagerPage
       subTitle={t('time-intervals.page-subtitle', 'Define time windows for muting or activating notifications')}
     >
-      {hasConfigurationAPI && (
+      {canMutateTimeIntervals && (
         <LinkButton href={prefixRoute(ROUTES.CreateTimeInterval)}>
           {t('time-intervals.create-button', 'Create time interval')}
         </LinkButton>
@@ -113,12 +116,7 @@ function TimeIntervalsPage() {
               <Skeleton height={120} count={3} style={{ marginBottom: '5px' }} />
             </div>
           }
-          renderError={
-            <DataSourceError
-              error={error}
-              title={t('time-intervals.error-loading-title', 'Error loading time intervals')}
-            />
-          }
+          renderError={<TimeIntervalsError error={error} />}
           empty={
             <EmptyState
               message={t(

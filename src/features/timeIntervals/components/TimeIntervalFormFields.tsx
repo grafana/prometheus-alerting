@@ -6,6 +6,7 @@ import { Alert, Button, Field, Input, Stack, Combobox } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { IANA_TIMEZONES } from '../utils/timezones';
+import { getTimeIntervalMutationErrorFeedback } from '../utils/errorFeedback';
 
 export const TimeIntervalFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -42,6 +43,14 @@ export function TimeIntervalFormFields({
   showNameField = true,
 }: TimeIntervalFormFieldsProps) {
   const isEditMode = Boolean(timeInterval);
+  const mutationErrorFeedback = error
+    ? getTimeIntervalMutationErrorFeedback(
+        error,
+        isEditMode
+          ? t('time-intervals.form.error-updating-title', 'Error updating time interval')
+          : t('time-intervals.form.error-title', 'Error creating time interval')
+      )
+    : undefined;
 
   const {
     register,
@@ -83,18 +92,9 @@ export function TimeIntervalFormFields({
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack direction="column" gap={2}>
-        {Boolean(error) && (
-          <Alert
-            title={
-              isEditMode
-                ? t('time-intervals.form.error-updating-title', 'Error updating time interval')
-                : t('time-intervals.form.error-title', 'Error creating time interval')
-            }
-            severity="error"
-          >
-            {String(
-              error instanceof Error ? error.message : t('time-intervals.form.error-generic', 'An error occurred')
-            )}
+        {mutationErrorFeedback && (
+          <Alert title={mutationErrorFeedback.title} severity="error">
+            {mutationErrorFeedback.description}
           </Alert>
         )}
 
@@ -222,8 +222,8 @@ export function TimeIntervalFormFields({
                   ? t('time-intervals.form.updating', 'Updating...')
                   : t('time-intervals.form.creating', 'Creating...')
                 : isEditMode
-                ? t('time-intervals.form.update-button', 'Update Time Interval')
-                : t('time-intervals.form.create-button', 'Create Time Interval'))}
+                  ? t('time-intervals.form.update-button', 'Update Time Interval')
+                  : t('time-intervals.form.create-button', 'Create Time Interval'))}
           </Button>
           <Button type="button" variant="secondary" onClick={onCancel} disabled={isLoading}>
             {cancelButtonText || t('time-intervals.form.cancel-button', 'Cancel')}

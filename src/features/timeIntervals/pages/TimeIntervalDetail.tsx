@@ -12,6 +12,7 @@ import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { ROUTES } from '../../../constants';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
+import { TimeIntervalsError } from '../components/TimeIntervalsError';
 
 interface TimeIntervalItemProps {
   timeInterval: NonNullable<TimeInterval['time_intervals']>[number];
@@ -129,11 +130,10 @@ function TimeIntervalDetail() {
       <div data-testid={testIds.timeIntervals.detail} className={styles.wrapper}>
         {isLoading && <Skeleton height={24} count={10} />}
         {error && (
-          <Alert title={t('time-intervals.detail.error-title', 'Error loading time interval')} severity="error">
-            {error instanceof Error
-              ? error.message
-              : t('time-intervals.error-loading-message', 'Failed to fetch time intervals')}
-          </Alert>
+          <TimeIntervalsError
+            error={error}
+            title={t('time-intervals.detail.error-title', 'Error loading time interval')}
+          />
         )}
         {notFound && (
           <EmptyState

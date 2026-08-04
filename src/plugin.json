@@ -68,6 +68,7 @@
       "type": "page",
       "name": "Time intervals",
       "path": "/a/%PLUGIN_ID%/time-intervals",
+      "action": "alert.notifications.external:read",
       "addToNav": true,
       "defaultNav": false
     },

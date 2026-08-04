@@ -13,6 +13,11 @@ import { locationService } from '@grafana/runtime';
 import { z } from 'zod';
 import { useTimeIntervals, useAddTimeInterval, useUpdateTimeInterval } from '../hooks/useTimeIntervals';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
+import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
+import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { TimeIntervalMutationUnavailable, TimeIntervalsError } from '../components/TimeIntervalsError';
+import { getTimeIntervalMutationErrorFeedback } from '../utils/errorFeedback';
 
 const TimeIntervalFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -30,6 +35,9 @@ type TimeIntervalFormData = z.infer<typeof TimeIntervalFormSchema>;
 function TimeIntervalForm() {
   const { name } = useParams<{ name: string }>();
   const isEditMode = Boolean(name);
+  const hasConfigurationAPI = useHasConfigurationAPI();
+  const mutationAbility = getAlertmanagerConfigMutationAbility(hasConfigurationAPI);
+  const canMutateTimeIntervals = isAbilityAllowed(mutationAbility);
   const { timeIntervals, isLoading: isLoadingTimeIntervals, error: loadError } = useTimeIntervals();
   const [addTimeInterval, { isLoading: isAdding, error: addError, isSuccess: isAddSuccess }] = useAddTimeInterval();
   const [updateTimeInterval, { isLoading: isUpdating, error: updateError, isSuccess: isUpdateSuccess }] =
@@ -38,6 +46,14 @@ function TimeIntervalForm() {
   const isLoading = isAdding || isUpdating;
   const mutationError = addError || updateError;
   const isSuccess = isAddSuccess || isUpdateSuccess;
+  const mutationErrorFeedback = mutationError
+    ? getTimeIntervalMutationErrorFeedback(
+        mutationError,
+        isEditMode
+          ? t('time-intervals.form.error-updating-title', 'Error updating time interval')
+          : t('time-intervals.form.error-title', 'Error creating time interval')
+      )
+    : undefined;
 
   const existingTimeInterval = isEditMode ? timeIntervals.find((ti: TimeInterval) => ti.name === name) : undefined;
 
@@ -78,6 +94,10 @@ function TimeIntervalForm() {
   }, [isEditMode, existingTimeInterval, reset]);
 
   const onSubmit = async (data: TimeIntervalFormData) => {
+    if (!canMutateTimeIntervals) {
+      return;
+    }
+
     try {
       const timeInterval = {
         name: data.name,
@@ -111,6 +131,23 @@ function TimeIntervalForm() {
     }
   };
 
+  if (!canMutateTimeIntervals) {
+    return (
+      <AlertmanagerPage>
+        <div style={{ maxWidth: '600px' }}>
+          <h2>{t('time-intervals.form.page-title', 'Create Time Interval')}</h2>
+          {loadError && (
+            <TimeIntervalsError
+              error={loadError}
+              title={t('time-intervals.form.error-loading-title', 'Error loading time interval')}
+            />
+          )}
+          <TimeIntervalMutationUnavailable ability={mutationAbility} />
+        </div>
+      </AlertmanagerPage>
+    );
+  }
+
   return (
     <AlertmanagerPage>
       <div style={{ maxWidth: '600px' }}>
@@ -124,14 +161,10 @@ function TimeIntervalForm() {
                 : t('time-intervals.form.page-title', 'Create Time Interval')}
             </h2>
             {loadError && (
-              <Alert
+              <TimeIntervalsError
+                error={loadError}
                 title={t('time-intervals.form.error-loading-title', 'Error loading time interval')}
-                severity="error"
-              >
-                {loadError instanceof Error
-                  ? loadError.message
-                  : t('time-intervals.form.error-loading', 'Failed to load time interval')}
-              </Alert>
+              />
             )}
             {isEditMode && !existingTimeInterval && !isLoadingTimeIntervals && !loadError && (
               <Alert title={t('time-intervals.form.not-found-title', 'Time interval not found')} severity="error">
@@ -140,20 +173,11 @@ function TimeIntervalForm() {
             )}
             <form onSubmit={handleSubmit(onSubmit)}>
               <Stack direction="column" gap={2}>
-                {mutationError ? (
-                  <Alert
-                    title={
-                      isEditMode
-                        ? t('time-intervals.form.error-updating-title', 'Error updating time interval')
-                        : t('time-intervals.form.error-title', 'Error creating time interval')
-                    }
-                    severity="error"
-                  >
-                    {mutationError instanceof Error
-                      ? mutationError.message
-                      : t('time-intervals.form.error-generic', 'An error occurred')}
+                {mutationErrorFeedback && (
+                  <Alert title={mutationErrorFeedback.title} severity="error">
+                    {mutationErrorFeedback.description}
                   </Alert>
-                ) : null}
+                )}
 
                 {isSuccess && (
                   <Alert
@@ -300,8 +324,8 @@ function TimeIntervalForm() {
                         ? t('time-intervals.form.updating', 'Updating...')
                         : t('time-intervals.form.creating', 'Creating...')
                       : isEditMode
-                      ? t('time-intervals.form.update-button', 'Update Time Interval')
-                      : t('time-intervals.form.create-button', 'Create Time Interval')}
+                        ? t('time-intervals.form.update-button', 'Update Time Interval')
+                        : t('time-intervals.form.create-button', 'Create Time Interval')}
                   </Button>
                   <Button
                     type="button"
