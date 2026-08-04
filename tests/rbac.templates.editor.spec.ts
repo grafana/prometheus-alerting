@@ -18,7 +18,10 @@ test.describe('Templates RBAC - editor', () => {
     await templatesPage.fillName(editedTemplateName);
     await templatesPage.fillContent('{{ define "rbac-editor" }}After{{ end }}');
     await templatesPage.submitUpdate();
+    await expect(templatesPage.drawer).toBeHidden();
 
+    await templatesPage.page.reload();
+    await templatesPage.waitForLoad();
     await expect(templatesPage.getRow(templateName)).toHaveCount(0);
     await templatesPage.openTemplateByName(editedTemplateName);
     expect(await templatesPage.getContent()).toContain('After');
