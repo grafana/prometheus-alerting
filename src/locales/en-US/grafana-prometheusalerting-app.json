@@ -354,7 +354,6 @@
     "mutation": {
       "not-supported": {
         "description": "This Alertmanager does not support updating {{resource}}.",
-        "time-intervals-description": "This Alertmanager does not support updating time intervals.",
         "title": "Configuration changes unavailable"
       },
       "permission-denied": {

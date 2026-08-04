@@ -13,6 +13,7 @@ interface TimeIntervalDrawerProps {
 
 export function TimeIntervalDrawer({ timeInterval, onClose }: TimeIntervalDrawerProps) {
   const [isEditMode, setIsEditMode] = useState(false);
+
   if (!timeInterval) {
     return null;
   }

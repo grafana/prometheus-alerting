@@ -43,6 +43,7 @@ export function TimeIntervalFormFields({
   showNameField = true,
 }: TimeIntervalFormFieldsProps) {
   const isEditMode = Boolean(timeInterval);
+
   const {
     register,
     handleSubmit,
@@ -79,6 +80,14 @@ export function TimeIntervalFormFields({
       });
     }
   }, [timeInterval, reset]);
+
+  const defaultSubmitButtonText = isLoading
+    ? isEditMode
+      ? t('time-intervals.form.updating', 'Updating...')
+      : t('time-intervals.form.creating', 'Creating...')
+    : isEditMode
+      ? t('time-intervals.form.update-button', 'Update Time Interval')
+      : t('time-intervals.form.create-button', 'Create Time Interval');
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -194,34 +203,37 @@ export function TimeIntervalFormFields({
           invalid={!!errors.location}
           error={errors.location?.message}
         >
-          <Controller
-            name="location"
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <Combobox
-                options={IANA_TIMEZONES}
-                value={IANA_TIMEZONES.find((tz) => tz.value === value) || IANA_TIMEZONES[0]}
-                onChange={(option) => onChange(option.value)}
-                placeholder={t('time-intervals.form.location-placeholder', 'UTC')}
-                isClearable={false}
-              />
-            )}
-          />
+          {isEditMode ? (
+            <Controller
+              name="location"
+              control={control}
+              render={({ field: { onChange, value } }) => {
+                const selectedTimezone = IANA_TIMEZONES.find((timezone) => timezone.value === value);
+                const options =
+                  value && !selectedTimezone ? [{ label: value, value }, ...IANA_TIMEZONES] : IANA_TIMEZONES;
+
+                return (
+                  <Combobox
+                    options={options}
+                    value={selectedTimezone ?? options[0]}
+                    onChange={(option) => onChange(option.value)}
+                    placeholder={t('time-intervals.form.location-placeholder', 'UTC')}
+                    isClearable={false}
+                  />
+                );
+              }}
+            />
+          ) : (
+            <Input {...register('location')} placeholder={t('time-intervals.form.location-placeholder', 'UTC')} />
+          )}
         </Field>
 
         <Stack direction="row" gap={2}>
           <Button type="submit" disabled={isLoading}>
-            {submitButtonText ||
-              (isLoading
-                ? isEditMode
-                  ? t('time-intervals.form.updating', 'Updating...')
-                  : t('time-intervals.form.creating', 'Creating...')
-                : isEditMode
-                  ? t('time-intervals.form.update-button', 'Update Time Interval')
-                  : t('time-intervals.form.create-button', 'Create Time Interval'))}
+            {submitButtonText ?? defaultSubmitButtonText}
           </Button>
           <Button type="button" variant="secondary" onClick={onCancel} disabled={isLoading}>
-            {cancelButtonText || t('time-intervals.form.cancel-button', 'Cancel')}
+            {cancelButtonText ?? t('time-intervals.form.cancel-button', 'Cancel')}
           </Button>
         </Stack>
       </Stack>

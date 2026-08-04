@@ -4,11 +4,11 @@ import { t } from '@grafana/i18n';
 import { locationService } from '@grafana/runtime';
 
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { MutationUnavailable } from '../../../access-control/components/MutationUnavailable';
 import { ROUTES } from '../../../constants';
 import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { TimeIntervalFormFields, type TimeIntervalFormData } from '../components/TimeIntervalFormFields';
-import { TimeIntervalMutationUnavailable } from '../components/TimeIntervalMutationUnavailable';
 import { useAddTimeInterval } from '../hooks/useTimeIntervals';
 
 function TimeIntervalForm() {
@@ -50,15 +50,9 @@ function TimeIntervalForm() {
             onCancel={navigateToList}
             isLoading={isLoading}
             error={error}
-            submitButtonText={
-              isLoading
-                ? t('time-intervals.form.creating', 'Creating...')
-                : t('time-intervals.form.create-button', 'Create Time Interval')
-            }
-            cancelButtonText={t('time-intervals.form.cancel-button', 'Cancel')}
           />
         ) : (
-          <TimeIntervalMutationUnavailable />
+          <MutationUnavailable resource={t('time-intervals.resource-label', 'time intervals')} />
         )}
       </div>
     </AlertmanagerPage>

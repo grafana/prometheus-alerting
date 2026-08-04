@@ -12,6 +12,7 @@ interface TimeIntervalDrawerEditProps {
 
 export function TimeIntervalDrawerEdit({ timeInterval, onCancel, onSuccess }: TimeIntervalDrawerEditProps) {
   const [updateTimeInterval, { isLoading: isUpdating, error: updateError }] = useUpdateTimeInterval();
+
   const handleSave = async (data: TimeIntervalFormData) => {
     const updatedTimeInterval = {
       name: data.name,
