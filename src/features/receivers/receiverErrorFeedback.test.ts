@@ -1,6 +1,6 @@
-import { PermissionDeniedError, UnsupportedOperationError } from '../../../access-control/errors';
+import { PermissionDeniedError, UnsupportedOperationError } from '../../access-control/errors';
 
-import { getReceiverMutationErrorFeedback } from './errorFeedback';
+import { getReceiverMutationErrorFeedback } from './receiverErrorFeedback';
 
 describe('getReceiverMutationErrorFeedback', () => {
   it.each([new PermissionDeniedError('Denied'), { status: 403, data: { message: 'Forbidden' } }])(

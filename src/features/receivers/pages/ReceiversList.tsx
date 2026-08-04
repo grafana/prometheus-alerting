@@ -13,10 +13,9 @@ import { getContactPointDescription, getReceiverIntegrations } from '../utils/re
 import { getIntegrationIcon } from '../utils/integrationIcons';
 import { ReceiverDrawer, DrawerMode } from '../components/ReceiverDrawer';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
-import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
-import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
 import { isAbilityAllowed } from '../../../access-control/abilities';
 import { AlertmanagerError } from '../../../components/AlertmanagerError';
+import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 
 import { t, Trans } from '@grafana/i18n';
 
@@ -24,8 +23,7 @@ function ReceiversPage() {
   const [triggerFetch, { receivers = [], isLoading, error, isSuccess }] = useReceivers();
   const [selectedReceiver, setSelectedReceiver] = useState<Receiver | null>(null);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
-  const hasConfigurationAPI = useHasConfigurationAPI();
-  const canMutateReceivers = isAbilityAllowed(getAlertmanagerConfigMutationAbility(hasConfigurationAPI));
+  const canMutateReceivers = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
 
   useEffect(() => {
     triggerFetch();

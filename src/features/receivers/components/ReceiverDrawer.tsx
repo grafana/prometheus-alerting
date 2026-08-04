@@ -12,15 +12,15 @@ import {
   deleteReceiverAction,
   updateReceiverAction,
 } from '../../../reducers/alertmanager/receivers';
-import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { filterAndTransformConfigEntries } from '../utils/receiversUtils';
 import { JsonValue } from 'type-fest';
 import { ReceiverEditForm } from './ReceiverEditForm';
 import { useReceiverInUse } from '../hooks/useReceiverInUse';
-import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
 import { isAbilityAllowed } from '../../../access-control/abilities';
-import { getReceiverMutationErrorFeedback } from '../utils/errorFeedback';
+import { getReceiverMutationErrorFeedback } from '../receiverErrorFeedback';
 import { useAppNotifications } from '../../../hooks/useAppNotifications';
+import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
+import { ReceiverMutationError } from './ReceiverMutationError';
 
 export enum DrawerMode {
   View = 'view',
@@ -129,8 +129,7 @@ export function ReceiverDrawer({
   const [mode, setMode] = useState<DrawerMode>(initialMode);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [produceNewConfig, { error: configError, isLoading }] = useProduceNewAlertmanagerConfiguration();
-  const hasConfigurationAPI = useHasConfigurationAPI();
-  const canMutateConfiguration = isAbilityAllowed(getAlertmanagerConfigMutationAbility(hasConfigurationAPI));
+  const canMutateConfiguration = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
   const { isInUse, isDefaultReceiver, usageCount } = useReceiverInUse(receiver?.name);
   const { success: notifySuccess, error: notifyError } = useAppNotifications();
 
@@ -290,15 +289,7 @@ export function ReceiverDrawer({
         footer={getFooter()}
       >
         <Stack direction="column" gap={2}>
-          {Boolean(configError) &&
-            (() => {
-              const feedback = getReceiverMutationErrorFeedback(configError, t('receivers.error-title', 'Error'));
-              return (
-                <Alert title={feedback.title} severity="error">
-                  {feedback.description}
-                </Alert>
-              );
-            })()}
+          <ReceiverMutationError error={configError} fallbackTitle={t('receivers.error-title', 'Error')} />
 
           {/* View mode */}
           {isViewMode && receiver && <ReceiverIntegrations receiver={receiver} />}

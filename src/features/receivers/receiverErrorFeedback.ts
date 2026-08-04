@@ -1,7 +1,7 @@
 import { t } from '@grafana/i18n';
 
-import { isPermissionDeniedError, isUnsupportedOperationError } from '../../../access-control/errors';
-import { extractErrorMessage, isForbiddenError } from '../../../utils/errors';
+import { isPermissionDeniedError, isUnsupportedOperationError } from '../../access-control/errors';
+import { extractErrorMessage, isForbiddenError } from '../../utils/errors';
 
 export interface ReceiverErrorFeedback {
   title: string;
