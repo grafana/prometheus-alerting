@@ -1,7 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { t, Trans } from '@grafana/i18n';
-import { AppEvents } from '@grafana/data';
-import { getAppEvents } from '@grafana/runtime';
 import { Alert, Stack, Text, Button, IconButton, Icon, ConfirmModal } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
@@ -22,6 +20,7 @@ import { useReceiverInUse } from '../hooks/useReceiverInUse';
 import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
 import { isAbilityAllowed } from '../../../access-control/abilities';
 import { getReceiverMutationErrorFeedback } from '../utils/errorFeedback';
+import { useAppNotifications } from '../../../hooks/useAppNotifications';
 
 export enum DrawerMode {
   View = 'view',
@@ -133,6 +132,7 @@ export function ReceiverDrawer({
   const hasConfigurationAPI = useHasConfigurationAPI();
   const canMutateConfiguration = isAbilityAllowed(getAlertmanagerConfigMutationAbility(hasConfigurationAPI));
   const { isInUse, isDefaultReceiver, usageCount } = useReceiverInUse(receiver?.name);
+  const { success: notifySuccess, error: notifyError } = useAppNotifications();
 
   const canEdit = canMutateConfiguration && !showBackButton;
   const effectiveMode = canEdit ? mode : DrawerMode.View;
@@ -162,16 +162,10 @@ export function ReceiverDrawer({
         }
         if (isAddMode) {
           await produceNewConfig(addReceiverAction(newReceiver));
-          getAppEvents().publish({
-            type: AppEvents.alertSuccess.name,
-            payload: [t('receivers.create.success', 'Receiver created successfully')],
-          });
+          notifySuccess(t('receivers.create.success', 'Receiver created successfully'));
         } else if (isEditMode && receiver) {
           await produceNewConfig(updateReceiverAction({ name: receiver.name, receiver: newReceiver }));
-          getAppEvents().publish({
-            type: AppEvents.alertSuccess.name,
-            payload: [t('receivers.update.success', 'Receiver updated successfully')],
-          });
+          notifySuccess(t('receivers.update.success', 'Receiver updated successfully'));
         }
         await onSaved?.();
         onClose();
@@ -182,13 +176,10 @@ export function ReceiverDrawer({
             ? t('receivers.create.error', 'Failed to create receiver')
             : t('receivers.update.error', 'Failed to update receiver')
         );
-        getAppEvents().publish({
-          type: AppEvents.alertError.name,
-          payload: [feedback.title, feedback.description],
-        });
+        notifyError(feedback.title, feedback.description);
       }
     },
-    [canEdit, isAddMode, isEditMode, receiver, produceNewConfig, onSaved, onClose]
+    [canEdit, isAddMode, isEditMode, receiver, produceNewConfig, notifySuccess, notifyError, onSaved, onClose]
   );
 
   const handleDelete = useCallback(async () => {
@@ -197,21 +188,15 @@ export function ReceiverDrawer({
     }
     try {
       await produceNewConfig(deleteReceiverAction(receiver.name));
-      getAppEvents().publish({
-        type: AppEvents.alertSuccess.name,
-        payload: [t('receivers.delete.success', 'Receiver deleted successfully')],
-      });
+      notifySuccess(t('receivers.delete.success', 'Receiver deleted successfully'));
       await onSaved?.();
       onClose();
     } catch (err) {
       const feedback = getReceiverMutationErrorFeedback(err, t('receivers.delete.error', 'Failed to delete receiver'));
-      getAppEvents().publish({
-        type: AppEvents.alertError.name,
-        payload: [feedback.title, feedback.description],
-      });
+      notifyError(feedback.title, feedback.description);
     }
     setShowDeleteConfirm(false);
-  }, [receiver, canDelete, produceNewConfig, onSaved, onClose]);
+  }, [receiver, canDelete, produceNewConfig, notifySuccess, notifyError, onSaved, onClose]);
 
   // Don't render if no receiver and not in add mode
   if (!receiver && !isAddMode) {

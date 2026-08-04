@@ -16,7 +16,7 @@ import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
 import { isAbilityAllowed } from '../../../access-control/abilities';
-import { ReceiversError } from '../components/ReceiversError';
+import { AlertmanagerError } from '../../../components/AlertmanagerError';
 
 import { t, Trans } from '@grafana/i18n';
 
@@ -118,7 +118,9 @@ function ReceiversPage() {
           error={error}
           isEmpty={receivers.length === 0}
           loading={<Skeleton height={24} count={5} />}
-          renderError={<ReceiversError error={error} />}
+          renderError={
+            <AlertmanagerError error={error} title={t('receivers.error-loading-title', 'Error loading receivers')} />
+          }
           empty={
             <EmptyState
               message={t('receivers.no-receivers-message', 'No receivers are configured in the Alertmanager.')}
