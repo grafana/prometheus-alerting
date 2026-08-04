@@ -5,22 +5,24 @@ import { Trans, t } from '@grafana/i18n';
 import { getAppEvents } from '@grafana/runtime';
 import { Alert, Button, Modal } from '@grafana/ui';
 
-import { rulerApi } from '../../../../api/rules/mimir.endpoints';
-import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
+import { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
+import { useInvalidatePromRules } from '../../hooks/useInvalidatePromRules';
 import { useRuleConsistencyCheck } from '../../hooks/useRuleConsistencyCheck';
+import { useDeleteRuleFromGroup } from '../../rule-editor/hooks/useDeleteRuleFromGroup';
 import { AlertingAction, isAbilityAllowed, useScopedAbilities } from '../../../../access-control/abilities';
 
-const { useDeleteRuleGroupMutation } = rulerApi;
-
 interface DeleteRuleModalProps {
-  identifier: DataSourceRuleIdentifier;
+  identifier: CloudRuleIdentifier;
   onClose: () => void;
+  /** Called after the rule has been deleted successfully, before the modal closes */
+  onDeleted?: (identifier: CloudRuleIdentifier) => void;
 }
 
-export function DeleteRuleModal({ identifier, onClose }: DeleteRuleModalProps) {
+export function DeleteRuleModal({ identifier, onClose, onDeleted }: DeleteRuleModalProps) {
   const deleteAbility = useScopedAbilities(identifier.uid)[AlertingAction.DeleteRule];
   const canDeleteRules = isAbilityAllowed(deleteAbility);
-  const [deleteRuleGroup, { isLoading: isDeleting }] = useDeleteRuleGroupMutation();
+  const invalidatePromRules = useInvalidatePromRules();
+  const [deleteRuleFromGroup, { isLoading: isDeleting }] = useDeleteRuleFromGroup();
   const { waitForRemoval } = useRuleConsistencyCheck();
   const [error, setError] = useState<string | null>(null);
   const [isWaitingForConsistency, setIsWaitingForConsistency] = useState(false);
@@ -34,12 +36,10 @@ export function DeleteRuleModal({ identifier, onClose }: DeleteRuleModalProps) {
     }
 
     try {
-      // Step 1: Delete the rule from the Ruler API
-      await deleteRuleGroup({
-        dataSourceUid: identifier.uid,
-        namespace: identifier.namespace,
-        groupName: identifier.groupName,
-      }).unwrap();
+      // Step 1: Remove the rule from its group.
+      // The Ruler API cannot delete a single rule, so this rewrites the group without
+      // that rule – or deletes the group when it was the only rule left.
+      await deleteRuleFromGroup(identifier);
 
       // Step 2: Wait for Prometheus API to reflect the deletion
       // This prevents the list from showing stale data
@@ -47,13 +47,17 @@ export function DeleteRuleModal({ identifier, onClose }: DeleteRuleModalProps) {
       await waitForRemoval(identifier);
       setIsWaitingForConsistency(false);
 
-      // Step 3: Show success and close
+      // Step 3: Evict the cached Prometheus rules, or the list keeps showing the deleted rule
+      invalidatePromRules(identifier.uid);
+
+      // Step 4: Show success and close
       const appEvents = getAppEvents();
       appEvents.publish({
         type: AppEvents.alertSuccess.name,
         payload: [t('alerting.delete-rule.success', 'Rule deleted successfully')],
       });
 
+      onDeleted?.(identifier);
       onClose();
     } catch (err) {
       setIsWaitingForConsistency(false);
@@ -117,10 +121,10 @@ export function DeleteRuleModal({ identifier, onClose }: DeleteRuleModalProps) {
   );
 }
 
-export function useDeleteRuleModal() {
-  const [identifier, setIdentifier] = useState<DataSourceRuleIdentifier | null>(null);
+export function useDeleteRuleModal(onDeleted?: (identifier: CloudRuleIdentifier) => void) {
+  const [identifier, setIdentifier] = useState<CloudRuleIdentifier | null>(null);
 
-  const showModal = (id: DataSourceRuleIdentifier) => {
+  const showModal = (id: CloudRuleIdentifier) => {
     setIdentifier(id);
   };
 
@@ -128,7 +132,9 @@ export function useDeleteRuleModal() {
     setIdentifier(null);
   };
 
-  const modal = identifier ? <DeleteRuleModal identifier={identifier} onClose={hideModal} /> : null;
+  const modal = identifier ? (
+    <DeleteRuleModal identifier={identifier} onClose={hideModal} onDeleted={onDeleted} />
+  ) : null;
 
   return [modal, showModal, hideModal] as const;
 }

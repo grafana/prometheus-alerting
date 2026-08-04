@@ -33,6 +33,7 @@ import { DraggableRulesTable, SwapOperation, applySwaps } from '../components/Dr
 import { EvaluationIntervalInput } from '../components/EvaluationIntervalInput';
 import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { useWaitForGroupConsistency } from '../hooks/useGroupConsistencyCheck';
+import { useInvalidatePromRules } from '../hooks/useInvalidatePromRules';
 
 type GroupEditPageRouteParams = {
   dataSourceUid?: string;
@@ -165,6 +166,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
   const [upsertRuleGroup, { isLoading: isUpdating }] = useUpsertRuleGroupMutation();
   const [deleteRuleGroup, { isLoading: isDeleting }] = useDeleteRuleGroupMutation();
   const { waitForGroupConsistency } = useWaitForGroupConsistency();
+  const invalidatePromRules = useInvalidatePromRules();
 
   const [swapOperations, setSwapOperations] = useState<SwapOperation[]>([]);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -284,6 +286,9 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
         groupName: originalGroupName,
       });
       setIsWaitingForConsistency(false);
+
+      // Evict the cached Prometheus rules, or the list still shows the deleted group
+      invalidatePromRules(dataSourceUid);
 
       // Navigate back to rules list
       locationService.push(`${PLUGIN_BASE_URL}/${ROUTES.Rules}`);

@@ -11,6 +11,7 @@ import { receiversReducer } from '../reducers/alertmanager/receivers';
 import { inhibitRulesReducer } from '../reducers/alertmanager/inhibitRules';
 import { useAlertmanager } from './useAlertmanager';
 import { useHasConfigurationAPI } from './useHasConfigurationAPI';
+import { mergeRequestStates } from '../utils/requestState';
 import { mimirAlertmanagerApi } from '../api/alertmanager/mimir.endpoints';
 import {
   PostableParsedUserConfiguration,
@@ -105,23 +106,4 @@ export function useProduceNewAlertmanagerConfiguration() {
   };
 
   return [produceNewAlertmanagerConfiguration, newConfigurationState] as const;
-}
-
-interface RequestState {
-  error?: unknown;
-  isUninitialized: boolean;
-  isSuccess: boolean;
-  isError: boolean;
-  isLoading: boolean;
-}
-
-// @TODO what to do with the other props that we get from RTKQ's state such as originalArgs, etc?
-function mergeRequestStates(...states: RequestState[]): RequestState {
-  return {
-    error: states.find((s) => s.error),
-    isUninitialized: states.every((s) => s.isUninitialized),
-    isSuccess: states.every((s) => s.isSuccess),
-    isError: states.some((s) => s.isError),
-    isLoading: states.some((s) => s.isLoading),
-  };
 }
