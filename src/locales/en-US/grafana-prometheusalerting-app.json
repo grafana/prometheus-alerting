@@ -1169,16 +1169,9 @@
       "name-required": "Template name is required",
       "update": "Update template"
     },
-    "mutation-not-supported": {
-      "description": "This Alertmanager does not support updating templates.",
-      "title": "Template changes unavailable"
-    },
     "no-templates-message": "No templates are configured in the Alertmanager.",
     "page-subtitle": "Customize notification message templates",
-    "permission-denied": {
-      "description": "You do not have permission to change templates for this data source.",
-      "title": "Permission denied"
-    },
+    "resource-label": "templates",
     "update": {
       "error": "Failed to update template",
       "success": "Template updated successfully"
