@@ -5,8 +5,9 @@ import { type NormalizedInhibitRule, stringifyObjectMatcher } from '@grafana/ext
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { InhibitRuleDrawerView, InhibitRuleDrawerViewFooter } from './InhibitRuleDrawerView';
 import { InhibitRuleDrawerEdit } from './InhibitRuleDrawerEdit';
-import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { useDeleteInhibitRule } from '../hooks/useInhibitRules';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 
 interface InhibitRuleDrawerProps {
   inhibitRule: NormalizedInhibitRule | null;
@@ -16,7 +17,7 @@ interface InhibitRuleDrawerProps {
 
 export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: InhibitRuleDrawerProps) {
   const [isEditMode, setIsEditMode] = useState(false);
-  const hasConfigurationAPI = useHasConfigurationAPI();
+  const canMutateInhibitRules = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
   const [deleteInhibitRule, { isLoading: isDeleting, error: deleteError }] = useDeleteInhibitRule();
 
   if (!inhibitRule || inhibitRuleIndex === null) {
@@ -48,7 +49,7 @@ export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: In
       onClose={onClose}
       size="sm"
       footer={
-        !isEditMode && hasConfigurationAPI ? (
+        !isEditMode && canMutateInhibitRules ? (
           <InhibitRuleDrawerViewFooter
             onEdit={() => setIsEditMode(true)}
             onDelete={handleDelete}
@@ -68,15 +69,7 @@ export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: In
           }}
         />
       ) : (
-        <InhibitRuleDrawerView
-          inhibitRule={inhibitRule}
-          inhibitRuleIndex={inhibitRuleIndex}
-          onEdit={() => setIsEditMode(true)}
-          onClose={onClose}
-          onDelete={handleDelete}
-          isDeleting={isDeleting}
-          deleteError={deleteError}
-        />
+        <InhibitRuleDrawerView inhibitRule={inhibitRule} deleteError={deleteError} />
       )}
     </DrawerWithFooter>
   );

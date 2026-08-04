@@ -510,7 +510,6 @@
       "target-matchers": "Target Matchers",
       "title": "Inhibit Rule"
     },
-    "error-deleting-message": "Failed to delete inhibit rule",
     "error-deleting-title": "Error deleting inhibit rule",
     "error-loading-title": "Error loading inhibit rules",
     "form": {
@@ -521,7 +520,6 @@
       "equal-label": "Equal Labels",
       "equal-placeholder": "alertname, instance",
       "error-creating-title": "Error creating inhibit rule",
-      "error-generic": "An error occurred",
       "error-updating-title": "Error updating inhibit rule",
       "source-matchers-description": "One matcher per line (e.g. severity = critical). The source alert must match all of these.",
       "source-matchers-label": "Source Matchers",
@@ -534,7 +532,8 @@
     },
     "no-matchers": "None",
     "no-rules-message": "No inhibit rules are configured in the Alertmanager.",
-    "page-subtitle": "Suppress alerts based on other active alerts"
+    "page-subtitle": "Suppress alerts based on other active alerts",
+    "resource-label": "inhibit rules"
   },
   "key-value-list": {
     "empty-value": "(not set)",
