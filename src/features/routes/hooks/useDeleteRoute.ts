@@ -1,19 +1,17 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
-import { AppEvents } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { getAppEvents } from '@grafana/runtime';
 
+import { useAppNotifications } from '../../../hooks/useAppNotifications';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { deleteRouteAction } from '../../../reducers/alertmanager/routes';
-import { extractErrorMessage } from '../../../utils/errors';
+import { getRouteMutationErrorFeedback } from '../utils/errorFeedback';
 import { useRoutes } from './useRoutes';
 
 interface UseDeleteRouteResult {
   /** Deletes a route. Returns true on success, false on failure. */
   deleteRoute: (routeId: string) => Promise<boolean>;
   isDeleting: boolean;
-  error: Error | null;
 }
 
 /**
@@ -22,43 +20,30 @@ interface UseDeleteRouteResult {
 export function useDeleteRoute(): UseDeleteRouteResult {
   const { refetch: refetchRoutes } = useRoutes();
   const [produceNewAlertmanagerConfiguration, { isLoading }] = useProduceNewAlertmanagerConfiguration();
-
-  const [error, setError] = useState<Error | null>(null);
+  const { error: notifyError, success: notifySuccess } = useAppNotifications();
 
   const deleteRoute = useCallback(
     async (routeId: string) => {
-      setError(null);
-
       try {
         await produceNewAlertmanagerConfiguration(deleteRouteAction({ id: routeId }));
 
         refetchRoutes();
 
-        getAppEvents().publish({
-          type: AppEvents.alertSuccess.name,
-          payload: [t('routes.delete.success', 'Successfully deleted route')],
-        });
+        notifySuccess(t('routes.delete.success', 'Successfully deleted route'));
 
         return true;
       } catch (err) {
-        const errorMessage = extractErrorMessage(err);
-        const error = new Error(errorMessage);
-        setError(error);
-
-        getAppEvents().publish({
-          type: AppEvents.alertError.name,
-          payload: [t('routes.delete.error', 'Failed to delete route'), errorMessage],
-        });
+        const feedback = getRouteMutationErrorFeedback(err, t('routes.delete.error', 'Failed to delete route'));
+        notifyError(feedback.title, feedback.description);
 
         return false;
       }
     },
-    [produceNewAlertmanagerConfiguration, refetchRoutes]
+    [notifyError, notifySuccess, produceNewAlertmanagerConfiguration, refetchRoutes]
   );
 
   return {
     deleteRoute,
     isDeleting: isLoading,
-    error,
   };
 }

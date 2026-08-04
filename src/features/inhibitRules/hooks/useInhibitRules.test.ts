@@ -5,11 +5,12 @@ import { http, HttpResponse } from 'msw';
 import { YamlToParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 
 import { server } from '../../../test/server';
-import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
+import { createMockDataSourceSrv, setCurrentUserPermissions } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 import { basicConfig, configWithInhibitRules } from '../../../test/fixtures/alertmanager-config';
 import { setVanillaAlertmanagerConfig } from '../../../test/handlers/alertmanager';
 import { useInhibitRules, useAddInhibitRule, useUpdateInhibitRule, useDeleteInhibitRule } from './useInhibitRules';
+import { AlertingPermission } from '../../../access-control/abilities';
 
 // Hoisted top-level mock — applies to all tests in this file.
 // Individual tests can override the return value with vi.mocked(...).mockReturnValueOnce().
@@ -25,6 +26,7 @@ import { useAlertmanager } from '../../../hooks/useAlertmanager';
 
 beforeEach(() => {
   setDataSourceSrv(createMockDataSourceSrv());
+  setCurrentUserPermissions(AlertingPermission.NotificationsWrite);
 });
 
 afterEach(() => {

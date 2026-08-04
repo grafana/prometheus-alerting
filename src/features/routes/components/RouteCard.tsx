@@ -31,7 +31,7 @@ import { InsertPosition } from '../types';
 
 const ROUTES_PER_PAGE = 20;
 
-// when not read-only, the add/edit/delete handlers must all be provided together
+// Route mutations share one permission, so editable cards require all mutation handlers.
 export type RouteCardActions =
   | {
       readOnly: true;
@@ -68,12 +68,9 @@ const RouteCard = (props: Props) => {
     onDeleteRoute,
   } = props;
 
-  const readOnly = props.readOnly ?? false;
-
   const routeActions: RouteCardActions = props.readOnly
     ? { readOnly: true }
     : {
-        readOnly: false,
         onAddRoute: props.onAddRoute,
         onEditRoute: props.onEditRoute,
         onDeleteRoute: props.onDeleteRoute,
@@ -112,8 +109,8 @@ const RouteCard = (props: Props) => {
 
   const hasFocus = Boolean(focussedRouteID) && String(currentRoute.id) === String(focussedRouteID);
 
-  const showAddAction = !readOnly;
-  const showMoreAction = Boolean(onRouteClick) || !readOnly;
+  const showAddAction = Boolean(onAddRoute);
+  const showMoreAction = Boolean(onRouteClick || onEditRoute || (!isDefault && onDeleteRoute));
 
   return (
     <Stack direction="column" gap={1.5}>
@@ -221,14 +218,14 @@ const RouteCard = (props: Props) => {
                                 onClick={() => onRouteClick(currentRoute)}
                               />
                             )}
-                            {!readOnly && onEditRoute && (
+                            {onEditRoute && (
                               <Menu.Item
                                 label={t('alerting.route.label-edit-route', 'Edit')}
                                 icon="pen"
                                 onClick={() => onEditRoute(currentRoute)}
                               />
                             )}
-                            {!readOnly && onDeleteRoute && !isDefault && (
+                            {onDeleteRoute && !isDefault && (
                               <>
                                 <Menu.Divider />
                                 <Menu.Item

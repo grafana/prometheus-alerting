@@ -14,34 +14,56 @@ import { addTimeInterval } from '../reducers/alertmanager/timeIntervals';
 import { addRouteAction } from '../reducers/alertmanager/routes';
 import { attachRouteIds } from '../features/routes/utils';
 import { server } from '../test/server';
-import { createMockDataSourceSrv } from '../test/mocks/grafana-runtime';
+import {
+  createMockDataSourceSrv,
+  setCurrentUserPermissions,
+  setMockGrafanaDataSources,
+} from '../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../test/utils/test-wrapper';
+import { mockAlertmanagerDs, mockMimirAlertmanagerDs } from '../test/fixtures/datasources';
 import {
   configWithCustomRoutes,
   fullyPopulatedConfig,
   emptyConfig,
   configWithSpecificRoutes,
 } from '../test/fixtures/alertmanager-config';
-
-// Mock the Alertmanager hook to provide test data source UID
-vi.mock('./useAlertmanager', () => ({
-  useAlertmanager: () => ({
-    uid: 'test-mimir-uid',
-    settings: {
-      uid: 'test-mimir-uid',
-      name: 'Test Mimir',
-      type: 'prometheus',
-      jsonData: {
-        implementation: 'mimir',
-      },
-    },
-  }),
-}));
+import { AlertingPermission } from '../access-control/abilities';
+import { PermissionDeniedError, UnsupportedOperationError } from '../access-control/errors';
 
 describe('useProduceNewAlertmanagerConfiguration', () => {
   beforeEach(() => {
+    setMockGrafanaDataSources();
     setDataSourceSrv(createMockDataSourceSrv());
+    setCurrentUserPermissions(AlertingPermission.NotificationsWrite);
     vi.clearAllMocks();
+  });
+
+  it('rejects before fetching configuration when notification write permission is missing', async () => {
+    setCurrentUserPermissions();
+
+    const { result } = renderHook(() => useProduceNewAlertmanagerConfiguration(), {
+      wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
+    });
+    const [produceNewConfig] = result.current;
+
+    await act(async () => {
+      await expect(
+        produceNewConfig(addTimeInterval({ interval: { name: 'business-hours', time_intervals: [] } }))
+      ).rejects.toBeInstanceOf(PermissionDeniedError);
+    });
+  });
+
+  it('rejects before fetching configuration when the configuration API is unsupported', async () => {
+    const { result } = renderHook(() => useProduceNewAlertmanagerConfiguration(), {
+      wrapper: createTestWrapper(mockAlertmanagerDs.uid),
+    });
+    const [produceNewConfig] = result.current;
+
+    await act(async () => {
+      await expect(
+        produceNewConfig(addTimeInterval({ interval: { name: 'business-hours', time_intervals: [] } }))
+      ).rejects.toBeInstanceOf(UnsupportedOperationError);
+    });
   });
 
   it('should preserve existing routes when adding a time interval', async () => {
@@ -50,10 +72,10 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
 
     // Mock the MSW handlers for this specific test
     server.use(
-      http.get('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', () => {
+      http.get('/api/datasources/proxy/uid/:uid/api/v1/alerts', () => {
         return HttpResponse.text(YamlToParsedUserConfiguration.encode(existingConfig));
       }),
-      http.post('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', async ({ request }) => {
+      http.post('/api/datasources/proxy/uid/:uid/api/v1/alerts', async ({ request }) => {
         const yamlBody = await request.text();
         const updatedConfig = YamlToParsedUserConfiguration.decode(yamlBody);
 
@@ -82,7 +104,7 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     );
 
     const { result } = renderHook(() => useProduceNewAlertmanagerConfiguration(), {
-      wrapper: createTestWrapper(),
+      wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
     });
 
     // Act: Add a new time interval
@@ -118,10 +140,10 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     const existingConfig: PostableParsedUserConfiguration = fullyPopulatedConfig;
 
     server.use(
-      http.get('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', () => {
+      http.get('/api/datasources/proxy/uid/:uid/api/v1/alerts', () => {
         return HttpResponse.text(YamlToParsedUserConfiguration.encode(existingConfig));
       }),
-      http.post('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', async ({ request }) => {
+      http.post('/api/datasources/proxy/uid/:uid/api/v1/alerts', async ({ request }) => {
         const yamlBody = await request.text();
         const updatedConfig = YamlToParsedUserConfiguration.decode(yamlBody);
 
@@ -142,7 +164,7 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     );
 
     const { result } = renderHook(() => useProduceNewAlertmanagerConfiguration(), {
-      wrapper: createTestWrapper(),
+      wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
     });
     const [produceNewConfig] = result.current;
 
@@ -165,10 +187,10 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     const existingConfig = emptyConfig;
 
     server.use(
-      http.get('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', () => {
+      http.get('/api/datasources/proxy/uid/:uid/api/v1/alerts', () => {
         return HttpResponse.text(YamlToParsedUserConfiguration.encode(existingConfig));
       }),
-      http.post('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', async ({ request }) => {
+      http.post('/api/datasources/proxy/uid/:uid/api/v1/alerts', async ({ request }) => {
         const yamlBody = await request.text();
         const updatedConfig = YamlToParsedUserConfiguration.decode(yamlBody);
 
@@ -191,7 +213,7 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     );
 
     const { result } = renderHook(() => useProduceNewAlertmanagerConfiguration(), {
-      wrapper: createTestWrapper(),
+      wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
     });
     const [produceNewConfig] = result.current;
 
@@ -214,10 +236,10 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     const existingConfig: PostableParsedUserConfiguration = configWithSpecificRoutes;
 
     server.use(
-      http.get('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', () => {
+      http.get('/api/datasources/proxy/uid/:uid/api/v1/alerts', () => {
         return HttpResponse.text(YamlToParsedUserConfiguration.encode(existingConfig));
       }),
-      http.post('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', async ({ request }) => {
+      http.post('/api/datasources/proxy/uid/:uid/api/v1/alerts', async ({ request }) => {
         const yamlBody = await request.text();
         const updatedConfig = YamlToParsedUserConfiguration.decode(yamlBody);
 
@@ -243,7 +265,7 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     );
 
     const { result } = renderHook(() => useProduceNewAlertmanagerConfiguration(), {
-      wrapper: createTestWrapper(),
+      wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
     });
     const [produceNewConfig] = result.current;
 
@@ -283,10 +305,10 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     const rootId = attachRouteIds(existingConfig.alertmanager_config.route!).id;
 
     server.use(
-      http.get('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', () => {
+      http.get('/api/datasources/proxy/uid/:uid/api/v1/alerts', () => {
         return HttpResponse.text(YamlToParsedUserConfiguration.encode(existingConfig));
       }),
-      http.post('/api/datasources/proxy/uid/test-mimir-uid/api/v1/alerts', async ({ request }) => {
+      http.post('/api/datasources/proxy/uid/:uid/api/v1/alerts', async ({ request }) => {
         const yamlBody = await request.text();
         const updatedConfig = YamlToParsedUserConfiguration.decode(yamlBody);
 
@@ -298,7 +320,7 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     );
 
     const { result } = renderHook(() => useProduceNewAlertmanagerConfiguration(), {
-      wrapper: createTestWrapper(),
+      wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
     });
     const [produceNewConfig] = result.current;
 

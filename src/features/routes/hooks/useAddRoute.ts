@@ -1,21 +1,19 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
-import { AppEvents } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { getAppEvents } from '@grafana/runtime';
 
+import { useAppNotifications } from '../../../hooks/useAppNotifications';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { addRouteAction } from '../../../reducers/alertmanager/routes';
-import { extractErrorMessage } from '../../../utils/errors';
 import { FormAmRoute, InsertPosition } from '../types';
 import { formAmRouteToAmRoute } from '../utils/routeTransform';
+import { getRouteMutationErrorFeedback } from '../utils/errorFeedback';
 import { useRoutes } from './useRoutes';
 
 interface UseAddRouteResult {
   /** Adds a new route. Returns true on success, false on failure. */
   addRoute: (referenceRouteId: string, newRoute: Partial<FormAmRoute>, position: InsertPosition) => Promise<boolean>;
   isAdding: boolean;
-  error: Error | null;
 }
 
 /**
@@ -24,13 +22,10 @@ interface UseAddRouteResult {
 export function useAddRoute(): UseAddRouteResult {
   const { refetch: refetchRoutes } = useRoutes();
   const [produceNewAlertmanagerConfiguration, { isLoading }] = useProduceNewAlertmanagerConfiguration();
-
-  const [error, setError] = useState<Error | null>(null);
+  const { error: notifyError, success: notifySuccess } = useAppNotifications();
 
   const addRoute = useCallback(
     async (referenceRouteId: string, newRoute: Partial<FormAmRoute>, position: InsertPosition): Promise<boolean> => {
-      setError(null);
-
       try {
         const partialRoute = formAmRouteToAmRoute(newRoute);
         await produceNewAlertmanagerConfiguration(
@@ -43,31 +38,21 @@ export function useAddRoute(): UseAddRouteResult {
 
         refetchRoutes();
 
-        getAppEvents().publish({
-          type: AppEvents.alertSuccess.name,
-          payload: [t('routes.add.success', 'Successfully added route')],
-        });
+        notifySuccess(t('routes.add.success', 'Successfully added route'));
 
         return true;
       } catch (err) {
-        const errorMessage = extractErrorMessage(err);
-        const error = new Error(errorMessage);
-        setError(error);
-
-        getAppEvents().publish({
-          type: AppEvents.alertError.name,
-          payload: [t('routes.add.error', 'Failed to add route'), errorMessage],
-        });
+        const feedback = getRouteMutationErrorFeedback(err, t('routes.add.error', 'Failed to add route'));
+        notifyError(feedback.title, feedback.description);
 
         return false;
       }
     },
-    [produceNewAlertmanagerConfiguration, refetchRoutes]
+    [notifyError, notifySuccess, produceNewAlertmanagerConfiguration, refetchRoutes]
   );
 
   return {
     addRoute,
     isAdding: isLoading,
-    error,
   };
 }

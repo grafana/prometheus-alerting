@@ -4,10 +4,12 @@ import { ConfirmModal, EmptyState } from '@grafana/ui';
 import { useRoutes } from '../hooks/useRoutes';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
-import { DataSourceError } from '../../../components/AlertmanagerError';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { RouteAction } from '../../../access-control/abilities.routes';
 import { t } from '@grafana/i18n';
 import { computeInheritedTree } from '@grafana/alerting';
 import { RouteCard, RouteCardActions } from '../components/RouteCard';
+import { RoutesError } from '../components/RoutesError';
 import { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { RouteViewDrawer } from '../components/RouteViewDrawer';
@@ -16,16 +18,22 @@ import { ReceiverDrawer } from '../../receivers/components/ReceiverDrawer';
 import { useReceivers } from '../../receivers/hooks/useReceivers';
 import { useAlertGroups } from '../hooks/useAlertGroups';
 import { useRouteMatching, getRouteMatchCount } from '../hooks/useRouteMatching';
-import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { useDeleteRoute } from '../hooks/useDeleteRoute';
 import { useRouteDrawer } from '../hooks/useRouteDrawer';
+import { useRouteAbilities } from '../hooks/useRouteAbilities';
 import { attachRouteIds } from '../utils';
 import { InsertPosition } from '../types';
 
 function RoutesPage() {
   const { route, isLoading, error, isSuccess } = useRoutes();
-  const { alertGroups, isLoading: isLoadingAlerts } = useAlertGroups();
-  const { settings } = useAlertmanager();
+  const abilities = useRouteAbilities();
+  const canMutateRoutes = isAbilityAllowed(abilities[RouteAction.MutateRoutes]);
+  const canViewInstances = isAbilityAllowed(abilities[RouteAction.ViewInstances]);
+  const {
+    alertGroups,
+    isLoading: isLoadingAlerts,
+    error: alertGroupsError,
+  } = useAlertGroups({ skip: !canViewInstances });
   const [drawerState, dispatchDrawer] = useRouteDrawer();
   const [selectedReceiverName, setSelectedReceiverName] = useState<string | null>(null);
   const [triggerFetchReceivers, { receivers = [] }] = useReceivers();
@@ -33,10 +41,6 @@ function RoutesPage() {
   // State for delete confirmation (from the RouteCard menu or the view drawer)
   const [routeToDelete, setRouteToDelete] = useState<RouteWithID | null>(null);
   const { deleteRoute, isDeleting } = useDeleteRoute();
-
-  // Check if the Alertmanager supports editing (Mimir implementation)
-  const isMimir = settings?.jsonData?.implementation === 'mimir';
-  const canEdit = isMimir;
 
   // Fetch receivers when component mounts
   useEffect(() => {
@@ -68,6 +72,7 @@ function RoutesPage() {
   // Compute matching counts for each route in the tree
   // Type assertion needed for the same package type differences
   const matchingCounts = useRouteMatching(routeTree as Parameters<typeof useRouteMatching>[0], alertGroups);
+  const canShowMatchingCounts = canViewInstances && !isLoadingAlerts && !alertGroupsError;
 
   // Find the selected receiver
   const selectedReceiver = useMemo(() => {
@@ -139,8 +144,12 @@ function RoutesPage() {
   const canDeleteViewingRoute = drawerState.type === 'view' && drawerState.route.id !== routeTree?.id;
   const routeToDeleteHasChildren = routeToDelete?.routes && routeToDelete.routes.length > 0;
 
-  const routeCardActions: RouteCardActions = canEdit
-    ? { readOnly: false, onAddRoute: handleAddRoute, onEditRoute: handleEditRoute, onDeleteRoute: handleDeleteRoute }
+  const routeCardActions: RouteCardActions = canMutateRoutes
+    ? {
+        onAddRoute: handleAddRoute,
+        onEditRoute: handleEditRoute,
+        onDeleteRoute: handleDeleteRoute,
+      }
     : { readOnly: true };
 
   return (
@@ -152,9 +161,7 @@ function RoutesPage() {
           error={error}
           isEmpty={!routeTree}
           loading={<RouteCard.Skeleton count={3} />}
-          renderError={
-            <DataSourceError error={error} title={t('routes.error-loading-title', 'Error loading routes')} />
-          }
+          renderError={<RoutesError error={error} />}
           empty={
             <EmptyState
               message={t('routes.no-routes-message', 'No routing configuration is available in the Alertmanager.')}
@@ -167,9 +174,9 @@ function RoutesPage() {
               <RouteCard
                 currentRoute={routeTree}
                 numberOfMatchingInstances={
-                  isLoadingAlerts ? undefined : getRouteMatchCount(matchingCounts, routeTree.id)
+                  canShowMatchingCounts ? getRouteMatchCount(matchingCounts, routeTree.id) : undefined
                 }
-                matchingCounts={isLoadingAlerts ? undefined : matchingCounts}
+                matchingCounts={canShowMatchingCounts ? matchingCounts : undefined}
                 isDefault={true}
                 onRouteClick={handleRouteClick}
                 focussedRouteID={
@@ -186,12 +193,14 @@ function RoutesPage() {
           route={drawerState.route}
           onClose={handleDrawerClose}
           onReceiverClick={handleReceiverClick}
-          onEdit={canEdit ? () => handleEditRoute(drawerState.route) : undefined}
-          onDelete={canEdit && canDeleteViewingRoute ? () => handleDeleteRoute(drawerState.route) : undefined}
+          onEdit={canMutateRoutes ? () => handleEditRoute(drawerState.route) : undefined}
+          onDelete={canMutateRoutes && canDeleteViewingRoute ? () => handleDeleteRoute(drawerState.route) : undefined}
         />
       )}
-      {drawerState.type === 'edit' && <RouteEditDrawer route={drawerState.route} onClose={handleDrawerClose} />}
-      {drawerState.type === 'add' && (
+      {drawerState.type === 'edit' && canMutateRoutes && (
+        <RouteEditDrawer route={drawerState.route} onClose={handleDrawerClose} />
+      )}
+      {drawerState.type === 'add' && canMutateRoutes && (
         <RouteEditDrawer
           route={null}
           referenceRouteId={drawerState.referenceRouteId}
@@ -205,7 +214,7 @@ function RoutesPage() {
 
       {/* Delete confirmation modal (from the RouteCard menu or the view drawer) */}
       <ConfirmModal
-        isOpen={routeToDelete !== null}
+        isOpen={canMutateRoutes && routeToDelete !== null}
         title={t('routes.delete.confirm-title', 'Delete Route')}
         body={
           routeToDeleteHasChildren

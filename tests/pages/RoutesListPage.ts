@@ -6,8 +6,8 @@ import { MatcherOperator } from '../../src/features/routes/types';
  * Page object for the Routes / notification tree view (`/routes`).
  *
  * Read: vanilla `test-alertmanager` (root + 5 seeded child routes, read-only — no Add button).
- * Write: Mimir `test-mimir-alertmanager` (add/edit/delete; gated by `useHasConfigurationAPI()`
- * via `canEdit`). See `src/features/routes/`.
+ * Write: Mimir `test-mimir-alertmanager` (add/edit/delete; gated by Alertmanager capability
+ * and route abilities). See `src/access-control/abilities.routes.ts`.
  *
  * Clicking a route opens `RouteDrawer`; clicking its receiver link opens `ReceiverDrawer`, which
  * *replaces* it (the route drawer unmounts, not just visually hides) — "Back to route" is the
@@ -149,8 +149,13 @@ export class RoutesListPage extends AlertmanagerPage {
    * "Add" menu, it renders in a floating overlay, so its items are queried at the page level.
    */
   async openMoreMenu(routeLocator: Locator, action: 'Details' | 'Edit' | 'Delete route') {
-    await routeLocator.getByRole('button', { name: 'More', exact: true }).click();
+    await this.openMoreActions(routeLocator);
     await this.page.getByRole('menuitem', { name: action, exact: true }).click();
+  }
+
+  /** Open a route's "More" menu without selecting an item, for action-visibility assertions. */
+  async openMoreActions(routeLocator: Locator) {
+    await routeLocator.getByRole('button', { name: 'More', exact: true }).click();
   }
 
   // ----- Matchers (add/edit form) -----

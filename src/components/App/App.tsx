@@ -38,7 +38,9 @@ function App(_props: AppRootProps) {
         <Routes>
           <Route path="/" element={<Navigate to={ROUTES.Alerts} replace />} />
           <Route path={ROUTES.Alerts} element={<Alerts />} />
-          <Route path={ROUTES.Routes} element={<RouteTree />} />
+          <Route element={<ProtectedRoute requirements={[AlertingPermission.NotificationsRead]} />}>
+            <Route path={ROUTES.Routes} element={<RouteTree />} />
+          </Route>
           <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesRead]} />}>
             <Route path={ROUTES.Rules} element={<Rules />} />
             <Route path={ROUTES.RuleView} element={<RuleDetails />} />
