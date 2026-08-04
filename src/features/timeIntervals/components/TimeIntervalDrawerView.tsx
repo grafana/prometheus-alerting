@@ -4,11 +4,10 @@ import { Alert, Stack, Button, ConfirmModal } from '@grafana/ui';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
-import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { useDeleteTimeInterval } from '../hooks/useTimeIntervals';
-import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
 import { isAbilityAllowed } from '../../../access-control/abilities';
-import { getTimeIntervalMutationErrorFeedback } from '../utils/errorFeedback';
+import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
+import { MutationError } from '../../../access-control/components/MutationError';
 
 interface TimeIntervalDetailsProps {
   timeInterval: TimeInterval;
@@ -78,21 +77,14 @@ interface TimeIntervalDrawerViewProps {
 
 export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIntervalDrawerViewProps) {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const hasConfigurationAPI = useHasConfigurationAPI();
-  const canMutateTimeIntervals = isAbilityAllowed(getAlertmanagerConfigMutationAbility(hasConfigurationAPI));
+  const canMutateTimeIntervals = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
   const [deleteTimeInterval, { isLoading: isDeleting, error: deleteError }] = useDeleteTimeInterval();
 
   const handleRemove = () => {
-    if (canMutateTimeIntervals) {
-      setIsConfirmModalOpen(true);
-    }
+    setIsConfirmModalOpen(true);
   };
 
   const handleConfirmRemove = async () => {
-    if (!canMutateTimeIntervals) {
-      return;
-    }
-
     try {
       await deleteTimeInterval(timeInterval.name);
       setIsConfirmModalOpen(false);
@@ -110,18 +102,11 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
 
   return (
     <>
-      {Boolean(deleteError) &&
-        (() => {
-          const feedback = getTimeIntervalMutationErrorFeedback(
-            deleteError,
-            t('time-intervals.error-deleting-title', 'Error deleting time interval')
-          );
-          return (
-            <Alert title={feedback.title} severity="error">
-              {feedback.description}
-            </Alert>
-          );
-        })()}
+      <MutationError
+        error={deleteError}
+        fallbackTitle={t('time-intervals.error-deleting-title', 'Error deleting time interval')}
+        resource={t('time-intervals.resource-label', 'time intervals')}
+      />
 
       <TimeIntervalDetails timeInterval={timeInterval} />
 
@@ -140,7 +125,7 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
       )}
 
       <ConfirmModal
-        isOpen={canMutateTimeIntervals && isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title={t('time-intervals.confirm-remove.title', 'Remove Time Interval')}
         body={t(
           'time-intervals.confirm-remove.body',
@@ -151,7 +136,7 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
         dismissText={t('time-intervals.confirm-remove.cancel', 'Cancel')}
         onConfirm={handleConfirmRemove}
         onDismiss={handleCancelRemove}
-        confirmVariant="destructive"
+        confirmButtonVariant="destructive"
       />
     </>
   );

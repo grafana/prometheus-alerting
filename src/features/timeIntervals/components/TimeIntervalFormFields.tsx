@@ -2,11 +2,11 @@ import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, Field, Input, Stack, Combobox } from '@grafana/ui';
+import { Button, Field, Input, Stack, Combobox } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { IANA_TIMEZONES } from '../utils/timezones';
-import { getTimeIntervalMutationErrorFeedback } from '../utils/errorFeedback';
+import { MutationError } from '../../../access-control/components/MutationError';
 
 export const TimeIntervalFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -43,15 +43,6 @@ export function TimeIntervalFormFields({
   showNameField = true,
 }: TimeIntervalFormFieldsProps) {
   const isEditMode = Boolean(timeInterval);
-  const mutationErrorFeedback = error
-    ? getTimeIntervalMutationErrorFeedback(
-        error,
-        isEditMode
-          ? t('time-intervals.form.error-updating-title', 'Error updating time interval')
-          : t('time-intervals.form.error-title', 'Error creating time interval')
-      )
-    : undefined;
-
   const {
     register,
     handleSubmit,
@@ -92,11 +83,15 @@ export function TimeIntervalFormFields({
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack direction="column" gap={2}>
-        {mutationErrorFeedback && (
-          <Alert title={mutationErrorFeedback.title} severity="error">
-            {mutationErrorFeedback.description}
-          </Alert>
-        )}
+        <MutationError
+          error={error}
+          fallbackTitle={
+            isEditMode
+              ? t('time-intervals.form.error-updating-title', 'Error updating time interval')
+              : t('time-intervals.form.error-title', 'Error creating time interval')
+          }
+          resource={t('time-intervals.resource-label', 'time intervals')}
+        />
 
         {showNameField && (
           <Field

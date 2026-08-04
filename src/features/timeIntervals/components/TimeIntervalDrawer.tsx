@@ -5,9 +5,6 @@ import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { TimeIntervalDrawerView } from './TimeIntervalDrawerView';
 import { TimeIntervalDrawerEdit } from './TimeIntervalDrawerEdit';
-import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
-import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
-import { isAbilityAllowed } from '../../../access-control/abilities';
 
 interface TimeIntervalDrawerProps {
   timeInterval: TimeInterval | null;
@@ -16,18 +13,12 @@ interface TimeIntervalDrawerProps {
 
 export function TimeIntervalDrawer({ timeInterval, onClose }: TimeIntervalDrawerProps) {
   const [isEditMode, setIsEditMode] = useState(false);
-  const hasConfigurationAPI = useHasConfigurationAPI();
-  const canMutateTimeIntervals = isAbilityAllowed(getAlertmanagerConfigMutationAbility(hasConfigurationAPI));
-  const effectiveIsEditMode = canMutateTimeIntervals && isEditMode;
-
   if (!timeInterval) {
     return null;
   }
 
   const handleEdit = () => {
-    if (canMutateTimeIntervals) {
-      setIsEditMode(true);
-    }
+    setIsEditMode(true);
   };
 
   const handleCancelEdit = () => {
@@ -52,7 +43,7 @@ export function TimeIntervalDrawer({ timeInterval, onClose }: TimeIntervalDrawer
       onClose={onClose}
       size="sm"
     >
-      {effectiveIsEditMode ? (
+      {isEditMode ? (
         <TimeIntervalDrawerEdit timeInterval={timeInterval} onCancel={handleCancelEdit} onSuccess={handleEditSuccess} />
       ) : (
         <TimeIntervalDrawerView timeInterval={timeInterval} onEdit={handleEdit} onClose={onClose} />

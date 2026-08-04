@@ -11,16 +11,14 @@ import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
 import { prefixRoute } from '../../../utils/utils.routing';
-import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { TimeIntervalDrawer } from '../components/TimeIntervalDrawer';
-import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
 import { isAbilityAllowed } from '../../../access-control/abilities';
-import { TimeIntervalsError } from '../components/TimeIntervalsError';
+import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
+import { AlertmanagerError } from '../../../components/AlertmanagerError';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error, isSuccess } = useTimeIntervals();
-  const hasConfigurationAPI = useHasConfigurationAPI();
-  const canMutateTimeIntervals = isAbilityAllowed(getAlertmanagerConfigMutationAbility(hasConfigurationAPI));
+  const canMutateTimeIntervals = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
 
   const [selectedTimeInterval, setSelectedTimeInterval] = useState<TimeInterval | null>(null);
 
@@ -116,7 +114,12 @@ function TimeIntervalsPage() {
               <Skeleton height={120} count={3} style={{ marginBottom: '5px' }} />
             </div>
           }
-          renderError={<TimeIntervalsError error={error} />}
+          renderError={
+            <AlertmanagerError
+              error={error}
+              title={t('time-intervals.error-loading-title', 'Error loading time intervals')}
+            />
+          }
           empty={
             <EmptyState
               message={t(
