@@ -354,6 +354,7 @@
     "mutation": {
       "not-supported": {
         "description": "This Alertmanager does not support updating {{resource}}.",
+        "time-intervals-description": "This Alertmanager does not support updating time intervals.",
         "title": "Configuration changes unavailable"
       },
       "permission-denied": {
@@ -1222,11 +1223,9 @@
       "days-of-month-description": "Comma-separated list of days (e.g., 1, 15, -1 for last day)",
       "days-of-month-label": "Days of Month",
       "days-of-month-placeholder": "1, 15, -1",
-      "edit-page-title": "Edit Time Interval",
       "end-time-description": "End time in HH:MM format",
       "end-time-label": "End Time",
       "end-time-placeholder": "23:59",
-      "error-loading-title": "Error loading time interval",
       "error-title": "Error creating time interval",
       "error-updating-title": "Error updating time interval",
       "location-description": "IANA timezone (e.g., UTC, America/New_York)",
@@ -1238,16 +1237,10 @@
       "name-description": "A unique name for this time interval",
       "name-label": "Name",
       "name-placeholder": "my-time-interval",
-      "not-found-message": "The time interval \"{{name}}\" does not exist.",
-      "not-found-title": "Time interval not found",
       "page-title": "Create Time Interval",
       "start-time-description": "Start time in HH:MM format",
       "start-time-label": "Start Time",
       "start-time-placeholder": "00:00",
-      "success-message": "Time interval has been created successfully.",
-      "success-title": "Time interval created",
-      "success-updating-message": "Time interval has been updated successfully.",
-      "success-updating-title": "Time interval updated",
       "update-button": "Update Time Interval",
       "updating": "Updating...",
       "weekdays-description": "Comma-separated list (e.g., monday, tuesday, wednesday)",
@@ -1260,19 +1253,12 @@
     "interval-number": "Interval {{number}}",
     "location-label": "Location",
     "months-label": "Months",
-    "mutation-not-supported": {
-      "description": "This Alertmanager does not support updating time intervals.",
-      "title": "Time interval changes unavailable"
-    },
     "no-intervals": "No time intervals",
     "no-intervals-defined": "No time intervals defined",
     "no-intervals-desc": "This time interval has no time ranges configured.",
     "no-time-intervals-message": "No time intervals are configured in the Alertmanager.",
     "page-subtitle": "Define time windows for muting or activating notifications",
-    "permission-denied": {
-      "description": "You do not have permission to change time intervals for this data source.",
-      "title": "Permission denied"
-    },
+    "resource-label": "time intervals",
     "times-label": "Times",
     "weekdays-label": "Weekdays",
     "years-label": "Years"
