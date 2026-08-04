@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.3.0](https://github.com/grafana/prometheus-alerting/compare/v1.2.0...v1.3.0) (2026-08-04)
+
+
+### 🎉 Features
+
+* **routes:** enforce RBAC on routes page ([#168](https://github.com/grafana/prometheus-alerting/issues/168)) ([c7c58eb](https://github.com/grafana/prometheus-alerting/commit/c7c58eb468319b16e18d90673b71785bf5802e58))
+* **rules:** add RBAC access controls ([#157](https://github.com/grafana/prometheus-alerting/issues/157)) ([307b993](https://github.com/grafana/prometheus-alerting/commit/307b99325a007b397a08de0b926d526f900ed3f8))
+* **rules:** enforce RBAC in rule views and actions ([#158](https://github.com/grafana/prometheus-alerting/issues/158)) ([64fd1b1](https://github.com/grafana/prometheus-alerting/commit/64fd1b1f7608eccfafb6c8814e8da9a0713ff0cb))
+* **rules:** protect editor workflows with RBAC ([#159](https://github.com/grafana/prometheus-alerting/issues/159)) ([f62738f](https://github.com/grafana/prometheus-alerting/commit/f62738f4adeb9496f91590b4ea2751851d0caff8))
+
+
+### 🐛 Bug Fixes
+
+* **alerts:** use TextLink for generator URL to prevent XSS, add lint rule ([#169](https://github.com/grafana/prometheus-alerting/issues/169)) ([c56477f](https://github.com/grafana/prometheus-alerting/commit/c56477f244d27ea62edb650ffc772f7a70600724))
+* **rules:** deleting of rule only for a single one and not the entire rule group ([#166](https://github.com/grafana/prometheus-alerting/issues/166)) ([c30c1ed](https://github.com/grafana/prometheus-alerting/commit/c30c1ed492d1d1919f044d52a82cf0da4586bb7f))
+* **security/high/:** update pnpm to v11.8.0 [security] ([#162](https://github.com/grafana/prometheus-alerting/issues/162)) ([8ac6c01](https://github.com/grafana/prometheus-alerting/commit/8ac6c01311a21008b0f2e5ca30247629ee9347a1))
+* **security:** reject protocol-relative returnTo paths ([#170](https://github.com/grafana/prometheus-alerting/issues/170)) ([b16c7be](https://github.com/grafana/prometheus-alerting/commit/b16c7be56f0eb6b1170c77922a2525ab16801900))
+
+
+### ♻️ Code Refactoring
+
+* **rules:** use datasource proxy APIs ([#155](https://github.com/grafana/prometheus-alerting/issues/155)) ([f7a1471](https://github.com/grafana/prometheus-alerting/commit/f7a1471b20afb86945449b0c578b1e15fc14aa07))
+
+
+### ✅ Tests
+
+* **rules:** add group page e2e coverage ([#153](https://github.com/grafana/prometheus-alerting/issues/153)) ([492636d](https://github.com/grafana/prometheus-alerting/commit/492636d7ecf5faf3ad714031df0dfa27957c1c15))
+
+
+### 🏗️ Builds
+
+* bump everything to pnpm 11.17.0 ([#165](https://github.com/grafana/prometheus-alerting/issues/165)) ([80c1372](https://github.com/grafana/prometheus-alerting/commit/80c137273cf1c208c1ea353bbcf8536de0757376))
+* **deps:** resolve audit vulnerabilities and bump toolchain ([#161](https://github.com/grafana/prometheus-alerting/issues/161)) ([c04b59d](https://github.com/grafana/prometheus-alerting/commit/c04b59d2544765ba8059d0f4d787bc1747077b15))
+
 ## [1.2.0](https://github.com/grafana/prometheus-alerting/compare/v1.1.0...v1.2.0) (2026-07-22)
 
 
