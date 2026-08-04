@@ -96,7 +96,7 @@ function ReceiversPage() {
     },
   ];
 
-  const isDrawerOpen = selectedReceiver !== null || (canMutateReceivers && drawerMode === DrawerMode.Add);
+  const isDrawerOpen = selectedReceiver !== null || drawerMode === DrawerMode.Add;
 
   return (
     <AlertmanagerPage
