@@ -209,7 +209,12 @@ function RoutesPage() {
         />
       )}
       {selectedReceiverName && (
-        <ReceiverDrawer receiver={selectedReceiver} onClose={handleReceiverDrawerClose} showBackButton={true} />
+        <ReceiverDrawer
+          receiver={selectedReceiver}
+          onClose={handleReceiverDrawerClose}
+          showBackButton={true}
+          readOnly={true}
+        />
       )}
 
       {/* Delete confirmation modal (from the RouteCard menu or the view drawer) */}

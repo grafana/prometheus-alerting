@@ -115,6 +115,7 @@ interface ReceiverDrawerProps {
   onClose: () => void;
   onSaved?: () => void | Promise<void>;
   showBackButton?: boolean;
+  readOnly?: boolean;
   initialMode?: DrawerMode;
 }
 
@@ -124,6 +125,7 @@ export function ReceiverDrawer({
   onClose,
   onSaved,
   showBackButton = false,
+  readOnly = false,
   initialMode = DrawerMode.View,
 }: ReceiverDrawerProps) {
   const [mode, setMode] = useState<DrawerMode>(initialMode);
@@ -133,7 +135,7 @@ export function ReceiverDrawer({
   const { isInUse, isDefaultReceiver, usageCount } = useReceiverInUse(receiver?.name);
   const { success: notifySuccess, error: notifyError } = useAppNotifications();
 
-  const canEdit = canMutateConfiguration && !showBackButton;
+  const canEdit = canMutateConfiguration && !readOnly;
   const effectiveMode = canEdit ? mode : DrawerMode.View;
   const isViewMode = effectiveMode === DrawerMode.View;
   const isEditMode = effectiveMode === DrawerMode.Edit;
