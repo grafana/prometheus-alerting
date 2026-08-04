@@ -15,13 +15,21 @@ overrides:
   '@types/react-dom': '18.3.7'
   '@opentelemetry/core@<2.8.0': ^2.8.0
   react-router@>=6.7.0 <6.30.4: ^6.30.4
-  # GHSA-mh99-v99m-4gvg is only fixed in brace-expansion 5.0.8; the 1.x line has no
-  # backport. brace-expansion 5 switched to a named export, which breaks minimatch 3's
-  # `require('brace-expansion')` ("expand is not a function", surfaced via eslint).
-  # Lifting every minimatch to 10 removes the last consumers of brace-expansion 1.x/2.x
-  # so the whole tree can sit on the single patched 5.0.8.
-  'brace-expansion': '>=5.0.8'
-  'minimatch@<10': '^10'
+  # brace-expansion backports every advisory fix to each major line, so pin each line to its own
+  # patched release rather than lifting the whole tree to 5.x. brace-expansion 5 switched to a named
+  # export, so forcing it onto minimatch 3 breaks it ("expand is not a function"), which in turn
+  # forced minimatch to 10 — and minimatch 10's CJS build has no default export, which broke
+  # fork-ts-checker-webpack-plugin's default import. Pinning per-line keeps every consumer on the
+  # export shape it expects with no patched dependency needed.
+  'brace-expansion@<1.1.18': '^1.1.18'
+  'brace-expansion@>=2 <2.1.4': '^2.1.4'
+  'brace-expansion@>=3 <3.0.6': '^3.0.6'
+  'brace-expansion@>=4 <5.0.9': '>=5.0.9'
+  # Transitive-only advisories, all reached through build/dev tooling:
+  'fast-uri': '^3.1.5' # GHSA via copy-webpack-plugin>schema-utils; stay on 3.x, schema-utils wants ^3
+  'ip-address': '>=10.3.1' # 3 advisories via @grafana/sign-plugin>proxy-agent>socks
+  'postcss': '>=8.5.23' # via @vitejs/plugin-react>vite
+  'undici': '^7.29.0' # 4 advisories via i18next-parser>cheerio; pinned to 7.x, cheerio wants ^7
 
 registries:
   '@jsr': https://npm.jsr.io
