@@ -9,15 +9,18 @@ import { t, Trans } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
-import { DataSourceError } from '../../../components/AlertmanagerError';
 import { TemplateDrawer, DrawerMode } from '../components/TemplateDrawer';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
+import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { TemplatesError } from '../components/TemplatesError';
 
 function TemplatesPage() {
   const { templates, isLoading, error, refetch, isSuccess } = useTemplates();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
   const hasConfigurationAPI = useHasConfigurationAPI();
+  const canMutateTemplates = isAbilityAllowed(getAlertmanagerConfigMutationAbility(hasConfigurationAPI));
 
   const existingTemplateNames = useMemo(() => templates.map((t: Template) => t.name), [templates]);
 
@@ -75,13 +78,13 @@ function TemplatesPage() {
     },
   ];
 
-  const isDrawerOpen = selectedTemplate !== null || drawerMode === DrawerMode.Add;
+  const isDrawerOpen = selectedTemplate !== null || (canMutateTemplates && drawerMode === DrawerMode.Add);
 
   return (
     <AlertmanagerPage
       subTitle={t('templates.page-subtitle', 'Customize notification message templates')}
       actions={
-        hasConfigurationAPI && (
+        canMutateTemplates && (
           <Button icon="plus" onClick={handleCreateTemplate}>
             <Trans i18nKey="templates.create-button">Create template</Trans>
           </Button>
@@ -100,15 +103,13 @@ function TemplatesPage() {
               <Skeleton height={80} count={3} style={{ marginBottom: '5px' }} />
             </div>
           }
-          renderError={
-            <DataSourceError error={error} title={t('templates.error-loading-title', 'Error loading templates')} />
-          }
+          renderError={<TemplatesError error={error} />}
           empty={
             <EmptyState
               message={t('templates.no-templates-message', 'No templates are configured in the Alertmanager.')}
               variant="call-to-action"
               button={
-                hasConfigurationAPI && (
+                canMutateTemplates && (
                   <Button icon="plus" onClick={handleCreateTemplate}>
                     <Trans i18nKey="templates.create-button">Create template</Trans>
                   </Button>

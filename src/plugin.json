@@ -53,6 +53,7 @@
       "type": "page",
       "name": "Templates",
       "path": "/a/%PLUGIN_ID%/templates",
+      "action": "alert.notifications.external:read",
       "addToNav": true,
       "defaultNav": false
     },
