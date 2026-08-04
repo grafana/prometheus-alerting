@@ -40,6 +40,8 @@ function App(_props: AppRootProps) {
           <Route path={ROUTES.Alerts} element={<Alerts />} />
           <Route element={<ProtectedRoute requirements={[AlertingPermission.NotificationsRead]} />}>
             <Route path={ROUTES.Routes} element={<RouteTree />} />
+            <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
+            <Route path={ROUTES.Receivers} element={<Receivers />} />
           </Route>
           <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesRead]} />}>
             <Route path={ROUTES.Rules} element={<Rules />} />
@@ -55,8 +57,6 @@ function App(_props: AppRootProps) {
           <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesWrite]} />}>
             <Route path={ROUTES.RuleNew} element={<RuleEditor />} />
           </Route>
-          <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
-          <Route path={ROUTES.Receivers} element={<Receivers />} />
           <Route path={ROUTES.Templates} element={<Templates />} />
           <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
           <Route path={ROUTES.Silences} element={<Silences />} />

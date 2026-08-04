@@ -18,8 +18,10 @@ import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { filterAndTransformConfigEntries } from '../utils/receiversUtils';
 import { JsonValue } from 'type-fest';
 import { ReceiverEditForm } from './ReceiverEditForm';
-import { extractErrorMessage } from '../../../utils/errors';
 import { useReceiverInUse } from '../hooks/useReceiverInUse';
+import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { getReceiverMutationErrorFeedback } from '../utils/errorFeedback';
 
 export enum DrawerMode {
   View = 'view',
@@ -129,12 +131,14 @@ export function ReceiverDrawer({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [produceNewConfig, { error: configError, isLoading }] = useProduceNewAlertmanagerConfiguration();
   const hasConfigurationAPI = useHasConfigurationAPI();
+  const canMutateConfiguration = isAbilityAllowed(getAlertmanagerConfigMutationAbility(hasConfigurationAPI));
   const { isInUse, isDefaultReceiver, usageCount } = useReceiverInUse(receiver?.name);
 
-  const isViewMode = mode === DrawerMode.View;
-  const isEditMode = mode === DrawerMode.Edit;
-  const isAddMode = mode === DrawerMode.Add;
-  const canEdit = hasConfigurationAPI && !showBackButton;
+  const canEdit = canMutateConfiguration && !showBackButton;
+  const effectiveMode = canEdit ? mode : DrawerMode.View;
+  const isViewMode = effectiveMode === DrawerMode.View;
+  const isEditMode = effectiveMode === DrawerMode.Edit;
+  const isAddMode = effectiveMode === DrawerMode.Add;
   // Cannot delete the default receiver or a receiver that's in use
   const canDelete = canEdit && !isDefaultReceiver;
 
@@ -153,6 +157,9 @@ export function ReceiverDrawer({
   const handleSave = useCallback(
     async (newReceiver: Receiver) => {
       try {
+        if (!canEdit) {
+          return;
+        }
         if (isAddMode) {
           await produceNewConfig(addReceiverAction(newReceiver));
           getAppEvents().publish({
@@ -169,23 +176,23 @@ export function ReceiverDrawer({
         await onSaved?.();
         onClose();
       } catch (err) {
-        const errorMessage = extractErrorMessage(err);
+        const feedback = getReceiverMutationErrorFeedback(
+          err,
+          isAddMode
+            ? t('receivers.create.error', 'Failed to create receiver')
+            : t('receivers.update.error', 'Failed to update receiver')
+        );
         getAppEvents().publish({
           type: AppEvents.alertError.name,
-          payload: [
-            isAddMode
-              ? t('receivers.create.error', 'Failed to create receiver')
-              : t('receivers.update.error', 'Failed to update receiver'),
-            errorMessage,
-          ],
+          payload: [feedback.title, feedback.description],
         });
       }
     },
-    [isAddMode, isEditMode, receiver, produceNewConfig, onSaved, onClose]
+    [canEdit, isAddMode, isEditMode, receiver, produceNewConfig, onSaved, onClose]
   );
 
   const handleDelete = useCallback(async () => {
-    if (!receiver) {
+    if (!receiver || !canDelete) {
       return;
     }
     try {
@@ -197,14 +204,14 @@ export function ReceiverDrawer({
       await onSaved?.();
       onClose();
     } catch (err) {
-      const errorMessage = extractErrorMessage(err);
+      const feedback = getReceiverMutationErrorFeedback(err, t('receivers.delete.error', 'Failed to delete receiver'));
       getAppEvents().publish({
         type: AppEvents.alertError.name,
-        payload: [t('receivers.delete.error', 'Failed to delete receiver'), errorMessage],
+        payload: [feedback.title, feedback.description],
       });
     }
     setShowDeleteConfirm(false);
-  }, [receiver, produceNewConfig, onSaved, onClose]);
+  }, [receiver, canDelete, produceNewConfig, onSaved, onClose]);
 
   // Don't render if no receiver and not in add mode
   if (!receiver && !isAddMode) {
@@ -298,21 +305,23 @@ export function ReceiverDrawer({
         footer={getFooter()}
       >
         <Stack direction="column" gap={2}>
-          {Boolean(configError) && (
-            <Alert title={t('receivers.error-title', 'Error')} severity="error">
-              {String(
-                configError instanceof Error ? configError.message : t('receivers.error-message', 'An error occurred')
-              )}
-            </Alert>
-          )}
+          {Boolean(configError) &&
+            (() => {
+              const feedback = getReceiverMutationErrorFeedback(configError, t('receivers.error-title', 'Error'));
+              return (
+                <Alert title={feedback.title} severity="error">
+                  {feedback.description}
+                </Alert>
+              );
+            })()}
 
           {/* View mode */}
           {isViewMode && receiver && <ReceiverIntegrations receiver={receiver} />}
 
           {/* Edit/Add mode */}
-          {(isEditMode || isAddMode) && (
+          {canEdit && (isEditMode || isAddMode) && (
             <ReceiverEditForm
-              receiver={isEditMode ? receiver ?? undefined : undefined}
+              receiver={isEditMode ? (receiver ?? undefined) : undefined}
               existingReceivers={existingReceivers}
               onSave={handleSave}
               onCancel={handleCancelEdit}
@@ -324,7 +333,7 @@ export function ReceiverDrawer({
 
       {/* Delete confirmation modal */}
       <ConfirmModal
-        isOpen={showDeleteConfirm}
+        isOpen={canDelete && showDeleteConfirm}
         title={t('receivers.delete.confirm-title', 'Delete receiver')}
         body={
           <Stack direction="column" gap={2}>

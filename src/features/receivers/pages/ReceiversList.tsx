@@ -9,12 +9,14 @@ import { type Receiver } from '@grafana/external-alertmanager/vanilla';
 import { useReceivers } from '../hooks/useReceivers';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
-import { DataSourceError } from '../../../components/AlertmanagerError';
 import { getContactPointDescription, getReceiverIntegrations } from '../utils/receiversUtils';
 import { getIntegrationIcon } from '../utils/integrationIcons';
 import { ReceiverDrawer, DrawerMode } from '../components/ReceiverDrawer';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
+import { getAlertmanagerConfigMutationAbility } from '../../../access-control/abilities.alertmanager';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { ReceiversError } from '../components/ReceiversError';
 
 import { t, Trans } from '@grafana/i18n';
 
@@ -23,6 +25,7 @@ function ReceiversPage() {
   const [selectedReceiver, setSelectedReceiver] = useState<Receiver | null>(null);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(DrawerMode.View);
   const hasConfigurationAPI = useHasConfigurationAPI();
+  const canMutateReceivers = isAbilityAllowed(getAlertmanagerConfigMutationAbility(hasConfigurationAPI));
 
   useEffect(() => {
     triggerFetch();
@@ -95,13 +98,13 @@ function ReceiversPage() {
     },
   ];
 
-  const isDrawerOpen = selectedReceiver !== null || drawerMode === DrawerMode.Add;
+  const isDrawerOpen = selectedReceiver !== null || (canMutateReceivers && drawerMode === DrawerMode.Add);
 
   return (
     <AlertmanagerPage
       subTitle={t('receivers.page-subtitle', 'Configure how and where to send alert notifications')}
       actions={
-        hasConfigurationAPI && (
+        canMutateReceivers && (
           <Button icon="plus" onClick={handleCreateReceiver}>
             <Trans i18nKey="receivers.create-button">Create receiver</Trans>
           </Button>
@@ -115,15 +118,13 @@ function ReceiversPage() {
           error={error}
           isEmpty={receivers.length === 0}
           loading={<Skeleton height={24} count={5} />}
-          renderError={
-            <DataSourceError error={error} title={t('receivers.error-loading-title', 'Error loading receivers')} />
-          }
+          renderError={<ReceiversError error={error} />}
           empty={
             <EmptyState
               message={t('receivers.no-receivers-message', 'No receivers are configured in the Alertmanager.')}
               variant="call-to-action"
               button={
-                hasConfigurationAPI && (
+                canMutateReceivers && (
                   <Button icon="plus" onClick={handleCreateReceiver}>
                     <Trans i18nKey="receivers.create-button">Create receiver</Trans>
                   </Button>

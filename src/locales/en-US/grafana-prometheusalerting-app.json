@@ -608,7 +608,6 @@
       "to-desc": "Email address to send notifications to"
     },
     "error-loading-title": "Error loading receivers",
-    "error-message": "An error occurred",
     "error-title": "Error",
     "form": {
       "add-integration": "Add integration",
@@ -643,6 +642,10 @@
       "title-desc": "Message title",
       "webhook-url": "Webhook URL",
       "webhook-url-desc": "Microsoft Teams webhook URL"
+    },
+    "mutation-not-supported": {
+      "description": "This Alertmanager does not support updating receivers.",
+      "title": "Receiver changes unavailable"
     },
     "no-integrations": "No integrations",
     "no-integrations-desc": "This receiver has no integrations configured.",
@@ -679,6 +682,10 @@
       "severity-desc": "Incident severity level",
       "url": "URL",
       "url-desc": "PagerDuty API endpoint"
+    },
+    "permission-denied": {
+      "description": "You do not have permission to change receivers for this data source.",
+      "title": "Permission denied"
     },
     "pushover": {
       "expire": "Expire",
