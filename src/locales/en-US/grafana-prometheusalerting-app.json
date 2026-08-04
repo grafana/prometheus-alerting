@@ -350,6 +350,15 @@
   "alertmanager": {
     "error": {
       "data-source": "Data source: {{name}}"
+    },
+    "mutation": {
+      "not-supported": {
+        "description": "This Alertmanager does not support updating {{resource}}.",
+        "title": "Configuration changes unavailable"
+      },
+      "permission-denied": {
+        "description": "You do not have permission to change {{resource}} for this data source."
+      }
     }
   },
   "alerts": {
@@ -643,10 +652,6 @@
       "webhook-url": "Webhook URL",
       "webhook-url-desc": "Microsoft Teams webhook URL"
     },
-    "mutation-not-supported": {
-      "description": "This Alertmanager does not support updating receivers.",
-      "title": "Receiver changes unavailable"
-    },
     "no-integrations": "No integrations",
     "no-integrations-desc": "This receiver has no integrations configured.",
     "no-receivers-message": "No receivers are configured in the Alertmanager.",
@@ -683,10 +688,6 @@
       "url": "URL",
       "url-desc": "PagerDuty API endpoint"
     },
-    "permission-denied": {
-      "description": "You do not have permission to change receivers for this data source.",
-      "title": "Permission denied"
-    },
     "pushover": {
       "expire": "Expire",
       "expire-desc": "Expiration time for emergency priority",
@@ -705,6 +706,7 @@
       "user-key": "User key",
       "user-key-desc": "Pushover user key"
     },
+    "resource-label": "receivers",
     "slack": {
       "api-url": "API URL",
       "api-url-desc": "Slack webhook URL",
@@ -890,20 +892,13 @@
     "group-interval-label": "Group interval",
     "group-wait-label": "Group wait",
     "matchers-label": "Matchers",
-    "mutation-not-supported": {
-      "description": "This Alertmanager does not support updating routes.",
-      "title": "Route changes unavailable"
-    },
     "new-route": "New route",
     "no": "No",
     "no-routes-message": "No routing configuration is available in the Alertmanager.",
     "page-subtitle": "Determine how alerts are routed to receivers",
-    "permission-denied": {
-      "description": "You do not have permission to change routes for this data source.",
-      "title": "Permission denied"
-    },
     "receiver-label": "Receiver",
     "repeat-interval-label": "Repeat interval",
+    "resource-label": "routes",
     "root-route-desc": "This is the root route. All alerts will be processed through this route and its children.",
     "root-route-title": "Root Route",
     "route-label": "Route",
