@@ -33,10 +33,10 @@ export function buildIssueTitle(error: Error | null): string {
 
 export function buildIssueBody({ error, componentStack, location, pluginVersion }: ReportIssueOptions): string {
   const environment = [
-    `- Plugin version: ${pluginVersion ?? 'unknown'}`,
-    `- Grafana version: ${config.buildInfo?.version ?? 'unknown'} (${config.buildInfo?.edition ?? 'unknown'})`,
-    `- Location: ${location ?? 'unknown'}`,
-    `- User agent: ${typeof navigator === 'undefined' ? 'unknown' : navigator.userAgent}`,
+    `- Plugin version: ${inlineCode(pluginVersion)}`,
+    `- Grafana version: ${inlineCode(config.buildInfo?.version)} (${inlineCode(config.buildInfo?.edition)})`,
+    `- Location: ${inlineCode(location)}`,
+    `- User agent: ${inlineCode(typeof navigator === 'undefined' ? undefined : navigator.userAgent)}`,
   ].join('\n');
 
   const sections = [
@@ -44,22 +44,51 @@ export function buildIssueBody({ error, componentStack, location, pluginVersion 
     '',
     'The plugin crashed with the error below. <!-- Please add any steps to reproduce. -->',
     '',
+    '> [!IMPORTANT]',
+    '> This report was generated automatically. Stack traces can contain data from your',
+    '> Alertmanager or Prometheus configuration — please review it for anything sensitive',
+    '> before submitting, since GitHub issues are public.',
+    '',
     '### Environment',
     '',
     environment,
     '',
     '### Error',
     '',
-    '```',
-    error?.stack || error?.message || 'No error details available',
-    '```',
+    codeBlock(error?.stack || error?.message || 'No error details available'),
   ];
 
   if (componentStack) {
-    sections.push('', '### Component stack', '', '```', componentStack.trim(), '```');
+    sections.push('', '### Component stack', '', codeBlock(componentStack.trim()));
   }
 
   return sections.join('\n');
+}
+
+/**
+ * Wrap untrusted multi-line content (stack traces) in a fenced code block. Error messages can
+ * contain data from a data source, so the fence is made longer than any run of backticks in the
+ * content — otherwise the content could close the fence and inject arbitrary markdown into the
+ * report the user is about to submit.
+ */
+function codeBlock(content: string): string {
+  const longestBacktickRun = Math.max(0, ...[...content.matchAll(/`+/g)].map((match) => match[0].length));
+  const fence = '`'.repeat(Math.max(3, longestBacktickRun + 1));
+
+  return [fence, content, fence].join('\n');
+}
+
+/**
+ * Render an untrusted single-line value as inline code, stripping the characters it could use to
+ * break out of it (backticks and newlines).
+ */
+function inlineCode(value: string | null | undefined): string {
+  if (!value) {
+    return '`unknown`';
+  }
+
+  const sanitized = truncate(value.replace(/[`\r\n]/g, ' '), 500);
+  return `\`${sanitized}\``;
 }
 
 /**
