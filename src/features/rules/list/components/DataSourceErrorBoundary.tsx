@@ -1,8 +1,10 @@
 import React from 'react';
 
 import { t, Trans } from '@grafana/i18n';
-import { Alert, ErrorBoundary, ErrorWithStack, Text } from '@grafana/ui';
+import { Alert, ErrorBoundary, ErrorWithStack, Stack, Text } from '@grafana/ui';
 
+import { ReportIssueButton } from '../../../../components/ErrorBoundary/ReportIssueButton';
+import { useAppPluginVersion } from '../../../../hooks/useAppPluginVersion';
 import { DataSourceRulesSourceIdentifier } from '../../../../types/datasources';
 
 import { DataSourceSection } from './DataSourceSection';
@@ -19,6 +21,8 @@ export function DataSourceErrorBoundary({
   children: React.ReactNode;
   rulesSourceIdentifier: DataSourceRulesSourceIdentifier;
 }) {
+  const pluginVersion = useAppPluginVersion();
+
   return (
     <ErrorBoundary>
       {({ error, errorInfo }) => {
@@ -27,16 +31,25 @@ export function DataSourceErrorBoundary({
           return (
             <DataSourceSection uid={uid} name={name}>
               <Alert title={t('rules.error-boundary.title', 'Unable to load rules from this data source')}>
-                <Text>
-                  <Trans i18nKey="rules.error-boundary.message">
-                    Check the data source configuration. Does the data source support Prometheus API?
-                  </Trans>
-                </Text>
-                <ErrorWithStack
-                  error={error}
-                  errorInfo={errorInfo}
-                  title={t('rules.error-boundary.stack-title', 'Unable to load rules from this data source')}
-                />
+                <Stack direction="column" gap={2} alignItems="flex-start">
+                  <Text>
+                    <Trans i18nKey="rules.error-boundary.message">
+                      Check the data source configuration. Does the data source support Prometheus API?
+                    </Trans>
+                  </Text>
+                  <ReportIssueButton
+                    error={error}
+                    componentStack={errorInfo?.componentStack}
+                    pluginVersion={pluginVersion}
+                    size="sm"
+                    variant="secondary"
+                  />
+                  <ErrorWithStack
+                    error={error}
+                    errorInfo={errorInfo}
+                    title={t('rules.error-boundary.stack-title', 'Unable to load rules from this data source')}
+                  />
+                </Stack>
               </Alert>
             </DataSourceSection>
           );

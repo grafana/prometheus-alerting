@@ -65,6 +65,15 @@
       "recording": "Recording",
       "rule-name": "Rule name"
     },
+    "error-boundary": {
+      "copy-details": "Copy error details",
+      "copy-details-success": "Error details copied to clipboard",
+      "message": "An unexpected error occurred and this part of the page could not be displayed. Reporting the issue helps us fix it.",
+      "reload": "Reload page",
+      "report-issue": "Report this issue on GitHub",
+      "stack-title": "Error details",
+      "title": "Something went wrong"
+    },
     "evaluation-interval": {
       "exceeds-pending": "Interval ({{interval}}) exceeds the pending period ({{for}}) of some rules. This may cause alerts to fire immediately.",
       "invalid-format": "Invalid duration format. Use formats like 1m, 30s, 1h.",

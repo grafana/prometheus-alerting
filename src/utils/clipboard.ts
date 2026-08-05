@@ -5,7 +5,7 @@ import { getAppEvents } from '@grafana/runtime';
 /**
  * Copy text to clipboard and show a success notification
  */
-export function copyToClipboard(text: string): void {
+export function copyToClipboard(text: string, successMessage?: string): void {
   if (!navigator.clipboard) {
     console.warn('Clipboard API not available');
     return;
@@ -16,7 +16,7 @@ export function copyToClipboard(text: string): void {
       const appEvents = getAppEvents();
       appEvents.publish({
         type: AppEvents.alertSuccess.name,
-        payload: [t('alerting.clipboard.success', 'URL copied to clipboard')],
+        payload: [successMessage ?? t('alerting.clipboard.success', 'URL copied to clipboard')],
       });
     },
     (error) => {
