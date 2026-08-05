@@ -3,8 +3,7 @@ import { PluginPage } from '@grafana/runtime';
 import { EmptyState, LinkButton } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { testIds } from './testIds';
-
-const NEW_DATA_SOURCE_URL = '/connections/datasources/new';
+import { NEW_DATA_SOURCE_URL } from '../constants';
 
 /**
  * Rendered instead of the app when no Alertmanager data sources exist in this Grafana instance.

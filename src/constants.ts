@@ -8,6 +8,9 @@ export const STORAGE_KEYS = {
 
 export const DEFAULT_PAGE_SIZE = 40;
 
+/** Grafana's "add a new data source" page – linked from the empty states for missing data sources. */
+export const NEW_DATA_SOURCE_URL = '/connections/datasources/new';
+
 export enum ROUTES {
   Alerts = 'alerts',
   Rules = 'rules',

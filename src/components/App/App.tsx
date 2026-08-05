@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppRootProps } from '@grafana/data';
 import { useTheme2 } from '@grafana/ui';
@@ -10,6 +10,7 @@ import { AlertingPermission } from '../../access-control/abilities';
 import { ProtectedRoute } from '../../access-control/components/ProtectedRoute';
 import { RequireAlertmanager } from '../RequireAlertmanager';
 import { useAvailableAlertmanagers } from '../../hooks/useAvailableAlertmanager';
+import { getExternalRulesSources } from '../../utils/datasource';
 
 const Alerts = React.lazy(() => import('../../features/alerts/pages/Alerts'));
 const Rules = React.lazy(() => import('../../features/rules/pages/RulesList'));
@@ -31,10 +32,12 @@ const InhibitRules = React.lazy(() => import('../../features/inhibitRules/pages/
 function App(_props: AppRootProps) {
   const theme = useTheme2();
   const hasAlertmanager = useAvailableAlertmanagers().length > 0;
+  const hasRulesSource = useMemo(() => getExternalRulesSources().length > 0, []);
 
-  // Alerts is the natural landing page, but without an Alertmanager it can only show an empty state –
-  // send those instances to the rules list instead, which works off Prometheus / Mimir.
-  const landingRoute = hasAlertmanager ? ROUTES.Alerts : ROUTES.Rules;
+  // Alerts is the natural landing page, but without an Alertmanager it can only show an empty state – send
+  // those instances to the rules list instead, which works off Prometheus / Mimir. If rules have nowhere to
+  // come from either, stay on alerts: its "no Alertmanager configured" page explains the situation best.
+  const landingRoute = !hasAlertmanager && hasRulesSource ? ROUTES.Rules : ROUTES.Alerts;
 
   return (
     <StoreProvider store={sharedStore}>

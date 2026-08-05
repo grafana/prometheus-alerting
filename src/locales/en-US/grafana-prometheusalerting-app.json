@@ -304,6 +304,9 @@
       "new-alerting-rule": "New alerting rule",
       "new-recording-rule": "New recording rule",
       "new-rule": "New rule",
+      "no-rules-sources": "Alert and recording rules are read from Prometheus, Mimir and Loki data sources. Add one to see rules here.",
+      "no-rules-sources-add-data-source": "Add data source",
+      "no-rules-sources-title": "No rules data sources configured",
       "view-mode": {
         "grouped": "Grouped",
         "list": "List"

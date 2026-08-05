@@ -4,12 +4,12 @@ import { AppRootProps, PluginType } from '@grafana/data';
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 
-import { config } from '@grafana/runtime';
+import { config, setDataSourceSrv } from '@grafana/runtime';
 
 import App from './App';
 import { testIds } from '../testIds';
 import { createTestWrapper } from '../../test/utils/test-wrapper';
-import { setMockGrafanaDataSources } from '../../test/mocks/grafana-runtime';
+import { createMockDataSourceSrv, setMockGrafanaDataSources } from '../../test/mocks/grafana-runtime';
 import { ROUTES } from '../../constants';
 
 vi.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
@@ -24,6 +24,7 @@ describe('Components/App', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     setMockGrafanaDataSources();
+    setDataSourceSrv(createMockDataSourceSrv());
 
     props = {
       basename: 'a/sample-app',
@@ -76,7 +77,7 @@ describe('Components/App', () => {
     expect(screen.getByText('No Alertmanager data sources configured')).toBeInTheDocument();
   });
 
-  test('lands on the rules page instead of alerts when no Alertmanager is configured', async () => {
+  test('lands on the rules page instead of alerts when only rules data sources are configured', async () => {
     (config as any).datasources = {};
 
     renderApp();
@@ -86,5 +87,18 @@ describe('Components/App', () => {
       expect(screen.queryByTestId(testIds.noAlertmanager.container)).not.toBeInTheDocument();
     });
     expect(screen.queryByTestId(testIds.alerts.container)).not.toBeInTheDocument();
+  });
+
+  test('lands on alerts when neither an Alertmanager nor a rules data source is configured', async () => {
+    (config as any).datasources = {};
+    const dataSourceSrv = createMockDataSourceSrv();
+    setDataSourceSrv({ ...dataSourceSrv, getList: () => [] } as never);
+
+    renderApp();
+
+    // Redirecting to rules would only show a second empty state – the Alertmanager page explains more.
+    await waitFor(() => {
+      expect(screen.getByTestId(testIds.noAlertmanager.container)).toBeInTheDocument();
+    });
   });
 });
