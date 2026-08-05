@@ -1,5 +1,5 @@
 import { css, cx } from '@emotion/css';
-import React, { useCallback, useEffect, useId, useRef } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 
 import { GrafanaTheme2 } from '@grafana/data';
@@ -82,7 +82,8 @@ function FilterSidebarForm() {
   const { filterState, updateFilters } = useRulesFilter();
   const isApplyingRef = useRef(false);
 
-  const dataSourceOptions = useDataSourceOptions();
+  const selectedDataSources = useMemo(() => filterState.dataSourceNames ?? [], [filterState.dataSourceNames]);
+  const dataSourceOptions = useDataSourceOptions(selectedDataSources);
   const { labelOptions } = useLabelOptions();
 
   const ruleNameId = useId();

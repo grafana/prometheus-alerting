@@ -35,9 +35,7 @@ export const DataSourceSection = ({
   const styles = useStyles2((theme) => getStyles(theme, isCollapsed));
 
   const configureLink = `/connections/datasources/edit/${String(uid)}`;
-  const errorFeedback = error
-    ? getRulesErrorFeedback(error, t('rules.datasource-section.error-title', 'Cannot load rules for this data source'))
-    : undefined;
+  const errorFeedback = error ? getRulesErrorFeedback(error) : undefined;
 
   return (
     <section aria-labelledby={`datasource-${String(uid)}-heading`} role="listitem">
@@ -68,7 +66,7 @@ export const DataSourceSection = ({
 
                 {Boolean(error) && (
                   <Toggletip
-                    title={errorFeedback?.title}
+                    title={t('rules.datasource-section.error-title', 'Cannot load rules for this data source')}
                     content={
                       <Text color="error">
                         <span>{errorFeedback?.description}</span>

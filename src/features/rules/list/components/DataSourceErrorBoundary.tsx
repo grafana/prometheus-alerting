@@ -1,16 +1,21 @@
 import React from 'react';
 
-import { t, Trans } from '@grafana/i18n';
-import { Alert, ErrorBoundary, ErrorWithStack, Text } from '@grafana/ui';
+import { ErrorBoundary } from '@grafana/ui';
 
 import { DataSourceRulesSourceIdentifier } from '../../../../types/datasources';
 
-import { DataSourceSection } from './DataSourceSection';
+import { ReportDataSourceError } from '../hooks/useDataSourceErrors';
 
 /**
  * Some more exotic Prometheus data sources might not be 100% compatible with Prometheus API
- * We don't want them to break the whole page, so we wrap them in an error boundary
+ * We don't want them to break the whole page, so we wrap them in an error boundary.
+ * Data sources that throw are hidden from the list and reported in the sidebar instead.
  */
+
+// Stable reference, a new Error on every render would re-trigger the error reporting effect
+const UNKNOWN_ERROR = new Error(
+  'Unable to load rules from this data source. Does the data source support the Prometheus API?'
+);
 
 export function DataSourceErrorBoundary({
   children,
@@ -24,22 +29,7 @@ export function DataSourceErrorBoundary({
       {({ error, errorInfo }) => {
         if (error || errorInfo) {
           const { uid, name } = rulesSourceIdentifier;
-          return (
-            <DataSourceSection uid={uid} name={name}>
-              <Alert title={t('rules.error-boundary.title', 'Unable to load rules from this data source')}>
-                <Text>
-                  <Trans i18nKey="rules.error-boundary.message">
-                    Check the data source configuration. Does the data source support Prometheus API?
-                  </Trans>
-                </Text>
-                <ErrorWithStack
-                  error={error}
-                  errorInfo={errorInfo}
-                  title={t('rules.error-boundary.stack-title', 'Unable to load rules from this data source')}
-                />
-              </Alert>
-            </DataSourceSection>
-          );
+          return <ReportDataSourceError uid={uid} name={name} error={error ?? UNKNOWN_ERROR} />;
         }
         return children;
       }}

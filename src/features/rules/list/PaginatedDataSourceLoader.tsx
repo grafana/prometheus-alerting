@@ -16,6 +16,7 @@ import { ListSection } from './components/ListSection';
 import { LoadMoreButton } from './components/LoadMoreButton';
 import { NoRulesFound } from './components/NoRulesFound';
 import { groupFilter as groupFilterFn } from './hooks/filters';
+import { useReportDataSourceError } from './hooks/useDataSourceErrors';
 import { toIndividualRuleGroups, usePrometheusGroupsGenerator } from './hooks/prometheusGroupsGenerator';
 import { useLazyLoadPrometheusGroups } from './hooks/useLazyLoadPrometheusGroups';
 
@@ -98,6 +99,14 @@ function PaginatedGroupsLoader({
 
   const hasNoRules = isEmpty(groups) && !isLoading;
   const groupsByNamespace = useMemo(() => groupBy(groups, 'file'), [groups]);
+
+  // Data sources that failed are reported in the sidebar. When we managed to load some groups
+  // before failing we keep the section around, together with its inline error indicator.
+  useReportDataSourceError(uid, name, error);
+
+  if (error && isEmpty(groups)) {
+    return null;
+  }
 
   // Hide datasource section when filters are active and there are no matching results
   if (hideOnEmpty && hasNoRules) {

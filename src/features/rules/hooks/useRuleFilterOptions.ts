@@ -1,20 +1,34 @@
 import { useMemo } from 'react';
 
+import { ComboboxOption } from '@grafana/ui';
+
 import { getExternalRulesSources } from '../../../utils/datasource';
+import { useDataSourceErrors } from '../list/hooks/useDataSourceErrors';
 
 /**
  * Hook to get data source options for the filter
  * Uses name as value for user-friendly URLs (datasource:mimir-cloud instead of datasource:abc123)
+ *
+ * Data sources that reported an error are hidden from the rule list, so filtering by them would
+ * only ever yield an empty list – they are dropped from the options. Ones that are already
+ * selected stay in the list, so they can still be deselected.
+ *
+ * @param selectedNames Names of the data sources currently selected in the filter
  */
-export function useDataSourceOptions() {
+export function useDataSourceOptions(selectedNames: string[] = []): Array<ComboboxOption<string>> {
   const dataSources = useMemo(() => getExternalRulesSources(), []);
+  const { errors } = useDataSourceErrors();
 
   const options = useMemo(() => {
-    return dataSources.map((ds) => ({
-      label: ds.name,
-      value: ds.name, // Use name for user-friendly search queries
-    }));
-  }, [dataSources]);
+    const failingUids = new Set(errors.map((error) => error.uid));
+
+    return dataSources
+      .filter((ds) => !failingUids.has(ds.uid) || selectedNames.includes(ds.name))
+      .map((ds) => ({
+        label: ds.name,
+        value: ds.name, // Use name for user-friendly search queries
+      }));
+  }, [dataSources, errors, selectedNames]);
 
   return options;
 }

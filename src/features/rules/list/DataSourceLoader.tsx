@@ -7,48 +7,42 @@ import { DataSourceRulesSourceIdentifier } from '../../../types/datasources';
 import { DataSourceSection } from './components/DataSourceSection';
 import { DataSourceErrorBoundary } from './components/DataSourceErrorBoundary';
 import { PaginatedDataSourceLoader } from './PaginatedDataSourceLoader';
+import { useReportDataSourceError } from './hooks/useDataSourceErrors';
 
 interface DataSourceLoaderProps {
   rulesSourceIdentifier: DataSourceRulesSourceIdentifier;
   groupFilter?: string;
   namespaceFilter?: string;
-  /** When true, hide the datasource section if it has errors or no matching results */
-  hideOnEmptyOrError?: boolean;
+  /** When true, hide the datasource section if it has no matching results */
+  hideOnEmpty?: boolean;
 }
 
 export function DataSourceLoader({
   rulesSourceIdentifier,
   groupFilter,
   namespaceFilter,
-  hideOnEmptyOrError = false,
+  hideOnEmpty = false,
 }: DataSourceLoaderProps) {
   const { uid, name } = rulesSourceIdentifier;
 
   // Run feature discovery
   const { data: features, isLoading, error } = useDiscoverFeaturesQuery({ uid });
 
+  // Data sources we cannot talk to are hidden from the list and reported in the sidebar instead
+  const discoveryError = error ?? (!isLoading && !features ? 'Unable to discover data source features' : undefined);
+  useReportDataSourceError(uid, name, discoveryError);
+
   if (isLoading) {
-    // While loading, show skeleton only if not hiding on empty/error
+    // While loading, show skeleton only if not hiding on empty
     // (we don't know yet if there will be results)
-    if (hideOnEmptyOrError) {
+    if (hideOnEmpty) {
       return null;
     }
     return <DataSourceSection loader={<Skeleton width={250} height={16} />} uid={uid} name={name} />;
   }
 
-  if (error) {
-    // Hide datasource with errors when filters are active
-    if (hideOnEmptyOrError) {
-      return null;
-    }
-    return <DataSourceSection error={error} uid={uid} name={name} />;
-  }
-
-  if (!features) {
-    if (hideOnEmptyOrError) {
-      return null;
-    }
-    return <DataSourceSection error="Unable to discover data source features" uid={uid} name={name} />;
+  if (discoveryError || !features) {
+    return null;
   }
 
   return (
@@ -59,7 +53,7 @@ export function DataSourceLoader({
         rulerApiEnabled={features.rulerApiEnabled}
         groupFilter={groupFilter}
         namespaceFilter={namespaceFilter}
-        hideOnEmpty={hideOnEmptyOrError}
+        hideOnEmpty={hideOnEmpty}
       />
     </DataSourceErrorBoundary>
   );

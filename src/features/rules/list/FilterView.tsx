@@ -13,9 +13,11 @@ import { hashRule } from '@grafana/external-rules/hashing';
 import { RulesFilter } from '../search/rulesSearchParser';
 
 import { DataSourceRuleLoader } from './DataSourceRuleLoader';
+import { DataSourceErrorsFooter } from './components/DataSourceErrorsStatus';
 import { FilterProgressState, FilterStatus } from './components/FilterStatus';
 import { SkeletonListItem } from './components/ListItem';
 import { LoadMoreHelper } from './components/LoadMoreHelper';
+import { useDataSourceErrors } from './hooks/useDataSourceErrors';
 import { useFilteredRulesIteratorProvider } from './hooks/useFilteredRulesIterator';
 import { FRONTEND_LIST_PAGE_SIZE, FILTERED_GROUPS_API_PAGE_SIZE } from '../../../utils/paginationLimits';
 
@@ -50,6 +52,7 @@ function FilterViewResults({ filterState }: FilterViewProps) {
 
   /* this hook returns a function that creates an AsyncIterable<PromRuleWithOrigin> which we will use to populate the front-end */
   const getFilteredRulesIterator = useFilteredRulesIteratorProvider();
+  const { clearErrors } = useDataSourceErrors();
 
   const iteration = useRef<{
     rulesBatchIterator: AsyncIterator<PromRuleWithOrigin[]>;
@@ -116,6 +119,8 @@ function FilterViewResults({ filterState }: FilterViewProps) {
   /* When we unmount the component we make sure to abort all iterables and stop making HTTP requests */
   useUnmountEffect(() => {
     cancelSearch();
+    // Errors are reported by the iterables, which have no lifecycle of their own to clean up after
+    clearErrors();
   });
 
   // track the state of the filter progress, which is either searching, done or aborted
@@ -131,14 +136,17 @@ function FilterViewResults({ filterState }: FilterViewProps) {
   /* If we don't have any rules and have exhausted all sources, show a EmptyState */
   if (noRulesFound && doneSearching) {
     return (
-      <EmptyState
-        variant="not-found"
-        message={t('alerting.rule-list.filter-view.no-rules-found-title', 'No matching rules found')}
-      >
-        <Trans i18nKey="alerting.rule-list.filter-view.no-rules-found">
-          No alert or recording rules matched your current set of filters.
-        </Trans>
-      </EmptyState>
+      <Stack direction="column" gap={1}>
+        <EmptyState
+          variant="not-found"
+          message={t('alerting.rule-list.filter-view.no-rules-found-title', 'No matching rules found')}
+        >
+          <Trans i18nKey="alerting.rule-list.filter-view.no-rules-found">
+            No alert or recording rules matched your current set of filters.
+          </Trans>
+        </EmptyState>
+        <DataSourceErrorsFooter />
+      </Stack>
     );
   }
 

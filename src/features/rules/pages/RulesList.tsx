@@ -13,6 +13,7 @@ import { AlertingAction, isAbilityAllowed, useUnscopedAbilities } from '../../..
 import { useRulesFilter } from '../hooks/useRulesFilter';
 import { FilterView } from '../list/FilterView';
 import { GroupedView } from '../list/GroupedView';
+import { DataSourceErrorsProvider } from '../list/hooks/useDataSourceErrors';
 
 type ViewMode = 'grouped' | 'list';
 
@@ -47,40 +48,42 @@ function RulesPage() {
 
   return (
     <PluginPage subTitle={t('rules.page-subtitle', 'Manage and monitor alert rules from your data sources')}>
-      <div data-testid={testIds.rules.container}>
-        <Stack direction="column" gap={2}>
-          {/* Search and view controls */}
-          <Stack direction="row" alignItems="center" gap={1}>
-            <Box flex={1}>
-              <RulesFilter />
-            </Box>
-            <RadioButtonGroup value={effectiveViewMode} options={viewModeOptions} onChange={setViewMode} />
-            {canCreateRules && (
-              <Dropdown overlay={newRuleMenu} placement="bottom-end">
-                <Button icon="plus" variant="primary">
-                  <Trans i18nKey="alerting.rule-list.new-rule">New rule</Trans>
-                </Button>
-              </Dropdown>
-            )}
-          </Stack>
-
-          {/* Sidebar + rule list */}
-          <div style={{ display: 'flex', gap: '16px', minHeight: 0 }}>
-            <RulesFilterSidebar />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {effectiveViewMode === 'grouped' ? (
-                <GroupedView
-                  groupFilter={filterState.groupName}
-                  namespaceFilter={filterState.namespace}
-                  dataSourceFilter={filterState.dataSourceNames}
-                />
-              ) : (
-                <FilterView filterState={filterState} />
+      <DataSourceErrorsProvider>
+        <div data-testid={testIds.rules.container}>
+          <Stack direction="column" gap={2}>
+            {/* Search and view controls */}
+            <Stack direction="row" alignItems="center" gap={1}>
+              <Box flex={1}>
+                <RulesFilter />
+              </Box>
+              <RadioButtonGroup value={effectiveViewMode} options={viewModeOptions} onChange={setViewMode} />
+              {canCreateRules && (
+                <Dropdown overlay={newRuleMenu} placement="bottom-end">
+                  <Button icon="plus" variant="primary">
+                    <Trans i18nKey="alerting.rule-list.new-rule">New rule</Trans>
+                  </Button>
+                </Dropdown>
               )}
+            </Stack>
+
+            {/* Sidebar + rule list */}
+            <div style={{ display: 'flex', gap: '16px', minHeight: 0 }}>
+              <RulesFilterSidebar />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {effectiveViewMode === 'grouped' ? (
+                  <GroupedView
+                    groupFilter={filterState.groupName}
+                    namespaceFilter={filterState.namespace}
+                    dataSourceFilter={filterState.dataSourceNames}
+                  />
+                ) : (
+                  <FilterView filterState={filterState} />
+                )}
+              </div>
             </div>
-          </div>
-        </Stack>
-      </div>
+          </Stack>
+        </div>
+      </DataSourceErrorsProvider>
     </PluginPage>
   );
 }

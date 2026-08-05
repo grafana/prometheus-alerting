@@ -29,9 +29,11 @@ export async function discoverDataSourceFeatures(uid: string): Promise<DataSourc
     const application = type === 'loki' ? 'loki' : 'cortex';
 
     // Check if we can fetch rules via the prometheus compatible api
-    const hasPromRules = await testPromRulesSupport(uid, type);
-    if (!hasPromRules) {
-      throw new Error(`Unable to fetch alert rules. Is the data source properly configured?`);
+    const promRulesError = await testPromRulesSupport(uid, type);
+    if (promRulesError) {
+      // Rethrow the original failure – its status, body and trace id explain *why* the data
+      // source is unusable, which a generic message would throw away
+      throw promRulesError;
     }
 
     // Check if the ruler API is enabled
@@ -88,11 +90,18 @@ async function fetchBuildInfo(uid: string): Promise<PromBuildInfoResponse | unde
 }
 
 /**
- * Test if the data source supports fetching rules via Prometheus API
+ * Test if the data source supports fetching rules via Prometheus API.
+ * Resolves with the failure, or `undefined` when the endpoint is available.
  */
-async function testPromRulesSupport(uid: string, type: string): Promise<boolean> {
+async function testPromRulesSupport(uid: string, type: string): Promise<unknown | undefined> {
   const path = getPrometheusRulesApiBasePath(type === 'loki' ? 'loki' : 'prometheus');
-  return isEndpointAvailable(`/api/datasources/proxy/uid/${uid}/${path}`);
+
+  try {
+    await fetchEndpoint(`/api/datasources/proxy/uid/${uid}/${path}`);
+    return undefined;
+  } catch (error) {
+    return error ?? new Error('Unable to fetch alert rules. Is the data source properly configured?');
+  }
 }
 
 /**
@@ -120,20 +129,6 @@ async function testRulerSupport(uid: string, type: string): Promise<boolean> {
     }
 
     // Preserve the existing conservative behavior for unrecognized failures.
-    return false;
-  }
-}
-
-/** Returns whether an endpoint responds successfully, while preserving permission errors for the caller. */
-async function isEndpointAvailable(url: string): Promise<boolean> {
-  try {
-    await fetchEndpoint(url);
-    return true;
-  } catch (error) {
-    if (isForbiddenError(error)) {
-      throw error;
-    }
-
     return false;
   }
 }

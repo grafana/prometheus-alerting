@@ -25,11 +25,22 @@ export const featureDiscoveryApi = createApi({
 
 export const { useDiscoverFeaturesQuery, useLazyDiscoverFeaturesQuery } = featureDiscoveryApi;
 
-export function toFeatureDiscoveryError(error: unknown): FetchBaseQueryError {
+/**
+ * Request context we keep alongside the RTK Query error – `FetchError` carries it, but only
+ * `status` and `data` survive the conversion, and a bare "Bad Gateway" is not much to go on.
+ */
+interface RulesRequestContext {
+  statusText?: string;
+  url?: string;
+}
+
+export function toFeatureDiscoveryError(error: unknown): FetchBaseQueryError & RulesRequestContext {
   if (isFetchError(error)) {
     return {
       status: error.status,
       data: error.data,
+      statusText: error.statusText,
+      url: error.config?.url,
     };
   }
 
