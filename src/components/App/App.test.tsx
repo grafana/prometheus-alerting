@@ -10,6 +10,7 @@ import App from './App';
 import { testIds } from '../testIds';
 import { createTestWrapper } from '../../test/utils/test-wrapper';
 import { setMockGrafanaDataSources } from '../../test/mocks/grafana-runtime';
+import { ROUTES } from '../../constants';
 
 vi.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
   AlertmanagerPicker: () => <div data-testid="alertmanager-picker" />,
@@ -73,5 +74,17 @@ describe('Components/App', () => {
       expect(screen.getByTestId(testIds.noAlertmanager.container)).toBeInTheDocument();
     });
     expect(screen.getByText('No Alertmanager data sources configured')).toBeInTheDocument();
+  });
+
+  test('lands on the rules page instead of alerts when no Alertmanager is configured', async () => {
+    (config as any).datasources = {};
+
+    renderApp();
+
+    // Landing on alerts would only show the "no Alertmanager" empty state, so we redirect to rules.
+    await waitFor(() => {
+      expect(screen.queryByTestId(testIds.noAlertmanager.container)).not.toBeInTheDocument();
+    });
+    expect(screen.queryByTestId(testIds.alerts.container)).not.toBeInTheDocument();
   });
 });
