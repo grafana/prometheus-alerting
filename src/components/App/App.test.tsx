@@ -39,17 +39,21 @@ describe('Components/App', () => {
     } as unknown as AppRootProps;
   });
 
-  test('renders the alerts page by default', async () => {
+  function renderApp(initialEntry = '/') {
     const Wrapper = createTestWrapper();
-    render(
+    return render(
       <Wrapper>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={[initialEntry]}>
           <Suspense fallback={null}>
             <App {...props} />
           </Suspense>
         </MemoryRouter>
       </Wrapper>
     );
+  }
+
+  test('renders the alerts page by default', async () => {
+    renderApp();
 
     // Application is lazy loaded, so we need to wait for the component to render
     await waitFor(
@@ -63,16 +67,7 @@ describe('Components/App', () => {
   test('renders an empty state instead of crashing when no Alertmanager is configured', async () => {
     (config as any).datasources = {};
 
-    const Wrapper = createTestWrapper();
-    render(
-      <Wrapper>
-        <MemoryRouter>
-          <Suspense fallback={null}>
-            <App {...props} />
-          </Suspense>
-        </MemoryRouter>
-      </Wrapper>
-    );
+    renderApp(`/${ROUTES.Alerts}`);
 
     await waitFor(() => {
       expect(screen.getByTestId(testIds.noAlertmanager.container)).toBeInTheDocument();
