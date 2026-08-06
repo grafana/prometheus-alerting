@@ -18,6 +18,7 @@ import Skeleton from 'react-loading-skeleton';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { useCreateSilence, useSilence } from '../hooks/useSilences';
 import { SilenceFormSchema, type SilenceFormData } from '../utils/silenceFormSchema';
+import { formatDateTimeLocal } from '../utils/silences.utils';
 import type { PostableSilence } from '@grafana/external-alertmanager/vanilla';
 import { ROUTES } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
@@ -97,15 +98,6 @@ function SilenceForm() {
   // Get current time and 1 hour from now as defaults
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-
-  const formatDateTimeLocal = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
 
   const {
     control,
