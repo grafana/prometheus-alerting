@@ -2,9 +2,10 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, Field, Input, Stack } from '@grafana/ui';
+import { Button, Field, Input, Stack } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { normalizeInhibitRuleMatchers, type InhibitRule } from '@grafana/external-alertmanager/vanilla';
+import { MutationError } from '../../../access-control/components/MutationError';
 
 /**
  * Matchers are stored as string arrays in the API (e.g. ["severity = critical", "team = ops"]).
@@ -135,20 +136,15 @@ export function InhibitRuleFormFields({
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack direction="column" gap={2}>
-        {Boolean(error) && (
-          <Alert
-            title={
-              isEditMode
-                ? t('inhibit-rules.form.error-updating-title', 'Error updating inhibit rule')
-                : t('inhibit-rules.form.error-creating-title', 'Error creating inhibit rule')
-            }
-            severity="error"
-          >
-            {String(
-              error instanceof Error ? error.message : t('inhibit-rules.form.error-generic', 'An error occurred')
-            )}
-          </Alert>
-        )}
+        <MutationError
+          error={error}
+          fallbackTitle={
+            isEditMode
+              ? t('inhibit-rules.form.error-updating-title', 'Error updating inhibit rule')
+              : t('inhibit-rules.form.error-creating-title', 'Error creating inhibit rule')
+          }
+          resource={t('inhibit-rules.resource-label', 'inhibit rules')}
+        />
 
         <Field
           noMargin
@@ -208,8 +204,8 @@ export function InhibitRuleFormFields({
                   ? t('inhibit-rules.form.updating', 'Updating...')
                   : t('inhibit-rules.form.creating', 'Creating...')
                 : isEditMode
-                ? t('inhibit-rules.form.update-button', 'Update')
-                : t('inhibit-rules.form.create-button', 'Create'))}
+                  ? t('inhibit-rules.form.update-button', 'Update')
+                  : t('inhibit-rules.form.create-button', 'Create'))}
           </Button>
           <Button type="button" variant="secondary" onClick={onCancel} disabled={isLoading}>
             {cancelButtonText ?? t('inhibit-rules.form.cancel-button', 'Cancel')}

@@ -69,14 +69,22 @@ function App(_props: AppRootProps) {
               <Route path={ROUTES.Routes} element={<RouteTree />} />
               <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
               <Route path={ROUTES.Receivers} element={<Receivers />} />
+              <Route path={ROUTES.Templates} element={<Templates />} />
+              <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
+              <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
+              <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
             </Route>
-            <Route path={ROUTES.Templates} element={<Templates />} />
+            <Route
+              element={
+                <ProtectedRoute
+                  requirements={[AlertingPermission.NotificationsRead, AlertingPermission.NotificationsWrite]}
+                />
+              }
+            >
+              <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
+            </Route>
             <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
             <Route path={ROUTES.Silences} element={<Silences />} />
-            <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
-            <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
-            <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
-            <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
           </Route>
         </Routes>
       </SkeletonTheme>
