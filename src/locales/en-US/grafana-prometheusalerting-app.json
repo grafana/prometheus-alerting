@@ -1157,7 +1157,6 @@
       "title": "Template"
     },
     "error-loading-title": "Error loading templates",
-    "error-message": "An error occurred",
     "error-title": "Error",
     "form": {
       "content": "Content",
@@ -1172,6 +1171,7 @@
     },
     "no-templates-message": "No templates are configured in the Alertmanager.",
     "page-subtitle": "Customize notification message templates",
+    "resource-label": "templates",
     "update": {
       "error": "Failed to update template",
       "success": "Template updated successfully"
