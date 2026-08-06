@@ -62,4 +62,12 @@ test.describe('Routes RBAC - editor', () => {
     await routesListPage.deleteButton.click();
     await expect(routesListPage.confirmDeleteModal).toBeVisible();
   });
+
+  test('the receiver preview remains read-only for an editor', async ({ routesListPage }) => {
+    await routesListPage.openRootRoute();
+    await routesListPage.openReceiverLink('empty-default-receiver');
+
+    await expect(routesListPage.receiverDrawer.getByRole('button', { name: 'Edit', exact: true })).toBeHidden();
+    await expect(routesListPage.receiverDrawer.getByRole('button', { name: 'Delete', exact: true })).toBeHidden();
+  });
 });

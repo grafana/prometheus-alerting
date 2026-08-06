@@ -7,7 +7,7 @@ import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduc
 import { addRouteAction } from '../../../reducers/alertmanager/routes';
 import { FormAmRoute, InsertPosition } from '../types';
 import { formAmRouteToAmRoute } from '../utils/routeTransform';
-import { getRouteMutationErrorFeedback } from '../utils/errorFeedback';
+import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 import { useRoutes } from './useRoutes';
 
 interface UseAddRouteResult {
@@ -42,7 +42,10 @@ export function useAddRoute(): UseAddRouteResult {
 
         return true;
       } catch (err) {
-        const feedback = getRouteMutationErrorFeedback(err, t('routes.add.error', 'Failed to add route'));
+        const feedback = getMutationErrorFeedback(err, {
+          fallbackTitle: t('routes.add.error', 'Failed to add route'),
+          resource: t('routes.resource-label', 'routes'),
+        });
         notifyError(feedback.title, feedback.description);
 
         return false;

@@ -2,7 +2,6 @@ import { Action } from '@reduxjs/toolkit';
 import reduceReducers from 'reduce-reducers';
 import { defaultsDeep } from 'lodash';
 
-import { getAlertmanagerConfigMutationAbility } from '../access-control/abilities.alertmanager';
 import { PermissionDeniedError, UnsupportedOperationError } from '../access-control/errors';
 import { timeIntervalsReducer } from '../reducers/alertmanager/timeIntervals';
 import { routesReducer } from '../reducers/alertmanager/routes';
@@ -10,7 +9,7 @@ import { notificationTemplatesReducer } from '../reducers/alertmanager/templates
 import { receiversReducer } from '../reducers/alertmanager/receivers';
 import { inhibitRulesReducer } from '../reducers/alertmanager/inhibitRules';
 import { useAlertmanager } from './useAlertmanager';
-import { useHasConfigurationAPI } from './useHasConfigurationAPI';
+import { useAlertmanagerConfigMutationAbility } from './useAlertmanagerConfigMutationAbility';
 import { mergeRequestStates } from '../utils/requestState';
 import { mimirAlertmanagerApi } from '../api/alertmanager/mimir.endpoints';
 import {
@@ -50,7 +49,7 @@ export function useProduceNewAlertmanagerConfiguration() {
   const [updateAlertManagerConfiguration, updateAlertmanagerState] = updateUserConfiguration.useMutation();
 
   const newConfigurationState = mergeRequestStates(fetchAlertmanagerState, updateAlertmanagerState);
-  const configurationMutationAbility = getAlertmanagerConfigMutationAbility(useHasConfigurationAPI());
+  const configurationMutationAbility = useAlertmanagerConfigMutationAbility();
 
   if (!dataSourceUID) {
     throw ERR_NO_ACTIVE_AM;
