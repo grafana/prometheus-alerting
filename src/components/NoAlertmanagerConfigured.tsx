@@ -1,6 +1,6 @@
 import React from 'react';
 import { PluginPage } from '@grafana/runtime';
-import { EmptyState, LinkButton } from '@grafana/ui';
+import { EmptyState, LinkButton, Stack } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { testIds } from './testIds';
 import { NEW_DATA_SOURCE_URL } from '../constants';
@@ -17,15 +17,15 @@ export function NoAlertmanagerConfigured() {
           variant="not-found"
           message={t('alertmanager.none-configured.title', 'No Alertmanager data sources configured')}
         >
-          {t(
-            'alertmanager.none-configured.body',
-            'This app needs at least one Alertmanager data source to show alerts, notification routing and silences.'
-          )}
-          <br />
-          <br />
-          <LinkButton href={NEW_DATA_SOURCE_URL} icon="plus">
-            {t('alertmanager.none-configured.add-data-source', 'Add Alertmanager data source')}
-          </LinkButton>
+          <Stack direction="column" gap={2} alignItems="center">
+            {t(
+              'alertmanager.none-configured.body',
+              'This app needs at least one Alertmanager data source to show alerts, notification routing and silences.'
+            )}
+            <LinkButton href={NEW_DATA_SOURCE_URL} icon="plus">
+              {t('alertmanager.none-configured.add-data-source', 'Add Alertmanager data source')}
+            </LinkButton>
+          </Stack>
         </EmptyState>
       </div>
     </PluginPage>
