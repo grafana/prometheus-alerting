@@ -1,5 +1,4 @@
 import { renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AlertingPermission } from '../../../access-control/abilities';
 import { PermissionDeniedError } from '../../../access-control/errors';
