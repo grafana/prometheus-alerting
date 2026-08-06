@@ -124,12 +124,3 @@ export function useReportDataSourceError(uid: string, name: string, error: unkno
     return () => clearError(uid);
   }, [uid, name, description, details, reportError, clearError]);
 }
-
-/**
- * Renderless version of {@link useReportDataSourceError}, for places where we cannot call hooks –
- * such as the render prop of an error boundary.
- */
-export function ReportDataSourceError({ uid, name, error }: { uid: string; name: string; error: unknown }) {
-  useReportDataSourceError(uid, name, error);
-  return null;
-}

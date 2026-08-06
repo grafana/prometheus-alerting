@@ -79,17 +79,13 @@ function DataSourceErrorItem({ uid, name, description, details }: DataSourceRule
         <Text variant="h6" element="h3">
           {name}
         </Text>
-        <LinkButton variant="secondary" fill="text" size="sm" href={`/connections/datasources/edit/${uid}`}>
+        <LinkButton variant="secondary" size="sm" href={`/connections/datasources/edit/${uid}`}>
           <Trans i18nKey="alerting.rule-list.datasource-errors.configure">Configure</Trans>
         </LinkButton>
       </Stack>
       {/* The status line in the details repeats the message of a bodyless failure verbatim */}
       {!details?.includes(description) && <Text color="error">{description}</Text>}
-      {details && (
-        <Text color="error" variant="code">
-          {details}
-        </Text>
-      )}
+      {details && <code>{details}</code>}
     </Stack>
   );
 }

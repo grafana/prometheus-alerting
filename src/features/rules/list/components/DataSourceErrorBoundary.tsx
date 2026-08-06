@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { ErrorBoundary } from '@grafana/ui';
 
 import { DataSourceRulesSourceIdentifier } from '../../../../types/datasources';
 
-import { ReportDataSourceError } from '../hooks/useDataSourceErrors';
+import { useReportDataSourceError } from '../hooks/useDataSourceErrors';
 
 /**
  * Some more exotic Prometheus data sources might not be 100% compatible with Prometheus API
@@ -24,15 +24,14 @@ export function DataSourceErrorBoundary({
   children: React.ReactNode;
   rulesSourceIdentifier: DataSourceRulesSourceIdentifier;
 }) {
+  const { uid, name } = rulesSourceIdentifier;
+  const [caughtError, setCaughtError] = useState<Error | null>(null);
+
+  useReportDataSourceError(uid, name, caughtError);
+
   return (
-    <ErrorBoundary>
-      {({ error, errorInfo }) => {
-        if (error || errorInfo) {
-          const { uid, name } = rulesSourceIdentifier;
-          return <ReportDataSourceError uid={uid} name={name} error={error ?? UNKNOWN_ERROR} />;
-        }
-        return children;
-      }}
+    <ErrorBoundary onError={(error) => setCaughtError(error ?? UNKNOWN_ERROR)}>
+      {({ error, errorInfo }) => (error || errorInfo ? null : children)}
     </ErrorBoundary>
   );
 }
