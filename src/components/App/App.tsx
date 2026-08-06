@@ -45,6 +45,7 @@ function App(_props: AppRootProps) {
             <Route path={ROUTES.Templates} element={<Templates />} />
             <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
             <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
+            <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
           </Route>
           <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesRead]} />}>
             <Route path={ROUTES.Rules} element={<Rules />} />
@@ -71,7 +72,6 @@ function App(_props: AppRootProps) {
           </Route>
           <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
           <Route path={ROUTES.Silences} element={<Silences />} />
-          <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
         </Routes>
       </SkeletonTheme>
     </StoreProvider>

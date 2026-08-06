@@ -17,7 +17,8 @@ import { ViewState } from '../../../components/ViewState';
 import { DataSourceError } from '../../../components/AlertmanagerError';
 import { InhibitRuleDrawer } from '../components/InhibitRuleDrawer';
 import { InhibitRuleCreateDrawer } from '../components/InhibitRuleCreateDrawer';
-import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 
 const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
   if (!matchers || matchers.length === 0) {
@@ -39,7 +40,7 @@ const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
 
 function InhibitRulesPage() {
   const { inhibitRules, isLoading, error, isSuccess } = useInhibitRules();
-  const hasConfigurationAPI = useHasConfigurationAPI();
+  const canMutateInhibitRules = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
   const [selectedInhibitRule, setSelectedInhibitRule] = useState<NormalizedInhibitRule | null>(null);
   const [selectedInhibitRuleIndex, setSelectedInhibitRuleIndex] = useState<number | null>(null);
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
@@ -94,7 +95,7 @@ function InhibitRulesPage() {
   return (
     <AlertmanagerPage subTitle={t('inhibit-rules.page-subtitle', 'Suppress alerts based on other active alerts')}>
       <div data-testid={testIds.inhibitRules.container}>
-        {hasConfigurationAPI && (
+        {canMutateInhibitRules && (
           <Stack justifyContent="flex-end">
             <Button icon="plus" onClick={() => setIsCreateDrawerOpen(true)}>
               {t('inhibit-rules.add-button', 'Add inhibit rule')}
@@ -123,7 +124,7 @@ function InhibitRulesPage() {
               message={t('inhibit-rules.no-rules-message', 'No inhibit rules are configured in the Alertmanager.')}
               variant="call-to-action"
             >
-              {hasConfigurationAPI && (
+              {canMutateInhibitRules && (
                 <Button icon="plus" onClick={() => setIsCreateDrawerOpen(true)}>
                   {t('inhibit-rules.add-button', 'Add inhibit rule')}
                 </Button>

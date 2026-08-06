@@ -76,6 +76,7 @@
       "type": "page",
       "name": "Inhibit Rules",
       "path": "/a/%PLUGIN_ID%/inhibit-rules",
+      "action": "alert.notifications.external:read",
       "addToNav": true,
       "defaultNav": false
     },
