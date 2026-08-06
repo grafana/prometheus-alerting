@@ -83,8 +83,16 @@ function App(_props: AppRootProps) {
             >
               <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
             </Route>
-            <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
-            <Route path={ROUTES.Silences} element={<Silences />} />
+            <Route
+              element={
+                <ProtectedRoute requirements={[AlertingPermission.InstancesRead, AlertingPermission.InstancesWrite]} />
+              }
+            >
+              <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
+            </Route>
+            <Route element={<ProtectedRoute requirements={[AlertingPermission.InstancesRead]} />}>
+              <Route path={ROUTES.Silences} element={<Silences />} />
+            </Route>
           </Route>
         </Routes>
       </SkeletonTheme>

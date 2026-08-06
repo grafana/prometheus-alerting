@@ -61,6 +61,7 @@
       "type": "page",
       "name": "Silences",
       "path": "/a/%PLUGIN_ID%/silences",
+      "action": "alert.instances.external:read",
       "addToNav": true,
       "defaultNav": false
     },

@@ -1130,6 +1130,7 @@
     "recreate": {
       "page-title": "Recreate Silence"
     },
+    "resource-label": "silences",
     "show-inactive": "Show inactive silences"
   },
   "templates": {
