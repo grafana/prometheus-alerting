@@ -13,7 +13,7 @@ import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
 import { isAbilityAllowed } from '../../../access-control/abilities';
 import { getSilencesAbilities, SilenceAction } from '../../../access-control/abilities.silences';
-import { SilencesError } from '../components/SilencesError';
+import { AlertmanagerError } from '../../../components/AlertmanagerError';
 import { ROUTES, DEFAULT_PAGE_SIZE } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
@@ -113,7 +113,9 @@ function SilencesPage() {
                 <Skeleton height={40} count={5} style={{ marginBottom: '5px' }} />
               </div>
             }
-            renderError={<SilencesError error={error} />}
+            renderError={
+              <AlertmanagerError error={error} title={t('silences.error-loading-title', 'Error loading silences')} />
+            }
             empty={
               <EmptyState
                 message={
