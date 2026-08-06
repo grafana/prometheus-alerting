@@ -2,10 +2,11 @@ import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, Field, Input, Stack, Combobox } from '@grafana/ui';
+import { Button, Field, Input, Stack, Combobox } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { IANA_TIMEZONES } from '../utils/timezones';
+import { MutationError } from '../../../access-control/components/MutationError';
 
 export const TimeIntervalFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -80,23 +81,26 @@ export function TimeIntervalFormFields({
     }
   }, [timeInterval, reset]);
 
+  const defaultSubmitButtonText = isLoading
+    ? isEditMode
+      ? t('time-intervals.form.updating', 'Updating...')
+      : t('time-intervals.form.creating', 'Creating...')
+    : isEditMode
+      ? t('time-intervals.form.update-button', 'Update Time Interval')
+      : t('time-intervals.form.create-button', 'Create Time Interval');
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack direction="column" gap={2}>
-        {Boolean(error) && (
-          <Alert
-            title={
-              isEditMode
-                ? t('time-intervals.form.error-updating-title', 'Error updating time interval')
-                : t('time-intervals.form.error-title', 'Error creating time interval')
-            }
-            severity="error"
-          >
-            {String(
-              error instanceof Error ? error.message : t('time-intervals.form.error-generic', 'An error occurred')
-            )}
-          </Alert>
-        )}
+        <MutationError
+          error={error}
+          fallbackTitle={
+            isEditMode
+              ? t('time-intervals.form.error-updating-title', 'Error updating time interval')
+              : t('time-intervals.form.error-title', 'Error creating time interval')
+          }
+          resource={t('time-intervals.resource-label', 'time intervals')}
+        />
 
         {showNameField && (
           <Field
@@ -199,34 +203,37 @@ export function TimeIntervalFormFields({
           invalid={!!errors.location}
           error={errors.location?.message}
         >
-          <Controller
-            name="location"
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <Combobox
-                options={IANA_TIMEZONES}
-                value={IANA_TIMEZONES.find((tz) => tz.value === value) || IANA_TIMEZONES[0]}
-                onChange={(option) => onChange(option.value)}
-                placeholder={t('time-intervals.form.location-placeholder', 'UTC')}
-                isClearable={false}
-              />
-            )}
-          />
+          {isEditMode ? (
+            <Controller
+              name="location"
+              control={control}
+              render={({ field: { onChange, value } }) => {
+                const selectedTimezone = IANA_TIMEZONES.find((timezone) => timezone.value === value);
+                const options =
+                  value && !selectedTimezone ? [{ label: value, value }, ...IANA_TIMEZONES] : IANA_TIMEZONES;
+
+                return (
+                  <Combobox
+                    options={options}
+                    value={selectedTimezone ?? options[0]}
+                    onChange={(option) => onChange(option.value)}
+                    placeholder={t('time-intervals.form.location-placeholder', 'UTC')}
+                    isClearable={false}
+                  />
+                );
+              }}
+            />
+          ) : (
+            <Input {...register('location')} placeholder={t('time-intervals.form.location-placeholder', 'UTC')} />
+          )}
         </Field>
 
         <Stack direction="row" gap={2}>
           <Button type="submit" disabled={isLoading}>
-            {submitButtonText ||
-              (isLoading
-                ? isEditMode
-                  ? t('time-intervals.form.updating', 'Updating...')
-                  : t('time-intervals.form.creating', 'Creating...')
-                : isEditMode
-                ? t('time-intervals.form.update-button', 'Update Time Interval')
-                : t('time-intervals.form.create-button', 'Create Time Interval'))}
+            {submitButtonText ?? defaultSubmitButtonText}
           </Button>
           <Button type="button" variant="secondary" onClick={onCancel} disabled={isLoading}>
-            {cancelButtonText || t('time-intervals.form.cancel-button', 'Cancel')}
+            {cancelButtonText ?? t('time-intervals.form.cancel-button', 'Cancel')}
           </Button>
         </Stack>
       </Stack>

@@ -510,7 +510,6 @@
       "target-matchers": "Target Matchers",
       "title": "Inhibit Rule"
     },
-    "error-deleting-message": "Failed to delete inhibit rule",
     "error-deleting-title": "Error deleting inhibit rule",
     "error-loading-title": "Error loading inhibit rules",
     "form": {
@@ -521,7 +520,6 @@
       "equal-label": "Equal Labels",
       "equal-placeholder": "alertname, instance",
       "error-creating-title": "Error creating inhibit rule",
-      "error-generic": "An error occurred",
       "error-updating-title": "Error updating inhibit rule",
       "source-matchers-description": "One matcher per line (e.g. severity = critical). The source alert must match all of these.",
       "source-matchers-label": "Source Matchers",
@@ -534,7 +532,8 @@
     },
     "no-matchers": "None",
     "no-rules-message": "No inhibit rules are configured in the Alertmanager.",
-    "page-subtitle": "Suppress alerts based on other active alerts"
+    "page-subtitle": "Suppress alerts based on other active alerts",
+    "resource-label": "inhibit rules"
   },
   "key-value-list": {
     "empty-value": "(not set)",
@@ -1161,7 +1160,6 @@
       "title": "Template"
     },
     "error-loading-title": "Error loading templates",
-    "error-message": "An error occurred",
     "error-title": "Error",
     "form": {
       "content": "Content",
@@ -1176,6 +1174,7 @@
     },
     "no-templates-message": "No templates are configured in the Alertmanager.",
     "page-subtitle": "Customize notification message templates",
+    "resource-label": "templates",
     "update": {
       "error": "Failed to update template",
       "success": "Template updated successfully"
@@ -1217,9 +1216,7 @@
       "update-button": "Update",
       "updating": "Updating..."
     },
-    "error-deleting-message": "Failed to delete time interval",
     "error-deleting-title": "Error deleting time interval",
-    "error-loading-message": "Failed to fetch time intervals",
     "error-loading-title": "Error loading time intervals",
     "form": {
       "cancel-button": "Cancel",
@@ -1228,13 +1225,9 @@
       "days-of-month-description": "Comma-separated list of days (e.g., 1, 15, -1 for last day)",
       "days-of-month-label": "Days of Month",
       "days-of-month-placeholder": "1, 15, -1",
-      "edit-page-title": "Edit Time Interval",
       "end-time-description": "End time in HH:MM format",
       "end-time-label": "End Time",
       "end-time-placeholder": "23:59",
-      "error-generic": "An error occurred",
-      "error-loading": "Failed to load time interval",
-      "error-loading-title": "Error loading time interval",
       "error-title": "Error creating time interval",
       "error-updating-title": "Error updating time interval",
       "location-description": "IANA timezone (e.g., UTC, America/New_York)",
@@ -1246,16 +1239,10 @@
       "name-description": "A unique name for this time interval",
       "name-label": "Name",
       "name-placeholder": "my-time-interval",
-      "not-found-message": "The time interval \"{{name}}\" does not exist.",
-      "not-found-title": "Time interval not found",
       "page-title": "Create Time Interval",
       "start-time-description": "Start time in HH:MM format",
       "start-time-label": "Start Time",
       "start-time-placeholder": "00:00",
-      "success-message": "Time interval has been created successfully.",
-      "success-title": "Time interval created",
-      "success-updating-message": "Time interval has been updated successfully.",
-      "success-updating-title": "Time interval updated",
       "update-button": "Update Time Interval",
       "updating": "Updating...",
       "weekdays-description": "Comma-separated list (e.g., monday, tuesday, wednesday)",
@@ -1273,6 +1260,7 @@
     "no-intervals-desc": "This time interval has no time ranges configured.",
     "no-time-intervals-message": "No time intervals are configured in the Alertmanager.",
     "page-subtitle": "Define time windows for muting or activating notifications",
+    "resource-label": "time intervals",
     "times-label": "Times",
     "weekdays-label": "Weekdays",
     "years-label": "Years"

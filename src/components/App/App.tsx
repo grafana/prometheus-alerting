@@ -42,6 +42,10 @@ function App(_props: AppRootProps) {
             <Route path={ROUTES.Routes} element={<RouteTree />} />
             <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
             <Route path={ROUTES.Receivers} element={<Receivers />} />
+            <Route path={ROUTES.Templates} element={<Templates />} />
+            <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
+            <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
+            <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
           </Route>
           <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesRead]} />}>
             <Route path={ROUTES.Rules} element={<Rules />} />
@@ -57,7 +61,15 @@ function App(_props: AppRootProps) {
           <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesWrite]} />}>
             <Route path={ROUTES.RuleNew} element={<RuleEditor />} />
           </Route>
-          <Route path={ROUTES.Templates} element={<Templates />} />
+          <Route
+            element={
+              <ProtectedRoute
+                requirements={[AlertingPermission.NotificationsRead, AlertingPermission.NotificationsWrite]}
+              />
+            }
+          >
+            <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
+          </Route>
           <Route
             element={
               <ProtectedRoute requirements={[AlertingPermission.InstancesRead, AlertingPermission.InstancesWrite]} />
@@ -68,10 +80,6 @@ function App(_props: AppRootProps) {
           <Route element={<ProtectedRoute requirements={[AlertingPermission.InstancesRead]} />}>
             <Route path={ROUTES.Silences} element={<Silences />} />
           </Route>
-          <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
-          <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
-          <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
-          <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
         </Routes>
       </SkeletonTheme>
     </StoreProvider>
