@@ -10,6 +10,7 @@ import { createMimirAlertmanagerDataSource, deleteGrafanaDataSource } from '../a
 import { InhibitRulesPage } from '../pages/InhibitRulesPage';
 import { ReceiversPage } from '../pages/ReceiversPage';
 import { RoutesListPage } from '../pages/RoutesListPage';
+import { SilencesPage } from '../pages/SilencesPage';
 import { TemplatesPage } from '../pages/TemplatesPage';
 
 /**
@@ -29,6 +30,7 @@ type AlertmanagerTestFixture = {
   inhibitRulesPage: InhibitRulesPage;
   receiversPage: ReceiversPage;
   routesListPage: RoutesListPage;
+  silencesPage: SilencesPage;
   templatesPage: TemplatesPage;
   /** A dedicated Mimir tenant and Grafana datasource, isolated for one test. */
   mimirAlertmanager: MimirAlertmanagerFixture;
@@ -46,6 +48,10 @@ export const test = base.extend<AlertmanagerTestFixture>({
   routesListPage: async ({ page }, use) => {
     const routesListPage = new RoutesListPage(page, pluginJson.id);
     await use(routesListPage);
+  },
+  silencesPage: async ({ page }, use) => {
+    const silencesPage = new SilencesPage(page, pluginJson.id);
+    await use(silencesPage);
   },
   templatesPage: async ({ page }, use) => {
     const templatesPage = new TemplatesPage(page, pluginJson.id);

@@ -1,6 +1,8 @@
 import React from 'react';
 import { t } from '@grafana/i18n';
 import type { GettableSilence, PostableSilence } from '@grafana/external-alertmanager/vanilla';
+import { useAppNotifications } from '../../../hooks/useAppNotifications';
+import { getSilenceMutationErrorFeedback } from '../utils/errorFeedback';
 import { useCreateSilence } from '../hooks/useSilences';
 import { SilenceFormFields } from './SilenceFormFields';
 import type { SilenceFormData } from '../utils/silenceFormSchema';
@@ -14,6 +16,7 @@ interface SilenceDrawerEditProps {
 
 export function SilenceDrawerEdit({ silence, onCancel, onSuccess }: SilenceDrawerEditProps) {
   const [updateSilence, { isLoading: isUpdating, error: updateError }] = useCreateSilence();
+  const { error: notifyError } = useAppNotifications();
 
   const handleSave = async (data: SilenceFormData) => {
     let startsAt: string;
@@ -47,7 +50,8 @@ export function SilenceDrawerEdit({ silence, onCancel, onSuccess }: SilenceDrawe
       await updateSilence(postableData);
       onSuccess();
     } catch (err) {
-      console.error('Failed to update silence:', err);
+      const feedback = getSilenceMutationErrorFeedback(err, t('silences.edit.error-title', 'Error updating silence'));
+      notifyError(feedback.title, feedback.description);
     }
   };
 

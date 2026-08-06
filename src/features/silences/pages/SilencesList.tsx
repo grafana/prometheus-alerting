@@ -11,7 +11,9 @@ import { type GettableSilence, parsePromQLStyleMatcherLooseSafe } from '@grafana
 import { t } from '@grafana/i18n';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
-import { DataSourceError } from '../../../components/AlertmanagerError';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { getSilencesAbilities, SilenceAction } from '../../../access-control/abilities.silences';
+import { SilencesError } from '../components/SilencesError';
 import { ROUTES, DEFAULT_PAGE_SIZE } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
 import { getStatusBadge, formatMatchers, formatDateTime } from '../utils/silences.utils';
@@ -22,6 +24,7 @@ import { useURLSearchParams } from '../../../hooks/useURLSearchParams';
 
 function SilencesPage() {
   const { data: silences = [], isLoading, error, isSuccess } = useSilences();
+  const canMutateSilences = isAbilityAllowed(getSilencesAbilities()[SilenceAction.MutateSilences]);
   const { showInactive, setShowInactive, applyStateFilter } = useSilencesFilters();
   const [selectedSilence, setSelectedSilence] = useState<GettableSilence | null>(null);
   const [searchParams] = useURLSearchParams();
@@ -89,11 +92,13 @@ function SilencesPage() {
     <AlertmanagerPage subTitle={t('pages.silences.subtitle', 'Stop notifications from one or more alerting rules')}>
       <div data-testid={testIds.silences.container}>
         <Stack direction="column" gap={2}>
-          <Stack direction="row" gap={2} alignItems="center">
-            <LinkButton icon="plus" href={prefixRoute(ROUTES.CreateSilence)}>
-              {t('silences.create-button', 'Create Silence')}
-            </LinkButton>
-          </Stack>
+          {canMutateSilences && (
+            <Stack direction="row" gap={2} alignItems="center">
+              <LinkButton icon="plus" href={prefixRoute(ROUTES.CreateSilence)}>
+                {t('silences.create-button', 'Create Silence')}
+              </LinkButton>
+            </Stack>
+          )}
 
           <SilencesFilters silences={silences} showInactive={showInactive} onShowInactiveChange={setShowInactive} />
 
@@ -108,9 +113,7 @@ function SilencesPage() {
                 <Skeleton height={40} count={5} style={{ marginBottom: '5px' }} />
               </div>
             }
-            renderError={
-              <DataSourceError error={error} title={t('silences.error-loading-title', 'Error loading silences')} />
-            }
+            renderError={<SilencesError error={error} />}
             empty={
               <EmptyState
                 message={
