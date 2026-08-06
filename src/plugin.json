@@ -45,6 +45,7 @@
       "type": "page",
       "name": "Receivers",
       "path": "/a/%PLUGIN_ID%/receivers",
+      "action": "alert.notifications.external:read",
       "addToNav": true,
       "defaultNav": false
     },

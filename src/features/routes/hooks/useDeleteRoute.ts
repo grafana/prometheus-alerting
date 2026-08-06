@@ -5,7 +5,7 @@ import { t } from '@grafana/i18n';
 import { useAppNotifications } from '../../../hooks/useAppNotifications';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { deleteRouteAction } from '../../../reducers/alertmanager/routes';
-import { getRouteMutationErrorFeedback } from '../utils/errorFeedback';
+import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 import { useRoutes } from './useRoutes';
 
 interface UseDeleteRouteResult {
@@ -33,7 +33,10 @@ export function useDeleteRoute(): UseDeleteRouteResult {
 
         return true;
       } catch (err) {
-        const feedback = getRouteMutationErrorFeedback(err, t('routes.delete.error', 'Failed to delete route'));
+        const feedback = getMutationErrorFeedback(err, {
+          fallbackTitle: t('routes.delete.error', 'Failed to delete route'),
+          resource: t('routes.resource-label', 'routes'),
+        });
         notifyError(feedback.title, feedback.description);
 
         return false;
