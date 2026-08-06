@@ -2,7 +2,7 @@ import React from 'react';
 import { t } from '@grafana/i18n';
 import type { GettableSilence, PostableSilence } from '@grafana/external-alertmanager/vanilla';
 import { useAppNotifications } from '../../../hooks/useAppNotifications';
-import { getSilenceMutationErrorFeedback } from '../utils/errorFeedback';
+import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 import { useCreateSilence } from '../hooks/useSilences';
 import { SilenceFormFields } from './SilenceFormFields';
 import type { SilenceFormData } from '../utils/silenceFormSchema';
@@ -50,7 +50,10 @@ export function SilenceDrawerEdit({ silence, onCancel, onSuccess }: SilenceDrawe
       await updateSilence(postableData);
       onSuccess();
     } catch (err) {
-      const feedback = getSilenceMutationErrorFeedback(err, t('silences.edit.error-title', 'Error updating silence'));
+      const feedback = getMutationErrorFeedback(err, {
+        fallbackTitle: t('silences.edit.error-title', 'Error updating silence'),
+        resource: t('silences.resource-label', 'silences'),
+      });
       notifyError(feedback.title, feedback.description);
     }
   };

@@ -11,7 +11,7 @@ import { Section } from '../../../components/KeyValueList/Section';
 import { isAbilityAllowed } from '../../../access-control/abilities';
 import { getSilencesAbilities, SilenceAction } from '../../../access-control/abilities.silences';
 import { useAppNotifications } from '../../../hooks/useAppNotifications';
-import { getSilenceMutationErrorFeedback } from '../utils/errorFeedback';
+import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 import { useDeleteSilence } from '../hooks/useSilences';
 import { formatMatchers, formatDateTime } from '../utils/silences.utils';
 import { AffectedAlertsList } from './AffectedAlertsList';
@@ -102,10 +102,10 @@ export function SilenceDrawerView({ silence, activeTab, onEdit, onClose }: Silen
       // The list will automatically refresh due to cache invalidation
     } catch (err) {
       // Keep modal open on error so user can retry
-      const feedback = getSilenceMutationErrorFeedback(
-        err,
-        t('silences.error-expiring-title', 'Error expiring silence')
-      );
+      const feedback = getMutationErrorFeedback(err, {
+        fallbackTitle: t('silences.error-expiring-title', 'Error expiring silence'),
+        resource: t('silences.resource-label', 'silences'),
+      });
       notifyError(feedback.title, feedback.description);
     }
   };

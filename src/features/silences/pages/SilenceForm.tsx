@@ -17,7 +17,7 @@ import Skeleton from 'react-loading-skeleton';
 
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { useAppNotifications } from '../../../hooks/useAppNotifications';
-import { getSilenceMutationErrorFeedback } from '../utils/errorFeedback';
+import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 import { useCreateSilence, useSilence } from '../hooks/useSilences';
 import { SilenceFormSchema, type SilenceFormData } from '../utils/silenceFormSchema';
 import type { PostableSilence } from '@grafana/external-alertmanager/vanilla';
@@ -244,12 +244,12 @@ function SilenceForm() {
     } catch (err) {
       // Datasource failures also surface through the mutationError state; notify for the ones that
       // never reach the API, such as a locally denied mutation.
-      const feedback = getSilenceMutationErrorFeedback(
-        err,
-        isEditMode
+      const feedback = getMutationErrorFeedback(err, {
+        fallbackTitle: isEditMode
           ? t('silences.edit.error-title', 'Error updating silence')
-          : t('silences.create.error-title', 'Error creating silence')
-      );
+          : t('silences.create.error-title', 'Error creating silence'),
+        resource: t('silences.resource-label', 'silences'),
+      });
       notifyError(feedback.title, feedback.description);
     }
   };
