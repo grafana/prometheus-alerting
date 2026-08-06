@@ -10,14 +10,15 @@ import { DEFAULT_PAGE_SIZE, ROUTES } from '../../../constants';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
-import { DataSourceError } from '../../../components/AlertmanagerError';
 import { prefixRoute } from '../../../utils/utils.routing';
-import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { TimeIntervalDrawer } from '../components/TimeIntervalDrawer';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
+import { AlertmanagerError } from '../../../components/AlertmanagerError';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error, isSuccess } = useTimeIntervals();
-  const hasConfigurationAPI = useHasConfigurationAPI();
+  const canMutateTimeIntervals = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
 
   const [selectedTimeInterval, setSelectedTimeInterval] = useState<TimeInterval | null>(null);
 
@@ -96,7 +97,7 @@ function TimeIntervalsPage() {
     <AlertmanagerPage
       subTitle={t('time-intervals.page-subtitle', 'Define time windows for muting or activating notifications')}
     >
-      {hasConfigurationAPI && (
+      {canMutateTimeIntervals && (
         <LinkButton href={prefixRoute(ROUTES.CreateTimeInterval)}>
           {t('time-intervals.create-button', 'Create time interval')}
         </LinkButton>
@@ -114,7 +115,7 @@ function TimeIntervalsPage() {
             </div>
           }
           renderError={
-            <DataSourceError
+            <AlertmanagerError
               error={error}
               title={t('time-intervals.error-loading-title', 'Error loading time intervals')}
             />
