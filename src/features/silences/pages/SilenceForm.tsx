@@ -16,6 +16,8 @@ import {
 import Skeleton from 'react-loading-skeleton';
 
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { useAppNotifications } from '../../../hooks/useAppNotifications';
+import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 import { useCreateSilence, useSilence } from '../hooks/useSilences';
 import { SilenceFormSchema, type SilenceFormData } from '../utils/silenceFormSchema';
 import { formatDateTimeLocal } from '../utils/silences.utils';
@@ -94,6 +96,7 @@ function SilenceForm() {
   ];
 
   const [createSilence, { isLoading, error: mutationError }] = useCreateSilence();
+  const { error: notifyError } = useAppNotifications();
 
   // Get current time and 1 hour from now as defaults
   const now = new Date();
@@ -231,8 +234,15 @@ function SilenceForm() {
       // Navigate back to silences list on success
       locationService.push(prefixRoute(ROUTES.Silences));
     } catch (err) {
-      // Error will be handled by the mutationError state
-      console.error(`Failed to ${isEditMode ? 'update' : 'create'} silence:`, err);
+      // Datasource failures also surface through the mutationError state; notify for the ones that
+      // never reach the API, such as a locally denied mutation.
+      const feedback = getMutationErrorFeedback(err, {
+        fallbackTitle: isEditMode
+          ? t('silences.edit.error-title', 'Error updating silence')
+          : t('silences.create.error-title', 'Error creating silence'),
+        resource: t('silences.resource-label', 'silences'),
+      });
+      notifyError(feedback.title, feedback.description);
     }
   };
 

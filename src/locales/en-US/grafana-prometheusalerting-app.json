@@ -185,6 +185,8 @@
     },
     "route": {
       "label-delete-route": "Delete route",
+      "label-details": "Details",
+      "label-edit-route": "Edit",
       "label-new-child-route": "New child route",
       "label-new-sibling-above": "New sibling above",
       "label-new-sibling-below": "New sibling below"
@@ -344,6 +346,7 @@
       "type-label": "Type"
     },
     "rules-filter-sidebar": {
+      "aria-label": "Filter rules",
       "clear-filters": "Clear filters"
     }
   },
@@ -843,11 +846,7 @@
       "adding": "New Route",
       "delete": "Delete",
       "edit": "Edit",
-      "editing": "Editing Route",
-      "tabs": {
-        "configuration": "Configuration",
-        "instances": "Instances"
-      }
+      "editing": "Editing Route"
     },
     "edit": {
       "add-matcher": "Add matcher",
@@ -983,9 +982,7 @@
       "collapse": "Collapse",
       "configure": "Configure",
       "error": "Error",
-      "error-title": "Cannot load rules for this data source",
-      "permission-denied-description": "You do not have permission to read rules from this data source.",
-      "permission-denied-title": "Permission denied for this data source"
+      "error-title": "Cannot load rules for this data source"
     },
     "error-boundary": {
       "message": "Check the data source configuration. Does the data source support Prometheus API?",
@@ -1125,6 +1122,7 @@
     "recreate": {
       "page-title": "Recreate Silence"
     },
+    "resource-label": "silences",
     "show-inactive": "Show inactive silences"
   },
   "templates": {
