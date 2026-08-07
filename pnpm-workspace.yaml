@@ -6,6 +6,8 @@ verifyDepsBeforeRun: install
 minimumReleaseAge: 4320 # 3 days, in minutes
 minimumReleaseAgeExclude:
   - '@grafana/*'
+  # Renovate security update: js-yaml@4.3.1
+  - js-yaml@4.3.1
 
 overrides:
   'js-cookie': '>=3.0.6'
