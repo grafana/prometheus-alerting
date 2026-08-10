@@ -30,6 +30,7 @@ import {
 
 import { getDataSourceSrv } from '@grafana/runtime';
 import { AlertManagerDataSourceJsonData } from 'types/datasources';
+import { buildDatasourceProxyPath } from '../utils/proxyPath';
 import { WithDataSourceInformation, TransformedAlertmanagerStatusApiResponseTransform } from './alertmanager.types';
 
 function createAlertmanagerPath(dataSourceUID: string, path: `/${string}`) {
@@ -37,7 +38,10 @@ function createAlertmanagerPath(dataSourceUID: string, path: `/${string}`) {
   const jsonData = dsSettings?.jsonData as AlertManagerDataSourceJsonData;
   const implementation = jsonData?.implementation ?? 'prometheus';
 
-  return implementation === 'mimir' ? `/${dataSourceUID}/alertmanager/api${path}` : `/${dataSourceUID}/api${path}`;
+  const prefixSegments = implementation === 'mimir' ? ['alertmanager', 'api'] : ['api'];
+  const pathSegments = path.split('/').filter(Boolean);
+
+  return buildDatasourceProxyPath(dataSourceUID, ...prefixSegments, ...pathSegments);
 }
 
 // Base API for Prometheus/vanilla Alertmanager

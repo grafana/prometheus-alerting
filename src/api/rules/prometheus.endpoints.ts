@@ -10,6 +10,7 @@ import { produce } from 'immer';
 
 import { DataSourceRulesSourceIdentifier, getPrometheusRulesApiBasePath } from '../../types/rules';
 import { getRulesApiPluginType } from '../../utils/datasource';
+import { buildDatasourceProxyPath } from '../utils/proxyPath';
 
 interface PromRulesOptions {
   ruleSource: Pick<DataSourceRulesSourceIdentifier, 'uid'>;
@@ -28,8 +29,9 @@ export const prometheusApi = createApi({
   endpoints: (build) => ({
     getGroups: build.query<GetPromRulesApiResponse, PromRulesOptions>({
       query: ({ ruleSource, namespace, groupName, ruleName, groupLimit, excludeAlerts, groupNextToken }) => {
+        const basePath = getPrometheusRulesApiBasePath(getRulesApiPluginType(ruleSource.uid));
         return {
-          url: `/${ruleSource.uid}/${getPrometheusRulesApiBasePath(getRulesApiPluginType(ruleSource.uid))}`,
+          url: buildDatasourceProxyPath(ruleSource.uid, ...basePath.split('/')),
           params: {
             file: namespace, // Mimir
             'file[]': namespace, // Prometheus

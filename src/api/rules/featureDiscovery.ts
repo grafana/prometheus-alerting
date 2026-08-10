@@ -4,6 +4,7 @@ import { lastValueFrom } from 'rxjs';
 
 import { DataSourceFeatures, getPrometheusRulesApiBasePath, PromBuildInfoResponse } from '../../types/rules';
 import { isForbiddenError, isNotFoundError } from '../../utils/errors';
+import { buildDatasourceProxyUrl } from '../utils/proxyPath';
 
 export type { DataSourceFeatures };
 
@@ -69,7 +70,7 @@ async function fetchBuildInfo(uid: string): Promise<PromBuildInfoResponse | unde
   try {
     const response = await lastValueFrom(
       getBackendSrv().fetch<PromBuildInfoResponse>({
-        url: `/api/datasources/proxy/uid/${uid}/api/v1/status/buildinfo`,
+        url: buildDatasourceProxyUrl(uid, 'api', 'v1', 'status', 'buildinfo'),
         showErrorAlert: false,
         showSuccessAlert: false,
       })
@@ -92,7 +93,7 @@ async function fetchBuildInfo(uid: string): Promise<PromBuildInfoResponse | unde
  */
 async function testPromRulesSupport(uid: string, type: string): Promise<boolean> {
   const path = getPrometheusRulesApiBasePath(type === 'loki' ? 'loki' : 'prometheus');
-  return isEndpointAvailable(`/api/datasources/proxy/uid/${uid}/${path}`);
+  return isEndpointAvailable(buildDatasourceProxyUrl(uid, ...path.split('/')));
 }
 
 /**
@@ -104,7 +105,7 @@ async function testRulerSupport(uid: string, type: string): Promise<boolean> {
   const path = type === 'loki' ? 'api/prom/rules' : 'api/v1/ruler/test/test';
 
   try {
-    await fetchEndpoint(`/api/datasources/proxy/uid/${uid}/${path}`);
+    await fetchEndpoint(buildDatasourceProxyUrl(uid, ...path.split('/')));
     return true;
   } catch (error) {
     if (isForbiddenError(error)) {
