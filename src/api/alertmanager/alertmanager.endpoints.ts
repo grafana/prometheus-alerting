@@ -33,15 +33,22 @@ import { AlertManagerDataSourceJsonData } from 'types/datasources';
 import { buildDatasourceProxyPath } from '../utils/proxyPath';
 import { WithDataSourceInformation, TransformedAlertmanagerStatusApiResponseTransform } from './alertmanager.types';
 
-function createAlertmanagerPath(dataSourceUID: string, path: `/${string}`) {
+/**
+ * `staticPath` must be a literal path made up of segments we control (e.g. `/v2/silence`) —
+ * it gets split on `/` and each piece encoded individually. Any response-derived value (e.g.
+ * a silence ID) must be passed via `dynamicSegments` instead of being spliced into
+ * `staticPath`: splitting a string that already contains an attacker-controlled `/` would
+ * treat their traversal sequences as path separators again, defeating the encoding.
+ */
+function createAlertmanagerPath(dataSourceUID: string, staticPath: `/${string}`, ...dynamicSegments: string[]) {
   const dsSettings = getDataSourceSrv().getInstanceSettings(dataSourceUID);
   const jsonData = dsSettings?.jsonData as AlertManagerDataSourceJsonData;
   const implementation = jsonData?.implementation ?? 'prometheus';
 
   const prefixSegments = implementation === 'mimir' ? ['alertmanager', 'api'] : ['api'];
-  const pathSegments = path.split('/').filter(Boolean);
+  const staticSegments = staticPath.split('/').filter(Boolean);
 
-  return buildDatasourceProxyPath(dataSourceUID, ...prefixSegments, ...pathSegments);
+  return buildDatasourceProxyPath(dataSourceUID, ...prefixSegments, ...staticSegments, ...dynamicSegments);
 }
 
 // Base API for Prometheus/vanilla Alertmanager
@@ -101,7 +108,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
     }),
     getSilence: build.query<GetSilenceApiResponse, WithDataSourceInformation<GetSilenceApiArg>>({
       query: ({ dataSourceUID, silenceId }) => ({
-        url: createAlertmanagerPath(dataSourceUID, `/v2/silence/${silenceId}`),
+        url: createAlertmanagerPath(dataSourceUID, `/v2/silence`, silenceId),
         dataSourceUID,
       }),
       providesTags: ['Silences'],
@@ -109,7 +116,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
     }),
     deleteSilence: build.mutation<DeleteSilenceApiResponse, WithDataSourceInformation<DeleteSilenceApiArg>>({
       query: ({ dataSourceUID, silenceId }) => ({
-        url: createAlertmanagerPath(dataSourceUID, `/v2/silence/${silenceId}`),
+        url: createAlertmanagerPath(dataSourceUID, `/v2/silence`, silenceId),
         method: 'DELETE',
         dataSourceUID,
       }),
