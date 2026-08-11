@@ -1,10 +1,19 @@
-# Grafana app plugin template
+# Prometheus Alerting
 
-This template is a starting point for building an app plugin for Grafana.
+Prometheus Alerting is a Grafana app plugin for managing alert rules and Alertmanager configuration across Prometheus, Mimir, Cortex, and Loki data sources — all from within Grafana.
 
-## What are Grafana app plugins?
+It brings the native Prometheus/Alertmanager alerting experience into Grafana, so you can manage external alerting stacks without leaving the Grafana UI:
 
-App plugins can let you create a custom out-of-the-box monitoring experience by custom pages, nested data sources and panel plugins.
+- **Alerts** — view firing and pending alerts across your configured data sources
+- **Rules** — browse Prometheus-compatible alerting and recording rules
+- **Routes** — configure Alertmanager routing trees
+- **Receivers** — manage notification receivers (email, Slack, PagerDuty, webhooks, and more)
+- **Templates** — edit Alertmanager notification templates
+- **Silences** — create and manage silences for alert instances
+- **Time intervals** — define mute/active time intervals used by routes
+- **Inhibit rules** — configure Alertmanager inhibition rules
+
+Access to each page is enforced via Grafana RBAC, and the plugin picks up any Prometheus, Mimir, Cortex, or Loki data source configured with an accessible Alertmanager/ruler API.
 
 ## Requirements
 
@@ -71,10 +80,10 @@ pnpm --version  # should be >= 11.4
    pnpm run build
    ```
 
-4. Run the tests (using Jest)
+4. Run the tests (using Vitest)
 
    ```bash
-   # Runs the tests and watches for changes, requires git init first
+   # Runs the tests and watches for changes
    pnpm run test
 
    # Exits after running all the tests
@@ -150,49 +159,7 @@ To install and test the plugin in a local Grafana instance (outside of Docker):
 
 **Note:** You must have at least one external Alertmanager configured as a data source to use this plugin.
 
-# Distributing your plugin
-
-When distributing a Grafana plugin either within the community or privately the plugin must be signed so the Grafana application can verify its authenticity. This can be done with the `@grafana/sign-plugin` package.
-
-_Note: It's not necessary to sign a plugin during development. The docker development environment that is scaffolded with `@grafana/create-plugin` caters for running the plugin without a signature._
-
-## Initial steps
-
-Before signing a plugin please read the Grafana [plugin publishing and signing criteria](https://grafana.com/legal/plugins/#plugin-publishing-and-signing-criteria) documentation carefully.
-
-`@grafana/create-plugin` has added the necessary commands and workflows to make signing and distributing a plugin via the grafana plugins catalog as straightforward as possible.
-
-Before signing a plugin for the first time please consult the Grafana [plugin signature levels](https://grafana.com/legal/plugins/#what-are-the-different-classifications-of-plugins) documentation to understand the differences between the types of signature level.
-
-1. Create a [Grafana Cloud account](https://grafana.com/signup).
-2. Make sure that the first part of the plugin ID matches the slug of your Grafana Cloud account.
-   - _You can find the plugin ID in the `plugin.json` file inside your plugin directory. For example, if your account slug is `acmecorp`, you need to prefix the plugin ID with `acmecorp-`._
-3. Create a Grafana Cloud API key with the `PluginPublisher` role.
-4. Keep a record of this API key as it will be required for signing a plugin
-
-## Signing a plugin
-
-### Using Github actions release workflow
-
-If the plugin is using the github actions supplied with `@grafana/create-plugin` signing a plugin is included out of the box. The [release workflow](./.github/workflows/release.yml) can prepare everything to make submitting your plugin to Grafana as easy as possible. Before being able to sign the plugin however a secret needs adding to the Github repository.
-
-1. Please navigate to "settings > secrets > actions" within your repo to create secrets.
-2. Click "New repository secret"
-3. Name the secret "GRAFANA_API_KEY"
-4. Paste your Grafana Cloud API key in the Secret field
-5. Click "Add secret"
-
-#### Push a version tag
-
-To trigger the workflow we need to push a version tag to github. This can be achieved with the following steps:
-
-1. Run `pnpm version <major|minor|patch>`
-2. Run `git push origin main --follow-tags`
-
 ## Learn more
 
-Below you can find source code for existing app plugins and other related documentation.
-
-- [Basic app plugin example](https://github.com/grafana/grafana-plugin-examples/tree/master/examples/app-basic#readme)
 - [`plugin.json` documentation](https://grafana.com/developers/plugin-tools/reference/plugin-jsonplugin-json)
 - [Sign a plugin](https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin)
