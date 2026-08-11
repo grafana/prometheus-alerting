@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/grafana/prometheus-alerting/compare/v1.4.1...v1.4.2) (2026-08-11)
+
+
+### 🤖 Continuous Integrations
+
+* Remove pending option from catalog publication ([#188](https://github.com/grafana/prometheus-alerting/issues/188)) ([31d43e3](https://github.com/grafana/prometheus-alerting/commit/31d43e37e51a8f47bacb95083df7c7938b87edf3))
+
 ## [1.4.1](https://github.com/grafana/prometheus-alerting/compare/v1.4.0...v1.4.1) (2026-08-11)
 
 
