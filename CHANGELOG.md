@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/grafana/prometheus-alerting/compare/v1.4.0...v1.4.1) (2026-08-11)
+
+
+### 🐛 Bug Fixes
+
+* **security:** percent-encode datasource proxy path segments ([#185](https://github.com/grafana/prometheus-alerting/issues/185)) ([99d4ddb](https://github.com/grafana/prometheus-alerting/commit/99d4ddb1b931e0a2b530ffccbbe208f20bbad5d4))
+* **security:** update dompurify and nanoid to patched versions ([#186](https://github.com/grafana/prometheus-alerting/issues/186)) ([fee152a](https://github.com/grafana/prometheus-alerting/commit/fee152a7497212f727ab40c682e2e8dc3fcc4ad8))
+
 ## [1.4.0](https://github.com/grafana/prometheus-alerting/compare/v1.3.0...v1.4.0) (2026-08-10)
 
 
