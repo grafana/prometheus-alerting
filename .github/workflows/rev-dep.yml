@@ -1,4 +1,4 @@
-name: Rev-dep
+name: Unused code & dependencies
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   rev-dep:
-    name: Check dependencies
+    name: rev-dep
     runs-on: ubuntu-latest
     permissions:
       contents: read
