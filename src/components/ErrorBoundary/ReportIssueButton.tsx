@@ -24,7 +24,7 @@ export function ReportIssueButton({ error, componentStack, size = 'md', variant 
   });
 
   return (
-    <LinkButton href={href} target="_blank" rel="noreferrer noopener" icon="github" size={size} variant={variant}>
+    <LinkButton href={href} target="_blank" rel="noopener noreferrer" icon="github" size={size} variant={variant}>
       {t('alerting.error-boundary.report-issue', 'Report this issue on GitHub')}
     </LinkButton>
   );
