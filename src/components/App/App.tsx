@@ -11,6 +11,7 @@ import { ProtectedRoute } from '../../access-control/components/ProtectedRoute';
 import { RequireAlertmanager } from '../RequireAlertmanager';
 import { useAvailableAlertmanagers } from '../../hooks/useAvailableAlertmanager';
 import { getExternalRulesSources } from '../../utils/datasource';
+import { AppErrorBoundary } from './AppErrorBoundary';
 
 const Alerts = React.lazy(() => import('../../features/alerts/pages/Alerts'));
 const Rules = React.lazy(() => import('../../features/rules/pages/RulesList'));
@@ -40,63 +41,67 @@ function App(_props: AppRootProps) {
   const landingRoute = !hasAlertmanager && hasRulesSource ? ROUTES.Rules : ROUTES.Alerts;
 
   return (
-    <StoreProvider store={sharedStore}>
-      <SkeletonTheme
-        baseColor={theme.colors.background.secondary}
-        highlightColor={theme.colors.emphasize(theme.colors.background.secondary, 0.03)}
-      >
-        <Routes>
-          <Route path="/" element={<Navigate to={landingRoute} replace />} />
-          {/* Rule pages read from Prometheus / Mimir, so they work without any Alertmanager data source. */}
-          <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesRead]} />}>
-            <Route path={ROUTES.Rules} element={<Rules />} />
-            <Route path={ROUTES.RuleView} element={<RuleDetails />} />
-            <Route path={ROUTES.GroupView} element={<GroupDetails />} />
-          </Route>
-          <Route
-            element={<ProtectedRoute requirements={[AlertingPermission.RulesRead, AlertingPermission.RulesWrite]} />}
-          >
-            <Route path={ROUTES.RuleEdit} element={<RuleEditor />} />
-            <Route path={ROUTES.GroupEdit} element={<GroupEditPage />} />
-          </Route>
-          <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesWrite]} />}>
-            <Route path={ROUTES.RuleNew} element={<RuleEditor />} />
-          </Route>
-          {/* Everything below queries an Alertmanager, so it needs at least one configured. */}
-          <Route element={<RequireAlertmanager />}>
-            <Route path={ROUTES.Alerts} element={<Alerts />} />
-            <Route element={<ProtectedRoute requirements={[AlertingPermission.NotificationsRead]} />}>
-              <Route path={ROUTES.Routes} element={<RouteTree />} />
-              <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
-              <Route path={ROUTES.Receivers} element={<Receivers />} />
-              <Route path={ROUTES.Templates} element={<Templates />} />
-              <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
-              <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
-              <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
+    <AppErrorBoundary>
+      <StoreProvider store={sharedStore}>
+        <SkeletonTheme
+          baseColor={theme.colors.background.secondary}
+          highlightColor={theme.colors.emphasize(theme.colors.background.secondary, 0.03)}
+        >
+          <Routes>
+            <Route path="/" element={<Navigate to={landingRoute} replace />} />
+            {/* Rule pages read from Prometheus / Mimir, so they work without any Alertmanager data source. */}
+            <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesRead]} />}>
+              <Route path={ROUTES.Rules} element={<Rules />} />
+              <Route path={ROUTES.RuleView} element={<RuleDetails />} />
+              <Route path={ROUTES.GroupView} element={<GroupDetails />} />
             </Route>
             <Route
-              element={
-                <ProtectedRoute
-                  requirements={[AlertingPermission.NotificationsRead, AlertingPermission.NotificationsWrite]}
-                />
-              }
+              element={<ProtectedRoute requirements={[AlertingPermission.RulesRead, AlertingPermission.RulesWrite]} />}
             >
-              <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
+              <Route path={ROUTES.RuleEdit} element={<RuleEditor />} />
+              <Route path={ROUTES.GroupEdit} element={<GroupEditPage />} />
             </Route>
-            <Route
-              element={
-                <ProtectedRoute requirements={[AlertingPermission.InstancesRead, AlertingPermission.InstancesWrite]} />
-              }
-            >
-              <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
+            <Route element={<ProtectedRoute requirements={[AlertingPermission.RulesWrite]} />}>
+              <Route path={ROUTES.RuleNew} element={<RuleEditor />} />
             </Route>
-            <Route element={<ProtectedRoute requirements={[AlertingPermission.InstancesRead]} />}>
-              <Route path={ROUTES.Silences} element={<Silences />} />
+            {/* Everything below queries an Alertmanager, so it needs at least one configured. */}
+            <Route element={<RequireAlertmanager />}>
+              <Route path={ROUTES.Alerts} element={<Alerts />} />
+              <Route element={<ProtectedRoute requirements={[AlertingPermission.NotificationsRead]} />}>
+                <Route path={ROUTES.Routes} element={<RouteTree />} />
+                <Route path={`${ROUTES.Receivers}/:name`} element={<ReceiverDetail />} />
+                <Route path={ROUTES.Receivers} element={<Receivers />} />
+                <Route path={ROUTES.Templates} element={<Templates />} />
+                <Route path={`${ROUTES.TimeIntervals}/:name`} element={<TimeIntervalDetail />} />
+                <Route path={ROUTES.TimeIntervals} element={<TimeIntervals />} />
+                <Route path={ROUTES.InhibitRules} element={<InhibitRules />} />
+              </Route>
+              <Route
+                element={
+                  <ProtectedRoute
+                    requirements={[AlertingPermission.NotificationsRead, AlertingPermission.NotificationsWrite]}
+                  />
+                }
+              >
+                <Route path={ROUTES.CreateTimeInterval} element={<TimeIntervalForm />} />
+              </Route>
+              <Route
+                element={
+                  <ProtectedRoute
+                    requirements={[AlertingPermission.InstancesRead, AlertingPermission.InstancesWrite]}
+                  />
+                }
+              >
+                <Route path={ROUTES.CreateSilence} element={<SilenceForm />} />
+              </Route>
+              <Route element={<ProtectedRoute requirements={[AlertingPermission.InstancesRead]} />}>
+                <Route path={ROUTES.Silences} element={<Silences />} />
+              </Route>
             </Route>
-          </Route>
-        </Routes>
-      </SkeletonTheme>
-    </StoreProvider>
+          </Routes>
+        </SkeletonTheme>
+      </StoreProvider>
+    </AppErrorBoundary>
   );
 }
 
