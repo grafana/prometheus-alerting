@@ -1,5 +1,7 @@
 import { config } from '@grafana/runtime';
 
+import { pluginVersion } from '../analytics';
+
 export const GITHUB_REPO_URL = 'https://github.com/grafana/prometheus-alerting';
 export const GITHUB_NEW_ISSUE_URL = `${GITHUB_REPO_URL}/issues/new`;
 
@@ -15,8 +17,6 @@ interface ReportIssueOptions {
   componentStack?: string | null;
   /** Where the crash happened, e.g. the current route */
   location?: string;
-  /** Version of this plugin, see `useAppPluginVersion()` */
-  pluginVersion?: string | null;
 }
 
 function truncate(value: string, maxLength: number): string {
@@ -31,7 +31,7 @@ export function buildIssueTitle(error: Error | null): string {
   return message ? `Crash: ${truncate(message, 120)}` : 'Crash: unknown error';
 }
 
-export function buildIssueBody({ error, componentStack, location, pluginVersion }: ReportIssueOptions): string {
+export function buildIssueBody({ error, componentStack, location }: ReportIssueOptions): string {
   const environment = [
     `- Plugin version: ${inlineCode(pluginVersion)}`,
     `- Grafana version: ${inlineCode(config.buildInfo?.version)} (${inlineCode(config.buildInfo?.edition)})`,

@@ -5,6 +5,7 @@ import { type NormalizedInhibitRule, stringifyObjectMatcher } from '@grafana/ext
 import { AlertLabel } from '@grafana/alerting';
 import { Section } from '../../../components/KeyValueList/Section';
 import { KeyValuePair } from '../../../components/KeyValueList/KeyValueList';
+import { MutationError } from '../../../access-control/components/MutationError';
 
 interface InhibitRuleDetailsProps {
   inhibitRule: NormalizedInhibitRule;
@@ -73,32 +74,17 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
 
 interface InhibitRuleDrawerViewProps {
   inhibitRule: NormalizedInhibitRule;
-  inhibitRuleIndex: number;
-  onEdit: () => void;
-  onClose: () => void;
-  onDelete: () => void;
-  isDeleting: boolean;
   deleteError: unknown;
 }
 
-export function InhibitRuleDrawerView({
-  inhibitRule,
-  onEdit,
-  onDelete,
-  isDeleting,
-  deleteError,
-}: InhibitRuleDrawerViewProps) {
+export function InhibitRuleDrawerView({ inhibitRule, deleteError }: InhibitRuleDrawerViewProps) {
   return (
     <>
-      {Boolean(deleteError) && (
-        <Alert title={t('inhibit-rules.error-deleting-title', 'Error deleting inhibit rule')} severity="error">
-          {String(
-            deleteError instanceof Error
-              ? deleteError.message
-              : t('inhibit-rules.error-deleting-message', 'Failed to delete inhibit rule')
-          )}
-        </Alert>
-      )}
+      <MutationError
+        error={deleteError}
+        fallbackTitle={t('inhibit-rules.error-deleting-title', 'Error deleting inhibit rule')}
+        resource={t('inhibit-rules.resource-label', 'inhibit rules')}
+      />
 
       <InhibitRuleDetails inhibitRule={inhibitRule} />
     </>
@@ -139,7 +125,7 @@ export function InhibitRuleDrawerViewFooter({ onEdit, onDelete, isDeleting }: In
           onDelete();
         }}
         onDismiss={() => setIsConfirmModalOpen(false)}
-        confirmButtonVariant="destructive"
+        confirmVariant="destructive"
       />
     </>
   );

@@ -4,7 +4,6 @@ import { t, Trans } from '@grafana/i18n';
 import { Alert, ErrorBoundary, ErrorWithStack, Stack, Text } from '@grafana/ui';
 
 import { ReportIssueButton } from '../../../../components/ErrorBoundary/ReportIssueButton';
-import { useAppPluginVersion } from '../../../../hooks/useAppPluginVersion';
 import { DataSourceRulesSourceIdentifier } from '../../../../types/datasources';
 
 import { DataSourceSection } from './DataSourceSection';
@@ -21,8 +20,6 @@ export function DataSourceErrorBoundary({
   children: React.ReactNode;
   rulesSourceIdentifier: DataSourceRulesSourceIdentifier;
 }) {
-  const pluginVersion = useAppPluginVersion();
-
   return (
     <ErrorBoundary>
       {({ error, errorInfo }) => {
@@ -40,7 +37,6 @@ export function DataSourceErrorBoundary({
                   <ReportIssueButton
                     error={error}
                     componentStack={errorInfo?.componentStack}
-                    pluginVersion={pluginVersion}
                     size="sm"
                     variant="secondary"
                   />

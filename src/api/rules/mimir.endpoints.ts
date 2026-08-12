@@ -9,6 +9,7 @@ import yaml from 'js-yaml';
 
 import { getRulerApiBasePath } from '../../types/rules';
 import { getRulesApiPluginType } from '../../utils/datasource';
+import { buildDatasourceProxyPath } from '../utils/proxyPath';
 
 interface GetRuleGroupParams {
   dataSourceUid: string;
@@ -36,9 +37,9 @@ interface GetAllRulesParams {
 const RulerRulesConfigDTOSchema = z.record(z.string(), z.array(RulerRuleGroupDTOSchema));
 export type RulerRulesConfigDTO = z.infer<typeof RulerRulesConfigDTOSchema>;
 
-function buildRulerApiUrl(dataSourceUid: string, path = ''): string {
+function buildRulerApiUrl(dataSourceUid: string, ...segments: string[]): string {
   const basePath = getRulerApiBasePath(getRulesApiPluginType(dataSourceUid));
-  return `/${dataSourceUid}/${basePath}${path}`;
+  return buildDatasourceProxyPath(dataSourceUid, ...basePath.split('/'), ...segments);
 }
 
 export const rulerApi = createApi({
@@ -48,7 +49,7 @@ export const rulerApi = createApi({
   endpoints: (build) => ({
     getRuleGroup: build.query<RulerRuleGroupDTO | null, GetRuleGroupParams>({
       query: ({ dataSourceUid, namespace, groupName }) => ({
-        url: buildRulerApiUrl(dataSourceUid, `/${encodeURIComponent(namespace)}/${encodeURIComponent(groupName)}`),
+        url: buildRulerApiUrl(dataSourceUid, namespace, groupName),
         responseHandler: 'text',
       }),
       transformResponse: (response: string): RulerRuleGroupDTO | null => {
@@ -70,7 +71,7 @@ export const rulerApi = createApi({
     }),
     deleteRuleGroup: build.mutation<void, DeleteRuleGroupParams>({
       query: ({ dataSourceUid, namespace, groupName }) => ({
-        url: buildRulerApiUrl(dataSourceUid, `/${encodeURIComponent(namespace)}/${encodeURIComponent(groupName)}`),
+        url: buildRulerApiUrl(dataSourceUid, namespace, groupName),
         method: 'DELETE',
       }),
       invalidatesTags: (_result, _error, { dataSourceUid, namespace, groupName }) => [
@@ -79,7 +80,7 @@ export const rulerApi = createApi({
     }),
     upsertRuleGroup: build.mutation<void, UpsertRuleGroupParams>({
       query: ({ dataSourceUid, namespace, payload }) => ({
-        url: buildRulerApiUrl(dataSourceUid, `/${encodeURIComponent(namespace)}`),
+        url: buildRulerApiUrl(dataSourceUid, namespace),
         method: 'POST',
         headers: {
           'Content-Type': 'application/yaml',

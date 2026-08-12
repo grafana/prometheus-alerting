@@ -3,6 +3,9 @@ export const testIds = {
   alerts: {
     container: 'data-testid prom-alerts',
   },
+  noAlertmanager: {
+    container: 'data-testid prom-no-alertmanager',
+  },
   landing: {
     container: 'data-testid prom-landing',
   },

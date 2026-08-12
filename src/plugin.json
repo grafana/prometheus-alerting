@@ -45,6 +45,7 @@
       "type": "page",
       "name": "Receivers",
       "path": "/a/%PLUGIN_ID%/receivers",
+      "action": "alert.notifications.external:read",
       "addToNav": true,
       "defaultNav": false
     },
@@ -52,6 +53,7 @@
       "type": "page",
       "name": "Templates",
       "path": "/a/%PLUGIN_ID%/templates",
+      "action": "alert.notifications.external:read",
       "addToNav": true,
       "defaultNav": false
     },
@@ -59,6 +61,7 @@
       "type": "page",
       "name": "Silences",
       "path": "/a/%PLUGIN_ID%/silences",
+      "action": "alert.instances.external:read",
       "addToNav": true,
       "defaultNav": false
     },
@@ -66,6 +69,7 @@
       "type": "page",
       "name": "Time intervals",
       "path": "/a/%PLUGIN_ID%/time-intervals",
+      "action": "alert.notifications.external:read",
       "addToNav": true,
       "defaultNav": false
     },
@@ -73,6 +77,7 @@
       "type": "page",
       "name": "Inhibit Rules",
       "path": "/a/%PLUGIN_ID%/inhibit-rules",
+      "action": "alert.notifications.external:read",
       "addToNav": true,
       "defaultNav": false
     },

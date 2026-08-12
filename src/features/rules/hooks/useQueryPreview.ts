@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { getBackendSrv } from '@grafana/runtime';
 
 import { RulesSourceApplication, getQueryApiPath } from '../../../types/rules';
+import { buildDatasourceProxyUrl } from '../../../api/utils/proxyPath';
 
 /**
  * Prometheus instant query result types
@@ -83,8 +84,9 @@ export function useQueryPreview(dataSourceUid: string, application: RulesSourceA
         params.append('query', expression);
         params.append('time', now.toString());
 
+        const queryApiPath = getQueryApiPath(application);
         const response = await getBackendSrv().post<PrometheusQueryResponse>(
-          `/api/datasources/proxy/uid/${dataSourceUid}/${getQueryApiPath(application)}`,
+          buildDatasourceProxyUrl(dataSourceUid, ...queryApiPath.split('/')),
           params.toString(),
           {
             headers: {

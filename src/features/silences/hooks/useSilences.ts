@@ -1,6 +1,11 @@
 import { alertmanagerApi } from '../../../api/alertmanager/alertmanager.endpoints';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { getSilencesAbilities, SilenceAction } from '../../../access-control/abilities.silences';
+import { PermissionDeniedError } from '../../../access-control/errors';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import type { PostableSilence } from '@grafana/external-alertmanager/vanilla';
+
+const ERR_INSUFFICIENT_PERMISSIONS = new PermissionDeniedError('Missing permission to change silences');
 
 /**
  * Hook to fetch and manage silences from the Alertmanager silences endpoint.
@@ -27,13 +32,21 @@ export function useSilence(silenceId: string, options?: { skip?: boolean }) {
 /**
  * Hook to create a new silence.
  * Returns a mutation function and mutation state.
+ *
+ * This is the enforcement boundary for silence creation and updates — callers that hide their
+ * affordances still cannot reach the API without `alert.instances.external:write`.
  */
 export function useCreateSilence() {
   const { uid: dataSourceUID } = useAlertmanager();
+  const canMutateSilences = isAbilityAllowed(getSilencesAbilities()[SilenceAction.MutateSilences]);
 
   const [postSilence, mutationState] = alertmanagerApi.endpoints.postSilences.useMutation();
 
   const createSilence = async (postableSilence: PostableSilence) => {
+    if (!canMutateSilences) {
+      throw ERR_INSUFFICIENT_PERMISSIONS;
+    }
+
     return postSilence({ dataSourceUID, postableSilence }).unwrap();
   };
 
@@ -46,11 +59,16 @@ export function useCreateSilence() {
  */
 export function useDeleteSilence() {
   const { uid: dataSourceUID } = useAlertmanager();
+  const canMutateSilences = isAbilityAllowed(getSilencesAbilities()[SilenceAction.MutateSilences]);
 
   const [deleteSilence, mutationState] = alertmanagerApi.endpoints.deleteSilence.useMutation();
 
-  const expireSilence = (silenceId: string) => {
-    return deleteSilence({ dataSourceUID, silenceId });
+  const expireSilence = async (silenceId: string) => {
+    if (!canMutateSilences) {
+      throw ERR_INSUFFICIENT_PERMISSIONS;
+    }
+
+    return deleteSilence({ dataSourceUID, silenceId }).unwrap();
   };
 
   return [expireSilence, mutationState] as const;

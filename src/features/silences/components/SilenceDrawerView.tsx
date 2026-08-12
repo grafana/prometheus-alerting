@@ -8,6 +8,10 @@ import { locationService } from '@grafana/runtime';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { getSilencesAbilities, SilenceAction } from '../../../access-control/abilities.silences';
+import { useAppNotifications } from '../../../hooks/useAppNotifications';
+import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 import { useDeleteSilence } from '../hooks/useSilences';
 import { formatMatchers, formatDateTime } from '../utils/silences.utils';
 import { AffectedAlertsList } from './AffectedAlertsList';
@@ -75,6 +79,8 @@ interface SilenceDrawerViewProps {
 export function SilenceDrawerView({ silence, activeTab, onEdit, onClose }: SilenceDrawerViewProps) {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [expireSilence, { isLoading: isExpiring, error: deleteError }] = useDeleteSilence();
+  const { error: notifyError } = useAppNotifications();
+  const canMutateSilences = isAbilityAllowed(getSilencesAbilities()[SilenceAction.MutateSilences]);
 
   const handleExpire = () => {
     setIsConfirmModalOpen(true);
@@ -95,8 +101,12 @@ export function SilenceDrawerView({ silence, activeTab, onEdit, onClose }: Silen
       onClose();
       // The list will automatically refresh due to cache invalidation
     } catch (err) {
-      console.error('Failed to expire silence:', err);
       // Keep modal open on error so user can retry
+      const feedback = getMutationErrorFeedback(err, {
+        fallbackTitle: t('silences.error-expiring-title', 'Error expiring silence'),
+        resource: t('silences.resource-label', 'silences'),
+      });
+      notifyError(feedback.title, feedback.description);
     }
   };
 
@@ -122,7 +132,7 @@ export function SilenceDrawerView({ silence, activeTab, onEdit, onClose }: Silen
         {activeTab === 'affected-alerts' && <AffectedAlertsList silence={silence} />}
       </TabContent>
 
-      {activeTab === 'configuration' && (
+      {activeTab === 'configuration' && canMutateSilences && (
         <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
           <Stack gap={2} justifyContent="space-between">
             <Stack gap={1}>

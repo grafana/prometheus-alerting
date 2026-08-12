@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { t, Trans } from '@grafana/i18n';
 import { Alert, Box, Button, ErrorWithStack, ErrorBoundary, Stack, Text } from '@grafana/ui';
 
-import { useAppPluginVersion } from '../../hooks/useAppPluginVersion';
+import { logError } from '../../analytics';
 import { copyToClipboard } from '../../utils/clipboard';
 import { buildIssueBody } from '../../utils/reportIssue';
 
@@ -32,8 +32,13 @@ export function PluginErrorBoundary({
   dependencies,
   message,
 }: PluginErrorBoundaryProps) {
+  // @grafana/ui's error boundary pushes to the host Faro instance directly, which loses all plugin
+  // attribution. Routing through our monitoring logger instead tags the error with the plugin source,
+  // module and version, so it can be told apart from core Grafana's errors.
+  const logBoundaryError = useCallback((error: Error) => logError(error, { boundary: boundaryName }), [boundaryName]);
+
   return (
-    <ErrorBoundary boundaryName={boundaryName} dependencies={dependencies}>
+    <ErrorBoundary boundaryName={boundaryName} dependencies={dependencies} errorLogger={logBoundaryError}>
       {({ error, errorInfo }) => {
         if (!error && !errorInfo) {
           return children;
@@ -87,17 +92,16 @@ export function PluginErrorBoundary({
 
 function ErrorActions({ error, errorInfo }: { error: Error | null; errorInfo: React.ErrorInfo | null }) {
   const componentStack = errorInfo?.componentStack;
-  const pluginVersion = useAppPluginVersion();
 
   return (
     <Stack direction="row" gap={1} wrap="wrap">
-      <ReportIssueButton error={error} componentStack={componentStack} pluginVersion={pluginVersion} />
+      <ReportIssueButton error={error} componentStack={componentStack} />
       <Button
         variant="secondary"
         icon="copy"
         onClick={() =>
           copyToClipboard(
-            buildIssueBody({ error, componentStack, pluginVersion, location: window.location.href }),
+            buildIssueBody({ error, componentStack, location: window.location.href }),
             t('alerting.error-boundary.copy-details-success', 'Error details copied to clipboard')
           )
         }

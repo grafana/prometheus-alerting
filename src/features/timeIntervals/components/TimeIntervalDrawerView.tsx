@@ -4,8 +4,10 @@ import { Alert, Stack, Button, ConfirmModal } from '@grafana/ui';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { KeyValueList } from '../../../components/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
-import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { useDeleteTimeInterval } from '../hooks/useTimeIntervals';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
+import { MutationError } from '../../../access-control/components/MutationError';
 
 interface TimeIntervalDetailsProps {
   timeInterval: TimeInterval;
@@ -75,7 +77,7 @@ interface TimeIntervalDrawerViewProps {
 
 export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIntervalDrawerViewProps) {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const hasConfigurationAPI = useHasConfigurationAPI();
+  const canMutateTimeIntervals = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
   const [deleteTimeInterval, { isLoading: isDeleting, error: deleteError }] = useDeleteTimeInterval();
 
   const handleRemove = () => {
@@ -100,19 +102,15 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
 
   return (
     <>
-      {Boolean(deleteError) && (
-        <Alert title={t('time-intervals.error-deleting-title', 'Error deleting time interval')} severity="error">
-          {String(
-            deleteError instanceof Error
-              ? deleteError.message
-              : t('time-intervals.error-deleting-message', 'Failed to delete time interval')
-          )}
-        </Alert>
-      )}
+      <MutationError
+        error={deleteError}
+        fallbackTitle={t('time-intervals.error-deleting-title', 'Error deleting time interval')}
+        resource={t('time-intervals.resource-label', 'time intervals')}
+      />
 
       <TimeIntervalDetails timeInterval={timeInterval} />
 
-      {hasConfigurationAPI && (
+      {canMutateTimeIntervals && (
         <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
           <Stack gap={2} justifyContent="space-between">
             <Button variant="secondary" onClick={onEdit}>

@@ -16,8 +16,11 @@ import {
 import Skeleton from 'react-loading-skeleton';
 
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
+import { useAppNotifications } from '../../../hooks/useAppNotifications';
+import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 import { useCreateSilence, useSilence } from '../hooks/useSilences';
 import { SilenceFormSchema, type SilenceFormData } from '../utils/silenceFormSchema';
+import { formatDateTimeLocal } from '../utils/silences.utils';
 import type { PostableSilence } from '@grafana/external-alertmanager/vanilla';
 import { ROUTES } from '../../../constants';
 import { prefixRoute } from '../../../utils/utils.routing';
@@ -93,19 +96,11 @@ function SilenceForm() {
   ];
 
   const [createSilence, { isLoading, error: mutationError }] = useCreateSilence();
+  const { error: notifyError } = useAppNotifications();
 
   // Get current time and 1 hour from now as defaults
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-
-  const formatDateTimeLocal = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
 
   const {
     control,
@@ -239,8 +234,15 @@ function SilenceForm() {
       // Navigate back to silences list on success
       locationService.push(prefixRoute(ROUTES.Silences));
     } catch (err) {
-      // Error will be handled by the mutationError state
-      console.error(`Failed to ${isEditMode ? 'update' : 'create'} silence:`, err);
+      // Datasource failures also surface through the mutationError state; notify for the ones that
+      // never reach the API, such as a locally denied mutation.
+      const feedback = getMutationErrorFeedback(err, {
+        fallbackTitle: isEditMode
+          ? t('silences.edit.error-title', 'Error updating silence')
+          : t('silences.create.error-title', 'Error creating silence'),
+        resource: t('silences.resource-label', 'silences'),
+      });
+      notifyError(feedback.title, feedback.description);
     }
   };
 

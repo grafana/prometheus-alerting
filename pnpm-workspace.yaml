@@ -6,10 +6,13 @@ verifyDepsBeforeRun: install
 minimumReleaseAge: 4320 # 3 days, in minutes
 minimumReleaseAgeExclude:
   - '@grafana/*'
+  # Renovate security update: js-yaml@4.3.1
+  - js-yaml@4.3.1
 
 overrides:
   'js-cookie': '>=3.0.6'
-  'dompurify': '>=3.3.2'
+  'dompurify': '>=3.4.13'
+  'nanoid': '>=3.3.17'
   'uuid': '>=11.1.1'
   '@types/react': '18.3.29'
   '@types/react-dom': '18.3.7'

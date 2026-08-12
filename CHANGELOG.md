@@ -1,5 +1,53 @@
 # Changelog
 
+## [1.5.0](https://github.com/grafana/prometheus-alerting/compare/v1.4.2...v1.5.0) (2026-08-12)
+
+
+### 🎉 Features
+
+* **observability:** add analytics module and app-level error boundary ([#190](https://github.com/grafana/prometheus-alerting/issues/190)) ([a4410e1](https://github.com/grafana/prometheus-alerting/commit/a4410e13589332211c9e75db2c5008edfce5f8c4))
+
+
+### 📝 Documentation
+
+* add CONTRIBUTING.md ([#191](https://github.com/grafana/prometheus-alerting/issues/191)) ([186524c](https://github.com/grafana/prometheus-alerting/commit/186524c5f3ad9d738c9730a68fbc91bd87d1ca39))
+
+## [1.4.2](https://github.com/grafana/prometheus-alerting/compare/v1.4.1...v1.4.2) (2026-08-11)
+
+
+### 🤖 Continuous Integrations
+
+* Remove pending option from catalog publication ([#188](https://github.com/grafana/prometheus-alerting/issues/188)) ([31d43e3](https://github.com/grafana/prometheus-alerting/commit/31d43e37e51a8f47bacb95083df7c7938b87edf3))
+
+## [1.4.1](https://github.com/grafana/prometheus-alerting/compare/v1.4.0...v1.4.1) (2026-08-11)
+
+
+### 🐛 Bug Fixes
+
+* **security:** percent-encode datasource proxy path segments ([#185](https://github.com/grafana/prometheus-alerting/issues/185)) ([99d4ddb](https://github.com/grafana/prometheus-alerting/commit/99d4ddb1b931e0a2b530ffccbbe208f20bbad5d4))
+* **security:** update dompurify and nanoid to patched versions ([#186](https://github.com/grafana/prometheus-alerting/issues/186)) ([fee152a](https://github.com/grafana/prometheus-alerting/commit/fee152a7497212f727ab40c682e2e8dc3fcc4ad8))
+
+## [1.4.0](https://github.com/grafana/prometheus-alerting/compare/v1.3.0...v1.4.0) (2026-08-10)
+
+
+### 🎉 Features
+
+* **inhibit-rules:** enforce RBAC on inhibit rules page ([#178](https://github.com/grafana/prometheus-alerting/issues/178)) ([8ad54a8](https://github.com/grafana/prometheus-alerting/commit/8ad54a81df357a85fc0afe4021516dc1c90af4c3))
+* **receivers:** enforce RBAC on receivers page ([#173](https://github.com/grafana/prometheus-alerting/issues/173)) ([42c523b](https://github.com/grafana/prometheus-alerting/commit/42c523b5cdf18cef573b9d83c29ed162366da217))
+* **silences:** enforce RBAC on silences page ([#181](https://github.com/grafana/prometheus-alerting/issues/181)) ([3facd2e](https://github.com/grafana/prometheus-alerting/commit/3facd2eaecf53f42e9135eddec391f59ca1af0d9))
+* **templates:** enforce RBAC on templates page ([#174](https://github.com/grafana/prometheus-alerting/issues/174)) ([31050f7](https://github.com/grafana/prometheus-alerting/commit/31050f7d885fedc0bd1c59c3802004efac495cc8))
+* **time-intervals:** enforce RBAC on time intervals page ([#175](https://github.com/grafana/prometheus-alerting/issues/175)) ([8441682](https://github.com/grafana/prometheus-alerting/commit/8441682972eb72cfdb37b36e5728ff748cc8634b))
+
+
+### 🐛 Bug Fixes
+
+* **security/high/:** update dependency js-yaml to v4.3.1 [security] ([#184](https://github.com/grafana/prometheus-alerting/issues/184)) ([a4b3151](https://github.com/grafana/prometheus-alerting/commit/a4b3151901f81bfdc9d2bab127e7f4dd70df903e))
+
+
+### ♻️ Code Refactoring
+
+* **silences:** extract duplicated formatDateTimeLocal helper ([#183](https://github.com/grafana/prometheus-alerting/issues/183)) ([3413163](https://github.com/grafana/prometheus-alerting/commit/3413163704186c24cbb64217640dea3c99b50e81))
+
 ## [1.3.0](https://github.com/grafana/prometheus-alerting/compare/v1.2.0...v1.3.0) (2026-08-04)
 
 

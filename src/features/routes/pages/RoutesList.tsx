@@ -9,7 +9,7 @@ import { RouteAction } from '../../../access-control/abilities.routes';
 import { t } from '@grafana/i18n';
 import { computeInheritedTree } from '@grafana/alerting';
 import { RouteCard, RouteCardActions } from '../components/RouteCard';
-import { RoutesError } from '../components/RoutesError';
+import { AlertmanagerError } from '../../../components/AlertmanagerError';
 import { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { RouteViewDrawer } from '../components/RouteViewDrawer';
@@ -161,7 +161,9 @@ function RoutesPage() {
           error={error}
           isEmpty={!routeTree}
           loading={<RouteCard.Skeleton count={3} />}
-          renderError={<RoutesError error={error} />}
+          renderError={
+            <AlertmanagerError error={error} title={t('routes.error-loading-title', 'Error loading routes')} />
+          }
           empty={
             <EmptyState
               message={t('routes.no-routes-message', 'No routing configuration is available in the Alertmanager.')}
@@ -209,7 +211,12 @@ function RoutesPage() {
         />
       )}
       {selectedReceiverName && (
-        <ReceiverDrawer receiver={selectedReceiver} onClose={handleReceiverDrawerClose} showBackButton={true} />
+        <ReceiverDrawer
+          receiver={selectedReceiver}
+          onClose={handleReceiverDrawerClose}
+          showBackButton={true}
+          readOnly={true}
+        />
       )}
 
       {/* Delete confirmation modal (from the RouteCard menu or the view drawer) */}

@@ -2,11 +2,21 @@ import React from 'react';
 import { Alert, Text } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { useAlertmanagerSafe } from '../hooks/useAlertmanager';
-import { stringifyFetchError, ErrorLike } from '../utils/errors';
+import { stringifyFetchError, ErrorLike, isForbiddenError } from '../utils/errors';
+import { PermissionDenied } from '../access-control/components/PermissionDenied';
 
 interface DataSourceErrorProps {
   error: unknown;
   title: string;
+}
+
+/** Displays clean permission feedback for forbidden Alertmanager reads and datasource details for other failures. */
+export function AlertmanagerError({ error, title }: DataSourceErrorProps) {
+  if (isForbiddenError(error)) {
+    return <PermissionDenied />;
+  }
+
+  return <DataSourceError error={error} title={title} />;
 }
 
 function isErrorLike(error: unknown): error is ErrorLike {

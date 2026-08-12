@@ -10,7 +10,9 @@ import { createMimirAlertmanagerDataSource, deleteGrafanaDataSource } from '../a
 import { InhibitRulesPage } from '../pages/InhibitRulesPage';
 import { ReceiversPage } from '../pages/ReceiversPage';
 import { RoutesListPage } from '../pages/RoutesListPage';
+import { SilencesPage } from '../pages/SilencesPage';
 import { TemplatesPage } from '../pages/TemplatesPage';
+import { TimeIntervalsPage } from '../pages/TimeIntervalsPage';
 
 /**
  * Test data source constants shared across every Alertmanager-page spec.
@@ -29,7 +31,9 @@ type AlertmanagerTestFixture = {
   inhibitRulesPage: InhibitRulesPage;
   receiversPage: ReceiversPage;
   routesListPage: RoutesListPage;
+  silencesPage: SilencesPage;
   templatesPage: TemplatesPage;
+  timeIntervalsPage: TimeIntervalsPage;
   /** A dedicated Mimir tenant and Grafana datasource, isolated for one test. */
   mimirAlertmanager: MimirAlertmanagerFixture;
 };
@@ -47,9 +51,17 @@ export const test = base.extend<AlertmanagerTestFixture>({
     const routesListPage = new RoutesListPage(page, pluginJson.id);
     await use(routesListPage);
   },
+  silencesPage: async ({ page }, use) => {
+    const silencesPage = new SilencesPage(page, pluginJson.id);
+    await use(silencesPage);
+  },
   templatesPage: async ({ page }, use) => {
     const templatesPage = new TemplatesPage(page, pluginJson.id);
     await use(templatesPage);
+  },
+  timeIntervalsPage: async ({ page }, use) => {
+    const timeIntervalsPage = new TimeIntervalsPage(page, pluginJson.id);
+    await use(timeIntervalsPage);
   },
   mimirAlertmanager: async ({}, use) => {
     const suffix = randomUUID().replaceAll('-', '');

@@ -8,8 +8,6 @@ import { buildReportIssueUrl } from '../../utils/reportIssue';
 interface ReportIssueButtonProps {
   error: Error | null;
   componentStack?: string | null;
-  /** Version of this plugin, see `useAppPluginVersion()` */
-  pluginVersion?: string | null;
   size?: 'sm' | 'md';
   variant?: 'primary' | 'secondary';
 }
@@ -18,17 +16,10 @@ interface ReportIssueButtonProps {
  * Opens a prefilled GitHub issue for this repository with the stack trace and environment details
  * of the crash, so users can report it in one click.
  */
-export function ReportIssueButton({
-  error,
-  componentStack,
-  pluginVersion,
-  size = 'md',
-  variant = 'primary',
-}: ReportIssueButtonProps) {
+export function ReportIssueButton({ error, componentStack, size = 'md', variant = 'primary' }: ReportIssueButtonProps) {
   const href = buildReportIssueUrl({
     error,
     componentStack,
-    pluginVersion,
     location: typeof window === 'undefined' ? undefined : window.location.href,
   });
 
