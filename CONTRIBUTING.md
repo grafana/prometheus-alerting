@@ -54,10 +54,6 @@ PRs are squash-merged, so **the PR title becomes the commit message on `main`** 
 
 Review is handled by [@grafana/alerting-frontend](https://github.com/orgs/grafana/teams/alerting-frontend).
 
-## Dependencies
-
-Dependency updates are handled by Renovate. If your change genuinely needs a new runtime dependency, please raise it in an issue or draft PR first — we weigh bundle size, maintenance burden, and supply chain risk, and are conservative by default.
-
 ## Code of conduct
 
 This project follows the [Grafana Labs Code of Conduct](https://github.com/grafana/grafana/blob/main/CODE_OF_CONDUCT.md). Be decent to each other.
