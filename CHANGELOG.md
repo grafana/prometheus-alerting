@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/grafana/prometheus-alerting/compare/v1.4.2...v1.5.0) (2026-08-12)
+
+
+### 🎉 Features
+
+* **observability:** add analytics module and app-level error boundary ([#190](https://github.com/grafana/prometheus-alerting/issues/190)) ([a4410e1](https://github.com/grafana/prometheus-alerting/commit/a4410e13589332211c9e75db2c5008edfce5f8c4))
+
+
+### 📝 Documentation
+
+* add CONTRIBUTING.md ([#191](https://github.com/grafana/prometheus-alerting/issues/191)) ([186524c](https://github.com/grafana/prometheus-alerting/commit/186524c5f3ad9d738c9730a68fbc91bd87d1ca39))
+
 ## [1.4.2](https://github.com/grafana/prometheus-alerting/compare/v1.4.1...v1.4.2) (2026-08-11)
 
 
