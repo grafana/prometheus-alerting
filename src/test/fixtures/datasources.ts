@@ -74,7 +74,10 @@ export const mockPrometheusDs = DataSourceInstanceSettingsFactory.build({
       author: { name: 'Grafana Labs' },
       description: 'Prometheus datasource',
       links: [],
-      logos: { small: '', large: '' },
+      logos: {
+        small: 'public/app/plugins/datasource/prometheus/img/prometheus_logo.svg',
+        large: 'public/app/plugins/datasource/prometheus/img/prometheus_logo.svg',
+      },
       screenshots: [],
       updated: '',
       version: '',
@@ -100,7 +103,10 @@ export const mockMimirDs = DataSourceInstanceSettingsFactory.build({
       author: { name: 'Grafana Labs' },
       description: 'Mimir datasource',
       links: [],
-      logos: { small: '', large: '' },
+      logos: {
+        small: 'public/app/plugins/datasource/prometheus/img/prometheus_logo.svg',
+        large: 'public/app/plugins/datasource/prometheus/img/prometheus_logo.svg',
+      },
       screenshots: [],
       updated: '',
       version: '',
