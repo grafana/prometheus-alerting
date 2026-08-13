@@ -1,7 +1,7 @@
 # Enforces Conventional Commit-style PR titles. Since PRs are squash-merged,
 # the PR title becomes the commit message on main that release-please parses
 # to decide the next version bump (feat -> minor, fix -> patch, etc).
-name: PR Conventional Commit Validation
+name: Validate PR title
 
 on:
   pull_request:
@@ -20,6 +20,7 @@ permissions:
 
 jobs:
   check-title:
+    name: Conventional Commits
     permissions:
       pull-requests: read
     runs-on: ubuntu-latest

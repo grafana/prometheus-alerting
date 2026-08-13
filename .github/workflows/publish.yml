@@ -3,7 +3,7 @@
 # All inputs are documented in the workflow file itself:
 # https://github.com/grafana/plugin-ci-workflows/blob/main/.github/workflows/cd.yml
 
-name: Plugins - CD
+name: Publish
 run-name: Deploy ${{ inputs.branch }} to ${{ inputs.environment }} by @${{ github.actor }}
 
 on:
@@ -30,7 +30,7 @@ permissions: {}
 
 jobs:
   cd:
-    name: CD
+    name: Publish to catalog
     uses: grafana/plugin-ci-workflows/.github/workflows/cd.yml@ci-cd-workflows/v10.1.0
     permissions:
       contents: write
