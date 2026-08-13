@@ -8,10 +8,10 @@ import type { RulerBackend } from './types';
  * The behavioural contract every {@link RulerBackend} must satisfy, regardless of what its
  * backend's native API looks like.
  *
- * Flavors can differ enormously below this line -- a future backend might rewrite a whole
- * namespace file as one document instead of writing per rule group, or apply changes
- * asynchronously. The app above the line assumes none of that. Run this suite against every
- * flavor so a new backend cannot quietly disagree with the one the UI was built against.
+ * Flavors differ enormously below this line -- Mimir writes one rule group at a time over YAML,
+ * AMP rewrites a whole base64'd namespace file over JSON and applies it asynchronously. The app
+ * above the line assumes none of that. Run this suite against every flavor so a new backend
+ * cannot quietly disagree with the one the UI was built against.
  *
  * `createBackend` receives a fresh, empty store on each call.
  */

@@ -147,6 +147,38 @@ export const mockLokiDs = DataSourceInstanceSettingsFactory.build({
 });
 
 /**
+ * A mock Amazon Managed Service for Prometheus datasource.
+ *
+ * Read-only: AMP has no Ruler reachable through the datasource proxy, so feature discovery reports
+ * `rulerApiEnabled: false` for it.
+ */
+export const mockAmpDs = DataSourceInstanceSettingsFactory.build({
+  uid: 'test-amp-uid',
+  name: 'Test AMP',
+  type: 'grafana-amazonprometheus-datasource',
+  meta: {
+    id: 'grafana-amazonprometheus-datasource',
+    name: 'Amazon Managed Service for Prometheus',
+    type: PluginType.datasource,
+    info: {
+      author: { name: 'Grafana Labs' },
+      description: 'Amazon Managed Service for Prometheus datasource',
+      links: [],
+      logos: {
+        small: 'public/plugins/grafana-amazonprometheus-datasource/img/prometheus_aws_logo.svg',
+        large: 'public/plugins/grafana-amazonprometheus-datasource/img/prometheus_aws_logo.svg',
+      },
+      screenshots: [],
+      updated: '',
+      version: '',
+    },
+    module: '',
+    baseUrl: '',
+  },
+  jsonData: {},
+});
+
+/**
  * A mock Mimir Alertmanager datasource
  */
 export const mockMimirAlertmanagerDs = AlertmanagerDataSourceInstanceSettingsFactory.build({
@@ -206,6 +238,7 @@ export const mockDatasourcesConfig = {
   [mockPrometheusDs.uid]: mockPrometheusDs,
   [mockMimirDs.uid]: mockMimirDs,
   [mockLokiDs.uid]: mockLokiDs,
+  [mockAmpDs.uid]: mockAmpDs,
   [mockAlertmanagerDs.uid]: mockAlertmanagerDs,
   [mockMimirAlertmanagerDs.uid]: mockMimirAlertmanagerDs,
 };

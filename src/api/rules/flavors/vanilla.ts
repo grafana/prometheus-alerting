@@ -14,18 +14,18 @@ import { isForbiddenError, isNotFoundError } from '../../../utils/errors';
 
 /**
  * The flavor for backends whose rules are read through the Prometheus-compatible API over the
- * datasource proxy: vanilla Prometheus, Mimir, Cortex, and Loki. They differ only in paths, in
- * whether `/api/v1/status/buildinfo` is worth probing, and in whether a Cortex-style Ruler is
- * reachable at all -- so they share one implementation, just configured differently, rather
- * than having one each.
+ * datasource proxy: vanilla Prometheus, Mimir, Cortex, Loki, and — read-only for now — Amazon
+ * Managed Service for Prometheus. They differ only in paths, in whether
+ * `/api/v1/status/buildinfo` is worth probing, and in whether a Cortex-style Ruler is reachable at
+ * all -- so they share one implementation, just configured differently, rather than having one
+ * each.
  */
 export interface VanillaFlavorOptions {
   promRulesPath: string;
   queryPath: string;
   /**
-   * Whether to fetch `/api/v1/status/buildinfo`. Loki's carries no feature information, and a
-   * backend that has no such endpoint at all should also set this to false -- probing it there
-   * would turn an unrelated error envelope into a failed discovery.
+   * Whether to fetch `/api/v1/status/buildinfo`. Loki's carries no feature information, and AMP has
+   * no such endpoint — probing it there would turn an AWS error envelope into a failed discovery.
    */
   probeBuildInfo: boolean;
   /** Application reported when the backend has no buildinfo endpoint. */
@@ -36,7 +36,7 @@ export interface VanillaFlavorOptions {
    *
    * Omit for backends that do not: discovery then reports `rulerApiEnabled: false` without probing,
    * and asking for a Ruler backend throws rather than issuing requests against a path that cannot
-   * work.
+   * work. AMP's rule CRUD lives on a separate control-plane host, so it omits this.
    */
   ruler?: {
     /** Ruler CRUD base path, e.g. `config/v1/rules`. */
