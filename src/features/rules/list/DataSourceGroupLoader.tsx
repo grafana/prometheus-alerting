@@ -9,11 +9,12 @@ import { Alert } from '@grafana/ui';
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { rulerApi } from '../../../api/rules/ruler.endpoints';
-import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../types/rules';
+import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 
 const { useGetRuleGroupQuery } = rulerApi;
 import { hashRule } from '@grafana/external-rules/hashing';
 import { createRulePositionHash, getMatchingRulerRule } from '@grafana/external-rules/matching';
+import type { RulesSourceApplication } from '@grafana/external-rules/ruler';
 import type { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vanilla';
 
 import { RuleExporter } from '../export';

@@ -41,6 +41,7 @@ export interface RulerBackend {
 }
 
 export interface RulesSourceFlavor {
+  application?: RulesSourceApplication;
   discoverFeatures(ctx: FlavorContext): Promise<DataSourceFeatures>;
   createRulerBackend(ctx: FlavorContext): RulerBackend;
   promRulesPath: string;
@@ -48,8 +49,47 @@ export interface RulesSourceFlavor {
 }
 ```
 
-Four operations, one discovery function, two paths. Deliberately small, and deliberately shaped
-around the DTOs the app already uses rather than around any one backend's API.
+Four operations, one discovery function, two paths, and one optional field for when the
+application is already known without probing. Deliberately small, and deliberately shaped around
+the DTOs the app already uses rather than around any one backend's API.
+
+### How a request flows
+
+Both callers into a flavor — the rule editor and rules list (through `rulerApi`) and feature
+discovery — go through the same three steps: look up the flavor, ask it to do the work, and let it
+talk to the backend through a transport bound to one data source.
+
+```mermaid
+flowchart LR
+    subgraph App["App"]
+        UI["Rule editor & rules list"]
+        Discovery["Feature discovery"]
+        RulerApi["rulerApi (RTK Query)<br/>owns caching &amp; response validation"]
+    end
+
+    subgraph FlavorLayer["Flavor (one per data source type)"]
+        Registry["registry<br/>picks the flavor for a data source"]
+        FlavorImpl["flavor<br/>knows the paths &amp; payload format"]
+        Transport["transport<br/>bound to one data source UID"]
+    end
+
+    Backend["Backend<br/>Prometheus / Mimir / Cortex / Loki"]
+
+    UI --> RulerApi
+    RulerApi --> Registry
+    Discovery --> Registry
+    Registry --> FlavorImpl
+    FlavorImpl --> Transport
+    Transport -->|via the datasource proxy| Backend
+```
+
+- `registry` is the only place that knows which flavor object belongs to which data source type.
+- `flavor` holds the paths and payload format; it has no access to caching, React, Redux, or the
+  Grafana runtime.
+- `transport` is built bound to one data source UID and rejects any path segment that could escape
+  the datasource proxy.
+- `rulerApi` is the only thing that owns cache keys, tags, invalidation, and response validation —
+  a flavor cannot change any of that.
 
 ### Where things live
 
@@ -79,16 +119,16 @@ address a different data source, cannot reach another Grafana API, and cannot sp
 segment out of the proxy prefix. See the security contract on `buildDatasourceProxyUrl` in
 `src/api/utils/proxyPath.ts`.
 
-**The registry is the single allow-list.** `supportedRulesSourceTypes` derives from its keys, so
-rules-source enumeration (`getExternalRulesSources`), the rule-editor picker filter
+**The registry is the one allow-list.** `supportedRulesSourceTypes` is built from its keys, so the
+list of rules sources (`getExternalRulesSources`), the rule-editor picker filter
 (`isSupportedExternalRulesSourceType`), and path selection can no longer drift apart. Deleting one
 registry line removes a flavor everywhere — that is the kill switch.
 
 **`RulesPluginType` is gone.** It only ever existed to be passed into the path helpers, and it hid
 a latent bug: `buildRulerApiUrl` passed a plugin type into a parameter typed
 `RulesSourceApplication`, so ruler paths were chosen by plugin type and never by the discovered
-application. The two axes are now explicit — the registry is keyed by plugin type, and
-`RulesSourceApplication` is presentation only (icons, query dialect).
+application. Those two things are now kept separate and explicit: the registry is keyed by plugin
+type, and `RulesSourceApplication` is presentation only (icons, query dialect).
 
 **Flavors that need a package get one.** A flavor contributed from outside
 `@grafana/alerting-frontend` lives in its own workspace package under `packages/`, not in `src/`.
@@ -110,8 +150,8 @@ one that does not is caught in CI rather than in production.
   behaviour in `src/features/rules/**` and `src/types/rules.ts`, which is precisely the code the
   isolation is meant to protect.
 - **A general datasource abstraction.** Rejected as premature: the differences that actually exist
-  are four write operations, one discovery probe, and two paths. Anything larger would be an
-  abstraction fitted to one hypothetical contributor.
+  are four write operations, one discovery probe, and two paths. Anything bigger would just be
+  building for a contributor and a backend that don't exist yet.
 - **Flavors call `getBackendSrv()` directly.** Simpler by one parameter, but it gives flavor code
   the whole Grafana API surface and makes flavors untestable without a Grafana runtime.
 

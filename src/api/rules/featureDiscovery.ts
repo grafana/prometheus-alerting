@@ -1,4 +1,4 @@
-import { DataSourceFeatures } from '../../types/rules';
+import type { DataSourceFeatures } from '@grafana/external-rules/ruler';
 
 import { flavorContext, resolveFlavorOrThrow } from './flavors/registry';
 

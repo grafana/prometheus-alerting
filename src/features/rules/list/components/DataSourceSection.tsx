@@ -5,8 +5,8 @@ import { css } from '@emotion/css';
 import { GrafanaTheme2 } from '@grafana/data';
 import { t, Trans } from '@grafana/i18n';
 import { Button, IconButton, LinkButton, Stack, Text, Toggletip, useStyles2 } from '@grafana/ui';
+import type { RulesSourceApplication } from '@grafana/external-rules/ruler';
 
-import { RulesSourceApplication } from '../../../../types/rules';
 import { getRulesErrorFeedback } from '../../utils/errorFeedback';
 
 import { DataSourceIcon } from './DataSourceIcon';

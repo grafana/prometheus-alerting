@@ -16,7 +16,8 @@ import { isForbiddenError, isNotFoundError } from '../../../utils/errors';
  * The flavor for backends whose rules are read through the Prometheus-compatible API over the
  * datasource proxy: vanilla Prometheus, Mimir, Cortex, and Loki. They differ only in paths, in
  * whether `/api/v1/status/buildinfo` is worth probing, and in whether a Cortex-style Ruler is
- * reachable at all, so they are parameterisations of one implementation rather than several.
+ * reachable at all -- so they share one implementation, just configured differently, rather
+ * than having one each.
  */
 export interface VanillaFlavorOptions {
   promRulesPath: string;

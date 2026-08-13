@@ -6,15 +6,15 @@ import { createRulerTransport } from './transport';
 import { vanillaFlavor } from './vanilla';
 
 /**
- * Every rules-source flavor the plugin supports, keyed by Grafana data source **plugin type**.
+ * Every rules-source flavor the plugin supports, one entry per Grafana data source type.
  *
- * This is the single place a flavor is wired in, and the single source of truth for which data
- * sources the plugin will touch -- the picker filters, the rule-editor validation, and the
- * rules-source enumeration all derive from these keys. Deleting an entry removes the flavor
- * everywhere.
+ * This is the one place a flavor gets added, and everything else -- the data source picker,
+ * rule-editor validation, and the rules-source list -- follows from what's listed here.
+ * Removing an entry removes that flavor everywhere.
  *
- * Note the axis: keys are plugin types, not applications. Prometheus, Mimir, and Cortex all
- * register as `prometheus` and are told apart at runtime by `discoverFeatures`.
+ * Note this is keyed by data source type, not by application: Prometheus, Mimir, and Cortex
+ * all register as the same `prometheus` data source type, and are only told apart later, at
+ * runtime, by `discoverFeatures`.
  */
 export const flavors: Record<string, RulesSourceFlavor> = {
   prometheus: vanillaFlavor({
@@ -72,6 +72,10 @@ export function getFlavorOrThrow(dataSourceUid: string): RulesSourceFlavor {
  * populates the instance-settings cache for data sources the frontend has not loaded yet -- use
  * it on the feature-discovery path, which may run before anything else has touched the data
  * source.
+ *
+ * @todo `getFlavor`/`getFlavorOrThrow` above still use the synchronous `getDataSourceSrv()`, which is
+ * deprecated in favor of these async accessors. Once their callers can tolerate a loading state,
+ * they should move to this async pattern too and the sync variants can be dropped.
  */
 export async function resolveFlavorOrThrow(dataSourceUid: string): Promise<RulesSourceFlavor> {
   const settings = await getDataSourceInstanceSettings(dataSourceUid);

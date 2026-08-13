@@ -1,19 +1,11 @@
 import { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vanilla';
 import type { RulePositionHash } from '@grafana/external-rules/matching';
-import type { DataSourceFeatures, RulesSourceApplication } from '@grafana/external-rules/ruler';
 
 export type { PromRuleGroupDTO, PromRuleDTO };
 
 // Import StateIcon types from the internal path since they're not exported from unstable
 export type Health = 'nodata' | 'error';
 export type State = 'normal' | 'firing' | 'pending' | 'unknown' | 'recovering';
-
-/**
- * Re-exported from the flavor contract in `@grafana/external-rules/ruler`, which is where
- * rules-source flavors (Prometheus, Mimir/Cortex, Loki) are declared. Kept here so the
- * app's existing imports of `types/rules` keep working.
- */
-export type { DataSourceFeatures, RulesSourceApplication };
 
 export interface PromBuildInfoResponse {
   status: string;

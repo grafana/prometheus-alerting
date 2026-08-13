@@ -95,16 +95,12 @@ export default defineConfig([
     // live (see docs/adr/0001-rules-source-flavors.md). They must stay independently testable: no
     // reaching back into the app, and no Grafana/React runtime. Without this the package boundary
     // is only a convention.
-    //
-    // Must come after baseConfig, which also configures `no-restricted-imports` -- hence `moment`
-    // is repeated here rather than inherited.
     name: 'grafana/package-boundaries',
     files: ['packages/*/src/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
-          paths: ['moment'],
           patterns: [
             {
               group: ['src/*', 'src/**', '**/../src/*', '**/../src/**'],

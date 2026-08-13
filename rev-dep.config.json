@@ -60,7 +60,7 @@
         "src/utils/index.ts",
         "src/matching.ts",
         "src/vanilla/index.ts",
-        "src/ruler/index.ts"
+        "src/ruler/types.ts"
       ],
       "devEntryPoints": ["src/**.test.{ts,tsx}", "src/ruler/contract.test-helpers.ts"],
       "unusedExportsDetection": { "enabled": true },
