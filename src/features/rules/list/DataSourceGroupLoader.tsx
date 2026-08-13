@@ -8,7 +8,7 @@ import { Alert } from '@grafana/ui';
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
-import { rulerApi } from '../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../api/rules/ruler.endpoints';
 import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../types/rules';
 
 const { useGetRuleGroupQuery } = rulerApi;

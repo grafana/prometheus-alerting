@@ -59,9 +59,10 @@
         "src/hashing/index.ts",
         "src/utils/index.ts",
         "src/matching.ts",
-        "src/vanilla/index.ts"
+        "src/vanilla/index.ts",
+        "src/ruler/index.ts"
       ],
-      "devEntryPoints": ["src/**.test.{ts,tsx}"],
+      "devEntryPoints": ["src/**.test.{ts,tsx}", "src/ruler/contract.test-helpers.ts"],
       "unusedExportsDetection": { "enabled": true },
       "orphanFilesDetection": { "enabled": true },
       "circularImportsDetection": { "enabled": true, "ignoreTypeImports": true }

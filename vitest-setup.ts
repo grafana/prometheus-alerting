@@ -10,6 +10,7 @@ import { server } from './src/test/server';
 
 // Import mocks
 import { setupGrafanaRuntimeMocks, resetGrafanaRuntimeMocks } from './src/test/mocks/grafana-runtime';
+import { setupMockBackendSrv } from './src/test/mocks/backend-srv';
 
 // Import handler reset functions
 import { resetRulerState } from './src/test/handlers/ruler';
@@ -121,3 +122,6 @@ afterAll(() => {
 
 // Set up Grafana runtime mocks (config.datasources, getDataSourceSrv, etc.)
 setupGrafanaRuntimeMocks();
+
+// Grafana's own BackendSrv is not published, so install a fetch-backed one that MSW can intercept.
+setupMockBackendSrv();

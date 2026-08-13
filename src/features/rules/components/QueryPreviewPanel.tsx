@@ -5,7 +5,6 @@ import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
 import { Alert, Button, Collapse, LoadingPlaceholder, Stack, Text, useStyles2 } from '@grafana/ui';
 
-import { RulesSourceApplication } from '../../../types/rules';
 import { useQueryPreview } from '../hooks/useQueryPreview';
 
 import { QueryPreviewTable } from './QueryPreviewTable';
@@ -13,7 +12,6 @@ import { QueryPreviewTable } from './QueryPreviewTable';
 interface QueryPreviewPanelProps {
   dataSourceUid: string;
   expression: string;
-  application?: RulesSourceApplication;
   collapsible?: boolean;
   defaultCollapsed?: boolean;
 }
@@ -21,12 +19,11 @@ interface QueryPreviewPanelProps {
 export function QueryPreviewPanel({
   dataSourceUid,
   expression,
-  application,
   collapsible = false,
   defaultCollapsed = true,
 }: QueryPreviewPanelProps) {
   const styles = useStyles2(getStyles);
-  const { results, isLoading, error, resultType, hasRun, runQuery } = useQueryPreview(dataSourceUid, application);
+  const { results, isLoading, error, resultType, hasRun, runQuery } = useQueryPreview(dataSourceUid);
   const [isOpen, setIsOpen] = React.useState(!defaultCollapsed);
 
   const handleRunQuery = useCallback(() => {

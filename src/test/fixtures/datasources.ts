@@ -118,6 +118,35 @@ export const mockMimirDs = DataSourceInstanceSettingsFactory.build({
 });
 
 /**
+ * A mock Loki datasource
+ */
+export const mockLokiDs = DataSourceInstanceSettingsFactory.build({
+  uid: 'test-loki-uid',
+  name: 'Test Loki',
+  type: 'loki',
+  meta: {
+    id: 'loki',
+    name: 'Loki',
+    type: PluginType.datasource,
+    info: {
+      author: { name: 'Grafana Labs' },
+      description: 'Loki datasource',
+      links: [],
+      logos: {
+        small: 'public/app/plugins/datasource/loki/img/loki_icon.svg',
+        large: 'public/app/plugins/datasource/loki/img/loki_icon.svg',
+      },
+      screenshots: [],
+      updated: '',
+      version: '',
+    },
+    module: '',
+    baseUrl: '',
+  },
+  jsonData: {},
+});
+
+/**
  * A mock Mimir Alertmanager datasource
  */
 export const mockMimirAlertmanagerDs = AlertmanagerDataSourceInstanceSettingsFactory.build({
@@ -176,6 +205,7 @@ export const mockAlertmanagerDs = AlertmanagerDataSourceInstanceSettingsFactory.
 export const mockDatasourcesConfig = {
   [mockPrometheusDs.uid]: mockPrometheusDs,
   [mockMimirDs.uid]: mockMimirDs,
+  [mockLokiDs.uid]: mockLokiDs,
   [mockAlertmanagerDs.uid]: mockAlertmanagerDs,
   [mockMimirAlertmanagerDs.uid]: mockMimirAlertmanagerDs,
 };

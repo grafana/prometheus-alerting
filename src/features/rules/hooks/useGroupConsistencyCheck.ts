@@ -4,7 +4,7 @@ import type { PromRuleGroupDTO, RulerRuleGroupDTO } from '@grafana/external-rule
 import { getRuleName } from '@grafana/external-rules/utils';
 
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
-import { rulerApi } from '../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../api/rules/ruler.endpoints';
 
 const { useLazyGetGroupsQuery } = prometheusApi;
 const { useLazyGetRuleGroupQuery } = rulerApi;

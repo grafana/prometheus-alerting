@@ -8,9 +8,10 @@ import {
 
 import { produce } from 'immer';
 
-import { DataSourceRulesSourceIdentifier, getPrometheusRulesApiBasePath } from '../../types/rules';
-import { getRulesApiPluginType } from '../../utils/datasource';
+import { DataSourceRulesSourceIdentifier } from '../../types/rules';
 import { buildDatasourceProxyPath } from '../utils/proxyPath';
+
+import { getFlavorOrThrow } from './flavors/registry';
 
 interface PromRulesOptions {
   ruleSource: Pick<DataSourceRulesSourceIdentifier, 'uid'>;
@@ -29,7 +30,7 @@ export const prometheusApi = createApi({
   endpoints: (build) => ({
     getGroups: build.query<GetPromRulesApiResponse, PromRulesOptions>({
       query: ({ ruleSource, namespace, groupName, ruleName, groupLimit, excludeAlerts, groupNextToken }) => {
-        const basePath = getPrometheusRulesApiBasePath(getRulesApiPluginType(ruleSource.uid));
+        const basePath = getFlavorOrThrow(ruleSource.uid).promRulesPath;
         return {
           url: buildDatasourceProxyPath(ruleSource.uid, ...basePath.split('/')),
           params: {

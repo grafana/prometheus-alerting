@@ -172,7 +172,7 @@ describe('getMatchingRulerRule', () => {
     const rulerRules = [RulerRuleDTOSchema.parse({ record: 'job:requests:rate5m', expr: 'sum(rate(x[5m]))' })];
     const result = getMatchingRulerRule(
       rulerRules,
-      promRule({ name: 'job:requests:rate5m', type: 'recording', state: undefined, query: 'sum(rate(x[5m]))' })
+      promRule({ name: 'job:requests:rate5m', type: 'recording', query: 'sum(rate(x[5m]))' })
     );
     expect(result).toBe(rulerRules[0]);
   });
