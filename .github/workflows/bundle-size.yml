@@ -1,4 +1,4 @@
-name: Bundle Stats
+name: Bundle size
 
 on:
   workflow_dispatch:
@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   compare:
+    name: Compare against base
     runs-on: ubuntu-latest
 
     steps:
