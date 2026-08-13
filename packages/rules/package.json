@@ -17,7 +17,7 @@
     "./utils": "./src/utils/index.ts",
     "./matching": "./src/matching.ts",
     "./vanilla": "./src/vanilla/index.ts",
-    "./ruler": "./src/ruler/index.ts",
+    "./ruler": "./src/ruler/types.ts",
     "./ruler/contract": "./src/ruler/contract.test-helpers.ts"
   }
 }
