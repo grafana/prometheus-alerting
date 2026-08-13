@@ -20,7 +20,7 @@ import packageJson from '../package.json';
 // Read from package.json rather than plugin.json: the latter's %VERSION% placeholder is substituted
 // only in the emitted plugin.json, never in the bundle. package.json is where webpack takes that
 // version from in the first place, so the two always agree.
-const pluginVersion = packageJson.version;
+export const pluginVersion = packageJson.version;
 
 export const { logDebug, logInfo, logWarning, logError, logMeasurement } = createMonitoringLogger(
   'plugins.prometheusalerting',

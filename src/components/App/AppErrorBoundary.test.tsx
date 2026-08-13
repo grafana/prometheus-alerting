@@ -50,7 +50,7 @@ describe('AppErrorBoundary', () => {
   it('shows a fallback and reports the error when a page throws', () => {
     renderAt('/rules');
 
-    expect(screen.getByText('An unexpected error happened')).toBeInTheDocument();
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     expect(vi.mocked(logError)).toHaveBeenCalledWith(expect.objectContaining({ message: 'page blew up' }), {
       boundary: 'app-root',
     });
@@ -60,11 +60,11 @@ describe('AppErrorBoundary', () => {
     const user = userEvent.setup();
     renderAt('/rules');
 
-    expect(screen.getByText('An unexpected error happened')).toBeInTheDocument();
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Silences' }));
 
     expect(screen.getByText('Silences list')).toBeInTheDocument();
-    expect(screen.queryByText('An unexpected error happened')).not.toBeInTheDocument();
+    expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument();
   });
 });
