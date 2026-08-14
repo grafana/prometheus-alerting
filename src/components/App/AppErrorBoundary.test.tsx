@@ -1,9 +1,10 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { logError } from '../../analytics';
 import { AppErrorBoundary } from './AppErrorBoundary';
+import { TestMemoryRouter } from '../../test/utils/test-wrapper';
 
 // Spy on the real module instead of replacing it – logError only reaches Faro when the host Grafana
 // has its JavaScript agent enabled, so the genuine implementation is a no-op here.
@@ -21,7 +22,7 @@ function NavigateToSilences() {
 
 function renderAt(path: string) {
   return render(
-    <MemoryRouter initialEntries={[path]}>
+    <TestMemoryRouter initialEntries={[path]}>
       <NavigateToSilences />
       <AppErrorBoundary>
         <Routes>
@@ -29,7 +30,7 @@ function renderAt(path: string) {
           <Route path="/silences" element={<p>Silences list</p>} />
         </Routes>
       </AppErrorBoundary>
-    </MemoryRouter>
+    </TestMemoryRouter>
   );
 }
 

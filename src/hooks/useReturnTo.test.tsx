@@ -1,9 +1,9 @@
 import React from 'react';
 import { renderHook } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 
 import { useReturnTo } from './useReturnTo';
+import { TestMemoryRouter } from '../test/utils/test-wrapper';
 
 const FALLBACK = '/a/grafana-prometheusalerting-app/rules';
 
@@ -12,7 +12,7 @@ function renderUseReturnTo(returnTo: string) {
 
   return renderHook(() => useReturnTo(FALLBACK), {
     wrapper: ({ children }: { children: React.ReactNode }) => (
-      <MemoryRouter initialEntries={[`/edit${search}`]}>{children}</MemoryRouter>
+      <TestMemoryRouter initialEntries={[`/edit${search}`]}>{children}</TestMemoryRouter>
     ),
   });
 }
@@ -31,7 +31,7 @@ describe('useReturnTo', () => {
 
   it('should return the fallback when no returnTo is set', () => {
     const { result } = renderHook(() => useReturnTo(FALLBACK), {
-      wrapper: ({ children }: { children: React.ReactNode }) => <MemoryRouter>{children}</MemoryRouter>,
+      wrapper: ({ children }: { children: React.ReactNode }) => <TestMemoryRouter>{children}</TestMemoryRouter>,
     });
 
     expect(result.current.returnTo).toBe(FALLBACK);

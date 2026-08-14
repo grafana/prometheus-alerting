@@ -1,5 +1,5 @@
 import React from 'react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 
@@ -8,18 +8,19 @@ import { config } from '@grafana/runtime';
 import { RequireAlertmanager } from './RequireAlertmanager';
 import { testIds } from './testIds';
 import { mockMimirDs, mockPrometheusDs, setMockGrafanaDataSources } from '../test/mocks/grafana-runtime';
+import { TestMemoryRouter } from '../test/utils/test-wrapper';
 
 vi.mock('@grafana/runtime');
 
 function renderGuardedRoute() {
   return render(
-    <MemoryRouter initialEntries={['/guarded']}>
+    <TestMemoryRouter initialEntries={['/guarded']}>
       <Routes>
         <Route element={<RequireAlertmanager />}>
           <Route path="/guarded" element={<div data-testid="guarded-page" />} />
         </Route>
       </Routes>
-    </MemoryRouter>
+    </TestMemoryRouter>
   );
 }
 

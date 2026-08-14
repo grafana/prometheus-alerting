@@ -10,6 +10,9 @@ minimumReleaseAgeExclude:
   - js-yaml@4.3.1
 
 overrides:
+  # i18next 25.x prints a console ad for its paid Locize product on every init (which
+  # @grafana/i18n triggers lazily and without opting out) - 26.x dropped the ad entirely.
+  'i18next': '^26.0.0'
   'js-cookie': '>=3.0.6'
   'dompurify': '>=3.4.13'
   'nanoid': '>=3.3.17'
