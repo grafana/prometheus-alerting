@@ -1,5 +1,5 @@
 import { Action } from '@reduxjs/toolkit';
-import { rulerApi } from '../../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../../api/rules/ruler.endpoints';
 import { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { ruleGroupReducer, addRuleAction } from '../ruleGroupReducer';
 import { isNotFoundError } from '../../../../utils/errors';

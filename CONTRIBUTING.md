@@ -17,6 +17,24 @@ Roughly:
 | Refactor touching many files or core data flow | Open an issue or draft PR first                                 |
 | Security vulnerability                         | See [SECURITY.md](SECURITY.md) — **do not** open a public issue |
 
+## Adding support for a Prometheus-compatible backend
+
+Support for a rules source — Prometheus, Mimir/Cortex, Loki, or anything else that speaks a
+Prometheus-compatible API — is added as a **flavor**: one object
+holding that backend's paths, feature discovery, and rule read/write behaviour.
+
+Read [docs/adr/0001-rules-source-flavors.md](docs/adr/0001-rules-source-flavors.md) first. It
+explains the contract, why it is deliberately small, and the step-by-step checklist. The short
+version:
+
+- Implement `RulesSourceFlavor` from `@grafana/external-rules/ruler`. If you are contributing from
+  outside `@grafana/alerting-frontend`, it goes in its own `packages/<name>/` workspace package.
+  Package code cannot import from `src/**` or from Grafana/React runtimes — that is enforced by
+  eslint, not just convention.
+- Run the shared `describeRulerBackend` suite against your backend. Every flavor must pass it.
+- Add one line to `src/api/rules/flavors/registry.ts`. Nothing else under `src/` should need to
+  change; if it does, say so in the issue rather than widening the diff.
+
 ## Development setup
 
 See the [README](README.md) for prerequisites, installing dependencies, running the plugin against a local Grafana, and running the test suites. We use [mise](https://mise.jdx.dev) to pin the Node.js and pnpm versions used in CI; `pnpm install` will refuse to run if your toolchain doesn't match.

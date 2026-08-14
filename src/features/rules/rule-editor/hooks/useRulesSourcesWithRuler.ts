@@ -4,7 +4,7 @@ import { DataSourceInstanceSettings } from '@grafana/data';
 import { getDataSourceSrv } from '@grafana/runtime';
 
 import { useLazyDiscoverFeaturesQuery } from '../../../../api/rules/featureDiscovery.endpoints';
-import { isSupportedExternalRulesSourceType } from '../datasourceValidation';
+import { isSupportedRulesSourceType } from '../../../../api/rules/flavors/registry';
 
 /**
  * Hook to get all data sources that support the Ruler API
@@ -24,7 +24,7 @@ export function useRulesSourcesWithRuler(): {
 
       // Get all Prometheus-compatible data sources
       const allDataSources = getDataSourceSrv().getList();
-      const rulesSources = allDataSources.filter((ds) => isSupportedExternalRulesSourceType(ds.type));
+      const rulesSources = allDataSources.filter((ds) => isSupportedRulesSourceType(ds.type));
 
       // Check each data source for Ruler API support
       const sourcesWithRuler: DataSourceInstanceSettings[] = [];

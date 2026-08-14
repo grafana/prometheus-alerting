@@ -2,6 +2,7 @@ import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
+import { getFlavor } from '../../../api/rules/flavors/registry';
 import { DataSourceRulesSourceIdentifier } from '../../../types/datasources';
 
 import { DataSourceSection } from './components/DataSourceSection';
@@ -27,6 +28,11 @@ export function DataSourceLoader({
   // Run feature discovery
   const { data: features, isLoading, error } = useDiscoverFeaturesQuery({ uid });
 
+  // Discovery is what normally tells us which application this is, so when it fails we fall back to
+  // whatever the plugin type already settles -- otherwise a failing data source loses its icon and
+  // becomes hard to identify in a list of several.
+  const knownApplication = getFlavor(uid)?.application;
+
   if (isLoading) {
     // While loading, show skeleton only if not hiding on empty/error
     // (we don't know yet if there will be results)
@@ -41,14 +47,21 @@ export function DataSourceLoader({
     if (hideOnEmptyOrError) {
       return null;
     }
-    return <DataSourceSection error={error} uid={uid} name={name} />;
+    return <DataSourceSection error={error} uid={uid} name={name} application={knownApplication} />;
   }
 
   if (!features) {
     if (hideOnEmptyOrError) {
       return null;
     }
-    return <DataSourceSection error="Unable to discover data source features" uid={uid} name={name} />;
+    return (
+      <DataSourceSection
+        error="Unable to discover data source features"
+        uid={uid}
+        name={name}
+        application={knownApplication}
+      />
+    );
   }
 
   return (

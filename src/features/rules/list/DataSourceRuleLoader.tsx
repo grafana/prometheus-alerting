@@ -3,7 +3,7 @@ import React, { memo, useMemo } from 'react';
 import { skipToken } from '@reduxjs/toolkit/query';
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
-import { rulerApi } from '../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../api/rules/ruler.endpoints';
 import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
 
 const { useGetRuleGroupQuery } = rulerApi;

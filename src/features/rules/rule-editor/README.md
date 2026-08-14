@@ -69,7 +69,7 @@ The `CloneRuleEditor` component fetches the rule to clone using `useRuleDetails`
 
 ## API Integration
 
-The form uses the `upsertRuleGroup` mutation from `src/api/rules/mimir.endpoints.ts` to save rules:
+The form uses the `upsertRuleGroup` mutation from `src/api/rules/ruler.endpoints.ts` to save rules:
 
 ```typescript
 upsertRuleGroup({
@@ -79,8 +79,11 @@ upsertRuleGroup({
 });
 ```
 
-The mutation POSTs through `/api/datasources/proxy/uid/{uid}/` to either
-`config/v1/rules/{namespace}` or Loki's `api/prom/rules/{namespace}` with the rule group payload.
+The mutation delegates to the data source's flavor (`src/api/rules/flavors/`), which for
+Prometheus-compatible sources POSTs the rule group as YAML through
+`/api/datasources/proxy/uid/{uid}/` to either `config/v1/rules/{namespace}` or Loki's
+`api/prom/rules/{namespace}`. See [the flavor ADR](../../../../docs/adr/0001-rules-source-flavors.md)
+for how other backends plug in.
 
 ## Form Flow
 

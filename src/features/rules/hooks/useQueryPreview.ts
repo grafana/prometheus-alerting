@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { getBackendSrv } from '@grafana/runtime';
 
-import { RulesSourceApplication, getQueryApiPath } from '../../../types/rules';
+import { resolveFlavorOrThrow } from '../../../api/rules/flavors/registry';
 import { buildDatasourceProxyUrl } from '../../../api/utils/proxyPath';
 
 /**
@@ -51,7 +51,7 @@ export interface QueryPreviewState {
  * Hook to execute instant queries against Prometheus/Loki datasources
  * and preview the results.
  */
-export function useQueryPreview(dataSourceUid: string, application: RulesSourceApplication = 'prometheus') {
+export function useQueryPreview(dataSourceUid: string) {
   const [state, setState] = useState<QueryPreviewState>({
     results: [],
     isLoading: false,
@@ -84,7 +84,7 @@ export function useQueryPreview(dataSourceUid: string, application: RulesSourceA
         params.append('query', expression);
         params.append('time', now.toString());
 
-        const queryApiPath = getQueryApiPath(application);
+        const queryApiPath = (await resolveFlavorOrThrow(dataSourceUid)).queryPath;
         const response = await getBackendSrv().post<PrometheusQueryResponse>(
           buildDatasourceProxyUrl(dataSourceUid, ...queryApiPath.split('/')),
           params.toString(),
@@ -146,7 +146,7 @@ export function useQueryPreview(dataSourceUid: string, application: RulesSourceA
         });
       }
     },
-    [dataSourceUid, application]
+    [dataSourceUid]
   );
 
   const clearResults = useCallback(() => {

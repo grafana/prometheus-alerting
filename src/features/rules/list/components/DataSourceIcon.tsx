@@ -2,11 +2,10 @@ import React from 'react';
 
 import { getDataSourceSrv } from '@grafana/runtime';
 import { Icon } from '@grafana/ui';
+import type { RulesSourceApplication } from '@grafana/external-rules/ruler';
 import lokiIconSvg from '../../../../img/loki_icon.svg';
 import mimirLogoSvg from '../../../../img/mimir_logo.svg';
 import prometheusLogoSvg from '../../../../img/prometheus_logo.svg';
-
-import { RulesSourceApplication } from '../../../../types/rules';
 
 interface DataSourceIconProps {
   application?: RulesSourceApplication;

@@ -7,7 +7,7 @@ import dataSourceReducer from './datasourceSlice';
 import { alertmanagerApi } from '../api/alertmanager/alertmanager.endpoints';
 import { featureDiscoveryApi } from '../api/rules/featureDiscovery.endpoints';
 import { prometheusApi } from '../api/rules/prometheus.endpoints';
-import { rulerApi } from '../api/rules/mimir.endpoints';
+import { rulerApi } from '../api/rules/ruler.endpoints';
 
 /**
  * Create the plugin store, optionally preselecting an Alertmanager data source.

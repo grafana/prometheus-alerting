@@ -90,9 +90,9 @@ vi.mock('../../../api/rules/featureDiscovery.endpoints', async () => {
   };
 });
 
-vi.mock('../../../api/rules/mimir.endpoints', async () => {
-  const actual = await vi.importActual<typeof import('../../../api/rules/mimir.endpoints')>(
-    '../../../api/rules/mimir.endpoints'
+vi.mock('../../../api/rules/ruler.endpoints', async () => {
+  const actual = await vi.importActual<typeof import('../../../api/rules/ruler.endpoints')>(
+    '../../../api/rules/ruler.endpoints'
   );
   return {
     ...actual,

@@ -4,7 +4,7 @@
     "ignoreDeprecations": "6.0",
     "rootDir": "."
   },
-  "include": ["src", "tests", ".config/types"],
+  "include": ["src", "tests", "packages", ".config/types"],
   "ts-node": {
     "compilerOptions": {
       "module": "commonjs",

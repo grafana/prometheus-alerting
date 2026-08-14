@@ -1,6 +1,6 @@
 import { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
 
-import { rulerApi } from '../../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../../api/rules/ruler.endpoints';
 import { mergeRequestStates } from '../../../../utils/requestState';
 import { deleteRuleAction } from '../ruleGroupReducer';
 

@@ -2,8 +2,9 @@ import React from 'react';
 
 import { RulerRuleDTO } from '@grafana/external-rules/vanilla';
 import { getRuleName, isAlertingRule, isRecordingRule } from '@grafana/external-rules/utils';
+import type { RulesSourceApplication } from '@grafana/external-rules/ruler';
 
-import { DataSourceRuleGroupIdentifier, Rule, RulesSourceApplication } from '../../../types/rules';
+import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
 import { fromRuleAndGroup, fromRulerRuleAndGroup } from '../../../utils/rule-id';
 import { rules as rulesNav } from '../../../utils/navigation';
 

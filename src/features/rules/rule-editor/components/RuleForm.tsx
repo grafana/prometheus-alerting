@@ -14,7 +14,7 @@ import type { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { hashRulerRule } from '@grafana/external-rules/hashing';
 import { getRuleName } from '@grafana/external-rules/utils';
 
-import { rulerApi } from '../../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../../api/rules/ruler.endpoints';
 import { rules as rulesNav } from '../../../../utils/navigation';
 
 const { useUpsertRuleGroupMutation } = rulerApi;

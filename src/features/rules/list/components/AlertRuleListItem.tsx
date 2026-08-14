@@ -7,8 +7,9 @@ import { AlertLabels, StateIcon } from '@grafana/alerting/unstable';
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans } from '@grafana/i18n';
 import { Icon, Stack, Text, TextLink, Tooltip, useStyles2 } from '@grafana/ui';
+import type { RulesSourceApplication } from '@grafana/external-rules/ruler';
 
-import { normalizeHealth, normalizeState, RulesSourceApplication } from '../../../../types/rules';
+import { normalizeHealth, normalizeState } from '../../../../types/rules';
 import { labelsSize } from '../../../../utils/labels';
 
 import { ListItem } from './ListItem';

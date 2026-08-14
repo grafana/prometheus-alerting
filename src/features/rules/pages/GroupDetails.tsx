@@ -9,7 +9,7 @@ import { Alert, LoadingPlaceholder, Stack } from '@grafana/ui';
 
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
-import { rulerApi } from '../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../api/rules/ruler.endpoints';
 import type { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
