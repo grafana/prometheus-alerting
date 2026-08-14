@@ -1,6 +1,8 @@
 import { setBackendSrv } from '@grafana/runtime';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { of } from 'rxjs';
+
+import { restoreMockBackendSrv } from '../../../test/mocks/backend-srv';
 
 import { createRulerTransport } from './transport';
 
@@ -11,6 +13,10 @@ beforeEach(() => {
   fetchMock.mockReturnValue(of({ ok: true, status: 200, data: { hello: 'world' } }));
   setBackendSrv({ fetch: fetchMock } as any);
 });
+
+// These tests swap in a stub so they can assert on the request options. Put the shared mock back
+// so the replacement doesn't outlive them.
+afterEach(restoreMockBackendSrv);
 
 describe('createRulerTransport', () => {
   it('issues the request under the data source proxy prefix', async () => {
