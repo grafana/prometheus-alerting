@@ -20,11 +20,10 @@ import { extractErrorMessage } from '../../utils/errors';
  * no notification area), `requestId` (which in Grafana cancels an earlier in-flight request with
  * the same id), `hideFromInspector` (no query inspector), and `retry` (every request is made once).
  *
- * Methods left out on purpose:
- *
- * - `datasourceRequest()` — deprecated, and nothing in the plugin calls it.
- * - `chunked()` — for long-lived streaming connections like the Kubernetes WATCH API. The plugin
- *   has no streaming transport.
+ * `datasourceRequest()` and `chunked()` are implemented as stubs that throw if called — the
+ * plugin doesn't use either (the first is deprecated, the second is for long-lived streaming
+ * connections like the Kubernetes WATCH API), so there's nothing real to reproduce, but a call
+ * to one should fail loudly in a test rather than silently doing nothing.
  *
  * Also missing: retrying once on a 401 to refresh the auth token, since there is no session to
  * refresh; `validatePath`, because the plugin does its own path checking in
@@ -190,7 +189,7 @@ async function request<T>(options: BackendSrvRequest): Promise<FetchResponse<T>>
 }
 
 export function createMockBackendSrv(): BackendSrv {
-  const backendSrv: Omit<BackendSrv, 'datasourceRequest' | 'chunked'> = {
+  const backendSrv: BackendSrv = {
     async get<T>(url: string, params?: unknown, requestId?: string, options?: Partial<BackendSrvRequest>) {
       return (
         await request<T>({ ...options, url, params: params as BackendSrvRequest['params'], requestId, method: 'GET' })
@@ -223,11 +222,17 @@ export function createMockBackendSrv(): BackendSrv {
     fetch<T>(options: BackendSrvRequest) {
       return from(request<T>(options));
     },
+
+    datasourceRequest() {
+      throw new Error('datasourceRequest() is not implemented in the mock BackendSrv — use fetch() instead');
+    },
+
+    chunked() {
+      throw new Error('chunked() is not implemented in the mock BackendSrv — the plugin has no streaming transport');
+    },
   };
 
-  // Everything above is checked against the real interface. The cast only covers the two methods
-  // this double deliberately leaves out — see the note at the top of the file.
-  return backendSrv as BackendSrv;
+  return backendSrv;
 }
 
 export function setupMockBackendSrv() {
