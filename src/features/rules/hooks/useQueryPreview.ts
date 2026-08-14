@@ -2,11 +2,8 @@ import { useCallback, useState } from 'react';
 
 import { getBackendSrv } from '@grafana/runtime';
 
-import { getFlavor } from '../../../api/rules/flavors/registry';
+import { resolveFlavorOrThrow } from '../../../api/rules/flavors/registry';
 import { buildDatasourceProxyUrl } from '../../../api/utils/proxyPath';
-
-/** Path used when the data source is not a registered rules source, e.g. while it is loading. */
-const DEFAULT_QUERY_API_PATH = 'api/v1/query';
 
 /**
  * Prometheus instant query result types
@@ -87,7 +84,7 @@ export function useQueryPreview(dataSourceUid: string) {
         params.append('query', expression);
         params.append('time', now.toString());
 
-        const queryApiPath = getFlavor(dataSourceUid)?.queryPath ?? DEFAULT_QUERY_API_PATH;
+        const queryApiPath = (await resolveFlavorOrThrow(dataSourceUid)).queryPath;
         const response = await getBackendSrv().post<PrometheusQueryResponse>(
           buildDatasourceProxyUrl(dataSourceUid, ...queryApiPath.split('/')),
           params.toString(),

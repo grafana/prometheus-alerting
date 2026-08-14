@@ -6,11 +6,15 @@ import { useQueryPreview } from './useQueryPreview';
 // Mock getBackendSrv
 const mockPost = vi.fn();
 
-// The query path comes from the data source's flavor, so the registry needs a data source srv.
-// Returning no settings exercises the fallback to the Prometheus query path.
+// The query path comes from the data source's flavor, so the registry needs to be able to
+// resolve the data source's type. Every uid used in these tests resolves as a Prometheus data
+// source, since that's the flavor whose query path the tests exercise.
 vi.mock('@grafana/runtime', () => ({
   getBackendSrv: () => ({ post: mockPost }),
-  getDataSourceSrv: () => ({ getInstanceSettings: () => undefined }),
+}));
+
+vi.mock('@grafana/runtime/unstable', () => ({
+  getDataSourceInstanceSettings: async () => ({ type: 'prometheus' }),
 }));
 
 describe('useQueryPreview', () => {
