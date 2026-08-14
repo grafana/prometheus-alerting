@@ -5,8 +5,8 @@ import { RulerRuleGroupDTO, RulerRuleGroupDTOSchema } from '../vanilla';
 /**
  * The contract every rules-source flavor implements.
  *
- * A "flavor" is one Prometheus-compatible backend: vanilla Prometheus, Mimir/Cortex, Loki,
- * Amazon Managed Service for Prometheus, and so on. Flavors differ in how rules are read and
+ * A "flavor" is one Prometheus-compatible backend: vanilla Prometheus, Mimir/Cortex, Loki, or
+ * anything else that speaks a Prometheus-compatible API. Flavors differ in how rules are read and
  * written, not in what a rule is -- they all speak the DTOs from `@grafana/external-rules/vanilla`.
  *
  * A flavor is behaviour only. It must not depend on the app: no React, no Redux, no
@@ -48,8 +48,8 @@ export type RulerTransport = <T>(request: RulerRequest) => Promise<T>;
 /**
  * Rule read/write operations, expressed per rule group.
  *
- * Flavors whose native API is not per-group (AMP writes whole namespace files) are responsible
- * for the read-modify-write needed to present this shape.
+ * Flavors whose native API is not per-group are responsible for the read-modify-write needed to
+ * present this shape.
  *
  * `getRuleGroup` **rejects** with a 404-shaped fetch error when the group does not exist -- the
  * app distinguishes "absent" from "failed" with `isNotFoundError`, and creates a blank group on

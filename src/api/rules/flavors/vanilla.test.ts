@@ -156,12 +156,12 @@ describe('vanilla feature discovery', () => {
     ruler: { path: 'api/prom/rules', probePath: 'api/prom/rules' },
   });
 
-  /** A backend with no Ruler reachable through the proxy, as AMP has. */
+  /** A backend with no Ruler reachable through the proxy at all. */
   const rulerlessFlavor = vanillaFlavor({
     promRulesPath: 'api/v1/rules',
     queryPath: 'api/v1/query',
     probeBuildInfo: false,
-    applicationWithoutBuildInfo: 'amp',
+    applicationWithoutBuildInfo: 'cortex',
   });
 
   /**
@@ -302,7 +302,7 @@ describe('vanilla feature discovery', () => {
       const { transport, paths } = probeTransport({ 'api/v1/rules': { status: 'success' } });
 
       expect(await rulerlessFlavor.discoverFeatures(ctx(transport))).toEqual({
-        application: 'amp',
+        application: 'cortex',
         rulerApiEnabled: false,
       });
       expect(paths).toEqual(['api/v1/rules']);

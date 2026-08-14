@@ -19,8 +19,8 @@ Roughly:
 
 ## Adding support for a Prometheus-compatible backend
 
-Support for a rules source — Prometheus, Mimir/Cortex, Loki, Amazon Managed Service for Prometheus,
-or anything else that speaks a Prometheus-compatible API — is added as a **flavor**: one object
+Support for a rules source — Prometheus, Mimir/Cortex, Loki, or anything else that speaks a
+Prometheus-compatible API — is added as a **flavor**: one object
 holding that backend's paths, feature discovery, and rule read/write behaviour.
 
 Read [docs/adr/0001-rules-source-flavors.md](docs/adr/0001-rules-source-flavors.md) first. It
