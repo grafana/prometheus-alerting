@@ -1,4 +1,5 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 
 import { setDataSourceSrv } from '@grafana/runtime';
 
@@ -56,13 +57,23 @@ describe('silence id path safety', () => {
       requested.push(new URL(request.url).pathname);
     });
 
+    // No real Alertmanager would have a silence at this id - respond 404 like the real one
+    // would, just without MSW's "no matching handler" warning cluttering the test output.
+    server.use(
+      http.delete('/api/datasources/proxy/uid/:uid/alertmanager/api/v2/silence/:id', () =>
+        HttpResponse.json(null, { status: 404 })
+      )
+    );
+
     const { result } = renderHook(() => useDeleteSilence(), {
       wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
     });
     const [expireSilence] = result.current;
 
     // the id a malicious or compromised Alertmanager could return
-    await expireSilence('../../../../../../../../api/admin/users/1').catch(() => {});
+    await act(async () => {
+      await expireSilence('../../../../../../../../api/admin/users/1').catch(() => {});
+    });
 
     expect(requested.every((path) => path.startsWith('/api/datasources/proxy/uid/'))).toBe(true);
   });

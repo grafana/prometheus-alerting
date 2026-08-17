@@ -1,5 +1,4 @@
 import React, { Suspense } from 'react';
-import { MemoryRouter } from 'react-router-dom';
 import { AppRootProps, PluginType } from '@grafana/data';
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
@@ -8,7 +7,7 @@ import { config, setDataSourceSrv } from '@grafana/runtime';
 
 import App from './App';
 import { testIds } from '../testIds';
-import { createTestWrapper } from '../../test/utils/test-wrapper';
+import { createTestWrapper, TestMemoryRouter } from '../../test/utils/test-wrapper';
 import { createMockDataSourceSrv, setMockGrafanaDataSources } from '../../test/mocks/grafana-runtime';
 import { ROUTES } from '../../constants';
 
@@ -45,11 +44,11 @@ describe('Components/App', () => {
     const Wrapper = createTestWrapper();
     return render(
       <Wrapper>
-        <MemoryRouter initialEntries={[initialEntry]}>
+        <TestMemoryRouter initialEntries={[initialEntry]}>
           <Suspense fallback={null}>
             <App {...props} />
           </Suspense>
-        </MemoryRouter>
+        </TestMemoryRouter>
       </Wrapper>
     );
   }

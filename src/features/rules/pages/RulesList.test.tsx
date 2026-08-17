@@ -1,12 +1,11 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { setDataSourceSrv } from '@grafana/runtime';
-import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import RulesPage from './RulesList';
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
-import { createTestWrapper } from '../../../test/utils/test-wrapper';
+import { createTestWrapper, TestMemoryRouter } from '../../../test/utils/test-wrapper';
 
 vi.mock('@grafana/runtime', async () => ({
   ...(await vi.importActual('@grafana/runtime')),
@@ -32,9 +31,9 @@ function renderRulesPage(path = '/rules') {
   const Wrapper = createTestWrapper();
   return render(
     <Wrapper>
-      <MemoryRouter initialEntries={[path]}>
+      <TestMemoryRouter initialEntries={[path]}>
         <RulesPage />
-      </MemoryRouter>
+      </TestMemoryRouter>
     </Wrapper>
   );
 }
