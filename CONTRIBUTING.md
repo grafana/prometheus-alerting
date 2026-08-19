@@ -50,6 +50,39 @@ pnpm e2e        # requires `pnpm run server` in another terminal
 
 Git hooks are installed automatically by [lefthook](https://lefthook.dev) on `pnpm install`. They run ESLint and Prettier on staged files before each commit, and `pnpm audit` plus a [TruffleHog](https://github.com/trufflesecurity/trufflehog) secret scan before each push. Please don't bypass them with `--no-verify`.
 
+## Documentation
+
+User-facing documentation lives in `docs/sources` and is published to
+[grafana.com/docs/plugins/grafana-prometheusalerting-app](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/).
+The `Publish` workflow opens a PR against `grafana/website` after a production
+release; nothing is published straight from this repository.
+
+Preview your changes before pushing. Both tasks need Docker or Podman running.
+
+```bash
+mise run docs
+```
+
+Serves at <http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/>
+and reloads as you edit. Docs are mounted under `latest`, so cross-page links
+resolve the same way they do on grafana.com.
+
+To lint the prose against Grafana's style guide:
+
+```bash
+mise run docs:vale
+```
+
+This reports errors by default. Set `VALE_MINALERTLEVEL=suggestion` to see
+warnings and suggestions too.
+
+CI builds `docs/sources` on every pull request, so a page that doesn't build
+fails the `Test docs` job. Vale isn't run in CI, so run it locally before
+pushing prose changes.
+
+For the style guide itself, refer to
+[Writers' Toolkit](https://grafana.com/docs/writers-toolkit/).
+
 ## Commit signing
 
 **All commits must be signed.** Unsigned commits show up as "Unverified" on GitHub and cannot be merged. SSH, GPG, and S/MIME signing all work — see [GitHub's docs on commit signature verification](https://docs.github.com/en/authentication/managing-commit-signature-verification) to set it up.

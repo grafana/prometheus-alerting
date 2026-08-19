@@ -54,7 +54,7 @@ The plugin then appears in the left-side menu. Which page opens first depends on
 - With neither, you land on **Alerts**, which explains what's missing.
 
 {{< admonition type="note" >}}
-Enabling the plugin requires the Grafana **Admin** role. Using it afterwards doesn't — access to each page is controlled separately. Refer to [Configure access control](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/configure-rbac/).
+Enabling the plugin requires the Grafana **Admin** role. Using it afterwards doesn't—access to each page is controlled separately. Refer to [Configure access control](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/configure-rbac/).
 {{< /admonition >}}
 
 ## Next steps

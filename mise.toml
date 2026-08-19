@@ -9,3 +9,41 @@ not_found_auto_install = false
 [tools]
 node = "24.18.0"
 pnpm = "11.17.0"
+
+# Documentation preview. Both tasks need Docker or Podman running.
+#
+# These drive the grafana/docs-base and grafana/vale images directly rather
+# than going through the Writers' Toolkit `make-docs` wrapper. The wrapper is
+# ~1000 lines of shell that exists mostly to resolve several projects across
+# sibling checkouts; a single plugin needs one mount, and driving the image
+# directly also avoids the wrapper forcing a TTY, which breaks it in CI and in
+# non-interactive shells.
+#
+# Docs are mounted under `latest` so cross-page links, which use /latest/ to
+# match grafana.com, resolve in the preview the same way they do in production.
+
+[tasks.docs]
+description = "Serve the docs at http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/"
+run = """
+set -eu
+echo "Serving http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/"
+echo "Press Ctrl+C to stop."
+docker run --rm --init -p 3002:3002 \
+  -v "$(git rev-parse --show-toplevel)/docs/sources:/hugo/content/docs/plugins/grafana-prometheusalerting-app/latest:ro" \
+  grafana/docs-base:latest \
+  hugo server --bind 0.0.0.0 --port 3002 --baseURL http://localhost:3002/ --appendPort=false
+"""
+
+[tasks."docs:vale"]
+description = "Lint the docs prose against Grafana's style guide"
+run = """
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+docker run --rm --init --workdir /w \
+  --volume "$PWD/docs/sources:/w/docs/sources:ro" \
+  grafana/vale:latest \
+  --config=/etc/vale/.vale.ini \
+  --minAlertLevel="${VALE_MINALERTLEVEL:-error}" \
+  --glob='*.md' \
+  docs/sources
+"""

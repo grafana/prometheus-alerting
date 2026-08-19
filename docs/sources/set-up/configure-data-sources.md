@@ -27,7 +27,7 @@ The plugin doesn't store anything itself. Everything it shows is read from your 
 The plugin draws on two different data sources, and you need both to use everything it offers:
 
 - **A rules source** backs the **Rules** pages. This is a Prometheus or Loki data source. Mimir and Cortex register in Grafana as the Prometheus data source type, so they're covered here too.
-- **An Alertmanager data source** backs everything else — **Alerts**, **Routes**, **Receivers**, **Templates**, **Silences**, **Time intervals**, and **Inhibit rules**.
+- **An Alertmanager data source** backs everything else—**Alerts**, **Routes**, **Receivers**, **Templates**, **Silences**, **Time intervals**, and **Inhibit rules**.
 
 These are configured separately in Grafana. Pointing the plugin at Mimir doesn't give it an Alertmanager; you add an Alertmanager data source for that, even when the same Mimir deployment serves both.
 
@@ -35,13 +35,13 @@ The split has a visible consequence. Rule pages work with no Alertmanager config
 
 ## Rules sources
 
-Add the data source that serves your rules as usual, under **Connections** > **Data sources**. The plugin picks up every Prometheus and Loki data source automatically — there's nothing to enable per data source.
+Add the data source that serves your rules as usual, under **Connections** > **Data sources**. The plugin picks up every Prometheus and Loki data source automatically—there's nothing to enable per data source.
 
 Built-in data sources such as `-- Grafana --` and `-- Mixed --` are excluded, since they don't serve Prometheus-compatible rules.
 
 ### Read-only compared with editable rules
 
-Whether you can edit rules depends on whether the backend serves a writable ruler API. The plugin doesn't assume this from the data source type — it probes the backend at runtime and adapts.
+Whether you can edit rules depends on whether the backend serves a writable ruler API. The plugin doesn't assume this from the data source type—it probes the backend at runtime and adapts.
 
 | Backend    | Read rules | Edit rules |
 | ---------- | ---------- | ---------- |
