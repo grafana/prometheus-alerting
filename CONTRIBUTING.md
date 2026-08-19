@@ -64,8 +64,20 @@ mise run docs
 ```
 
 Serves at <http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/>
-and reloads as you edit. Docs are mounted under `latest`, so cross-page links
-resolve the same way they do on grafana.com.
+and reloads as you edit. The first build takes a little while before the site
+answers. Docs are mounted under `latest`, so cross-page links resolve the same
+way they do on grafana.com.
+
+Port 3002 is a proxy in front of Hugo on 3003, and both are published. Browse
+3002 — going straight to 3003 gives you a page with no CSS.
+
+Two known cosmetic differences from the published site, neither of which
+affects published pages:
+
+- The `docs-base` image requests `/web/tw-styles.min.css`, which no longer
+  exists, so some headings render washed out locally.
+- The sidebar shows a `Plugins` node above the plugin. The published site has
+  real content at that level and a version picker instead.
 
 To lint the prose against Grafana's style guide:
 

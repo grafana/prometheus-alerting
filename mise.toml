@@ -12,33 +12,37 @@ pnpm = "11.17.0"
 
 # Documentation preview. Both tasks need Docker or Podman running.
 #
-# These drive the grafana/docs-base and grafana/vale images directly rather
-# than going through the Writers' Toolkit `make-docs` wrapper. The wrapper is
-# ~1000 lines of shell that exists mostly to resolve several projects across
-# sibling checkouts; a single plugin needs one mount, and driving the image
-# directly also avoids the wrapper forcing a TTY, which breaks it in CI and in
-# non-interactive shells.
+# `docs` mounts docs/sources where the website puts it — under a version
+# directory, so cross-page links that use /latest/ resolve here as they do on
+# grafana.com — and then does two things the image needs:
 #
-# Docs are mounted under `latest` so cross-page links, which use /latest/ to
-# match grafana.com, resolve in the preview the same way they do in production.
+#   - Write a section page for `plugins/`. The image ships content for every
+#     other Grafana product but no `plugins` section, and without one the
+#     sidebar falls back to walking the whole bundled tree and lists them all.
+#     The plugin level below it is left to Hugo: giving it a page of its own
+#     puts a second, redundant node in the sidebar.
+#   - Run the image's own `make server-docs` rather than `hugo server`. That
+#     target passes --environment=docs and starts the website-proxy on 3002 in
+#     front of hugo on 3003. Both ports are published; you browse 3002.
 
 [tasks.docs]
 description = "Serve the docs at http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/"
 run = """
 set -eu
-echo "Serving http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/"
-echo "Press Ctrl+C to stop."
-docker run --rm --init -p 3002:3002 \
-  -v "$(git rev-parse --show-toplevel)/docs/sources:/hugo/content/docs/plugins/grafana-prometheusalerting-app/latest:ro" \
+echo "Building. The site takes a little while to answer on first run."
+echo "Then browse http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/"
+docker run --rm --init \
+  --publish 3002:3002 --publish 3003:3003 \
+  --volume "$MISE_PROJECT_ROOT/docs/sources:/hugo/content/docs/plugins/grafana-prometheusalerting-app/latest:ro" \
   grafana/docs-base:latest \
-  hugo server --bind 0.0.0.0 --port 3002 --baseURL http://localhost:3002/ --appendPort=false
+  sh -c 'printf -- "---\ntitle: Plugins\n---\n" > /hugo/content/docs/plugins/_index.md && exec make server-docs'
 """
 
 [tasks."docs:lint"]
 description = "Lint the docs prose against Grafana's style guide"
 run = """
 set -eu
-cd "$(git rev-parse --show-toplevel)"
+cd "$MISE_PROJECT_ROOT"
 docker run --rm --init --workdir /w \
   --volume "$PWD/docs/sources:/w/docs/sources:ro" \
   grafana/vale:latest \
