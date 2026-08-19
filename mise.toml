@@ -34,7 +34,7 @@ docker run --rm --init -p 3002:3002 \
   hugo server --bind 0.0.0.0 --port 3002 --baseURL http://localhost:3002/ --appendPort=false
 """
 
-[tasks."docs:vale"]
+[tasks."docs:lint"]
 description = "Lint the docs prose against Grafana's style guide"
 run = """
 set -eu

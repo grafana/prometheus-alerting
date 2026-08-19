@@ -70,7 +70,7 @@ resolve the same way they do on grafana.com.
 To lint the prose against Grafana's style guide:
 
 ```bash
-mise run docs:vale
+mise run docs:lint
 ```
 
 This reports errors by default. Set `VALE_MINALERTLEVEL=suggestion` to see
