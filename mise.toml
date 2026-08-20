@@ -29,13 +29,28 @@ pnpm = "11.17.0"
 description = "Serve the docs at http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/"
 run = """
 set -eu
-echo "Building. The site takes a little while to answer on first run."
-echo "Then browse http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/"
-docker run --rm --init \
+name=prometheus-alerting-docs
+
+# The container is started detached and followed with `docker logs`, rather than
+# run in the foreground. Ctrl+C doesn't reliably stop a foreground `docker run`
+# here: the container's entry point is `make`, and the interrupt isn't passed on
+# to the hugo and proxy processes it spawns, so the container keeps running and
+# holds ports 3002 and 3003. Following the logs instead means Ctrl+C stops the
+# client, and the trap removes the container.
+cleanup() { docker rm -f "$name" >/dev/null 2>&1 || true; }
+trap cleanup EXIT INT TERM
+cleanup
+
+docker run --detach --init --name "$name" \
   --publish 3002:3002 --publish 3003:3003 \
   --volume "$MISE_PROJECT_ROOT/docs/sources:/hugo/content/docs/plugins/grafana-prometheusalerting-app/latest:ro" \
   grafana/docs-base:latest \
-  sh -c 'printf -- "---\ntitle: Plugins\n---\n" > /hugo/content/docs/plugins/_index.md && exec make server-docs'
+  sh -c 'printf -- "---\ntitle: Plugins\n---\n" > /hugo/content/docs/plugins/_index.md && exec make server-docs' >/dev/null
+
+echo "Building. The site takes a little while to answer on first run."
+echo "Then browse http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/"
+echo "Press Ctrl+C to stop."
+docker logs --follow "$name"
 """
 
 [tasks."docs:lint"]
