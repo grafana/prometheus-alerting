@@ -63,9 +63,8 @@ Preview your changes before pushing. Both tasks need Docker or Podman running.
 mise run docs
 ```
 
-Serves at <http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/>
-and reloads as you edit. The first build takes a little while before the site
-answers. Docs are mounted under `latest`, so cross-page links resolve the same
+The task waits for the first build to finish, then prints the URL. The site
+reloads as you edit. Docs are mounted under `latest`, so cross-page links resolve the same
 way they do on grafana.com.
 
 Port 3002 is a proxy in front of Hugo on 3003, and both are published. Browse

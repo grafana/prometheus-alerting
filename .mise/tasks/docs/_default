@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#MISE description="Serve the docs at http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/"
+set -euo pipefail
+
+# Serves docs/sources using the same container image the website and CI use.
+#
+# Three things here are less obvious than they look:
+#
+#   - The container runs the image's own `make server-docs` target rather than
+#     `hugo server`. That target passes --environment=docs and starts a proxy on
+#     3002 in front of hugo on 3003, so both ports are published and you browse
+#     3002. Running hugo directly gives broken CSS and an empty sidebar.
+#
+#   - docs/sources is mounted under a `latest` directory, matching where the
+#     publish workflow puts it on the website. Cross-page links use /latest/, so
+#     mounting it unversioned would 404 every one of them locally.
+#
+#   - .config/docs-plugins-index.md is mounted as the `plugins` section page.
+#     The image ships content for every other Grafana product but no `plugins`
+#     section, and without one the sidebar walks the whole bundled docs tree and
+#     lists them all. The plugin level below it is left to Hugo on purpose:
+#     giving that its own page adds a second, redundant plugin node.
+#
+# The container is started detached and followed with `docker logs` rather than
+# run in the foreground. Ctrl+C doesn't reliably stop a foreground `docker run`
+# here: the entry point is `make`, and the interrupt isn't passed on to the hugo
+# and proxy processes it spawns, so the container survives and keeps the ports.
+
+name=prometheus-alerting-docs
+url="http://localhost:3002/docs/plugins/grafana-prometheusalerting-app/latest/"
+
+cleanup() { docker rm --force "$name" >/dev/null 2>&1 || true; }
+trap cleanup EXIT INT TERM
+
+# Clear anything left behind by an earlier hard kill, so the fixed name can't
+# turn an orphaned container into a name conflict.
+cleanup
+
+docker run --detach --init --name "$name" \
+  --publish 3002:3002 --publish 3003:3003 \
+  --volume "$MISE_PROJECT_ROOT/docs/sources:/hugo/content/docs/plugins/grafana-prometheusalerting-app/latest:ro" \
+  --volume "$MISE_PROJECT_ROOT/.config/docs-plugins-index.md:/hugo/content/docs/plugins/_index.md:ro" \
+  grafana/docs-base:latest \
+  make server-docs >/dev/null
+
+echo "Building the site. This takes a little while on the first run."
+
+for _ in $(seq 180); do
+  if curl --silent --fail --output /dev/null "$url"; then
+    break
+  fi
+  if [ -z "$(docker ps --quiet --filter "name=$name")" ]; then
+    echo "The docs container stopped before the site came up. Its output was:" >&2
+    docker logs "$name" >&2 || true
+    exit 1
+  fi
+  sleep 1
+done
+
+echo
+echo "Ready -> $url"
+echo "Edits to docs/sources reload automatically. Press Ctrl+C to stop."
+echo
+
+docker logs --follow "$name"
