@@ -254,7 +254,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
               label={t('routes.edit.group-interval', 'Group interval')}
               description={t(
                 'routes.edit.group-interval-description',
-                'How long to wait before sending notifications about new alerts in a group'
+                'How long between checks for changes in a group, after the first notification'
               )}
               invalid={!!errors.groupIntervalValue}
               error={errors.groupIntervalValue?.message}
@@ -272,7 +272,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
               label={t('routes.edit.repeat-interval', 'Repeat interval')}
               description={t(
                 'routes.edit.repeat-interval-description',
-                'Minimum time between repeated notifications for the same alert'
+                'How long before an unchanged group is sent again. Rounded up to the next group interval.'
               )}
               invalid={!!errors.repeatIntervalValue}
               error={errors.repeatIntervalValue?.message}
