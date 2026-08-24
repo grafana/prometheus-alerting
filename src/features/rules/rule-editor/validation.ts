@@ -42,6 +42,10 @@ export function createRuleFormSchema() {
 
     forTimeUnit: z.string().min(1),
 
+    // No form field, but the resolver's output is what gets submitted -- leave this out and the
+    // value we read off the existing rule is stripped before it can be written back.
+    keepFiringFor: z.string().optional(),
+
     // Labels and annotations
     labels: z.array(
       z.object({

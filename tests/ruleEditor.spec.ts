@@ -1,4 +1,7 @@
+import type { RulerAlertingRuleDTO } from '@grafana/external-rules/vanilla';
+
 import { test, expect } from './fixtures/ruler';
+import { getMimirRuleGroup, postMimirRuleGroup } from './api/mimir';
 import { RuleBuilder } from './factories/rules';
 
 /**
@@ -314,6 +317,45 @@ test.describe('RuleEditor Page - E2E', () => {
       const errorAlert = page.getByRole('alert').filter({ hasText: /required|expression/i });
       const hasError = await errorAlert.isVisible().catch(() => false);
       expect(hasError).toBe(true);
+    });
+  });
+
+  test.describe('Write fidelity', () => {
+    test('keeps keep_firing_for when the rule is edited', async ({ ruleEditorPage, page, mimirRuler, mimirGroup }) => {
+      const groupName = mimirGroup('keep-firing-for');
+      const rule: RulerAlertingRuleDTO = {
+        alert: 'KeepFiringForRule',
+        expr: 'up == 0',
+        for: '5m',
+        keep_firing_for: '10m',
+      };
+
+      await postMimirRuleGroup(
+        mimirRuler.tenantId,
+        mimirRuler.namespace,
+        `name: ${groupName}
+interval: 1m
+rules:
+  - alert: ${rule.alert}
+    expr: ${rule.expr}
+    for: ${rule.for}
+    keep_firing_for: ${rule.keep_firing_for}
+`
+      );
+
+      const identifier = RuleBuilder.identifierForRulerRule(mimirRuler.uid, mimirRuler.namespace, groupName, rule);
+      await ruleEditorPage.gotoEdit(identifier);
+      await ruleEditorPage.waitForLoad(/Edit/);
+
+      await ruleEditorPage.fillExpression('up == 1');
+      await ruleEditorPage.clickSave();
+      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
+
+      // There is no form field for keep_firing_for, so editing anything else used to drop it --
+      // and the alert then resolved as soon as the query stopped firing.
+      const group = await getMimirRuleGroup(mimirRuler.tenantId, mimirRuler.namespace, groupName);
+      expect(group?.rules).toHaveLength(1);
+      expect(group?.rules[0]).toMatchObject({ ...rule, expr: 'up == 1' });
     });
   });
 

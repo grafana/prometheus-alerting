@@ -23,4 +23,13 @@ export interface RuleFormValues {
   expression: string;
   forTime: number;
   forTimeUnit: string;
+  /**
+   * `keep_firing_for` on the rule, kept exactly as the ruler returned it.
+   *
+   * There is no form field for it — like Grafana, we read it and write it back so editing a rule
+   * doesn't drop it. It stays a raw duration string rather than a number and a unit because
+   * Prometheus accepts compound durations like `1h30m`, and splitting one apart just to put it
+   * back together is a good way to lose it.
+   */
+  keepFiringFor?: string;
 }
