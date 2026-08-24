@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#MISE description="Lint the docs prose against Grafana's style guide"
+set -euo pipefail
+
+# Runs Vale over docs/sources using Grafana's own style configuration.
+#
+# The container works from /w with the docs mounted beneath it, so Vale reports
+# short repo-relative paths like docs/sources/guides/best-practices.md rather
+# than the long path inside the container. Pointing --config at the image's
+# configuration explicitly is what allows the working directory to be chosen.
+#
+# Only errors are reported by default. Set VALE_MINALERTLEVEL=suggestion to see
+# warnings and suggestions too. Vale exits non-zero when it finds anything at or
+# above that level, so the task fails when the prose does.
+
+docker run --rm --init --workdir /w \
+  --volume "$MISE_PROJECT_ROOT/docs/sources:/w/docs/sources:ro" \
+  grafana/vale:latest \
+  --config=/etc/vale/.vale.ini \
+  --minAlertLevel="${VALE_MINALERTLEVEL:-error}" \
+  --glob='*.md' \
+  docs/sources
