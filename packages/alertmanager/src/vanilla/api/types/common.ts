@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ReceiverSchema } from './receivers';
+import { HTTPConfigSchema, ReceiverSchema, TLSConfigSchema } from './receivers';
 
 // Re-export receiver types for convenience
 export type { Receiver } from './receivers';
@@ -26,6 +26,59 @@ export const VersionInfoSchema = z.object({
   buildDate: z.string(),
   goVersion: z.string(),
 });
+
+/**
+ * The `global:` block of an Alertmanager configuration: connection defaults every receiver
+ * inherits unless it overrides them.
+ *
+ * Unknown keys are kept as-is. Alertmanager adds a `*_api_url` here for practically every new
+ * integration, and dropping one would take the user's configuration with it — an unrecognised
+ * key we pass back unchanged is much better than a key we silently delete.
+ *
+ * Based on: https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
+ */
+export const GlobalConfigSchema = z.looseObject({
+  resolve_timeout: z.string().optional(),
+  http_config: HTTPConfigSchema.optional(),
+
+  smtp_from: z.string().optional(),
+  smtp_hello: z.string().optional(),
+  smtp_smarthost: z.string().optional(),
+  smtp_auth_username: z.string().optional(),
+  smtp_auth_password: z.string().optional(),
+  smtp_auth_password_file: z.string().optional(),
+  smtp_auth_identity: z.string().optional(),
+  smtp_auth_secret: z.string().optional(),
+  smtp_require_tls: z.boolean().optional(),
+  smtp_tls_config: TLSConfigSchema.optional(),
+
+  slack_api_url: z.string().optional(),
+  slack_api_url_file: z.string().optional(),
+
+  victorops_api_key: z.string().optional(),
+  victorops_api_key_file: z.string().optional(),
+  victorops_api_url: z.string().optional(),
+
+  pagerduty_url: z.string().optional(),
+
+  opsgenie_api_key: z.string().optional(),
+  opsgenie_api_key_file: z.string().optional(),
+  opsgenie_api_url: z.string().optional(),
+
+  wechat_api_url: z.string().optional(),
+  wechat_api_secret: z.string().optional(),
+  wechat_api_corp_id: z.string().optional(),
+
+  telegram_api_url: z.string().optional(),
+  webex_api_url: z.string().optional(),
+
+  rocketchat_api_url: z.string().optional(),
+  rocketchat_token: z.string().optional(),
+  rocketchat_token_id: z.string().optional(),
+
+  jira_api_url: z.string().optional(),
+});
+export type GlobalConfig = z.infer<typeof GlobalConfigSchema>;
 
 export const TimeIntervalSchema = z.object({
   name: z.string(),
