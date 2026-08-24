@@ -219,8 +219,12 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
       // Apply rule reordering
       const reorderedRules = hasSwaps ? applySwaps(rulerGroup.rules, swapOperations) : rulerGroup.rules;
 
-      // Create the new rule group payload
+      // Create the new rule group payload.
+      // Spread the group we fetched first: this form edits the name, the interval and the rule
+      // order, and everything else on the group -- source_tenants, limit, query_offset and the
+      // rest -- has to survive a save untouched.
       const newGroupPayload = {
+        ...rulerGroup,
         name: data.name,
         interval: data.interval,
         rules: reorderedRules,
