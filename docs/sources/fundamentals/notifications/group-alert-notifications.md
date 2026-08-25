@@ -1,6 +1,6 @@
 ---
 title: Group alert notifications
-description: Learn how Alertmanager batches related alerts into a single notification.
+description: Learn how Alertmanager batches related alerts into a single notification, and how group by, group wait, group interval, and repeat interval decide when that notification is sent.
 keywords:
   - alertmanager
   - grouping
@@ -14,7 +14,7 @@ labels:
     - enterprise
     - cloud
 weight: 300
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Group alert notifications

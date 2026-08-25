@@ -1,6 +1,6 @@
 ---
 title: Receivers
-description: Understand what an Alertmanager receiver is and which integrations it can hold.
+description: Understand what an Alertmanager receiver is, which notification integrations it can hold, and why renaming or deleting one affects the routes that reference it by name.
 keywords:
   - alertmanager
   - receivers
@@ -15,7 +15,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Receivers

@@ -1,6 +1,6 @@
 ---
 title: Configure data sources
-description: Learn which data sources the plugin works with and what each backend needs to support.
+description: Learn which data sources the Prometheus Alerting plugin reads from, why a rules source and an Alertmanager are configured separately, and which backends support editing rules.
 keywords:
   - data sources
   - prometheus
@@ -15,7 +15,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Configure data sources
@@ -27,7 +27,7 @@ The plugin doesn't store anything itself. Everything it shows is read from your 
 The plugin draws on two different data sources, and you need both to use everything it offers:
 
 - **A rules source** backs the **Rules** pages. This is a Prometheus or Loki data source. Mimir and Cortex register in Grafana as the Prometheus data source type, so they're covered here too.
-- **An Alertmanager data source** backs everything else—**Alerts**, **Routes**, **Receivers**, **Templates**, **Silences**, **Time intervals**, and **Inhibit rules**.
+- **An Alertmanager data source** backs everything else—**Alerts**, **Routes**, **Receivers**, **Templates**, **Silences**, **Time intervals**, and **Inhibit Rules**.
 
 These are configured separately in Grafana. Pointing the plugin at Mimir doesn't give it an Alertmanager; you add an Alertmanager data source for that, even when the same Mimir deployment serves both.
 

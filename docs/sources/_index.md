@@ -1,6 +1,6 @@
 ---
 title: Prometheus Alerting
-description: Manage data source-managed alert rules and Alertmanager configuration across Prometheus, Mimir, Cortex, and Loki from within Grafana.
+description: Prometheus Alerting is a Grafana app plugin for managing data source-managed alert rules and Alertmanager configuration across Prometheus, Mimir, Cortex, and Loki without leaving Grafana.
 keywords:
   - prometheus
   - mimir
@@ -17,7 +17,7 @@ labels:
     - enterprise
     - cloud
 weight: 10
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Prometheus Alerting

@@ -1,6 +1,6 @@
 ---
 title: Template annotations and labels
-description: Use Go templating in rule annotations and labels to include query results and label values.
+description: Use Go templating in rule annotations and labels so each alert describes its own labels and value, with the variables and functions the ruler makes available at evaluation time.
 keywords:
   - templates
   - annotations
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 400
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Template annotations and labels
@@ -33,26 +33,26 @@ The scope is one alert instance. A rule matching fifty filesystems renders its a
 
 Reference a label by name:
 
-```
+```go
 {{ $labels.instance }} is unreachable.
 ```
 
 Format the value, which is a float and prints unhelpfully by default:
 
-```
+```go
 Disk is {{ $value | printf "%.1f" }}% full.
 ```
 
 Use `humanize` for large or small numbers, and `humanizeDuration` for seconds:
 
-```
+```go
 Receiving {{ $value | humanize }} requests per second.
 Backlog will clear in {{ $value | humanizeDuration }}.
 ```
 
 Build a link that points at the specific thing that's broken:
 
-```
+```go
 https://grafana.example.com/d/abc123?var-instance={{ $labels.instance }}
 ```
 

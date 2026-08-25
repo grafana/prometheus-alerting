@@ -1,6 +1,6 @@
 ---
 title: Configure notifications
-description: Configure Alertmanager routes, receivers, templates, silences, time intervals, and inhibition rules.
+description: Configure the Alertmanager routes, receivers, notification templates, silences, time intervals, and inhibition rules that the Prometheus Alerting plugin manages for an external Alertmanager.
 keywords:
   - alertmanager
   - notifications
@@ -13,15 +13,15 @@ labels:
     - oss
     - enterprise
     - cloud
-weight: 125
-review_date: '2027-08-19'
+weight: 400
+review_date: '2026-08-19'
 ---
 
 # Configure notifications
 
 Alertmanager decides what happens to an alert once it fires. This section covers every Alertmanager resource the plugin manages.
 
-## Before you start
+## Before you begin
 
 These pages need an Alertmanager data source. Without one they don't appear in the plugin at all. Refer to [Configure data sources](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/configure-data-sources/).
 

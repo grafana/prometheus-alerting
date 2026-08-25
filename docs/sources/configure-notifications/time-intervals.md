@@ -1,6 +1,6 @@
 ---
 title: Configure time intervals
-description: Define recurring time windows that routes use to mute or allow notifications.
+description: Define recurring time windows that Alertmanager routes use to mute or allow notifications, learn how the fields combine, and why setting the timezone explicitly matters for a schedule.
 keywords:
   - alertmanager
   - time intervals
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 400
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Configure time intervals

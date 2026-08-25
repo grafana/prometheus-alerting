@@ -1,7 +1,6 @@
 ---
 title: Monitor alerts
-menuTitle: Monitor alerts
-description: See which alerts are firing, why they fired, and where they were sent.
+description: See which alerts are firing, why they fired, and where they were sent, using the Rules and Alerts pages in the Prometheus Alerting plugin to check the ruler and Alertmanager separately.
 keywords:
   - monitoring
   - alerts
@@ -13,8 +12,8 @@ labels:
     - oss
     - enterprise
     - cloud
-weight: 130
-review_date: '2027-08-19'
+weight: 500
+review_date: '2026-08-19'
 ---
 
 # Monitor alerts

@@ -1,6 +1,6 @@
 ---
 title: Alert rule evaluation
-description: Learn how rule groups are evaluated and how an alert moves between states.
+description: Learn how the Prometheus Alerting plugin evaluates rule groups on a schedule, how the evaluation interval interacts with the pending period, and how an alert moves between states.
 keywords:
   - evaluation
   - rule groups
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Alert rule evaluation

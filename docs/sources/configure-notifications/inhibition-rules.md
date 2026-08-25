@@ -1,6 +1,6 @@
 ---
 title: Configure inhibition rules
-description: Suppress notifications for one set of alerts while a more important alert is firing.
+description: Suppress notifications for one set of alerts while a more important alert is firing, using source matchers, target matchers, and equal labels to keep the suppression correctly scoped.
 keywords:
   - alertmanager
   - inhibit rules
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 500
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Configure inhibition rules
@@ -47,7 +47,7 @@ Drop `datacenter` from the equal labels and one critical alert anywhere silences
 
 ## Create an inhibition rule
 
-1. Click **Inhibit rules**.
+1. Click **Inhibit Rules**.
 1. Click **Add inhibit rule**.
 1. Add **Source Matchers**.
 1. Add **Target Matchers**.
@@ -60,7 +60,7 @@ Select a rule to open its drawer, which shows its source matchers, target matche
 
 ## Things to watch for
 
-**Both sides need the labels.** If the source alerts carry `datacenter` but the target alerts don't, they can never be equal, and the rule quietly never fires. Consistent labelling across rules is what makes inhibition work. Refer to [Labels and annotations](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rules/labels-and-annotations/).
+**Both sides need the labels.** If the source alerts carry `datacenter` but the target alerts don't, they can never be equal, and the rule quietly never fires. Consistent labeling across rules is what makes inhibition work. Refer to [Labels and annotations](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rules/labels-and-annotations/).
 
 **An alert can inhibit itself.** If your source and target matchers both match the same alert, it suppresses itself. Make sure the two sets are genuinely disjoint—usually by matching on different severity levels.
 

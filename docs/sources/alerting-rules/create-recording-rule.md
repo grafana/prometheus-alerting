@@ -1,6 +1,6 @@
 ---
 title: Create a recording rule
-description: Precompute expensive expressions and save the result as a new time series.
+description: Create a recording rule that precomputes an expensive expression and saves the result as a new time series, learn when one is worth adding, and how to name it by convention.
 keywords:
   - recording rules
   - precompute
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Create a recording rule
@@ -61,4 +61,4 @@ Reorder rules by dragging them on the group edit page. Refer to [Manage rule gro
 
 Recording rules have no alert state—the plugin shows them as **Recording**. What they do have is health, and a failing recording rule shows **Recording error**.
 
-This is worth watching, because the failure is quiet. Nothing fires when a recording rule breaks; the metric simply stops updating, and every alerting rule built on it goes blind at the same time.
+This is worth watching, because the failure is quiet. Nothing fires when a recording rule breaks; the metric stops updating, and every alerting rule built on it goes blind at the same time.

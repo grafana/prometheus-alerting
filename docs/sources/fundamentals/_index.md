@@ -1,7 +1,7 @@
 ---
 title: Introduction to Prometheus Alerting
 menuTitle: Introduction
-description: Learn how data source-managed alert rules and Alertmanager work together, and how the plugin exposes them.
+description: Learn how data source-managed alert rules and Alertmanager work together in the Prometheus Alerting plugin, which resources it manages, and how its terminology maps to Grafana Alerting.
 keywords:
   - prometheus
   - alerting
@@ -14,7 +14,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Introduction to Prometheus Alerting

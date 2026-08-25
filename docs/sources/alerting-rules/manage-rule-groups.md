@@ -1,6 +1,6 @@
 ---
 title: Manage rule groups
-description: Organize rules into namespaces and groups, and control how often they're evaluated.
+description: Organize data source-managed rules into namespaces and groups, change how often a group is evaluated, reorder rules to satisfy dependencies, and size groups so evaluations finish in time.
 keywords:
   - rule groups
   - namespaces
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 300
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Manage rule groups

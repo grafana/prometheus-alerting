@@ -1,6 +1,6 @@
 ---
 title: Configure routes
-description: Build the Alertmanager routing tree that decides which receiver each alert goes to.
+description: Build the Alertmanager routing tree that decides which receiver each alert goes to, order sibling routes correctly, and use the continue option to send one alert to two receivers.
 keywords:
   - alertmanager
   - routes
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Configure routes

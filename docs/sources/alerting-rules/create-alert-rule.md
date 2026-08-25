@@ -1,6 +1,6 @@
 ---
 title: Create an alert rule
-description: Create a data source-managed alerting rule from the Rules page.
+description: Create a data source-managed alerting rule from the Rules page in the Prometheus Alerting plugin, check the expression before saving, and learn what each field in the editor controls.
 keywords:
   - alert rules
   - create
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Create an alert rule
@@ -73,6 +73,6 @@ From the rule list and detail pages:
 
 1. Open the rule.
 1. Click **Delete**.
-1. Confirm. The dialog names the rule, its group, and its namespace, since names alone are easy to confuse.
+1. Confirm. The dialog box names the rule, its group, and its namespace, since names alone are easy to confuse.
 
 Deletion can't be undone. As with creation, the plugin waits for the change to propagate before showing the updated list.

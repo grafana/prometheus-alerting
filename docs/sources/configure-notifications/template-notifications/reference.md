@@ -1,6 +1,6 @@
 ---
 title: Template reference
-description: Reference for the data available inside Alertmanager notification templates.
+description: Reference for the data available inside an Alertmanager notification template, covering the top-level notification fields, the fields on each alert, and how to format labels and times.
 keywords:
   - notification templates
   - reference
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 400
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Template reference
@@ -60,7 +60,7 @@ A template using `.CommonLabels.instance` renders correctly while a group holds 
 
 ## Accessing a label
 
-```
+```go
 {{ .GroupLabels.alertname }}
 {{ .CommonLabels.severity }}
 {{ range .Alerts }}{{ .Labels.instance }}{{ end }}
@@ -68,13 +68,13 @@ A template using `.CommonLabels.instance` renders correctly while a group holds 
 
 For label names that aren't valid identifiers—anything with a dot or dash—use `index`:
 
-```
+```go
 {{ index .CommonLabels "k8s.namespace" }}
 ```
 
 ## Formatting times
 
-```
+```go
 {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}
 ```
 

@@ -1,6 +1,6 @@
 ---
 title: Best practices
-description: Recommendations for writing rules and organizing Alertmanager configuration that stays maintainable.
+description: Recommendations for writing alert rules and organizing Alertmanager configuration that stays maintainable as it grows, covering symptoms over causes, labels, grouping, and rule health.
 keywords:
   - best practices
   - alert fatigue
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Best practices
@@ -57,7 +57,7 @@ An alert saying only `HighErrorRate` sends someone hunting. One saying which ser
 
 ## Group so that one incident is one notification
 
-Grouping is the main defence against a broad outage flooding a channel. Group by the labels that describe the scope of an incident—commonly `alertname` and a cluster or environment label.
+Grouping is the main defense against a broad outage flooding a channel. Group by the labels that describe the scope of an incident—commonly `alertname` and a cluster or environment label.
 
 Keep the repeat interval long. A short one is a reliable way to make people mute the channel. Refer to [Group alert notifications](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/notifications/group-alert-notifications/).
 

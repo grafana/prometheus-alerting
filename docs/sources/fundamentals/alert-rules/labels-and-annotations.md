@@ -1,6 +1,6 @@
 ---
 title: Labels and annotations
-description: Learn how labels identify an alert instance and how annotations add context for notifications.
+description: Learn how labels give an alert instance its identity and drive routing, grouping, and silencing, while annotations carry the human-readable context that ends up in notifications.
 keywords:
   - labels
   - annotations
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Labels and annotations
