@@ -52,7 +52,7 @@ An interval with nothing filled in matches all the time, which mutes a route per
 ## Always set the timezone
 
 {{< admonition type="caution" >}}
-**Location/Timezone** decides what `09:00` means. Leaving it unset makes the interval depend on the Alertmanager server's timezone, which is usually UTC and rarely what whoever wrote "9 AM" had in mind. Set it explicitly, and set it to the timezone of the people the schedule is for—not the servers.
+**Location/Timezone** decides what `09:00` means. Leaving it unset makes the interval depend on the Alertmanager server's timezone, which is usually UTC and rarely what whoever wrote "9 AM" had in mind. Set it explicitly, and set it to the timezone of the people the schedule is for, not the servers.
 {{< /admonition >}}
 
 Daylight saving is handled correctly when you use a named zone like `Europe/Berlin`. A fixed offset isn't, and drifts by an hour twice a year.
@@ -63,8 +63,8 @@ A time interval does nothing until a route uses it. Open the route and reference
 
 A route can use an interval in two ways:
 
-- **Mute**—don't notify during the window. Use for non-urgent alerts overnight.
-- **Active**—only notify during the window. Use for a route that should only reach a team during their working hours.
+- **Mute**: don't notify during the window. Use for non-urgent alerts overnight.
+- **Active**: only notify during the window. Use for a route that should only reach a team during their working hours.
 
 ## Edit or remove
 
@@ -72,7 +72,7 @@ A route can use an interval in two ways:
 1. Select the interval.
 1. Click **Edit**, or **Remove** and confirm.
 
-Removing can't be undone. Check which routes reference the interval first—removing one that's still in use leaves the route referring to something that doesn't exist.
+Removing can't be undone. Check which routes reference the interval first. Removing one that's still in use leaves the route referring to something that doesn't exist.
 
 ## Confirming it works
 

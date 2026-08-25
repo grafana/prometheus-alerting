@@ -27,7 +27,7 @@ Reach for one when:
 - **A query is complex enough to be worth naming.** `job:request_latency_seconds:mean5m` is easier to read, and harder to get subtly wrong, than the ratio of two rates spelled out in every rule that needs it.
 - **Several alerting rules share a subexpression.** Record it once and have them all compare against the same number, so they can't drift apart.
 
-They're not free—each one adds a new series and work on every evaluation. A recording rule used by exactly one thing is usually not worth the indirection.
+They're not free. Each one adds a new series and work on every evaluation. A recording rule used by exactly one thing is usually not worth the indirection.
 
 ## Create the rule
 
@@ -39,15 +39,15 @@ They're not free—each one adds a new series and work on every evaluation. A re
 1. Choose a **Namespace** and **Group**.
 1. Click **Save**.
 
-There's no pending period or annotations here—nothing fires, so there's nothing to delay or describe.
+There's no pending period or annotations here. Nothing fires, so there's nothing to delay or describe.
 
 ## Naming
 
 The convention is `level:metric:operations`:
 
-- `level`—the labels the result is aggregated to, such as `job` or `instance`
-- `metric`—the underlying metric name
-- `operations`—what was done to it, such as `rate5m` or `mean5m`
+- `level`: the labels the result is aggregated to, such as `job` or `instance`
+- `metric`: the underlying metric name
+- `operations`: what was done to it, such as `rate5m` or `mean5m`
 
 For example, `job:request_latency_seconds:mean5m` reads as the mean 5-minute request latency, aggregated by job. Following the convention makes it obvious at a glance what a recorded series contains, and prevents recorded metrics from being mistaken for raw ones.
 
@@ -59,6 +59,6 @@ Reorder rules by dragging them on the group edit page. Refer to [Manage rule gro
 
 ## Checking the result
 
-Recording rules have no alert state—the plugin shows them as **Recording**. What they do have is health, and a failing recording rule shows **Recording error**.
+Recording rules have no alert state. The plugin shows them as **Recording**. What they do have is health, and a failing recording rule shows **Recording error**.
 
 This is worth watching, because the failure is quiet. Nothing fires when a recording rule breaks; the metric stops updating, and every alerting rule built on it goes blind at the same time.

@@ -67,7 +67,7 @@ annotations:
   runbook_url: https://runbooks.example.com/disk-full
 ```
 
-The `summary` is short enough to work as a notification title. The `description` carries the detail. The `runbook_url` is static, which is fine—not every annotation has to be templated.
+The `summary` is short enough to work as a notification title. The `description` carries the detail. The `runbook_url` is static, which is fine. Not every annotation has to be templated.
 
 ## Templating labels
 

@@ -18,7 +18,7 @@ review_date: '2026-08-19'
 
 # Notifications
 
-Once a rule fires, the ruler's job is done—it just keeps reporting the alert. Everything from that point is Alertmanager's decision.
+Once a rule fires, the ruler's job is done. It just keeps reporting the alert. Everything from that point is Alertmanager's decision.
 
 ## What Alertmanager does with an alert
 

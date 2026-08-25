@@ -52,9 +52,9 @@ Inside `{{ range .Alerts }}`, the dot becomes one alert:
 
 These three are easy to confuse:
 
-- `.GroupLabels`—the labels named in `group_by`. Always present, always identical across the group.
-- `.CommonLabels`—labels that happen to be identical across every alert in the group. A wider set than `.GroupLabels`, and it shrinks as the group becomes more varied.
-- `.Labels`, inside a range—that one alert's labels, including the ones that differ.
+- `.GroupLabels`: the labels named in `group_by`. Always present, always identical across the group.
+- `.CommonLabels`: labels that happen to be identical across every alert in the group. A wider set than `.GroupLabels`, and it shrinks as the group becomes more varied.
+- `.Labels`, inside a range: that one alert's labels, including the ones that differ.
 
 A template using `.CommonLabels.instance` renders correctly while a group holds one instance and renders empty the moment a second joins. When a value has to be present, use `.GroupLabels` or read it per alert inside a range.
 
@@ -82,4 +82,4 @@ Go's reference time is `2006-01-02 15:04:05`; the layout string is that exact mo
 
 ## Where the annotation content comes from
 
-`.Annotations` holds values the ruler already rendered during evaluation. A notification template can read and rearrange them, but it can't recover information the alert never carried—that has to be added at the rule. Refer to [Template annotations and labels](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/alerting-rules/template-annotations-and-labels/).
+`.Annotations` holds values the ruler already rendered during evaluation. A notification template can read and rearrange them, but it can't recover information the alert never carried. That has to be added at the rule. Refer to [Template annotations and labels](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/alerting-rules/template-annotations-and-labels/).

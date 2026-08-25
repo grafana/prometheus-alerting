@@ -17,7 +17,7 @@ review_date: '2026-08-19'
 
 # Template examples
 
-Working templates you can copy and adapt. Each is a complete definition—paste it into a template file and reference the defined name from a receiver.
+Working templates you can copy and adapt. Each is a complete definition. Paste it into a template file and reference the defined name from a receiver.
 
 ## A Slack title
 
@@ -42,7 +42,7 @@ Renders as `[FIRING:3] HighRequestLatency`. Putting the count in the title makes
 {{ end }}
 ```
 
-Loops over every alert in the group, printing its summary and, when present, its description and a runbook link. The `if` guards matter—an alert without a runbook would otherwise render an empty link.
+Loops over every alert in the group, printing its summary and, when present, its description and a runbook link. The `if` guards matter. An alert without a runbook would otherwise render an empty link.
 
 ## An email subject
 

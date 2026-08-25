@@ -28,21 +28,21 @@ A rule can produce many alert instances, one per series its expression returns. 
 | **Labels**       | The labels identifying this instance        |
 | **Active Since** | When the instance entered its current state |
 
-Expanding an instance shows its **Annotations** and its **Value**—the number the expression returned for that series on the last evaluation.
+Expanding an instance shows its **Annotations** and its **Value**, the number the expression returned for that series on the last evaluation.
 
 The value is worth checking. A firing alert whose value sits just past the threshold is a different situation from one far beyond it, and it's the quickest way to tell a genuine problem from a threshold that needs adjusting.
 
 ## Filter instances
 
-Filter by **State**—**All**, **Firing**, or **Pending**—each showing a count. Search by label narrows further.
+Filter by **State** using **All**, **Firing**, or **Pending**, each showing a count. Search by label narrows further.
 
 The counts alone are informative. Many pending and few firing means a condition that keeps almost holding, which usually points at a pending period that's too short for a noisy signal.
 
 ## What each state means
 
-**Pending**—the condition holds but hasn't held long enough. Nothing has been sent to Alertmanager, and nobody has been notified.
+**Pending**: the condition holds but hasn't held long enough. Nothing has been sent to Alertmanager, and nobody has been notified.
 
-**Firing**—the condition has held for the full pending period. The alert is being sent to Alertmanager, which then decides whether to notify.
+**Firing**: the condition has held for the full pending period. The alert is being sent to Alertmanager, which then decides whether to notify.
 
 An instance that disappears from the list has gone inactive: the expression stopped returning that series.
 

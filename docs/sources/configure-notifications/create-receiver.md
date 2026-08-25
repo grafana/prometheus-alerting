@@ -26,7 +26,7 @@ A receiver is a named set of integrations. Routes refer to receivers by name, so
 
 1. Click **Receivers**.
 1. Click **Create receiver**.
-1. Enter a **Name**. Names have to be unique—the plugin tells you if one is already taken.
+1. Enter a **Name**. Names have to be unique. The plugin tells you if one is already taken.
 1. Click **Add integration** and select an **Integration type**.
 1. Fill in the fields for that integration. Required fields are marked, and the form won't submit until they're filled.
 1. Optionally enable **Send resolved** to also notify when the alert stops firing.
@@ -45,11 +45,11 @@ Each type has its own fields. A few of the common ones:
 | --------------- | ----------------------------------------------------------------- |
 | Email           | **To**, **From**, **SMTP host**, and optional SMTP authentication |
 | Slack           | **API URL** (the webhook URL) and **Channel**                     |
-| PagerDuty       | **Routing key**—the integration key from the PagerDuty service    |
+| PagerDuty       | **Routing key**: the integration key from the PagerDuty service   |
 | Microsoft Teams | **Webhook URL**                                                   |
 | Webhook         | The endpoint URL, plus HTTP configuration                         |
 
-If the Alertmanager configuration contains an integration type the plugin doesn't know, it says the type isn't supported rather than hiding it. Take care editing such a receiver—the plugin can show you that the integration exists, but not its fields.
+If the Alertmanager configuration contains an integration type the plugin doesn't know, it says the type isn't supported rather than hiding it. Take care editing such a receiver. The plugin can show you that the integration exists, but not its fields.
 
 ## Choosing send resolved
 
