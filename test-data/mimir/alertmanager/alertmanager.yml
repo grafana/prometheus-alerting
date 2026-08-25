@@ -1,0 +1,80 @@
+# Seed configuration for the Mimir Alertmanager tenant ("anonymous").
+# Posted to Mimir's /api/v1/alerts by test-data/mimir/provision-alertmanager.mjs.
+# Unlike the vanilla Alertmanager, this config is writable from the plugin UI.
+route:
+  receiver: default
+  group_by: ['alertname', 'severity']
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+  routes:
+    - receiver: pagerduty
+      matchers:
+        - severity = critical
+      continue: true
+
+    - receiver: slack-critical
+      matchers:
+        - severity = critical
+
+    - receiver: email-platform
+      matchers:
+        - team = platform
+      mute_time_intervals:
+        - out-of-hours
+
+inhibit_rules:
+  # Suppress warning alerts when a critical alert is already firing for the same alertname and instance
+  - source_matchers:
+      - severity = critical
+    target_matchers:
+      - severity = warning
+    equal:
+      - alertname
+      - instance
+
+time_intervals:
+  - name: out-of-hours
+    time_intervals:
+      - times:
+          - start_time: '18:00'
+            end_time: '24:00'
+        weekdays: ['monday:friday']
+      - weekdays: ['saturday', 'sunday']
+
+templates:
+  - default.tmpl
+
+receivers:
+  - name: default
+    webhook_configs:
+      - url: 'http://localhost:9999/webhook'
+        send_resolved: true
+
+  - name: pagerduty
+    pagerduty_configs:
+      - routing_key: 'dummy-routing-key-pagerduty'
+        severity: 'critical'
+        client: 'Alertmanager'
+        client_url: 'https://grafana.example.com'
+        description: '{{ .CommonLabels.alertname }}'
+        send_resolved: true
+
+  - name: slack-critical
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/DUMMY/DUMMY/DUMMYTOKEN'
+        channel: '#critical-alerts'
+        username: 'Alertmanager'
+        title: '{{ template "alert.title" . }}'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+        send_resolved: true
+
+  - name: email-platform
+    email_configs:
+      - to: 'platform-team@example.com'
+        from: 'alertmanager@example.com'
+        smarthost: 'smtp.example.com:587'
+        auth_username: 'alertmanager@example.com'
+        auth_password: 'dummy-smtp-password'
+        require_tls: true
+        send_resolved: true
