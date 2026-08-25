@@ -52,7 +52,13 @@ const PROMETHEUS_SUFFIX_MULTIPLIER: Record<string, number> = {
   y: 365 * 24 * 60 * 60 * 1000,
 };
 
-const DURATION_REGEXP = new RegExp(/^(?:(?<value>\d+)(?<type>ms|s|m|h|d|w|y))|0$/);
+// ⚠️ Keep this a bare regex literal. Wrapping it in `new RegExp(...)` looks harmless, but the
+// build compiles down to a target without named capture groups and swaps the literal for a
+// polyfill object that supplies `.groups` itself. `new RegExp(someRegex)` copies the pattern out
+// of that object's internals, losing the polyfill — so `.groups` comes back undefined in the
+// browser and every duration below is rejected as invalid. Tests don't compile down that far, so
+// they can't catch it.
+const DURATION_REGEXP = /^(?:(?<value>\d+)(?<type>ms|s|m|h|d|w|y))|0$/;
 const INVALID_FORMAT = new Error(
   `Must be of format "(number)(unit)", for example "1m", or just "0". Available units: ${Object.values(
     TimeOptions
