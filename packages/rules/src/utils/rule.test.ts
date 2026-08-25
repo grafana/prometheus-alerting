@@ -1,4 +1,4 @@
-import { isValidMetricName } from './metricName';
+import { isValidMetricName } from './rule';
 
 describe('isValidMetricName', () => {
   it('accepts letters, digits, underscores and colons', () => {
