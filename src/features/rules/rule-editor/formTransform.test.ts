@@ -72,7 +72,22 @@ describe('formValuesToRulerRuleDTO', () => {
       keep_firing_for: undefined,
     });
 
+    expect(values.keepFiringFor).toBe('');
     expect(formValuesToRulerRuleDTO(values)).not.toHaveProperty('keep_firing_for');
+  });
+
+  it('drops keep_firing_for when the field is cleared', () => {
+    const values = rulerRuleToFormValues('ds-uid', 'namespace', 'group', alertingRule);
+
+    expect(formValuesToRulerRuleDTO({ ...values, keepFiringFor: '' })).not.toHaveProperty('keep_firing_for');
+  });
+
+  it('writes a compound keep_firing_for as typed', () => {
+    const values = rulerRuleToFormValues('ds-uid', 'namespace', 'group', alertingRule);
+
+    expect(formValuesToRulerRuleDTO({ ...values, keepFiringFor: '1h30m' })).toMatchObject({
+      keep_firing_for: '1h30m',
+    });
   });
 
   it('round-trips a recording rule', () => {

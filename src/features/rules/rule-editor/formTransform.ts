@@ -16,7 +16,7 @@ export function formValuesToRulerRuleDTO(values: RuleFormValues): RulerRuleDTO {
       annotations,
       labels,
       expr: expression,
-      // Only written when the rule already had one, so we don't add the field to rules without it
+      // Left off when the field is empty, so clearing it removes it from the rule
       ...(keepFiringFor ? { keep_firing_for: keepFiringFor } : {}),
     };
     return alertingRule;
@@ -55,7 +55,7 @@ export function rulerRuleToFormValues(
       expression: rule.expr,
       forTime: forDuration.value,
       forTimeUnit: forDuration.unit,
-      keepFiringFor: rule.keep_firing_for,
+      keepFiringFor: rule.keep_firing_for ?? '',
       annotations: listifyLabelsOrAnnotations(rule.annotations, false),
       labels: listifyLabelsOrAnnotations(rule.labels, true),
     };

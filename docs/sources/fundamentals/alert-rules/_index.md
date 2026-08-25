@@ -46,15 +46,16 @@ The example above shows the two working together: the recording rule does the ar
 
 ## What a rule is made of
 
-| Part           | Applies to     | Purpose                                                        |
-| -------------- | -------------- | -------------------------------------------------------------- |
-| Name           | Both           | `alert:` names the alert; `record:` names the resulting metric |
-| Expression     | Both           | The PromQL or LogQL query to evaluate                          |
-| Pending period | Alerting rules | How long the condition must hold before the alert fires        |
-| Labels         | Alerting rules | Identify the alert and drive routing                           |
-| Annotations    | Alerting rules | Human-readable context, carried into notifications             |
+| Part            | Applies to     | Purpose                                                        |
+| --------------- | -------------- | -------------------------------------------------------------- |
+| Name            | Both           | `alert:` names the alert; `record:` names the resulting metric |
+| Expression      | Both           | The PromQL or LogQL query to evaluate                          |
+| Pending period  | Alerting rules | How long the condition must hold before the alert fires        |
+| Keep firing for | Alerting rules | How long the alert keeps firing after the condition clears     |
+| Labels          | Alerting rules | Identify the alert and drive routing                           |
+| Annotations     | Alerting rules | Human-readable context, carried into notifications             |
 
-Recording rules have no pending period or annotations, because there's no alert to delay or describe.
+Recording rules have no pending period, keep firing for, or annotations, because there's no alert to delay, hold open, or describe.
 
 ## Where rules live
 

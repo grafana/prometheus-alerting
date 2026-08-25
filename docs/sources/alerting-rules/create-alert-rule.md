@@ -33,6 +33,7 @@ An alerting rule watches an expression and produces alerts when it returns resul
 1. Select the **Data source** to write the rule to. The query editor can't load until you've chosen one.
 1. Write the **Expression**. Write it so that it returns nothing when everything is healthy, and returns one series per problem otherwise. Refer to [Queries and conditions](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rules/queries-conditions/).
 1. Set the **Pending period**—how long the condition has to hold before the alert fires. Select **None** to fire on the first matching evaluation.
+1. Optionally set **Keep firing for**—how long the alert keeps firing after the condition stops being met. Leave it empty to resolve as soon as the condition clears. It takes a duration like `5m`, or a compound one like `1h30m`.
 1. Choose a **Namespace** and **Group**. Both pickers search existing values as you type and let you create a new one if nothing matches.
 1. Add **Labels** for routing. Click **Add labels** to open the label editor.
 1. Add **Annotations** describing what happened and what to do about it. Click **Add custom annotation** for keys beyond the standard ones.

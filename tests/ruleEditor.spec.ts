@@ -347,15 +347,120 @@ rules:
       await ruleEditorPage.gotoEdit(identifier);
       await ruleEditorPage.waitForLoad(/Edit/);
 
+      // The field shows what the ruler holds, so an edit elsewhere can't silently drop it
+      expect(await ruleEditorPage.getKeepFiringFor()).toBe('10m');
+
       await ruleEditorPage.fillExpression('up == 1');
       await ruleEditorPage.clickSave();
       await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
 
-      // There is no form field for keep_firing_for, so editing anything else used to drop it --
-      // and the alert then resolved as soon as the query stopped firing.
       const group = await getMimirRuleGroup(mimirRuler.tenantId, mimirRuler.namespace, groupName);
       expect(group?.rules).toHaveLength(1);
       expect(group?.rules[0]).toMatchObject({ ...rule, expr: 'up == 1' });
+    });
+
+    test('sets a compound keep_firing_for from the form', async ({ ruleEditorPage, page, mimirRuler, mimirGroup }) => {
+      const groupName = mimirGroup('keep-firing-for-set');
+      const rule: RulerAlertingRuleDTO = {
+        alert: 'NoKeepFiringForRule',
+        expr: 'up == 0',
+        for: '5m',
+      };
+
+      await postMimirRuleGroup(
+        mimirRuler.tenantId,
+        mimirRuler.namespace,
+        `name: ${groupName}
+interval: 1m
+rules:
+  - alert: ${rule.alert}
+    expr: ${rule.expr}
+    for: ${rule.for}
+`
+      );
+
+      const identifier = RuleBuilder.identifierForRulerRule(mimirRuler.uid, mimirRuler.namespace, groupName, rule);
+      await ruleEditorPage.gotoEdit(identifier);
+      await ruleEditorPage.waitForLoad(/Edit/);
+
+      expect(await ruleEditorPage.getKeepFiringFor()).toBe('');
+
+      // Prometheus takes compound durations, and the field passes one straight through
+      await ruleEditorPage.setKeepFiringFor('1h30m');
+      await ruleEditorPage.clickSave();
+      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
+
+      const group = await getMimirRuleGroup(mimirRuler.tenantId, mimirRuler.namespace, groupName);
+      expect(group?.rules[0]).toMatchObject({ ...rule, keep_firing_for: '1h30m' });
+    });
+
+    test('clearing the field removes keep_firing_for', async ({ ruleEditorPage, page, mimirRuler, mimirGroup }) => {
+      const groupName = mimirGroup('keep-firing-for-clear');
+      const rule: RulerAlertingRuleDTO = {
+        alert: 'ClearKeepFiringForRule',
+        expr: 'up == 0',
+        for: '5m',
+        keep_firing_for: '10m',
+      };
+
+      await postMimirRuleGroup(
+        mimirRuler.tenantId,
+        mimirRuler.namespace,
+        `name: ${groupName}
+interval: 1m
+rules:
+  - alert: ${rule.alert}
+    expr: ${rule.expr}
+    for: ${rule.for}
+    keep_firing_for: ${rule.keep_firing_for}
+`
+      );
+
+      const identifier = RuleBuilder.identifierForRulerRule(mimirRuler.uid, mimirRuler.namespace, groupName, rule);
+      await ruleEditorPage.gotoEdit(identifier);
+      await ruleEditorPage.waitForLoad(/Edit/);
+
+      await ruleEditorPage.setKeepFiringFor('');
+      await ruleEditorPage.clickSave();
+      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
+
+      const group = await getMimirRuleGroup(mimirRuler.tenantId, mimirRuler.namespace, groupName);
+      expect(group?.rules[0]).not.toHaveProperty('keep_firing_for');
+    });
+
+    test('rejects a keep_firing_for that is not a duration', async ({
+      ruleEditorPage,
+      page,
+      mimirRuler,
+      mimirGroup,
+    }) => {
+      const groupName = mimirGroup('keep-firing-for-invalid');
+      const rule: RulerAlertingRuleDTO = {
+        alert: 'InvalidKeepFiringForRule',
+        expr: 'up == 0',
+        for: '5m',
+      };
+
+      await postMimirRuleGroup(
+        mimirRuler.tenantId,
+        mimirRuler.namespace,
+        `name: ${groupName}
+interval: 1m
+rules:
+  - alert: ${rule.alert}
+    expr: ${rule.expr}
+    for: ${rule.for}
+`
+      );
+
+      const identifier = RuleBuilder.identifierForRulerRule(mimirRuler.uid, mimirRuler.namespace, groupName, rule);
+      await ruleEditorPage.gotoEdit(identifier);
+      await ruleEditorPage.waitForLoad(/Edit/);
+
+      await ruleEditorPage.setKeepFiringFor('ten minutes');
+      await ruleEditorPage.clickSave();
+
+      await expect(page.getByRole('alert').filter({ hasText: /Invalid duration format/i })).toBeVisible();
     });
   });
 

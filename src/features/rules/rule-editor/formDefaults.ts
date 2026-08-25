@@ -16,7 +16,7 @@ export function defaultFormValuesForRuleType(type: RuleFormType): RuleFormValues
     expression: '',
     forTime: 0,
     forTimeUnit: 's',
-    keepFiringFor: undefined,
+    keepFiringFor: '',
   });
 }
 
