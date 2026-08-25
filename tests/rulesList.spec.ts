@@ -226,3 +226,23 @@ test.describe('Duplicate Rule Name Disambiguation', () => {
     expect(editHrefs).toHaveLength(3);
   });
 });
+
+test.describe('Data source visibility', () => {
+  test('leaves out data sources that are not managed from the alerting UI', async ({
+    rulesListPage,
+    page,
+    mimirRuler,
+    unmanagedRuler,
+  }) => {
+    // Both datasources exist by the time the page loads, so the list is the thing under test
+    await rulesListPage.goto();
+    await rulesListPage.waitForLoad();
+
+    await rulesListPage.dataSourceCombobox.click();
+
+    await expect(page.getByRole('option', { name: mimirRuler.name })).toBeVisible();
+    // "Manage alerts via Alerting UI" is off on this one, so the plugin should not offer it --
+    // nor probe it for Ruler support
+    await expect(page.getByRole('option', { name: unmanagedRuler.name })).toHaveCount(0);
+  });
+});

@@ -100,6 +100,11 @@ type RulerTestFixture = {
   lokiRuler: LokiRulerFixture;
   /** A dedicated Mimir Ruler tenant and Grafana datasource, isolated for one test. */
   mimirRuler: MimirRulerFixture;
+  /**
+   * A Mimir datasource with "Manage alerts via Alerting UI" switched off, and no rules seeded.
+   * The alerting UI is meant to leave it alone entirely.
+   */
+  unmanagedRuler: { uid: string; name: string };
 };
 
 export const test = base.extend<RulerTestFixture>({
@@ -149,6 +154,18 @@ export const test = base.extend<RulerTestFixture>({
       } finally {
         await deleteGrafanaDataSource(uid);
       }
+    }
+  },
+  unmanagedRuler: async ({}, use) => {
+    const suffix = randomUUID().replaceAll('-', '');
+    const uid = `e2e-u-${suffix}`;
+    const name = `E2E Unmanaged Mimir ${suffix}`;
+    await createMimirRulerDataSource({ uid, name, tenantId: uid, manageAlerts: false });
+
+    try {
+      await use({ uid, name });
+    } finally {
+      await deleteGrafanaDataSource(uid);
     }
   },
   mimirRuler: async ({}, use) => {
