@@ -279,6 +279,7 @@
     "rule-form": {
       "cancel": "Cancel",
       "save": "Save",
+      "submit-error": "Failed to save rule",
       "validation": {
         "datasource-required": "Data source is required",
         "expression-required": "Expression is required",
@@ -338,7 +339,8 @@
     },
     "rules-error": {
       "permission-denied": "Permission denied",
-      "permission-denied-description": "You do not have permission to access rules from this data source."
+      "permission-denied-description": "You do not have permission to access rules from this data source.",
+      "unknown": "An unknown error occurred"
     },
     "rules-filter": {
       "data-source-label": "Data source",
