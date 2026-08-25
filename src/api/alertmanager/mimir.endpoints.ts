@@ -5,11 +5,7 @@ import {
 } from '@grafana/external-alertmanager/mimir';
 import { baseAlertmanagerApi } from './alertmanager.endpoints';
 import { WithDataSourceInformation } from './alertmanager.types';
-import {
-  validateMimirDataSource,
-  parseUserConfigurationResponse,
-  fetchMimirUserConfigurationWithRetry,
-} from './mimir.utils';
+import { validateMimirDataSource, loadMimirUserConfiguration } from './mimir.utils';
 
 // Inject Mimir-specific endpoints
 export const mimirAlertmanagerApi = baseAlertmanagerApi.injectEndpoints({
@@ -23,17 +19,11 @@ export const mimirAlertmanagerApi = baseAlertmanagerApi.injectEndpoints({
      * 3. The configuration is returned as a YAML string, which then needs to be parsed into the ParsedUserConfiguration format.
      */
     getUserConfiguration: build.query<ParsedUserConfiguration, WithDataSourceInformation>({
-      queryFn: async ({ dataSourceUID }, api, _extraOptions, baseQuery) => {
+      queryFn: async ({ dataSourceUID }, _api, _extraOptions, baseQuery) => {
         // double check if we're not calling this endpoint with a vanilla Alertmanager data source
         validateMimirDataSource(dataSourceUID);
 
-        const response = await fetchMimirUserConfigurationWithRetry(dataSourceUID, api, baseQuery);
-        if (response.error) {
-          return { error: response.error };
-        }
-
-        // Parse and validate the YAML response
-        return parseUserConfigurationResponse(response.data);
+        return loadMimirUserConfiguration(dataSourceUID, baseQuery);
       },
       providesTags: ['Configuration'],
       // Validate the final output from queryFn against the schema

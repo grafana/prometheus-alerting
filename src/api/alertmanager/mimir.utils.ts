@@ -1,16 +1,14 @@
-import { ParsedUserConfiguration, YamlToParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
-import { alertmanagerApi } from './alertmanager.endpoints';
-import { getDataSourceSrv } from '@grafana/runtime';
+import {
+  initialAlertmanagerConfiguration,
+  ParsedUserConfiguration,
+  YamlToParsedUserConfiguration,
+} from '@grafana/external-alertmanager/mimir';
+import { config } from '@grafana/runtime';
+import type { FetchBaseQueryError, FetchBaseQueryMeta, QueryReturnValue } from '@reduxjs/toolkit/query';
 import { AlertManagerDataSourceJsonData } from 'types/datasources';
-import retryUntil from 'p-retry';
 import { prettifyError, z, ZodError } from 'zod';
-import type {
-  BaseQueryApi,
-  FetchArgs,
-  FetchBaseQueryError,
-  FetchBaseQueryMeta,
-  QueryReturnValue,
-} from '@reduxjs/toolkit/query';
+
+import type { MimirConfigurationBaseQuery } from './mimir.types';
 
 const NO_USER_CONFIG_ERROR = 'alertmanager storage object not found';
 
@@ -26,7 +24,7 @@ export function isLazyInitializationError({ status, data }: FetchBaseQueryError)
  * Throws an error if the data source is not using Mimir.
  */
 export function validateMimirDataSource(dataSourceUID: string): void {
-  const dsSettings = getDataSourceSrv().getInstanceSettings(dataSourceUID);
+  const dsSettings = Object.values(config.datasources).find((dataSource) => dataSource.uid === dataSourceUID);
   const jsonData = dsSettings?.jsonData as AlertManagerDataSourceJsonData;
   const implementation = jsonData?.implementation ?? 'prometheus';
 
@@ -71,47 +69,27 @@ export function parseUserConfigurationResponse(
 }
 
 /**
- * Fetches Mimir user configuration with lazy initialization handling.
+ * Fetches and parses a Mimir user configuration.
  *
- * Mimir tenants are lazily initialized - the first request may fail with a lazy initialization error.
- * This function retries the request and "wakes up" the tenant by calling getStatus on the first failure.
- *
- * ⚠️ This procedure does _not_ support Mimir's custom "Alertmanager fallback config". This will only set the Alertmanager
- * configuration and Mimir doesn't know about it via the "/api/v1/alerts" endpoint. When we receive an empty Alertmanager configuration
- * we will return a hard-coded config to the client so the user can make changes to an empty Mimir installation.
+ * An uninitialized tenant has no stored configuration, so Mimir returns 404. Return the editable initial configuration immediately
+ * instead of retrying while a separate status request initializes the tenant.
  */
-export async function fetchMimirUserConfigurationWithRetry<T extends (arg: FetchArgs) => any>(
+export async function loadMimirUserConfiguration(
   dataSourceUID: string,
-  api: BaseQueryApi,
-  baseQuery: T
-): Promise<Awaited<ReturnType<T>>> {
-  return retryUntil(
-    async () => {
-      const response = await baseQuery({
-        url: `/${dataSourceUID}/api/v1/alerts`,
-        responseHandler: 'text',
-      });
+  baseQuery: MimirConfigurationBaseQuery
+): Promise<QueryReturnValue<ParsedUserConfiguration, FetchBaseQueryError, FetchBaseQueryMeta>> {
+  const response = await baseQuery({
+    url: `/${dataSourceUID}/api/v1/alerts`,
+    responseHandler: 'text',
+  });
 
-      if (response.error && isLazyInitializationError(response.error)) {
-        throw new Error('tenant configuration is uninitialized');
-      }
-
-      return response;
-    },
-    {
-      retries: 10,
-      onFailedAttempt: (context) => {
-        // dispatch a request to "wake up" the tenant configuration on the first failed attempt
-        // this will make requests succeed during one of the next retries.
-        if (context.attemptNumber === 1) {
-          api.dispatch(
-            alertmanagerApi.endpoints.getStatus.initiate(
-              { dataSourceUID },
-              { forceRefetch: true, subscribe: false } // make sure we don't subscribe
-            )
-          );
-        }
-      },
+  if (response.error) {
+    if (isLazyInitializationError(response.error)) {
+      return { data: initialAlertmanagerConfiguration };
     }
-  );
+
+    return { error: response.error };
+  }
+
+  return parseUserConfigurationResponse(response.data);
 }
