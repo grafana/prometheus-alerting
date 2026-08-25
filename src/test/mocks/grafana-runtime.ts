@@ -106,6 +106,11 @@ export function setupGrafanaRuntimeMocks() {
   // Apply mocks
   setMockGrafanaDataSources();
   setCurrentUser(mockCurrentUser);
+
+  // Grafana ships this as true (datasources.default_manage_alerts_ui_toggle), so data sources that
+  // never set `manageAlerts` are managed from the alerting UI. Without it the runtime config would
+  // report `undefined` here and every such data source would look opted out.
+  (config as any).defaultDatasourceManageAlertsUiToggle = true;
 }
 
 /**
