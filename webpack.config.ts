@@ -24,8 +24,46 @@ const applyReactDevRuntimeException = (config: Configuration) => {
   }
 };
 
+/**
+ * Derive the compile target from `.browserslistrc` instead of the fixed `jsc.target: 'es2015'`
+ * that `.config/webpack/webpack.config.ts` sets.
+ *
+ * grafana/grafana does the same thing for its own bundle (`scripts/webpack/rules.ts` feeds
+ * `browserslist()` into esbuild), and a plugin only ever has to run in the browsers Grafana
+ * supports — so pinning a fixed, much older ES version just means shipping transpiler polyfills
+ * nobody needs. One of those polyfills (the one for named capture groups) was behind routes
+ * failing to save with "Invalid duration format".
+ *
+ * swc rejects `env` and `jsc.target` together, so the target has to be removed first. With
+ * `env: {}` and no explicit targets, swc resolves `.browserslistrc` itself.
+ */
+const applyBrowserslistTarget = (config: Configuration) => {
+  const rules = config.module?.rules;
+  if (!rules) {
+    return;
+  }
+
+  for (const rule of rules as RuleSetRule[]) {
+    if (typeof rule !== 'object' || rule == null) {
+      continue;
+    }
+
+    if (rule.use && typeof rule.use === 'object' && 'loader' in rule.use && rule.use.loader === 'swc-loader') {
+      const options = rule.use.options as { jsc?: { target?: string }; env?: Record<string, unknown> } | undefined;
+      if (!options?.jsc) {
+        continue;
+      }
+
+      delete options.jsc.target;
+      options.env = {};
+    }
+  }
+};
+
 const config = async (env: Env): Promise<Configuration> => {
   const baseConfig = await grafanaConfig(env);
+
+  applyBrowserslistTarget(baseConfig);
 
   if (env.development) {
     applyReactDevRuntimeException(baseConfig);

@@ -1,0 +1,13 @@
+# Mirrors the production list in grafana/grafana's .browserslistrc — a plugin has to run in
+# whatever browsers Grafana itself supports, so the compile target is derived from this rather
+# than pinned to a fixed ES version.
+#
+# Kept as a single list rather than grafana's [dev]/[production] split: a plugin that compiles
+# differently in dev than in production hides browser-only bugs from local testing.
+last 2 Firefox versions
+last 2 Chrome versions
+last 2 Safari versions
+last 2 Edge versions
+last 1 ios_saf versions
+last 1 and_chr versions
+last 1 samsung versions
