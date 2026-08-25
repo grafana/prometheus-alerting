@@ -20,6 +20,14 @@ describe('stringifyFetchError', () => {
       expect(stringifyFetchError(error)).toBe('500 • Internal server error');
     });
 
+    it('should format a plain-text response body', () => {
+      const error: FetchBaseQueryError = {
+        status: 400,
+        data: 'Authentication to data source failed',
+      };
+      expect(stringifyFetchError(error)).toBe('400 • Authentication to data source failed');
+    });
+
     it('should stringify data object when no message field', () => {
       const error: FetchBaseQueryError = {
         status: 400,

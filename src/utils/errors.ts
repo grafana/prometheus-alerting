@@ -35,6 +35,10 @@ export function stringifyFetchError(error: ErrorLike): string {
     if (typeof statusCode === 'number') {
       const data = error.data;
 
+      if (typeof data === 'string' && data.trim()) {
+        return `${statusCode} • ${data}`;
+      }
+
       // Try to extract a meaningful message from data
       if (data && typeof data === 'object') {
         // Check for common error message fields
