@@ -118,6 +118,19 @@ services:
     restart: on-failure
     command: ['node', '/provision-rules.mjs']
 
+  mimir-alertmanager-provisioner:
+    image: node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd
+    container_name: mimir-alertmanager-provisioner
+    depends_on:
+      - mimir
+    volumes:
+      - ./test-data/mimir/alertmanager:/alertmanager:ro
+      - ./test-data/mimir/provision-alertmanager.mjs:/provision-alertmanager.mjs:ro
+    networks:
+      - monitoring
+    restart: on-failure
+    command: ['node', '/provision-alertmanager.mjs']
+
   loki:
     image: grafana/loki:3.2.0
     container_name: loki-test

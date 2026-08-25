@@ -51,7 +51,7 @@ pnpm e2e          # Run E2E tests with Playwright (requires pnpm server first)
 
 **Provisioned Data Sources:**
 
-Three data sources are auto-provisioned via `provisioning/datasources/test-datasources.yaml`:
+These data sources are auto-provisioned via `provisioning/datasources/test-datasources.yaml`:
 
 1. **Test Prometheus** (`test-prometheus`)
    - Type: `prometheus`
@@ -74,6 +74,32 @@ Three data sources are auto-provisioned via `provisioning/datasources/test-datas
    - Supports Ruler API for rule CRUD operations
    - Editable data source
    - Use case: Testing rule creation, editing, cloning, and Mimir-specific features
+
+4. **Test Loki** (`test-loki`)
+   - Type: `loki`
+   - URL: `http://loki:3100`
+   - Supports Ruler API for Loki rule CRUD operations
+   - Editable data source
+   - Use case: Testing Loki rule creation and editing
+
+5. **Test Mimir Alertmanager** (`test-mimir-alertmanager`)
+   - Type: `alertmanager`
+   - Implementation: `mimir`
+   - URL: `http://mimir:9009` (tenant `anonymous` via the `X-Scope-OrgID` header)
+   - Editable data source, and unlike vanilla Alertmanager its configuration can be written from the UI
+   - Use case: Creating and editing routes, receivers, templates, time intervals, inhibit rules and silences
+
+**Mimir Alertmanager Test Data:**
+
+- Mimir starts every tenant without an Alertmanager configuration, and its config API answers
+  `404 alertmanager storage object not found` until something is posted. The plugin reads that 404 as
+  "Mimir is still starting up" and keeps retrying, so the pages would hang on a loading skeleton.
+- The `mimir-alertmanager-provisioner` container posts `test-data/mimir/alertmanager/alertmanager.yml`
+  (plus any templates in `test-data/mimir/alertmanager/templates/`) to the `anonymous` tenant on startup.
+- It skips the upload if the tenant already has a configuration, so restarting the container won't
+  overwrite changes made from the UI.
+- E2E tests don't use this data source; they create their own per-test tenant and data source
+  (see the `mimirAlertmanager` fixture in `tests/fixtures/alertmanager.ts`).
 
 **Mimir Test Data:**
 
