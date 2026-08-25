@@ -3,12 +3,14 @@ import React from 'react';
 import { t } from '@grafana/i18n';
 import { locationService } from '@grafana/runtime';
 
+import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
+
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { MutationUnavailable } from '../../../access-control/components/MutationUnavailable';
 import { ROUTES } from '../../../constants';
 import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 import { prefixRoute } from '../../../utils/utils.routing';
-import { TimeIntervalFormFields, type TimeIntervalFormData } from '../components/TimeIntervalFormFields';
+import { TimeIntervalFormFields } from '../components/TimeIntervalFormFields';
 import { useAddTimeInterval } from '../hooks/useTimeIntervals';
 
 function TimeIntervalForm() {
@@ -17,21 +19,7 @@ function TimeIntervalForm() {
 
   const navigateToList = () => locationService.push(prefixRoute(ROUTES.TimeIntervals));
 
-  const handleSubmit = async (data: TimeIntervalFormData) => {
-    const timeInterval = {
-      name: data.name,
-      time_intervals: [
-        {
-          times: [{ start_time: data.startTime, end_time: data.endTime }],
-          weekdays: data.weekdays ? data.weekdays.split(',').map((day) => day.trim()) : undefined,
-          days_of_month: data.daysOfMonth ? data.daysOfMonth.split(',').map((day) => day.trim()) : undefined,
-          months: data.months ? data.months.split(',').map((month) => month.trim()) : undefined,
-          years: data.years ? data.years.split(',').map((year) => year.trim()) : undefined,
-          location: data.location || undefined,
-        },
-      ],
-    };
-
+  const handleSubmit = async (timeInterval: TimeInterval) => {
     try {
       await addTimeInterval(timeInterval);
       navigateToList();
