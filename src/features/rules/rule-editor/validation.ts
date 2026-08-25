@@ -1,8 +1,7 @@
 import { z } from 'zod';
 import { t } from '@grafana/i18n';
 import { RuleFormType } from './types';
-import { isCloudAlertingRuleByType, isCloudRecordingRuleByType } from './ruleTypeHelpers';
-import { hasUnbalancedTemplateDelimiters } from './templateValidation';
+import { isCloudRecordingRuleByType } from './ruleTypeHelpers';
 
 /**
  * A recording rule's name becomes the name of the metric it writes. Mimir (and Prometheus, and
@@ -19,48 +18,23 @@ const METRIC_NAME_PATTERN = /^[a-zA-Z_:][a-zA-Z0-9_:]*$/;
  * This is a function to ensure t() calls happen at runtime, not at module load time
  */
 export function createRuleFormSchema() {
-  const templateSyntaxError = t(
-    'alerting.rule-form.validation.template-unbalanced',
-    "This value has a '{{' or '}}' that doesn't have a match -- check the template syntax"
-  );
-
   return createRuleFormObjectSchema().superRefine((values, ctx) => {
-    if (isCloudRecordingRuleByType(values.type)) {
-      validateRecordingRuleName(values.name, ctx);
+    if (!isCloudRecordingRuleByType(values.type) || values.name.length === 0) {
+      // Empty names are already reported by the `name` field's own `min(1)` check.
+      return;
     }
 
-    if (isCloudAlertingRuleByType(values.type)) {
-      values.labels.forEach((label, index) => {
-        if (hasUnbalancedTemplateDelimiters(label.value)) {
-          ctx.addIssue({ code: 'custom', path: ['labels', index, 'value'], message: templateSyntaxError });
-        }
-      });
-
-      values.annotations.forEach((annotation, index) => {
-        if (hasUnbalancedTemplateDelimiters(annotation.value)) {
-          ctx.addIssue({ code: 'custom', path: ['annotations', index, 'value'], message: templateSyntaxError });
-        }
+    if (!METRIC_NAME_PATTERN.test(values.name)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['name'],
+        message: t(
+          'alerting.rule-form.validation.name-invalid-metric-name',
+          "Recording rule names can only contain letters, numbers, underscores and colons, and can't start with a number"
+        ),
       });
     }
   });
-}
-
-function validateRecordingRuleName(name: string, ctx: z.RefinementCtx) {
-  if (name.length === 0) {
-    // Empty names are already reported by the `name` field's own `min(1)` check.
-    return;
-  }
-
-  if (!METRIC_NAME_PATTERN.test(name)) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['name'],
-      message: t(
-        'alerting.rule-form.validation.name-invalid-metric-name',
-        "Recording rule names can only contain letters, numbers, underscores and colons, and can't start with a number"
-      ),
-    });
-  }
 }
 
 function createRuleFormObjectSchema() {

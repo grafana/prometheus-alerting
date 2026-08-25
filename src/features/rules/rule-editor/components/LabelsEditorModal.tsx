@@ -6,18 +6,15 @@ import { t } from '@grafana/i18n';
 import { Button, Field, Input, Modal, Stack, useStyles2 } from '@grafana/ui';
 
 import { KVObject } from '../types';
-import { hasUnbalancedTemplateDelimiters } from '../templateValidation';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSave: (labels: KVObject[]) => void;
   initialLabels: KVObject[];
-  /** Only alerting rules support templates in label values, so only check them there. */
-  checkTemplateSyntax?: boolean;
 }
 
-export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels, checkTemplateSyntax }: Props) => {
+export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels }: Props) => {
   const styles = useStyles2(getStyles);
   const [labels, setLabels] = useState<KVObject[]>(initialLabels.length > 0 ? initialLabels : [{ key: '', value: '' }]);
 
@@ -67,15 +64,6 @@ export const LabelsEditorModal = ({ isOpen, onClose, onSave, initialLabels, chec
             <Field
               label={index === 0 ? t('alerting.labels-editor-modal.label-value', 'Value') : undefined}
               className={styles.fieldValue}
-              invalid={checkTemplateSyntax && hasUnbalancedTemplateDelimiters(label.value)}
-              error={
-                checkTemplateSyntax && hasUnbalancedTemplateDelimiters(label.value)
-                  ? t(
-                      'alerting.rule-form.validation.template-unbalanced',
-                      "This value has a '{{' or '}}' that doesn't have a match -- check the template syntax"
-                    )
-                  : undefined
-              }
               noMargin
             >
               <Input
