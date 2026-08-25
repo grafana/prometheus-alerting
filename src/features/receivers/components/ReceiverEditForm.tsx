@@ -1,5 +1,13 @@
 import React, { useCallback, useMemo } from 'react';
-import { useForm, useFieldArray, Controller, useWatch, FormProvider, useFormContext } from 'react-hook-form';
+import {
+  useForm,
+  useFieldArray,
+  Controller,
+  useWatch,
+  FormProvider,
+  useFormContext,
+  UseFormGetValues,
+} from 'react-hook-form';
 import { t, Trans } from '@grafana/i18n';
 import {
   Button,
@@ -276,43 +284,56 @@ function IntegrationFields({ notifier, index, control, register }: IntegrationFi
   );
 }
 
+type IntegrationSettingsPath = `integrations.${number}.settings` | `integrations.${number}.settings.${string}`;
+type IntegrationSettingsFieldPath = `integrations.${number}.settings.${string}`;
+
+function appendFieldPath(basePath: IntegrationSettingsPath, propertyName: string): IntegrationSettingsFieldPath {
+  return `${basePath}.${propertyName}`;
+}
+
+function getSettingsFieldPath(index: number, fieldPath: string): IntegrationSettingsFieldPath {
+  return `integrations.${index}.settings.${fieldPath}`;
+}
+
+function validateOptionField(
+  value: unknown,
+  option: NotificationChannelOption,
+  index: number,
+  getValues: UseFormGetValues<ReceiverFormValues>
+): true | string {
+  const getSettingValue = (fieldPath: string) => getValues(getSettingsFieldPath(index, fieldPath));
+  const fieldHasValue = hasValue(value);
+  const conflictingField = fieldHasValue
+    ? option.mutuallyExclusiveWith?.find(({ fieldPath }) => hasValue(getSettingValue(fieldPath)))
+    : undefined;
+
+  if (conflictingField) {
+    return t('receivers.form.fields-mutually-exclusive', '{{field}} cannot be used with {{otherField}}', {
+      field: option.label,
+      otherField: conflictingField.label,
+    });
+  }
+
+  const alternativeFieldHasValue = option.requiredUnless
+    ? hasValue(getSettingValue(option.requiredUnless.fieldPath))
+    : false;
+  const requiredFieldIsMissing = option.required && !fieldHasValue && !alternativeFieldHasValue;
+
+  return requiredFieldIsMissing ? t('receivers.form.field-required', 'This field is required') : true;
+}
+
 interface OptionFieldProps {
   option: NotificationChannelOption;
   index: number;
   control: ReturnType<typeof useForm<ReceiverFormValues>>['control'];
   register: ReturnType<typeof useForm<ReceiverFormValues>>['register'];
-  basePath: string;
+  basePath: IntegrationSettingsPath;
 }
 
 function OptionField({ option, index, control, register, basePath }: OptionFieldProps) {
-  const fieldPath = `${basePath}.${option.propertyName}` as `integrations.${number}.settings.${string}`;
+  const fieldPath = appendFieldPath(basePath, option.propertyName);
   const { formState, getFieldState, getValues } = useFormContext<ReceiverFormValues>();
   const fieldError = getFieldState(fieldPath, formState).error?.message;
-  const requiredUnlessFieldPath: `integrations.${number}.settings.${string}` | undefined = option.requiredUnless
-    ? `integrations.${index}.settings.${option.requiredUnless.fieldPath}`
-    : undefined;
-  const mutuallyExclusiveFields = option.mutuallyExclusiveWith?.map(({ fieldPath: exclusivePath, label }) => ({
-    fieldPath: `integrations.${index}.settings.${exclusivePath}` as `integrations.${number}.settings.${string}`,
-    label,
-  }));
-  const validateField = (value: unknown) => {
-    const conflictingField = mutuallyExclusiveFields?.find(({ fieldPath: exclusivePath }) =>
-      hasValue(getValues(exclusivePath))
-    );
-    if (hasValue(value) && conflictingField) {
-      return t('receivers.form.fields-mutually-exclusive', '{{field}} cannot be used with {{otherField}}', {
-        field: option.label,
-        otherField: conflictingField.label,
-      });
-    }
-    if (!option.required || hasValue(value)) {
-      return true;
-    }
-    if (requiredUnlessFieldPath && hasValue(getValues(requiredUnlessFieldPath))) {
-      return true;
-    }
-    return t('receivers.form.field-required', 'This field is required');
-  };
 
   // Render subform fields (like http_config, tls_config) with a section header
   if (option.element === 'subform' || option.element === 'subform_array') {
@@ -330,7 +351,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
                 index={index}
                 control={control}
                 register={register}
-                basePath={`${basePath}.${option.propertyName}`}
+                basePath={fieldPath}
               />
             ))}
           </Stack>
@@ -400,7 +421,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
     >
       <Input
         {...register(fieldPath, {
-          validate: validateField,
+          validate: (value) => validateOptionField(value, option, index, getValues),
           setValueAs: option.setValueAs,
         })}
         type={option.inputType ?? 'text'}
