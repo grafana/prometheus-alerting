@@ -1,12 +1,53 @@
 import { z } from 'zod';
 import { t } from '@grafana/i18n';
 import { RuleFormType } from './types';
+import { isCloudRecordingRuleByType } from './ruleTypeHelpers';
+
+/**
+ * A recording rule's name becomes the name of the metric it writes. Mimir (and Prometheus, and
+ * Loki) only accept metric names made of letters, digits, underscores and colons, and they can't
+ * start with a digit. Saving a rule with a name outside that shape is rejected by the ruler, so
+ * checking it here catches the mistake before the round trip instead of after.
+ */
+const METRIC_NAME_PATTERN = /^[a-zA-Z_:][a-zA-Z0-9_:]*$/;
 
 /**
  * Creates the Zod schema for rule form validation
  * This is a function to ensure t() calls happen at runtime, not at module load time
  */
 export function createRuleFormSchema() {
+  return createRuleFormObjectSchema().superRefine((values, ctx) => {
+    if (!isCloudRecordingRuleByType(values.type) || values.name.length === 0) {
+      // Empty names are already reported by the `name` field's own `min(1)` check.
+      return;
+    }
+
+    if (values.name.includes('{') || values.name.includes('}')) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['name'],
+        message: t(
+          'alerting.rule-form.validation.name-braces',
+          "Recording rule names can't contain braces -- did you mean to put this in the expression instead?"
+        ),
+      });
+      return;
+    }
+
+    if (!METRIC_NAME_PATTERN.test(values.name)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['name'],
+        message: t(
+          'alerting.rule-form.validation.name-invalid-metric-name',
+          "Recording rule names can only contain letters, numbers, underscores and colons, and can't start with a number"
+        ),
+      });
+    }
+  });
+}
+
+function createRuleFormObjectSchema() {
   return z.object({
     // Common fields
     name: z
