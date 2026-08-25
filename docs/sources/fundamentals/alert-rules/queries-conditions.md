@@ -1,6 +1,6 @@
 ---
 title: Queries and conditions
-description: Learn how an expression and a pending period decide when an alert fires.
+description: Learn how the expression in a data source-managed alerting rule acts as its condition, how aggregation changes the number of alert instances, and how the pending period delays firing.
 keywords:
   - promql
   - logql
@@ -14,7 +14,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Queries and conditions

@@ -1,6 +1,6 @@
 ---
 title: View alert rules
-description: Browse alerting and recording rules and inspect their current state.
+description: Browse alerting and recording rules from every configured rules source, filter the list, and inspect a rule's evaluation timing, health, query, and current alert instances.
 keywords:
   - rules page
   - browse
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # View alert rules

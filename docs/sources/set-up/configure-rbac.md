@@ -1,6 +1,6 @@
 ---
 title: Configure access control
-description: Control who can view and edit rules, silences, and Alertmanager configuration.
+description: Control who can view and edit rules, silences, and Alertmanager configuration in the Prometheus Alerting plugin using the Grafana RBAC permissions for external alerting resources.
 keywords:
   - rbac
   - permissions
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 300
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Configure access control
@@ -43,7 +43,7 @@ Read permission controls whether a page is reachable at all. Write permission co
 | Receivers      | `alert.notifications.external:read` | `alert.notifications.external:write` |
 | Templates      | `alert.notifications.external:read` | `alert.notifications.external:write` |
 | Time intervals | `alert.notifications.external:read` | `alert.notifications.external:write` |
-| Inhibit rules  | `alert.notifications.external:read` | `alert.notifications.external:write` |
+| Inhibit Rules  | `alert.notifications.external:read` | `alert.notifications.external:write` |
 
 Pages a user can't read are hidden from the plugin navigation rather than shown and then refused. Someone with only `alert.rules.external:read` sees a plugin containing rule pages and nothing else.
 

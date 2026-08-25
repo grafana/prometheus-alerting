@@ -1,6 +1,6 @@
 ---
 title: Examples
-description: Worked examples of common data source-managed alerting patterns.
+description: Worked examples of common data source-managed alerting patterns, showing how one rule produces many alert instances and how to keep alert volume manageable at high cardinality.
 keywords:
   - examples
   - patterns
@@ -10,8 +10,8 @@ labels:
     - oss
     - enterprise
     - cloud
-weight: 180
-review_date: '2027-08-19'
+weight: 700
+review_date: '2026-08-19'
 ---
 
 # Examples

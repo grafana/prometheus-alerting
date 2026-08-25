@@ -1,6 +1,6 @@
 ---
 title: The routing tree
-description: Understand how Alertmanager routes match alerts and pass them to a receiver.
+description: Understand how Alertmanager walks the routing tree to pick a receiver, why the deepest match wins, how matchers and inheritance work, and what the continue option changes.
 keywords:
   - alertmanager
   - routes
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # The routing tree

@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Resolve common problems with the Prometheus Alerting plugin.
+description: Resolve common problems with the Prometheus Alerting plugin, from missing pages and read-only rules to alerts that fire without notifying anyone and templates that render empty.
 keywords:
   - troubleshooting
   - errors
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Troubleshooting

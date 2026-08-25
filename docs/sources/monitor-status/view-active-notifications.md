@@ -1,6 +1,6 @@
 ---
 title: View active notifications
-description: Confirm which receiver an alert was routed to and why a notification was suppressed.
+description: Confirm which receiver an alert was routed to and find out why a notification was suppressed, using the Alerts page to see what Alertmanager decided rather than what you configured.
 keywords:
   - alertmanager
   - routing
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 400
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # View active notifications

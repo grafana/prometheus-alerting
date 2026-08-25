@@ -1,6 +1,6 @@
 ---
 title: Create a silence
-description: Temporarily stop notifications for alert instances that match a set of matchers.
+description: Temporarily stop notifications for the alert instances that match a set of label matchers, check what a silence covers, and expire or recreate one in the Prometheus Alerting plugin.
 keywords:
   - alertmanager
   - silences
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 300
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Create a silence

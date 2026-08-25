@@ -1,7 +1,7 @@
 ---
 title: Set up the Prometheus Alerting plugin
 menuTitle: Set up
-description: Install the plugin, connect your data sources, and configure access control.
+description: Install the Prometheus Alerting plugin in Grafana, connect a Prometheus-compatible rules source and an Alertmanager data source, and configure the permissions that control each page.
 keywords:
   - installation
   - setup
@@ -13,8 +13,8 @@ labels:
     - oss
     - enterprise
     - cloud
-weight: 110
-review_date: '2027-08-19'
+weight: 200
+review_date: '2026-08-19'
 ---
 
 # Set up the Prometheus Alerting plugin

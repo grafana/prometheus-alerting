@@ -1,6 +1,6 @@
 ---
 title: Template language
-description: Learn the Go template syntax used in Alertmanager notification templates.
+description: Learn the Go text/template syntax used in Alertmanager notification templates, including define, the dot, loops, conditionals, variables, functions, and whitespace trimming.
 keywords:
   - go templates
   - syntax
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Template language
@@ -23,7 +23,7 @@ Alertmanager templates use Go's `text/template` syntax. This page covers the par
 
 Every template is a named definition:
 
-```
+```go
 {{ define "slack.title" }}
 [{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}
 {{ end }}
@@ -31,7 +31,7 @@ Every template is a named definition:
 
 Reference it from another template with `template`:
 
-```
+```go
 {{ template "slack.title" . }}
 ```
 
@@ -41,31 +41,31 @@ The trailing `.` passes the current context through. Leaving it off gives the te
 
 `.` is the current context. At the top of a notification template it's the notification data—the group of alerts and their shared labels. Inside a `range` it becomes the current item.
 
-```
+```go
 {{ .GroupLabels.alertname }}       one field of the notification
 {{ range .Alerts }}{{ .Labels.instance }}{{ end }}   .  is now one alert
 ```
 
 Losing track of what `.` refers to is the single most common template bug. Inside a loop, use `$` to reach back to the original top-level context:
 
-```
+```go
 {{ range .Alerts }}{{ $.GroupLabels.cluster }} — {{ .Labels.instance }}
 {{ end }}
 ```
 
 ## Loops and conditionals
 
-```
+```go
 {{ range .Alerts }}
 - {{ .Annotations.summary }}
 {{ end }}
 ```
 
-```
+```go
 {{ if eq .Status "firing" }}Firing{{ else }}Resolved{{ end }}
 ```
 
-```
+```go
 {{ if .Alerts.Firing }}{{ len .Alerts.Firing }} firing{{ end }}
 ```
 
@@ -73,7 +73,7 @@ Comparison functions are written as functions, not operators: `eq`, `ne`, `lt`, 
 
 ## Variables
 
-```
+```go
 {{ $count := len .Alerts }}
 {{ $count }} alert(s) firing
 ```
@@ -93,7 +93,7 @@ Comparison functions are written as functions, not operators: `eq`, `ne`, `lt`, 
 
 Go templates keep the whitespace around actions, which is why templates often render with unexpected blank lines. Add a hyphen inside the braces to trim it:
 
-```
+```go
 {{- range .Alerts }}
 - {{ .Annotations.summary }}
 {{- end }}

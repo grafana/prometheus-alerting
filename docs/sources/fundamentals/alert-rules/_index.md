@@ -1,6 +1,6 @@
 ---
 title: Alert rules
-description: Understand what a data source-managed alert rule is and what it's made of.
+description: Understand what a data source-managed alert rule is in the Prometheus Alerting plugin, how alerting and recording rules differ, and how rules are organized into groups and namespaces.
 keywords:
   - prometheus
   - alert rules
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Alert rules

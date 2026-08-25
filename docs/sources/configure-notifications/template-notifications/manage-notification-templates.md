@@ -1,6 +1,6 @@
 ---
 title: Manage notification templates
-description: Create, edit, and delete Alertmanager notification templates.
+description: Create, edit, and delete Alertmanager notification templates in the Prometheus Alerting plugin, and reference the names you define in them from a receiver's integration fields.
 keywords:
   - notification templates
   - create
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Manage notification templates

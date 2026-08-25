@@ -1,6 +1,6 @@
 ---
 title: High-cardinality alerts
-description: Keep alert volume manageable when a rule matches a large number of series.
+description: Keep alert volume manageable when a rule matches a large number of series, by aggregating in the expression, dropping labels you don't route on, and letting Alertmanager group the rest.
 keywords:
   - cardinality
   - aggregation
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # High-cardinality alerts

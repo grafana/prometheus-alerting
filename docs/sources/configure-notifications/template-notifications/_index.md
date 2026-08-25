@@ -1,6 +1,6 @@
 ---
 title: Notification templates
-description: Customize how Alertmanager formats the notifications it sends.
+description: Customize how Alertmanager formats the notifications it sends, using Go templates that are rendered at send time and describe a whole group of alerts rather than a single instance.
 keywords:
   - alertmanager
   - notification templates
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 600
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Notification templates

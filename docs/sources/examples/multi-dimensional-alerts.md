@@ -1,6 +1,6 @@
 ---
 title: Multi-dimensional alerts
-description: Write one rule that produces a separate alert instance per series.
+description: Write one alerting rule that produces a separate alert instance per series, learn why the label set gives each instance its identity, and how grouping keeps the notifications manageable.
 keywords:
   - multi-dimensional
   - instances
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Multi-dimensional alerts

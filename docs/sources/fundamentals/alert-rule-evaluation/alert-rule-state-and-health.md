@@ -1,6 +1,6 @@
 ---
 title: Alert rule state and health
-description: Understand the inactive, pending, and firing states, and what rule health tells you.
+description: Understand the inactive, pending, and firing states of an alert instance, and how rule health tells you whether the rule itself evaluated successfully in the Prometheus Alerting plugin.
 keywords:
   - alert state
   - inactive
@@ -14,7 +14,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Alert rule state and health

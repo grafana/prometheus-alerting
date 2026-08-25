@@ -1,6 +1,6 @@
 ---
 title: Alerts page
-description: View firing and suppressed alerts across the selected Alertmanager.
+description: View the firing and suppressed alerts the selected Alertmanager currently holds, filter them by label, receiver, or state, and find out why a suppressed alert sent no notification.
 keywords:
   - alerts page
   - firing
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Alerts page

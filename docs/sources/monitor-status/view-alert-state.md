@@ -1,6 +1,6 @@
 ---
 title: View alert state
-description: Understand what the state of an alert instance is telling you.
+description: Understand what the state of an alert instance is telling you, read the instances list on a rule's detail page, and tell a firing alert apart from a delivered notification.
 keywords:
   - alert state
   - inactive
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 300
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # View alert state

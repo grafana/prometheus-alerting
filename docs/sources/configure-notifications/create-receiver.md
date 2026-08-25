@@ -1,6 +1,6 @@
 ---
 title: Create a receiver
-description: Add and manage Alertmanager receivers such as email, Slack, PagerDuty, and webhooks.
+description: Add and manage Alertmanager receivers such as email, Slack, PagerDuty, and webhooks, choose whether to send resolved notifications, and understand what renaming or deleting one breaks.
 keywords:
   - alertmanager
   - receivers
@@ -15,7 +15,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Create a receiver
@@ -79,4 +79,4 @@ The default receiver can't be deleted. The default route always needs somewhere 
 
 ## Verify it works
 
-Receivers are only exercised when a notification is actually sent, so a configuration error tends to surface at the worst moment. The quickest check is to create a short silence-free test alert, or watch the **Alerts** page after a real alert fires and confirm the receiver column shows what you expect.
+Receivers are only exercised when a notification is actually sent, so a configuration error tends to surface at the worst moment. The plugin has no way to send a test notification, so the check is to wait for a real alert: after one fires, open the **Alerts** page and confirm the **Receiver** column shows the receiver you expect, then confirm the notification arrived in the receiving system.

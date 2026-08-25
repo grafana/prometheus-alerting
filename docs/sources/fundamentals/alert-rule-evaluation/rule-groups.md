@@ -1,6 +1,6 @@
 ---
 title: Rule groups and evaluation
-description: Learn how rules within a group are evaluated and how the evaluation interval affects alerting.
+description: Learn how rules in a group are evaluated together in order on the group's interval, how that interval interacts with the pending period, and how to size groups so evaluations don't lag.
 keywords:
   - rule groups
   - evaluation interval
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Rule groups and evaluation
