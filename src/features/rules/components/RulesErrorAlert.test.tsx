@@ -22,7 +22,7 @@ describe('RulesErrorAlert', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Request failed');
   });
 
-  it('shows a Mimir validation failure without the YAML position prefix', () => {
+  it('shows the ruler response verbatim, YAML position prefix and all', () => {
     render(
       <RulesErrorAlert
         error={{
@@ -35,25 +35,24 @@ describe('RulesErrorAlert', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('Failed to save rule');
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'group "group-3", rule 1, "sdsdsds-1": invalid recording rule name: sdsdsds-1'
+      '10:13: group "group-3", rule 1, "sdsdsds-1": invalid recording rule name: sdsdsds-1'
     );
-    expect(screen.getByRole('alert')).not.toHaveTextContent('10:13:');
   });
 
-  it('lists every problem when the ruler reports more than one', () => {
+  it('shows a multi-problem ruler response as one block of text, not a list', () => {
     render(
       <RulesErrorAlert
         error={{
           status: 400,
-          data: '10:13: group "g", rule 1, "a": invalid recording rule name: a\n14:9: group "g", rule 2, "b": invalid label name: b',
+          data: '10:13: group "g", rule 1, "a": invalid recording rule name: a, 14:9: group "g", rule 2, "b": invalid label name: b',
         }}
         title="Failed to save rule"
       />
     );
 
-    const problems = screen.getAllByRole('listitem');
-    expect(problems).toHaveLength(2);
-    expect(problems[0]).toHaveTextContent('group "g", rule 1, "a": invalid recording rule name: a');
-    expect(problems[1]).toHaveTextContent('group "g", rule 2, "b": invalid label name: b');
+    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      '10:13: group "g", rule 1, "a": invalid recording rule name: a, 14:9: group "g", rule 2, "b": invalid label name: b'
+    );
   });
 });
