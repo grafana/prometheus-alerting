@@ -17,11 +17,17 @@ function baseValues(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
-function nameErrors(result: ReturnType<ReturnType<typeof createRuleFormSchema>['safeParse']>) {
+type SchemaResult = ReturnType<ReturnType<typeof createRuleFormSchema>['safeParse']>;
+
+function errorsAt(result: SchemaResult, path: string) {
   if (result.success) {
     return [];
   }
-  return result.error.issues.filter((issue) => issue.path.join('.') === 'name').map((issue) => issue.message);
+  return result.error.issues.filter((issue) => issue.path.join('.') === path).map((issue) => issue.message);
+}
+
+function nameErrors(result: SchemaResult) {
+  return errorsAt(result, 'name');
 }
 
 describe('createRuleFormSchema recording rule name validation', () => {
@@ -67,5 +73,58 @@ describe('createRuleFormSchema recording rule name validation', () => {
     const result = createRuleFormSchema().safeParse(baseValues({ name: '' }));
 
     expect(nameErrors(result)).toEqual(['Rule name is required']);
+  });
+});
+
+describe('createRuleFormSchema alerting rule template validation', () => {
+  const templateError = "This value has a '{{' or '}}' that doesn't have a match -- check the template syntax";
+
+  it('accepts balanced templates in labels and annotations', () => {
+    const result = createRuleFormSchema().safeParse(
+      baseValues({
+        type: RuleFormType.cloudAlerting,
+        name: 'HighErrorRate',
+        labels: [{ key: 'severity', value: '{{ $labels.severity }}' }],
+        annotations: [{ key: 'summary', value: '{{ $labels.instance }} is down' }],
+      })
+    );
+
+    expect(result.success).toBe(true);
+  });
+
+  it('flags an annotation value with an unclosed template', () => {
+    const result = createRuleFormSchema().safeParse(
+      baseValues({
+        type: RuleFormType.cloudAlerting,
+        name: 'HighErrorRate',
+        annotations: [{ key: 'summary', value: '{{ $labels.instance }} on {{ $labels.job' }],
+      })
+    );
+
+    expect(errorsAt(result, 'annotations.0.value')).toEqual([templateError]);
+  });
+
+  it('flags a label value with an unclosed template', () => {
+    const result = createRuleFormSchema().safeParse(
+      baseValues({
+        type: RuleFormType.cloudAlerting,
+        name: 'HighErrorRate',
+        labels: [{ key: 'severity', value: '{{ $labels.severity' }],
+      })
+    );
+
+    expect(errorsAt(result, 'labels.0.value')).toEqual([templateError]);
+  });
+
+  it('does not check template syntax for recording rules', () => {
+    const result = createRuleFormSchema().safeParse(
+      baseValues({
+        type: RuleFormType.cloudRecording,
+        name: 'my_recording_rule',
+        labels: [{ key: 'severity', value: '{{ unclosed' }],
+      })
+    );
+
+    expect(errorsAt(result, 'labels.0.value')).toEqual([]);
   });
 });
