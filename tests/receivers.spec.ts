@@ -61,6 +61,24 @@ alertmanager_config: |
           text: 'Before message body'
 `;
 
+const WEBEX_FULL_BEFORE_CONFIG = `template_files: {}
+alertmanager_config: |
+  route:
+    receiver: webex-full-update
+  receivers:
+    - name: webex-full-update
+      webex_configs:
+        - api_url: 'https://webexapis.com/v1/messages-before'
+          room_id: 'room-before'
+          message: 'Before Webex message'
+          http_config:
+            bearer_token: 'token-before'
+            proxy_url: 'http://proxy-before.example.com:8080'
+            tls_config:
+              server_name: 'webex-before.example.com'
+              insecure_skip_verify: true
+`;
+
 /**
  * Receivers e2e (`/receivers`).
  *
@@ -376,6 +394,78 @@ test.describe('Receivers', () => {
       await expect(receiversPage.getViewFieldValue('username')).toHaveText('after-bot');
       await expect(receiversPage.getViewFieldValue('title')).toHaveText('After title');
       await expect(receiversPage.getViewFieldValue('text')).toHaveText('After message body');
+    });
+
+    test('creates a Webex receiver with all supported fields and persists them', async ({ receiversPage }) => {
+      await receiversPage.openCreateDrawer();
+      await receiversPage.fillName('webex-full-options');
+      const webex = await receiversPage.selectWebexIntegration(0);
+      await webex.fill({
+        apiUrl: 'https://webexapis.com/v1/messages',
+        roomId: 'room-create',
+        message: 'Created Webex message',
+        authorizationType: 'Bearer',
+        authorizationCredentials: 'token-create',
+        authorizationCredentialsFile: '/var/run/secrets/token',
+        proxyUrl: 'http://proxy-create.example.com:8080',
+        tlsServerName: 'webex-create.example.com',
+        tlsSkipVerify: true,
+      });
+      await receiversPage.submitCreate();
+      await expect(receiversPage.drawer.getByText('Credentials cannot be used with Credentials file')).toBeVisible();
+
+      await webex.fill({ authorizationCredentialsFile: '', basicAuthUsername: 'conflicting-user' });
+      await receiversPage.submitCreate();
+      await expect(receiversPage.drawer.getByText('Credentials cannot be used with Username')).toBeVisible();
+
+      await webex.fill({ basicAuthUsername: '' });
+      await receiversPage.submitCreate();
+      await expect(receiversPage.getRow('webex-full-options')).toBeVisible();
+
+      await receiversPage.openReceiverByName('webex-full-options');
+      await expect(receiversPage.getViewFieldValue('api_url')).toHaveText('https://webexapis.com/v1/messages');
+      await expect(receiversPage.getViewFieldValue('room_id')).toHaveText('room-create');
+      await expect(receiversPage.getViewFieldValue('message')).toHaveText('Created Webex message');
+      await expect(receiversPage.getViewFieldValue('type')).toHaveText('Bearer');
+      await expect(receiversPage.getViewFieldValue('credentials')).toHaveText('token-create');
+      await expect(receiversPage.drawer.getByText('bearer_token', { exact: true })).toHaveCount(0);
+      await expect(receiversPage.getViewFieldValue('proxy_url')).toHaveText('http://proxy-create.example.com:8080');
+      await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('webex-create.example.com');
+      await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('Yes');
+    });
+
+    test('updates a Webex receiver with all supported fields', async ({ receiversPage, mimirAlertmanager }) => {
+      await mimirAlertmanager.seedConfig(WEBEX_FULL_BEFORE_CONFIG);
+      await receiversPage.gotoWithAlertmanager(mimirAlertmanager.uid);
+
+      await receiversPage.openReceiverByName('webex-full-update');
+      await receiversPage.startEdit();
+      const editWebex = await receiversPage.selectWebexIntegration(0);
+      await expect(editWebex.authorizationTypeInput).toHaveValue('Bearer');
+      await expect(editWebex.authorizationCredentialsInput).toHaveValue('token-before');
+      await editWebex.fill({
+        apiUrl: 'https://webexapis.com/v1/messages-after',
+        roomId: 'room-after',
+        message: 'After Webex message',
+        authorizationCredentials: 'token-after',
+        proxyUrl: 'http://proxy-after.example.com:9090',
+        tlsServerName: 'webex-after.example.com',
+        // Already checked in the seeded config — clicking again toggles it back off.
+        tlsSkipVerify: true,
+      });
+      await receiversPage.submitUpdate();
+      await expect(receiversPage.drawer).toBeHidden();
+
+      await receiversPage.openReceiverByName('webex-full-update');
+      await expect(receiversPage.getViewFieldValue('api_url')).toHaveText('https://webexapis.com/v1/messages-after');
+      await expect(receiversPage.getViewFieldValue('room_id')).toHaveText('room-after');
+      await expect(receiversPage.getViewFieldValue('message')).toHaveText('After Webex message');
+      await expect(receiversPage.getViewFieldValue('type')).toHaveText('Bearer');
+      await expect(receiversPage.getViewFieldValue('credentials')).toHaveText('token-after');
+      await expect(receiversPage.drawer.getByText('bearer_token', { exact: true })).toHaveCount(0);
+      await expect(receiversPage.getViewFieldValue('proxy_url')).toHaveText('http://proxy-after.example.com:9090');
+      await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('webex-after.example.com');
+      await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('No');
     });
 
     test('creates a receiver with two integrations', async ({ receiversPage }) => {

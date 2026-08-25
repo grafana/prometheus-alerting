@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { useForm, useFieldArray, Controller, useWatch, FormProvider } from 'react-hook-form';
+import { useForm, useFieldArray, Controller, useWatch, FormProvider, useFormContext } from 'react-hook-form';
 import { t, Trans } from '@grafana/i18n';
 import {
   Button,
@@ -285,7 +285,34 @@ interface OptionFieldProps {
 }
 
 function OptionField({ option, index, control, register, basePath }: OptionFieldProps) {
-  const fieldPath = `${basePath}.${option.propertyName}` as const;
+  const fieldPath = `${basePath}.${option.propertyName}` as `integrations.${number}.settings.${string}`;
+  const { formState, getFieldState, getValues } = useFormContext<ReceiverFormValues>();
+  const fieldError = getFieldState(fieldPath, formState).error?.message;
+  const requiredUnlessFieldPath: `integrations.${number}.settings.${string}` | undefined = option.requiredUnless
+    ? `integrations.${index}.settings.${option.requiredUnless.fieldPath}`
+    : undefined;
+  const mutuallyExclusiveFields = option.mutuallyExclusiveWith?.map(({ fieldPath: exclusivePath, label }) => ({
+    fieldPath: `integrations.${index}.settings.${exclusivePath}` as `integrations.${number}.settings.${string}`,
+    label,
+  }));
+  const validateField = (value: unknown) => {
+    const conflictingField = mutuallyExclusiveFields?.find(({ fieldPath: exclusivePath }) =>
+      hasValue(getValues(exclusivePath))
+    );
+    if (hasValue(value) && conflictingField) {
+      return t('receivers.form.fields-mutually-exclusive', '{{field}} cannot be used with {{otherField}}', {
+        field: option.label,
+        otherField: conflictingField.label,
+      });
+    }
+    if (!option.required || hasValue(value)) {
+      return true;
+    }
+    if (requiredUnlessFieldPath && hasValue(getValues(requiredUnlessFieldPath))) {
+      return true;
+    }
+    return t('receivers.form.field-required', 'This field is required');
+  };
 
   // Render subform fields (like http_config, tls_config) with a section header
   if (option.element === 'subform' || option.element === 'subform_array') {
@@ -316,9 +343,9 @@ function OptionField({ option, index, control, register, basePath }: OptionField
   // Checkbox field
   if (option.element === 'checkbox') {
     return (
-      <Field label={option.label} description={option.description}>
+      <Field label={option.label} description={option.description} invalid={Boolean(fieldError)} error={fieldError}>
         <Controller
-          name={fieldPath as `integrations.${number}.settings.${string}`}
+          name={fieldPath}
           control={control}
           render={({ field: { onChange, value } }) => (
             <Checkbox
@@ -336,9 +363,9 @@ function OptionField({ option, index, control, register, basePath }: OptionField
   if (option.element === 'select' && option.selectOptions) {
     const selectOptions = option.selectOptions;
     return (
-      <Field label={option.label} description={option.description}>
+      <Field label={option.label} description={option.description} invalid={Boolean(fieldError)} error={fieldError}>
         <Controller
-          name={fieldPath as `integrations.${number}.settings.${string}`}
+          name={fieldPath}
           control={control}
           render={({ field: { onChange, value } }) => (
             <Combobox
@@ -356,23 +383,24 @@ function OptionField({ option, index, control, register, basePath }: OptionField
   // Textarea field
   if (option.element === 'textarea') {
     return (
-      <Field label={option.label} description={option.description}>
-        <TextArea
-          {...register(fieldPath as `integrations.${number}.settings.${string}`)}
-          placeholder={option.placeholder}
-          rows={3}
-          aria-label={option.label}
-        />
+      <Field label={option.label} description={option.description} invalid={Boolean(fieldError)} error={fieldError}>
+        <TextArea {...register(fieldPath)} placeholder={option.placeholder} rows={3} aria-label={option.label} />
       </Field>
     );
   }
 
   // Default: Input field
   return (
-    <Field label={option.label} description={option.description} required={option.required}>
+    <Field
+      label={option.label}
+      description={option.description}
+      required={option.required}
+      invalid={Boolean(fieldError)}
+      error={fieldError}
+    >
       <Input
-        {...register(fieldPath as `integrations.${number}.settings.${string}`, {
-          required: option.required ? t('receivers.form.field-required', 'This field is required') : false,
+        {...register(fieldPath, {
+          validate: validateField,
           setValueAs: option.setValueAs,
         })}
         type={option.inputType ?? 'text'}
@@ -381,4 +409,8 @@ function OptionField({ option, index, control, register, basePath }: OptionField
       />
     </Field>
   );
+}
+
+function hasValue(value: unknown): boolean {
+  return value !== undefined && value !== null && value !== '';
 }

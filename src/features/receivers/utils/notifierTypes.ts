@@ -19,6 +19,9 @@ export interface NotificationChannelOption {
   inputType?: string;
   placeholder?: string;
   required?: boolean;
+  /** Field path whose non-empty value makes this field optional. */
+  requiredUnless?: { fieldPath: string };
+  mutuallyExclusiveWith?: Array<{ fieldPath: string; label: string }>;
   validationRule?: string;
   defaultValue?: unknown;
   selectOptions?: Array<{ label: string; value: string }>;
@@ -49,13 +52,33 @@ function option(
   };
 }
 
+const authorizationTypePlaceholder = 'Bearer';
+const credentialsLabel = 'Credentials';
+const credentialsFileLabel = 'Credentials file';
+const usernameLabel = 'Username';
+const passwordLabel = 'Password';
+
+// Alertmanager makes HTTP authorization and basic auth mutually exclusive for every integration.
+const authorizationFields = [
+  { fieldPath: 'http_config.authorization.credentials', label: credentialsLabel },
+  { fieldPath: 'http_config.authorization.credentials_file', label: credentialsFileLabel },
+];
+
+const basicAuthFields = [
+  { fieldPath: 'http_config.basic_auth.username', label: usernameLabel },
+  { fieldPath: 'http_config.basic_auth.password', label: passwordLabel },
+];
+
 const basicAuthOption: NotificationChannelOption = option(
   'basic_auth',
   'Basic auth',
   'Sets the Authorization header with the configured username and password.',
   {
     element: 'subform',
-    subformOptions: [option('username', 'Username', ''), option('password', 'Password', '')],
+    subformOptions: [
+      option('username', 'Username', '', { mutuallyExclusiveWith: authorizationFields }),
+      option('password', 'Password', '', { mutuallyExclusiveWith: authorizationFields }),
+    ],
   }
 );
 
@@ -72,20 +95,51 @@ const tlsConfigOption: NotificationChannelOption = option('tls_config', 'TLS con
   ],
 });
 
-const httpConfigOption: NotificationChannelOption = option(
-  'http_config',
-  'HTTP Config',
-  'Note that basic_auth and bearer_token options are mutually exclusive.',
-  {
+function createAuthorizationOption(credentialsRequired = false): NotificationChannelOption {
+  return option('authorization', 'Authorization', 'Configures HTTP authorization credentials.', {
     element: 'subform',
     subformOptions: [
-      option('bearer_token', 'Bearer token', 'Sets the Authorization header with the configured bearer token.'),
-      option('proxy_url', 'Proxy URL', 'Optional proxy URL.'),
-      basicAuthOption,
-      tlsConfigOption,
+      option('type', 'Authorization type', 'HTTP authorization scheme.', { placeholder: authorizationTypePlaceholder }),
+      option('credentials', 'Credentials', 'Authorization credentials.', {
+        required: credentialsRequired,
+        requiredUnless: credentialsRequired ? { fieldPath: 'http_config.authorization.credentials_file' } : undefined,
+        mutuallyExclusiveWith: [
+          { fieldPath: 'http_config.authorization.credentials_file', label: credentialsFileLabel },
+          ...basicAuthFields,
+        ],
+      }),
+      option('credentials_file', 'Credentials file', 'Path to a file containing authorization credentials.', {
+        mutuallyExclusiveWith: [
+          { fieldPath: 'http_config.authorization.credentials', label: credentialsLabel },
+          ...basicAuthFields,
+        ],
+      }),
     ],
-  }
-);
+  });
+}
+
+interface HttpConfigOptionOptions {
+  authorizationCredentialsRequired?: boolean;
+}
+
+function createHttpConfigOption({ authorizationCredentialsRequired = false }: HttpConfigOptionOptions = {}) {
+  return option(
+    'http_config',
+    'HTTP Config',
+    'Note that authorization, basic_auth, and oauth2 options are mutually exclusive.',
+    {
+      element: 'subform',
+      subformOptions: [
+        createAuthorizationOption(authorizationCredentialsRequired),
+        option('proxy_url', 'Proxy URL', 'Optional proxy URL.'),
+        basicAuthOption,
+        tlsConfigOption,
+      ],
+    }
+  );
+}
+
+const httpConfigOption = createHttpConfigOption();
 
 /**
  * All available notifier types for cloud/mimir alertmanager.
@@ -337,7 +391,7 @@ export const cloudNotifierTypes: NotifierDTO[] = [
       option('api_url', 'API URL', 'The Webex Teams API URL', { placeholder: 'https://webexapis.com/v1/messages' }),
       option('room_id', 'Room ID', 'ID of the Webex Teams room where to send the messages', { required: true }),
       option('message', 'Message', 'Message template', { placeholder: '{{ template "webex.default.message" .}}' }),
-      httpConfigOption,
+      createHttpConfigOption({ authorizationCredentialsRequired: true }),
     ],
   },
   {
