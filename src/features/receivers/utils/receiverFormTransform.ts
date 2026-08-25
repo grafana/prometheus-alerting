@@ -73,7 +73,7 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
           __id: generateId(),
           type,
           sendResolved: send_resolved !== false, // default to true
-          settings,
+          settings: normalizeLegacyBearerToken(settings),
         });
       }
     }
@@ -120,14 +120,15 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
     // Add settings, filtering out empty values
     for (const [key, value] of Object.entries(integration.settings)) {
       if (value !== '' && value !== null && value !== undefined) {
+        const normalizedValue = key === 'http_config' && isRecord(value) ? normalizeLegacyBearerToken(value) : value;
         // Handle nested objects (like http_config)
-        if (typeof value === 'object' && !Array.isArray(value)) {
-          const cleanedNested = cleanEmptyValues(value as Record<string, unknown>);
+        if (isRecord(normalizedValue)) {
+          const cleanedNested = cleanEmptyValues(normalizedValue);
           if (Object.keys(cleanedNested).length > 0) {
             config[key] = cleanedNested;
           }
         } else {
-          config[key] = value;
+          config[key] = normalizedValue;
         }
       }
     }
@@ -150,8 +151,16 @@ function cleanEmptyValues(obj: Record<string, unknown>): Record<string, unknown>
       continue;
     }
 
-    if (typeof value === 'object' && !Array.isArray(value)) {
-      const cleanedNested = cleanEmptyValues(value as Record<string, unknown>);
+    if (key === 'authorization' && isRecord(value)) {
+      const cleanedAuthorization = cleanEmptyValues(value);
+      if (hasAuthorizationCredentials(cleanedAuthorization)) {
+        cleaned[key] = cleanedAuthorization;
+      }
+      continue;
+    }
+
+    if (isRecord(value)) {
+      const cleanedNested = cleanEmptyValues(value);
       if (Object.keys(cleanedNested).length > 0) {
         cleaned[key] = cleanedNested;
       }
@@ -161,6 +170,52 @@ function cleanEmptyValues(obj: Record<string, unknown>): Record<string, unknown>
   }
 
   return cleaned;
+}
+
+function normalizeLegacyBearerToken(settings: Record<string, unknown>): Record<string, unknown> {
+  const httpConfig = settings.http_config;
+  if (!isRecord(httpConfig)) {
+    return { ...settings };
+  }
+
+  const { bearer_token, bearer_token_file, authorization, ...otherHttpConfig } = httpConfig;
+  const normalizedAuthorization =
+    authorization ?? createAuthorizationFromLegacyBearerToken(bearer_token, bearer_token_file);
+  const normalizedHttpConfig = { ...otherHttpConfig };
+
+  if (normalizedAuthorization !== undefined) {
+    normalizedHttpConfig.authorization = normalizedAuthorization;
+  }
+
+  return {
+    ...settings,
+    http_config: normalizedHttpConfig,
+  };
+}
+
+function createAuthorizationFromLegacyBearerToken(
+  bearerToken: unknown,
+  bearerTokenFile: unknown
+): Record<string, string> | undefined {
+  if (hasValue(bearerToken)) {
+    return { type: 'Bearer', credentials: bearerToken };
+  }
+  if (hasValue(bearerTokenFile)) {
+    return { type: 'Bearer', credentials_file: bearerTokenFile };
+  }
+  return undefined;
+}
+
+function hasAuthorizationCredentials(authorization: Record<string, unknown>): boolean {
+  return hasValue(authorization.credentials) || hasValue(authorization.credentials_file);
+}
+
+function hasValue(value: unknown): value is string {
+  return typeof value === 'string' && value !== '';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -178,29 +233,33 @@ export function createDefaultReceiverFormValues(): ReceiverFormValues {
  */
 export function createDefaultIntegration(type: string): IntegrationFormValues {
   const notifier = cloudNotifierTypes.find((n) => n.type === type);
-  const settings: Record<string, unknown> = {};
-
-  // Set default values from notifier options
-  if (notifier) {
-    for (const option of notifier.options) {
-      if (option.defaultValue !== undefined) {
-        const defaultVal = option.defaultValue;
-        // Handle select default values which are objects
-        if (typeof defaultVal === 'object' && defaultVal !== null && 'value' in defaultVal) {
-          settings[option.propertyName] = (defaultVal as { value: unknown }).value;
-        } else {
-          settings[option.propertyName] = defaultVal;
-        }
-      }
-    }
-  }
 
   return {
     __id: generateId(),
     type,
     sendResolved: true,
-    settings,
+    settings: notifier ? createDefaultSettings(notifier.options) : {},
   };
+}
+
+function createDefaultSettings(options: NotifierDTO['options']): Record<string, unknown> {
+  const settings: Record<string, unknown> = {};
+
+  for (const option of options) {
+    if (option.element === 'subform' && option.subformOptions) {
+      const nestedSettings = createDefaultSettings(option.subformOptions);
+      if (Object.keys(nestedSettings).length > 0) {
+        settings[option.propertyName] = nestedSettings;
+      }
+      continue;
+    }
+
+    if (option.defaultValue !== undefined) {
+      settings[option.propertyName] = option.defaultValue;
+    }
+  }
+
+  return settings;
 }
 
 /**

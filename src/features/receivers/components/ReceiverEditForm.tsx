@@ -1,5 +1,13 @@
 import React, { useCallback, useMemo } from 'react';
-import { useForm, useFieldArray, Controller, useWatch, FormProvider } from 'react-hook-form';
+import {
+  useForm,
+  useFieldArray,
+  Controller,
+  useWatch,
+  FormProvider,
+  useFormContext,
+  UseFormGetValues,
+} from 'react-hook-form';
 import { t, Trans } from '@grafana/i18n';
 import {
   Button,
@@ -276,16 +284,56 @@ function IntegrationFields({ notifier, index, control, register }: IntegrationFi
   );
 }
 
+type IntegrationSettingsPath = `integrations.${number}.settings` | `integrations.${number}.settings.${string}`;
+type IntegrationSettingsFieldPath = `integrations.${number}.settings.${string}`;
+
+function appendFieldPath(basePath: IntegrationSettingsPath, propertyName: string): IntegrationSettingsFieldPath {
+  return `${basePath}.${propertyName}`;
+}
+
+function getSettingsFieldPath(index: number, fieldPath: string): IntegrationSettingsFieldPath {
+  return `integrations.${index}.settings.${fieldPath}`;
+}
+
+function validateOptionField(
+  value: unknown,
+  option: NotificationChannelOption,
+  index: number,
+  getValues: UseFormGetValues<ReceiverFormValues>
+): true | string {
+  const getSettingValue = (fieldPath: string) => getValues(getSettingsFieldPath(index, fieldPath));
+  const fieldHasValue = hasValue(value);
+  const conflictingField = fieldHasValue
+    ? option.mutuallyExclusiveWith?.find(({ fieldPath }) => hasValue(getSettingValue(fieldPath)))
+    : undefined;
+
+  if (conflictingField) {
+    return t('receivers.form.fields-mutually-exclusive', '{{field}} cannot be used with {{otherField}}', {
+      field: option.label,
+      otherField: conflictingField.label,
+    });
+  }
+
+  const alternativeFieldHasValue = option.requiredUnless
+    ? hasValue(getSettingValue(option.requiredUnless.fieldPath))
+    : false;
+  const requiredFieldIsMissing = option.required && !fieldHasValue && !alternativeFieldHasValue;
+
+  return requiredFieldIsMissing ? t('receivers.form.field-required', 'This field is required') : true;
+}
+
 interface OptionFieldProps {
   option: NotificationChannelOption;
   index: number;
   control: ReturnType<typeof useForm<ReceiverFormValues>>['control'];
   register: ReturnType<typeof useForm<ReceiverFormValues>>['register'];
-  basePath: string;
+  basePath: IntegrationSettingsPath;
 }
 
 function OptionField({ option, index, control, register, basePath }: OptionFieldProps) {
-  const fieldPath = `${basePath}.${option.propertyName}` as const;
+  const fieldPath = appendFieldPath(basePath, option.propertyName);
+  const { formState, getFieldState, getValues } = useFormContext<ReceiverFormValues>();
+  const fieldError = getFieldState(fieldPath, formState).error?.message;
 
   // Render subform fields (like http_config, tls_config) with a section header
   if (option.element === 'subform' || option.element === 'subform_array') {
@@ -303,7 +351,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
                 index={index}
                 control={control}
                 register={register}
-                basePath={`${basePath}.${option.propertyName}`}
+                basePath={fieldPath}
               />
             ))}
           </Stack>
@@ -316,9 +364,9 @@ function OptionField({ option, index, control, register, basePath }: OptionField
   // Checkbox field
   if (option.element === 'checkbox') {
     return (
-      <Field label={option.label} description={option.description}>
+      <Field label={option.label} description={option.description} invalid={Boolean(fieldError)} error={fieldError}>
         <Controller
-          name={fieldPath as `integrations.${number}.settings.${string}`}
+          name={fieldPath}
           control={control}
           render={({ field: { onChange, value } }) => (
             <Checkbox
@@ -336,9 +384,9 @@ function OptionField({ option, index, control, register, basePath }: OptionField
   if (option.element === 'select' && option.selectOptions) {
     const selectOptions = option.selectOptions;
     return (
-      <Field label={option.label} description={option.description}>
+      <Field label={option.label} description={option.description} invalid={Boolean(fieldError)} error={fieldError}>
         <Controller
-          name={fieldPath as `integrations.${number}.settings.${string}`}
+          name={fieldPath}
           control={control}
           render={({ field: { onChange, value } }) => (
             <Combobox
@@ -356,23 +404,24 @@ function OptionField({ option, index, control, register, basePath }: OptionField
   // Textarea field
   if (option.element === 'textarea') {
     return (
-      <Field label={option.label} description={option.description}>
-        <TextArea
-          {...register(fieldPath as `integrations.${number}.settings.${string}`)}
-          placeholder={option.placeholder}
-          rows={3}
-          aria-label={option.label}
-        />
+      <Field label={option.label} description={option.description} invalid={Boolean(fieldError)} error={fieldError}>
+        <TextArea {...register(fieldPath)} placeholder={option.placeholder} rows={3} aria-label={option.label} />
       </Field>
     );
   }
 
   // Default: Input field
   return (
-    <Field label={option.label} description={option.description} required={option.required}>
+    <Field
+      label={option.label}
+      description={option.description}
+      required={option.required}
+      invalid={Boolean(fieldError)}
+      error={fieldError}
+    >
       <Input
-        {...register(fieldPath as `integrations.${number}.settings.${string}`, {
-          required: option.required ? t('receivers.form.field-required', 'This field is required') : false,
+        {...register(fieldPath, {
+          validate: (value) => validateOptionField(value, option, index, getValues),
           setValueAs: option.setValueAs,
         })}
         type={option.inputType ?? 'text'}
@@ -381,4 +430,8 @@ function OptionField({ option, index, control, register, basePath }: OptionField
       />
     </Field>
   );
+}
+
+function hasValue(value: unknown): boolean {
+  return value !== undefined && value !== null && value !== '';
 }
