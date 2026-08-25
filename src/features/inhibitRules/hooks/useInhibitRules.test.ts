@@ -5,7 +5,11 @@ import { http, HttpResponse } from 'msw';
 import { YamlToParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 
 import { server } from '../../../test/server';
-import { createMockDataSourceSrv, setCurrentUserPermissions } from '../../../test/mocks/grafana-runtime';
+import {
+  createMockDataSourceSrv,
+  setCurrentUserPermissions,
+  setMockGrafanaDataSources,
+} from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 import { basicConfig, configWithInhibitRules } from '../../../test/fixtures/alertmanager-config';
 import { setVanillaAlertmanagerConfig } from '../../../test/handlers/alertmanager';
@@ -26,6 +30,7 @@ import { useAlertmanager } from '../../../hooks/useAlertmanager';
 
 beforeEach(() => {
   setDataSourceSrv(createMockDataSourceSrv());
+  setMockGrafanaDataSources();
   setCurrentUserPermissions(AlertingPermission.NotificationsWrite);
 });
 
