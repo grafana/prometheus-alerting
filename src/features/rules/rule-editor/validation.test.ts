@@ -97,11 +97,11 @@ describe('createRuleFormSchema recording rule name validation', () => {
     ]);
   });
 
-  it('flags braces separately, since that usually means a PromQL selector ended up in the name', () => {
+  it('rejects a name with braces, e.g. a PromQL selector pasted in by mistake', () => {
     const result = createRuleFormSchema().safeParse(baseValues({ name: 'errors_total{job="api"}' }));
 
     expect(nameErrors(result)).toEqual([
-      "Recording rule names can't contain braces -- did you mean to put this in the expression instead?",
+      "Recording rule names can only contain letters, numbers, underscores and colons, and can't start with a number",
     ]);
   });
 

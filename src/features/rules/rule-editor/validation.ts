@@ -25,18 +25,6 @@ export function createRuleFormSchema() {
       return;
     }
 
-    if (values.name.includes('{') || values.name.includes('}')) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['name'],
-        message: t(
-          'alerting.rule-form.validation.name-braces',
-          "Recording rule names can't contain braces -- did you mean to put this in the expression instead?"
-        ),
-      });
-      return;
-    }
-
     if (!METRIC_NAME_PATTERN.test(values.name)) {
       ctx.addIssue({
         code: 'custom',
