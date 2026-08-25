@@ -25,7 +25,6 @@ import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
 const { useGetRuleGroupQuery, useDeleteRuleGroupMutation, useUpsertRuleGroupMutation } = rulerApi;
 import { useReturnTo } from '../../../hooks/useReturnTo';
-import { extractErrorMessage } from '../../../utils/errors';
 import { groups } from '../../../utils/navigation';
 import { AlertingAction, isAbilityAllowed, useScopedAbilities } from '../../../access-control/abilities';
 
@@ -170,7 +169,8 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
 
   const [swapOperations, setSwapOperations] = useState<SwapOperation[]>([]);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  // The last failure, kept raw so the alert can decide how to present it
+  const [submitError, setSubmitError] = useState<unknown>(null);
   const [isWaitingForConsistency, setIsWaitingForConsistency] = useState(false);
 
   const defaultInterval = rulerGroup.interval ?? '1m';
@@ -259,7 +259,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
       }
     } catch (error) {
       setIsWaitingForConsistency(false);
-      setSubmitError(extractErrorMessage(error));
+      setSubmitError(error);
     }
   };
 
@@ -294,7 +294,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
       locationService.push(`${PLUGIN_BASE_URL}/${ROUTES.Rules}`);
     } catch (error) {
       setIsWaitingForConsistency(false);
-      setSubmitError(error instanceof Error ? error.message : String(error));
+      setSubmitError(error);
     }
   };
 
@@ -303,10 +303,11 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)}>
-        {submitError && (
-          <Alert severity="error" title={t('alerting.group-edit.submit-error', 'Failed to save changes')}>
-            {submitError}
-          </Alert>
+        {submitError !== null && (
+          <RulesErrorAlert
+            error={submitError}
+            title={t('alerting.group-edit.submit-error', 'Failed to save changes')}
+          />
         )}
 
         <Field

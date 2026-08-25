@@ -1,6 +1,6 @@
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { SerializedError } from '@reduxjs/toolkit';
-import { isForbiddenError, isNotFoundError, stringifyFetchError } from './errors';
+import { extractErrorMessage, isForbiddenError, isNotFoundError, stringifyFetchError, toRtkQueryError } from './errors';
 
 describe('stringifyFetchError', () => {
   describe('FetchBaseQueryError with numeric status', () => {
@@ -132,5 +132,18 @@ describe('isForbiddenError', () => {
 
   it('returns false for errors that are not forbidden', () => {
     expect(isForbiddenError({ status: 500 })).toBe(false);
+  });
+});
+
+describe('toRtkQueryError', () => {
+  it('keeps the status and the plain text body of a ruler rejection', () => {
+    // Mimir rejects an invalid rule group with a text/plain body, not JSON.
+    const body = '10:13: group "group-3", rule 1, "sdsdsds-1": invalid recording rule name: sdsdsds-1';
+
+    const error = toRtkQueryError({ status: 400, statusText: 'Bad Request', data: body, config: { url: '/x' } });
+
+    expect(error).toEqual({ status: 400, data: body });
+    // Without this the form used to fall back to `String(error)` and show "[object Object]".
+    expect(extractErrorMessage(error)).toBe(body);
   });
 });
