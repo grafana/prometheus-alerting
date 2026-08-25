@@ -1,0 +1,6 @@
+{{ define "alert.title" }}[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ end }}
+
+{{ define "alert.summary" }}
+{{ range .Alerts }}- {{ .Annotations.summary }}
+{{ end }}
+{{ end }}
