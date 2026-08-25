@@ -62,3 +62,21 @@ datasources:
       manageAlerts: true
       maxLines: 1000
     version: 1
+
+  # Mimir Alertmanager - for testing Alertmanager configuration CRUD
+  # The tenant's config is seeded by the mimir-alertmanager-provisioner container
+  # (see test-data/mimir/provision-alertmanager.mjs).
+  - name: Test Mimir Alertmanager
+    type: alertmanager
+    uid: test-mimir-alertmanager
+    url: http://mimir:9009
+    access: proxy
+    isDefault: false
+    editable: true
+    jsonData:
+      implementation: mimir
+      handleGrafanaManagedAlerts: false
+      httpHeaderName1: X-Scope-OrgID
+    secureJsonData:
+      httpHeaderValue1: anonymous
+    version: 1
