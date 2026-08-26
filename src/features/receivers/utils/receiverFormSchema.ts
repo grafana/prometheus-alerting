@@ -7,6 +7,7 @@ import { createPagerDutyIntegrationFormSchema } from '../integrations/pagerduty/
 import { createSNSIntegrationFormSchema } from '../integrations/sns/sns.schema';
 import { createEmailIntegrationFormSchema } from '../integrations/email/email.schema';
 import { createSlackIntegrationFormSchema } from '../integrations/slack/slack.schema';
+import { createOpsgenieIntegrationFormSchema } from '../integrations/opsgenie/opsgenie.schema';
 import { LEGACY_INTEGRATION_TYPES } from './cloudIntegrationTypes';
 
 const LegacyIntegrationFormSchema = z.object({
@@ -28,6 +29,7 @@ export function createReceiverFormSchema() {
         createSNSIntegrationFormSchema(),
         createEmailIntegrationFormSchema(),
         createSlackIntegrationFormSchema(),
+        createOpsgenieIntegrationFormSchema(),
         LegacyIntegrationFormSchema,
       ])
     ),

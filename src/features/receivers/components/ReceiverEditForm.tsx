@@ -43,6 +43,8 @@ import { EmailIntegrationForm } from '../integrations/email/EmailIntegrationForm
 
 import { SlackIntegrationForm } from '../integrations/slack/SlackIntegrationForm';
 
+import { OpsgenieIntegrationForm } from '../integrations/opsgenie/OpsgenieIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -277,6 +279,8 @@ function IntegrationEditor({
           <EmailIntegrationForm index={index} />
         ) : integrationType === 'slack' ? (
           <SlackIntegrationForm index={index} />
+        ) : integrationType === 'opsgenie' ? (
+          <OpsgenieIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}

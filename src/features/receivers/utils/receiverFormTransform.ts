@@ -8,6 +8,7 @@ import {
   SNSConfigSchema,
   EmailConfigSchema,
   SlackConfigSchema,
+  OpsGenieConfigSchema,
   type Receiver,
 } from '@grafana/external-alertmanager/vanilla';
 import {
@@ -40,6 +41,11 @@ import {
   slackConfigToFormSettings,
   slackFormSettingsToConfig,
 } from '../integrations/slack/slack.mapper';
+import {
+  createDefaultOpsgenieSettings,
+  opsgenieConfigToFormSettings,
+  opsgenieFormSettingsToConfig,
+} from '../integrations/opsgenie/opsgenie.mapper';
 import { cloudNotifierTypes, NotifierDTO } from './notifierTypes';
 import { CLOUD_INTEGRATION_TYPES, CloudIntegrationType, INTEGRATION_TYPE_MAP } from './cloudIntegrationTypes';
 import type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
@@ -140,6 +146,17 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
           continue;
         }
 
+        if (type === 'opsgenie') {
+          const typedConfig = OpsGenieConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: typedConfig.send_resolved !== false,
+            settings: opsgenieConfigToFormSettings(typedConfig),
+          });
+          continue;
+        }
+
         const { send_resolved, ...settings } = config;
         integrations.push({
           __id: id,
@@ -227,6 +244,15 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
 
     if (integration.type === 'slack') {
       const typedConfig = slackFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...typedConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+
+    if (integration.type === 'opsgenie') {
+      const typedConfig = opsgenieFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
         ...typedConfig,
         send_resolved: integration.sendResolved,
@@ -350,6 +376,15 @@ export function createDefaultIntegration(type: CloudIntegrationType): Integratio
       type,
       sendResolved: true,
       settings: createDefaultSlackSettings(),
+    };
+  }
+
+  if (type === 'opsgenie') {
+    return {
+      __id: generateId(),
+      type,
+      sendResolved: true,
+      settings: createDefaultOpsgenieSettings(),
     };
   }
 
