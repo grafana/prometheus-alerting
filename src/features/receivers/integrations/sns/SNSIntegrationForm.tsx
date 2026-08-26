@@ -14,13 +14,13 @@ export function SNSIntegrationForm({ index }: SNSIntegrationFormProps) {
   const { register } = useFormContext<ReceiverFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
-    <Stack direction="column" gap={3}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.sns-settings">Amazon SNS settings</Trans>
       </Text>
       <SNSField register={register} name={`${path}.api_url`} label={t('receivers.form.sns-api-url', 'API URL')} />
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.sns-sigv4">SigV4 authentication</Trans>
           </Text>
@@ -73,7 +73,7 @@ export function SNSIntegrationForm({ index }: SNSIntegrationFormProps) {
         label={t('receivers.form.sns-subject', 'Subject')}
         placeholder={t('receivers.form.sns-subject-placeholder', '{{ template "sns.default.subject" . }}')}
       />
-      <Field label={t('receivers.form.sns-message', 'Message')}>
+      <Field noMargin label={t('receivers.form.sns-message', 'Message')}>
         <TextArea
           {...register(`${path}.message`)}
           rows={4}
@@ -83,7 +83,7 @@ export function SNSIntegrationForm({ index }: SNSIntegrationFormProps) {
       </Field>
       <SNSKeyValueMap name={`${path}.attributes`} label={t('receivers.form.sns-attributes', 'Attributes')} />
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.sns-http-config">HTTP configuration</Trans>
           </Text>
@@ -174,7 +174,7 @@ function SNSField({
   const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
   const fieldError = getFieldState(name, formState).error?.message;
   return (
-    <Field label={label} invalid={Boolean(fieldError)} error={fieldError}>
+    <Field noMargin label={label} invalid={Boolean(fieldError)} error={fieldError}>
       <Input {...register(name)} type={type} placeholder={placeholder} aria-label={label} />
     </Field>
   );
@@ -190,7 +190,7 @@ function SNSCheckbox({
 }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}
@@ -208,7 +208,7 @@ function SNSCheckbox({
 function SNSKeyValueMap({ name, label }: { name: SNSFieldPath; label: string }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}

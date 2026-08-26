@@ -93,9 +93,10 @@ export function ReceiverEditForm({
   return (
     <FormProvider {...formAPI}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack direction="column" gap={3}>
+        <Stack direction="column" gap={1}>
           {/* Receiver Name */}
           <Field
+            noMargin
             label={t('receivers.form.name', 'Name')}
             invalid={Boolean(errors.name)}
             error={errors.name?.message}
@@ -206,10 +207,14 @@ function IntegrationEditor({
   );
 
   return (
-    <Stack direction="column" gap={2}>
+    <Stack direction="column" gap={1}>
       {/* Header with type selector and remove button */}
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-        <Field label={t('receivers.form.integration-type', 'Integration type')} style={{ flex: 1, marginRight: 16 }}>
+        <Field
+          noMargin
+          label={t('receivers.form.integration-type', 'Integration type')}
+          style={{ flex: 1, marginRight: 16 }}
+        >
           <Controller
             name={`integrations.${index}.type`}
             control={control}
@@ -241,6 +246,7 @@ function IntegrationEditor({
 
       {/* Send resolved toggle */}
       <Field
+        noMargin
         label={t('receivers.form.send-resolved', 'Send resolved')}
         description={t('receivers.form.send-resolved-description', 'Send notifications when alerts are resolved')}
       >

@@ -8,7 +8,7 @@ export function MSTeamsIntegrationForm({ index }: { index: number }) {
   const { register } = useFormContext<ReceiverFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
-    <Stack direction="column" gap={3}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.msteams-settings">Microsoft Teams settings</Trans>
       </Text>
@@ -20,11 +20,11 @@ export function MSTeamsIntegrationForm({ index }: { index: number }) {
       />
       <InputField register={register} name={`${path}.title`} label={t('receivers.form.msteams-title', 'Title')} />
       <InputField register={register} name={`${path}.summary`} label={t('receivers.form.msteams-summary', 'Summary')} />
-      <Field label={t('receivers.form.msteams-text', 'Text')}>
+      <Field noMargin label={t('receivers.form.msteams-text', 'Text')}>
         <TextArea {...register(`${path}.text`)} rows={4} aria-label={t('receivers.form.msteams-text', 'Text')} />
       </Field>
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.msteams-http-config">HTTP configuration</Trans>
           </Text>
@@ -112,7 +112,7 @@ function InputField({
   const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
-    <Field label={label} invalid={Boolean(error)} error={error}>
+    <Field noMargin label={label} invalid={Boolean(error)} error={error}>
       <Input {...register(name)} type={type} aria-label={label} />
     </Field>
   );
@@ -120,7 +120,7 @@ function InputField({
 function Check({ name, label, defaultChecked = false }: { name: Path; label: string; defaultChecked?: boolean }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}

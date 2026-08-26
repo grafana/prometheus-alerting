@@ -11,7 +11,7 @@ export function VictorOpsIntegrationForm({ index }: VictorOpsIntegrationFormProp
   const { register } = useFormContext<ReceiverFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
-    <Stack direction="column" gap={3}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.victorops-settings">VictorOps settings</Trans>
       </Text>
@@ -41,7 +41,7 @@ export function VictorOpsIntegrationForm({ index }: VictorOpsIntegrationFormProp
         name={`${path}.entity_display_name`}
         label={t('receivers.form.victorops-entity-display-name', 'Entity display name')}
       />
-      <Field label={t('receivers.form.victorops-state-message', 'State message')}>
+      <Field noMargin label={t('receivers.form.victorops-state-message', 'State message')}>
         <TextArea
           {...register(`${path}.state_message`)}
           rows={3}
@@ -54,7 +54,7 @@ export function VictorOpsIntegrationForm({ index }: VictorOpsIntegrationFormProp
         label={t('receivers.form.victorops-monitoring-tool', 'Monitoring tool')}
       />
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.victorops-http-config">HTTP configuration</Trans>
           </Text>
@@ -142,7 +142,7 @@ function VictorOpsField({
   const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
-    <Field label={label} invalid={Boolean(error)} error={error}>
+    <Field noMargin label={label} invalid={Boolean(error)} error={error}>
       <Input {...register(name)} type={type} aria-label={label} />
     </Field>
   );
@@ -158,7 +158,7 @@ function VictorOpsCheckbox({
 }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}

@@ -11,7 +11,7 @@ export function TelegramIntegrationForm({ index }: TelegramIntegrationFormProps)
   const { register, control } = useFormContext<ReceiverFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
-    <Stack direction="column" gap={3}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.telegram-settings">Telegram settings</Trans>
       </Text>
@@ -32,7 +32,7 @@ export function TelegramIntegrationForm({ index }: TelegramIntegrationFormProps)
         label={t('receivers.form.telegram-chat-id', 'Chat ID')}
         inputMode="numeric"
       />
-      <Field label={t('receivers.form.telegram-message', 'Message')}>
+      <Field noMargin label={t('receivers.form.telegram-message', 'Message')}>
         <TextArea
           {...register(`${path}.message`)}
           rows={4}
@@ -43,7 +43,7 @@ export function TelegramIntegrationForm({ index }: TelegramIntegrationFormProps)
         name={`${path}.disable_notifications`}
         label={t('receivers.form.telegram-disable-notifications', 'Disable notifications')}
       />
-      <Field label={t('receivers.form.telegram-parse-mode', 'Parse mode')}>
+      <Field noMargin label={t('receivers.form.telegram-parse-mode', 'Parse mode')}>
         <Controller
           name={`${path}.parse_mode`}
           control={control}
@@ -63,7 +63,7 @@ export function TelegramIntegrationForm({ index }: TelegramIntegrationFormProps)
         />
       </Field>
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.telegram-http-config">HTTP configuration</Trans>
           </Text>
@@ -153,7 +153,7 @@ function TelegramField({
   const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
-    <Field label={label} invalid={Boolean(error)} error={error}>
+    <Field noMargin label={label} invalid={Boolean(error)} error={error}>
       <Input {...register(name)} type={type} inputMode={inputMode} aria-label={label} />
     </Field>
   );
@@ -169,7 +169,7 @@ function TelegramCheckbox({
 }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}

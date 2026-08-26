@@ -17,7 +17,7 @@ export function PagerDutyIntegrationForm({ index }: PagerDutyIntegrationFormProp
   const path = `integrations.${index}.settings` satisfies PagerDutySettingsPath;
 
   return (
-    <Stack direction="column" gap={3}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.pagerduty-settings">PagerDuty settings</Trans>
       </Text>
@@ -49,7 +49,7 @@ export function PagerDutyIntegrationForm({ index }: PagerDutyIntegrationFormProp
           '{{ template "pagerduty.default.clientURL" . }}'
         )}
       />
-      <Field label={t('receivers.form.pagerduty-description', 'Description')}>
+      <Field noMargin label={t('receivers.form.pagerduty-description', 'Description')}>
         <TextArea
           {...register(`${path}.description`)}
           rows={3}
@@ -99,7 +99,7 @@ export function PagerDutyIntegrationForm({ index }: PagerDutyIntegrationFormProp
       />
 
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.pagerduty-http-config">HTTP configuration</Trans>
           </Text>
@@ -191,7 +191,7 @@ function PagerDutyField({
   const fieldError = getFieldState(name, formState).error?.message;
 
   return (
-    <Field label={label} invalid={Boolean(fieldError)} error={fieldError}>
+    <Field noMargin label={label} invalid={Boolean(fieldError)} error={fieldError}>
       <Input {...register(name)} type={type} placeholder={placeholder} aria-label={label} />
     </Field>
   );
@@ -208,7 +208,7 @@ function PagerDutyCheckbox({
 }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}
@@ -227,7 +227,7 @@ function PagerDutyCheckbox({
 function PagerDutyKeyValueMap({ name, label }: { name: PagerDutyFieldPath; label: string }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}
@@ -281,7 +281,7 @@ function PagerDutyObjectArray({
 }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}

@@ -14,7 +14,7 @@ export function SlackIntegrationForm({ index }: SlackIntegrationFormProps) {
   const { register } = useFormContext<ReceiverFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
-    <Stack direction="column" gap={3}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.slack-settings">Slack settings</Trans>
       </Text>
@@ -54,7 +54,7 @@ export function SlackIntegrationForm({ index }: SlackIntegrationFormProps) {
       />
       <SlackField register={register} name={`${path}.footer`} label={t('receivers.form.slack-footer', 'Footer')} />
       <SlackStringArray name={`${path}.mrkdwn_in`} label={t('receivers.form.slack-mrkdwn-in', 'Mrkdwn fields')} />
-      <Field label={t('receivers.form.slack-pretext', 'Pre-text')}>
+      <Field noMargin label={t('receivers.form.slack-pretext', 'Pre-text')}>
         <TextArea
           {...register(`${path}.pretext`)}
           rows={2}
@@ -62,7 +62,7 @@ export function SlackIntegrationForm({ index }: SlackIntegrationFormProps) {
         />
       </Field>
       <SlackCheckbox name={`${path}.short_fields`} label={t('receivers.form.slack-short-fields', 'Short fields')} />
-      <Field label={t('receivers.form.slack-text', 'Message body')}>
+      <Field noMargin label={t('receivers.form.slack-text', 'Message body')}>
         <TextArea {...register(`${path}.text`)} rows={4} aria-label={t('receivers.form.slack-text', 'Message body')} />
       </Field>
       <SlackField register={register} name={`${path}.title`} label={t('receivers.form.slack-title', 'Title')} />
@@ -83,7 +83,7 @@ export function SlackIntegrationForm({ index }: SlackIntegrationFormProps) {
       />
       <SlackActions name={`${path}.actions`} />
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.slack-http-config">HTTP configuration</Trans>
           </Text>
@@ -172,7 +172,7 @@ function SlackField({
   const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
   const fieldError = getFieldState(name, formState).error?.message;
   return (
-    <Field label={label} invalid={Boolean(fieldError)} error={fieldError}>
+    <Field noMargin label={label} invalid={Boolean(fieldError)} error={fieldError}>
       <Input {...register(name)} type={type} aria-label={label} />
     </Field>
   );
@@ -188,7 +188,7 @@ function SlackCheckbox({
 }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}
@@ -206,7 +206,7 @@ function SlackCheckbox({
 function SlackStringArray({ name, label }: { name: SlackFieldPath; label: string }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}
@@ -231,14 +231,14 @@ function SlackStringArray({ name, label }: { name: SlackFieldPath; label: string
 function SlackActions({ name }: { name: SlackFieldPath }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={t('receivers.form.slack-actions', 'Actions')}>
+    <Field noMargin label={t('receivers.form.slack-actions', 'Actions')}>
       <Controller
         name={name}
         control={control}
         render={({ field: { value, onChange } }) => {
           const actions = Array.isArray(value) ? value.filter(isRecord) : [];
           return (
-            <Stack direction="column" gap={2}>
+            <Stack direction="column" gap={1}>
               {actions.map((action, actionIndex) => (
                 <Box key={actionIndex} padding={2} borderColor="weak" borderStyle="solid">
                   <Stack direction="column" gap={1}>

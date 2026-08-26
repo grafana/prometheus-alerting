@@ -11,7 +11,7 @@ export function OpsgenieIntegrationForm({ index }: OpsgenieIntegrationFormProps)
   const { register } = useFormContext<ReceiverFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
-    <Stack direction="column" gap={3}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.opsgenie-settings">Opsgenie settings</Trans>
       </Text>
@@ -31,7 +31,7 @@ export function OpsgenieIntegrationForm({ index }: OpsgenieIntegrationFormProps)
         name={`${path}.message`}
         label={t('receivers.form.opsgenie-message', 'Message')}
       />
-      <Field label={t('receivers.form.opsgenie-description', 'Description')}>
+      <Field noMargin label={t('receivers.form.opsgenie-description', 'Description')}>
         <TextArea
           {...register(`${path}.description`)}
           rows={3}
@@ -53,7 +53,7 @@ export function OpsgenieIntegrationForm({ index }: OpsgenieIntegrationFormProps)
       />
       <OpsgenieResponders name={`${path}.responders`} />
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.opsgenie-http-config">HTTP configuration</Trans>
           </Text>
@@ -141,7 +141,7 @@ function OpsgenieField({
   const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
-    <Field label={label} invalid={Boolean(error)} error={error}>
+    <Field noMargin label={label} invalid={Boolean(error)} error={error}>
       <Input {...register(name)} type={type} aria-label={label} />
     </Field>
   );
@@ -157,7 +157,7 @@ function OpsgenieCheckbox({
 }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}
@@ -175,7 +175,7 @@ function OpsgenieCheckbox({
 function OpsgenieKeyValueMap({ name, label }: { name: OpsgenieFieldPath; label: string }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}
@@ -238,7 +238,7 @@ function OpsgenieKeyValueMap({ name, label }: { name: OpsgenieFieldPath; label: 
 function OpsgenieResponders({ name }: { name: OpsgenieFieldPath }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={t('receivers.form.opsgenie-responders', 'Responders')}>
+    <Field noMargin label={t('receivers.form.opsgenie-responders', 'Responders')}>
       <Controller
         name={name}
         control={control}

@@ -11,7 +11,7 @@ export function PushoverIntegrationForm({ index }: PushoverIntegrationFormProps)
   const { register } = useFormContext<ReceiverFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
-    <Stack direction="column" gap={3}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.pushover-settings">Pushover settings</Trans>
       </Text>
@@ -28,7 +28,7 @@ export function PushoverIntegrationForm({ index }: PushoverIntegrationFormProps)
         type="password"
       />
       <PushoverField register={register} name={`${path}.title`} label={t('receivers.form.pushover-title', 'Title')} />
-      <Field label={t('receivers.form.pushover-message', 'Message')}>
+      <Field noMargin label={t('receivers.form.pushover-message', 'Message')}>
         <TextArea
           {...register(`${path}.message`)}
           rows={4}
@@ -65,7 +65,7 @@ export function PushoverIntegrationForm({ index }: PushoverIntegrationFormProps)
         label={t('receivers.form.pushover-monospace', 'Use monospace formatting')}
       />
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.pushover-http-config">HTTP configuration</Trans>
           </Text>
@@ -153,7 +153,7 @@ function PushoverField({
   const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
-    <Field label={label} invalid={Boolean(error)} error={error}>
+    <Field noMargin label={label} invalid={Boolean(error)} error={error}>
       <Input {...register(name)} type={type} aria-label={label} />
     </Field>
   );
@@ -169,7 +169,7 @@ function PushoverCheckbox({
 }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}

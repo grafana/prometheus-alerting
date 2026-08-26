@@ -8,7 +8,7 @@ export function WeChatIntegrationForm({ index }: { index: number }) {
   const { register, control } = useFormContext<ReceiverFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
-    <Stack direction="column" gap={3}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.wechat-settings">WeChat settings</Trans>
       </Text>
@@ -32,14 +32,14 @@ export function WeChatIntegrationForm({ index }: { index: number }) {
         label={t('receivers.form.wechat-to-party', 'To party')}
       />
       <InputField register={register} name={`${path}.to_tag`} label={t('receivers.form.wechat-to-tag', 'To tag')} />
-      <Field label={t('receivers.form.wechat-message', 'Message')}>
+      <Field noMargin label={t('receivers.form.wechat-message', 'Message')}>
         <TextArea
           {...register(`${path}.message`)}
           rows={4}
           aria-label={t('receivers.form.wechat-message', 'Message')}
         />
       </Field>
-      <Field label={t('receivers.form.wechat-message-type', 'Message type')}>
+      <Field noMargin label={t('receivers.form.wechat-message-type', 'Message type')}>
         <Controller
           name={`${path}.message_type`}
           control={control}
@@ -57,7 +57,7 @@ export function WeChatIntegrationForm({ index }: { index: number }) {
         />
       </Field>
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.wechat-http-config">HTTP configuration</Trans>
           </Text>
@@ -145,7 +145,7 @@ function InputField({
   const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
-    <Field label={label} invalid={Boolean(error)} error={error}>
+    <Field noMargin label={label} invalid={Boolean(error)} error={error}>
       <Input {...register(name)} type={type} aria-label={label} />
     </Field>
   );
@@ -153,7 +153,7 @@ function InputField({
 function Check({ name, label, defaultChecked = false }: { name: Path; label: string; defaultChecked?: boolean }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}

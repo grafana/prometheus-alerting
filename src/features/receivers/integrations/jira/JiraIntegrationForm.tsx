@@ -8,7 +8,7 @@ export function JiraIntegrationForm({ index }: { index: number }) {
   const { register } = useFormContext<ReceiverFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
-    <Stack direction="column" gap={3}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.jira-settings">Jira settings</Trans>
       </Text>
@@ -24,7 +24,7 @@ export function JiraIntegrationForm({ index }: { index: number }) {
         label={t('receivers.form.jira-issue-type', 'Issue type')}
       />
       <InputField register={register} name={`${path}.summary`} label={t('receivers.form.jira-summary', 'Summary')} />
-      <Field label={t('receivers.form.jira-description', 'Description')}>
+      <Field noMargin label={t('receivers.form.jira-description', 'Description')}>
         <TextArea
           {...register(`${path}.description`)}
           rows={4}
@@ -55,7 +55,7 @@ export function JiraIntegrationForm({ index }: { index: number }) {
       />
       <KeyValueMap name={`${path}.fields`} label={t('receivers.form.jira-fields', 'Fields')} />
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.jira-http-config">HTTP configuration</Trans>
           </Text>
@@ -143,7 +143,7 @@ function InputField({
   const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
-    <Field label={label} invalid={Boolean(error)} error={error}>
+    <Field noMargin label={label} invalid={Boolean(error)} error={error}>
       <Input {...register(name)} type={type} aria-label={label} />
     </Field>
   );
@@ -151,7 +151,7 @@ function InputField({
 function Check({ name, label, defaultChecked = false }: { name: Path; label: string; defaultChecked?: boolean }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}
@@ -169,7 +169,7 @@ function Check({ name, label, defaultChecked = false }: { name: Path; label: str
 function StringArray({ name, label }: { name: Path; label: string }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}
@@ -194,7 +194,7 @@ function StringArray({ name, label }: { name: Path; label: string }) {
 function KeyValueMap({ name, label }: { name: Path; label: string }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}

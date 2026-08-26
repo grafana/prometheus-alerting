@@ -14,7 +14,7 @@ export function EmailIntegrationForm({ index }: EmailIntegrationFormProps) {
   const { register } = useFormContext<ReceiverFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
-    <Stack direction="column" gap={3}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.email-settings">Email settings</Trans>
       </Text>
@@ -49,7 +49,7 @@ export function EmailIntegrationForm({ index }: EmailIntegrationFormProps) {
         label={t('receivers.form.email-auth-identity', 'Identity')}
       />
       <EmailCheckbox name={`${path}.require_tls`} label={t('receivers.form.email-require-tls', 'Require TLS')} />
-      <Field label={t('receivers.form.email-html', 'Email HTML body')}>
+      <Field noMargin label={t('receivers.form.email-html', 'Email HTML body')}>
         <TextArea
           {...register(`${path}.html`)}
           rows={4}
@@ -57,7 +57,7 @@ export function EmailIntegrationForm({ index }: EmailIntegrationFormProps) {
           aria-label={t('receivers.form.email-html', 'Email HTML body')}
         />
       </Field>
-      <Field label={t('receivers.form.email-text', 'Email text body')}>
+      <Field noMargin label={t('receivers.form.email-text', 'Email text body')}>
         <TextArea
           {...register(`${path}.text`)}
           rows={4}
@@ -66,7 +66,7 @@ export function EmailIntegrationForm({ index }: EmailIntegrationFormProps) {
       </Field>
       <EmailKeyValueMap name={`${path}.headers`} label={t('receivers.form.email-headers', 'Headers')} />
       <Box paddingTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.email-tls-config">TLS configuration</Trans>
           </Text>
@@ -109,7 +109,7 @@ function EmailField({
   const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
   const fieldError = getFieldState(name, formState).error?.message;
   return (
-    <Field label={label} invalid={Boolean(fieldError)} error={fieldError}>
+    <Field noMargin label={label} invalid={Boolean(fieldError)} error={fieldError}>
       <Input {...register(name)} type={type} aria-label={label} />
     </Field>
   );
@@ -117,7 +117,7 @@ function EmailField({
 function EmailCheckbox({ name, label }: { name: EmailFieldPath; label: string }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}
@@ -135,7 +135,7 @@ function EmailCheckbox({ name, label }: { name: EmailFieldPath; label: string })
 function EmailKeyValueMap({ name, label }: { name: EmailFieldPath; label: string }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}

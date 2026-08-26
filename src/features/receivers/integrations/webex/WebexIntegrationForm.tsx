@@ -11,11 +11,11 @@ export function WebexIntegrationForm({ index }: { index: number }) {
   const error = (fieldPath: `${typeof path}.${string}`) => getFieldState(fieldPath, formState).error?.message;
 
   return (
-    <Stack direction="column" gap={2}>
+    <Stack direction="column" gap={1}>
       <Text variant="h6">
         <Trans i18nKey="receivers.form.webex-settings">Cisco Webex Teams settings</Trans>
       </Text>
-      <Field label={t('receivers.form.webex-api-url', 'API URL')}>
+      <Field noMargin label={t('receivers.form.webex-api-url', 'API URL')}>
         <Input
           {...register(`${path}.api_url`)}
           placeholder={t('receivers.form.webex-api-url-placeholder', 'https://webexapis.com/v1/messages')}
@@ -23,6 +23,7 @@ export function WebexIntegrationForm({ index }: { index: number }) {
         />
       </Field>
       <Field
+        noMargin
         label={t('receivers.form.webex-room-id', 'Room ID')}
         required
         invalid={Boolean(error(`${path}.room_id`))}
@@ -30,16 +31,16 @@ export function WebexIntegrationForm({ index }: { index: number }) {
       >
         <Input {...register(`${path}.room_id`)} aria-label={t('receivers.form.webex-room-id', 'Room ID')} />
       </Field>
-      <Field label={t('receivers.form.webex-message', 'Message')}>
+      <Field noMargin label={t('receivers.form.webex-message', 'Message')}>
         <TextArea {...register(`${path}.message`)} rows={3} aria-label={t('receivers.form.webex-message', 'Message')} />
       </Field>
 
       <Box marginTop={1}>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.webex-http-settings">Advanced HTTP settings</Trans>
           </Text>
-          <Field label={t('receivers.form.webex-authorization-type', 'Authorization type')}>
+          <Field noMargin label={t('receivers.form.webex-authorization-type', 'Authorization type')}>
             <Input
               {...register(`${path}.http_config.authorization.type`)}
               placeholder={t('receivers.form.webex-authorization-type-placeholder', 'Bearer')}
@@ -47,6 +48,7 @@ export function WebexIntegrationForm({ index }: { index: number }) {
             />
           </Field>
           <Field
+            noMargin
             label={t('receivers.form.webex-credentials', 'Credentials')}
             invalid={Boolean(error(`${path}.http_config.authorization.credentials`))}
             error={error(`${path}.http_config.authorization.credentials`)}
@@ -58,6 +60,7 @@ export function WebexIntegrationForm({ index }: { index: number }) {
             />
           </Field>
           <Field
+            noMargin
             label={t('receivers.form.webex-proxy-url', 'Proxy URL')}
             invalid={Boolean(error(`${path}.http_config.proxy_url`))}
             error={error(`${path}.http_config.proxy_url`)}
@@ -68,7 +71,7 @@ export function WebexIntegrationForm({ index }: { index: number }) {
               aria-label={t('receivers.form.webex-proxy-url', 'Proxy URL')}
             />
           </Field>
-          <Field label={t('receivers.form.webex-no-proxy', 'No proxy')}>
+          <Field noMargin label={t('receivers.form.webex-no-proxy', 'No proxy')}>
             <Input
               {...register(`${path}.http_config.no_proxy`)}
               aria-label={t('receivers.form.webex-no-proxy', 'No proxy')}
@@ -88,20 +91,20 @@ export function WebexIntegrationForm({ index }: { index: number }) {
             label={t('receivers.form.webex-enable-http2', 'Enable HTTP/2')}
             defaultChecked
           />
-          <Field label={t('receivers.form.webex-basic-auth-username', 'Username')}>
+          <Field noMargin label={t('receivers.form.webex-basic-auth-username', 'Username')}>
             <Input
               {...register(`${path}.http_config.basic_auth.username`)}
               aria-label={t('receivers.form.webex-basic-auth-username', 'Username')}
             />
           </Field>
-          <Field label={t('receivers.form.webex-basic-auth-password', 'Password')}>
+          <Field noMargin label={t('receivers.form.webex-basic-auth-password', 'Password')}>
             <Input
               {...register(`${path}.http_config.basic_auth.password`)}
               type="password"
               aria-label={t('receivers.form.webex-basic-auth-password', 'Password')}
             />
           </Field>
-          <Field label={t('receivers.form.webex-server-name', 'Server name')}>
+          <Field noMargin label={t('receivers.form.webex-server-name', 'Server name')}>
             <Input
               {...register(`${path}.http_config.tls_config.server_name`)}
               aria-label={t('receivers.form.webex-server-name', 'Server name')}
@@ -111,13 +114,13 @@ export function WebexIntegrationForm({ index }: { index: number }) {
             name={`${path}.http_config.tls_config.insecure_skip_verify`}
             label={t('receivers.form.webex-skip-verify', 'Skip verify')}
           />
-          <Field label={t('receivers.form.webex-min-tls-version', 'Minimum TLS version')}>
+          <Field noMargin label={t('receivers.form.webex-min-tls-version', 'Minimum TLS version')}>
             <Input
               {...register(`${path}.http_config.tls_config.min_version`)}
               aria-label={t('receivers.form.webex-min-tls-version', 'Minimum TLS version')}
             />
           </Field>
-          <Field label={t('receivers.form.webex-max-tls-version', 'Maximum TLS version')}>
+          <Field noMargin label={t('receivers.form.webex-max-tls-version', 'Maximum TLS version')}>
             <Input
               {...register(`${path}.http_config.tls_config.max_version`)}
               aria-label={t('receivers.form.webex-max-tls-version', 'Maximum TLS version')}
@@ -150,7 +153,7 @@ function WebexCheckbox({
 }) {
   const { control } = useFormContext<ReceiverFormValues>();
   return (
-    <Field label={label}>
+    <Field noMargin label={label}>
       <Controller
         name={name}
         control={control}
