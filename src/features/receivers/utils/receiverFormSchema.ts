@@ -14,15 +14,7 @@ import { createTelegramIntegrationFormSchema } from '../integrations/telegram/te
 import { createDiscordIntegrationFormSchema } from '../integrations/discord/discord.schema';
 import { createMSTeamsIntegrationFormSchema } from '../integrations/msteams/msteams.schema';
 import { createWeChatIntegrationFormSchema } from '../integrations/wechat/wechat.schema';
-import { LEGACY_INTEGRATION_TYPES } from './cloudIntegrationTypes';
-
-const LegacyIntegrationFormSchema = z.object({
-  __id: z.string(),
-  __deleted: z.boolean().optional(),
-  type: z.enum(LEGACY_INTEGRATION_TYPES),
-  sendResolved: z.boolean(),
-  settings: z.record(z.string(), z.unknown()),
-});
+import { createJiraIntegrationFormSchema } from '../integrations/jira/jira.schema';
 
 export function createReceiverFormSchema() {
   return z.object({
@@ -42,7 +34,7 @@ export function createReceiverFormSchema() {
         createDiscordIntegrationFormSchema(),
         createMSTeamsIntegrationFormSchema(),
         createWeChatIntegrationFormSchema(),
-        LegacyIntegrationFormSchema,
+        createJiraIntegrationFormSchema(),
       ])
     ),
   });

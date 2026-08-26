@@ -2,20 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, Controller, useWatch, FormProvider } from 'react-hook-form';
 import { t, Trans } from '@grafana/i18n';
-import {
-  Button,
-  Field,
-  Input,
-  Stack,
-  Combobox,
-  Switch,
-  TextArea,
-  IconButton,
-  Alert,
-  Box,
-  Text,
-  Checkbox,
-} from '@grafana/ui';
+import { Button, Field, Input, Stack, Combobox, Switch, IconButton, Alert, Box, Text } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 
 import {
@@ -24,10 +11,9 @@ import {
   formValuesToReceiver,
   createDefaultReceiverFormValues,
   createDefaultIntegration,
-  getNotifierForType,
   isReceiverNameUnique,
 } from '../utils/receiverFormTransform';
-import { NotificationChannelOption, getNotifierTypeOptions } from '../utils/notifierTypes';
+import { getNotifierTypeOptions } from '../utils/notifierTypes';
 import { createReceiverFormSchema } from '../utils/receiverFormSchema';
 import { CloudIntegrationType, isCloudIntegrationType } from '../utils/cloudIntegrationTypes';
 
@@ -56,6 +42,8 @@ import { DiscordIntegrationForm } from '../integrations/discord/DiscordIntegrati
 import { MSTeamsIntegrationForm } from '../integrations/msteams/MSTeamsIntegrationForm';
 
 import { WeChatIntegrationForm } from '../integrations/wechat/WeChatIntegrationForm';
+
+import { JiraIntegrationForm } from '../integrations/jira/JiraIntegrationForm';
 
 interface ReceiverEditFormProps {
   receiver?: Receiver;
@@ -166,7 +154,6 @@ export function ReceiverEditForm({
               key={field.id}
               index={index}
               control={control}
-              register={register}
               notifierTypeOptions={notifierTypeOptions}
               onRemove={() => remove(index)}
               onTypeChange={(type) => update(index, createDefaultIntegration(type))}
@@ -202,7 +189,6 @@ export function ReceiverEditForm({
 interface IntegrationEditorProps {
   index: number;
   control: ReturnType<typeof useForm<ReceiverFormValues>>['control'];
-  register: ReturnType<typeof useForm<ReceiverFormValues>>['register'];
   notifierTypeOptions: Array<{ label: string; value: string; description: string }>;
   onRemove: () => void;
   onTypeChange: (type: CloudIntegrationType) => void;
@@ -212,7 +198,6 @@ interface IntegrationEditorProps {
 function IntegrationEditor({
   index,
   control,
-  register,
   notifierTypeOptions,
   onRemove,
   onTypeChange,
@@ -223,7 +208,6 @@ function IntegrationEditor({
     name: `integrations.${index}.type`,
   });
 
-  const notifier = getNotifierForType(integrationType);
   const comboboxOptions = useMemo(
     () => notifierTypeOptions.map((opt) => ({ label: opt.label, value: opt.value })),
     [notifierTypeOptions]
@@ -305,148 +289,10 @@ function IntegrationEditor({
           <MSTeamsIntegrationForm index={index} />
         ) : integrationType === 'wechat' ? (
           <WeChatIntegrationForm index={index} />
-        ) : notifier ? (
-          <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
+        ) : integrationType === 'jira' ? (
+          <JiraIntegrationForm index={index} />
         ) : null}
       </Box>
     </Stack>
-  );
-}
-
-interface IntegrationFieldsProps {
-  notifier: ReturnType<typeof getNotifierForType>;
-  index: number;
-  control: ReturnType<typeof useForm<ReceiverFormValues>>['control'];
-  register: ReturnType<typeof useForm<ReceiverFormValues>>['register'];
-}
-
-function IntegrationFields({ notifier, index, control, register }: IntegrationFieldsProps) {
-  if (!notifier) {
-    return null;
-  }
-
-  return (
-    <Stack direction="column" gap={2}>
-      <Text variant="h6">{notifier.heading}</Text>
-      {notifier.options.map((option) => (
-        <OptionField
-          key={option.propertyName}
-          option={option}
-          index={index}
-          control={control}
-          register={register}
-          basePath={`integrations.${index}.settings`}
-        />
-      ))}
-    </Stack>
-  );
-}
-
-type IntegrationSettingsPath = `integrations.${number}.settings` | `integrations.${number}.settings.${string}`;
-type IntegrationSettingsFieldPath = `integrations.${number}.settings.${string}`;
-
-function appendFieldPath(basePath: IntegrationSettingsPath, propertyName: string): IntegrationSettingsFieldPath {
-  return `${basePath}.${propertyName}`;
-}
-
-interface OptionFieldProps {
-  option: NotificationChannelOption;
-  index: number;
-  control: ReturnType<typeof useForm<ReceiverFormValues>>['control'];
-  register: ReturnType<typeof useForm<ReceiverFormValues>>['register'];
-  basePath: IntegrationSettingsPath;
-}
-
-function OptionField({ option, index, control, register, basePath }: OptionFieldProps) {
-  const fieldPath = appendFieldPath(basePath, option.propertyName);
-
-  // Render subform fields (like http_config, tls_config) with a section header
-  if (option.element === 'subform' || option.element === 'subform_array') {
-    if (option.element === 'subform' && option.subformOptions) {
-      return (
-        <Box marginTop={2}>
-          <Stack direction="column" gap={2}>
-            <Text variant="bodySmall" weight="medium" color="secondary">
-              {option.label}
-            </Text>
-            {option.subformOptions.map((subOption) => (
-              <OptionField
-                key={subOption.propertyName}
-                option={subOption}
-                index={index}
-                control={control}
-                register={register}
-                basePath={fieldPath}
-              />
-            ))}
-          </Stack>
-        </Box>
-      );
-    }
-    return null;
-  }
-
-  // Checkbox field
-  if (option.element === 'checkbox') {
-    return (
-      <Field label={option.label} description={option.description}>
-        <Controller
-          name={fieldPath}
-          control={control}
-          render={({ field: { onChange, value } }) => (
-            <Checkbox
-              checked={Boolean(value)}
-              onChange={(e) => onChange(e.currentTarget.checked)}
-              aria-label={option.label}
-            />
-          )}
-        />
-      </Field>
-    );
-  }
-
-  // Select field
-  if (option.element === 'select' && option.selectOptions) {
-    const selectOptions = option.selectOptions;
-    return (
-      <Field label={option.label} description={option.description}>
-        <Controller
-          name={fieldPath}
-          control={control}
-          render={({ field: { onChange, value } }) => (
-            <Combobox
-              options={selectOptions.map((opt) => ({ label: opt.label, value: opt.value }))}
-              value={value as string}
-              onChange={(selected) => onChange(selected?.value ?? '')}
-              aria-label={option.label}
-            />
-          )}
-        />
-      </Field>
-    );
-  }
-
-  // Textarea field
-  if (option.element === 'textarea') {
-    return (
-      <Field label={option.label} description={option.description}>
-        <TextArea {...register(fieldPath)} placeholder={option.placeholder} rows={3} aria-label={option.label} />
-      </Field>
-    );
-  }
-
-  // Default: Input field
-  return (
-    <Field label={option.label} description={option.description} required={option.required}>
-      <Input
-        {...register(fieldPath, {
-          required: option.required ? t('receivers.form.field-required', 'This field is required') : false,
-          setValueAs: option.setValueAs,
-        })}
-        type={option.inputType ?? 'text'}
-        placeholder={option.placeholder}
-        aria-label={option.label}
-      />
-    </Field>
   );
 }

@@ -15,6 +15,7 @@ import {
   DiscordConfigSchema,
   MSTeamsConfigSchema,
   WechatConfigSchema,
+  JiraConfigSchema,
   type Receiver,
 } from '@grafana/external-alertmanager/vanilla';
 import {
@@ -82,7 +83,11 @@ import {
   weChatConfigToFormSettings,
   weChatFormSettingsToConfig,
 } from '../integrations/wechat/wechat.mapper';
-import { cloudNotifierTypes, NotifierDTO } from './notifierTypes';
+import {
+  createDefaultJiraSettings,
+  jiraConfigToFormSettings,
+  jiraFormSettingsToConfig,
+} from '../integrations/jira/jira.mapper';
 import { CLOUD_INTEGRATION_TYPES, CloudIntegrationType, INTEGRATION_TYPE_MAP } from './cloudIntegrationTypes';
 import type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
 
@@ -259,13 +264,16 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
           continue;
         }
 
-        const { send_resolved, ...settings } = config;
-        integrations.push({
-          __id: id,
-          type,
-          sendResolved: send_resolved !== false,
-          settings,
-        });
+        if (type === 'jira') {
+          const typedConfig = JiraConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: typedConfig.send_resolved !== false,
+            settings: jiraConfigToFormSettings(typedConfig),
+          });
+          continue;
+        }
       }
     }
   }
@@ -416,55 +424,17 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
       continue;
     }
 
-    const config: Record<string, unknown> = {
-      send_resolved: integration.sendResolved,
-    };
-
-    for (const [key, value] of Object.entries(integration.settings)) {
-      if (value !== '' && value !== null && value !== undefined) {
-        if (isRecord(value)) {
-          const cleanedNested = cleanEmptyValues(value);
-          if (Object.keys(cleanedNested).length > 0) {
-            config[key] = cleanedNested;
-          }
-        } else {
-          config[key] = value;
-        }
-      }
+    if (integration.type === 'jira') {
+      const typedConfig = jiraFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...typedConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
     }
-
-    (receiver[configKey] as Array<Record<string, unknown>>).push(config);
   }
 
   return receiver;
-}
-
-/**
- * Remove empty values from an object recursively
- */
-function cleanEmptyValues(obj: Record<string, unknown>): Record<string, unknown> {
-  const cleaned: Record<string, unknown> = {};
-
-  for (const [key, value] of Object.entries(obj)) {
-    if (value === '' || value === null || value === undefined) {
-      continue;
-    }
-
-    if (isRecord(value)) {
-      const cleanedNested = cleanEmptyValues(value);
-      if (Object.keys(cleanedNested).length > 0) {
-        cleaned[key] = cleanedNested;
-      }
-    } else {
-      cleaned[key] = value;
-    }
-  }
-
-  return cleaned;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -598,40 +568,16 @@ export function createDefaultIntegration(type: CloudIntegrationType): Integratio
     };
   }
 
-  const notifier = cloudNotifierTypes.find((n) => n.type === type);
-  return {
-    __id: generateId(),
-    type,
-    sendResolved: true,
-    settings: notifier ? createDefaultSettings(notifier.options) : {},
-  };
-}
-
-function createDefaultSettings(options: NotifierDTO['options']): Record<string, unknown> {
-  const settings: Record<string, unknown> = {};
-
-  for (const option of options) {
-    if (option.element === 'subform' && option.subformOptions) {
-      const nestedSettings = createDefaultSettings(option.subformOptions);
-      if (Object.keys(nestedSettings).length > 0) {
-        settings[option.propertyName] = nestedSettings;
-      }
-      continue;
-    }
-
-    if (option.defaultValue !== undefined) {
-      settings[option.propertyName] = option.defaultValue;
-    }
+  if (type === 'jira') {
+    return {
+      __id: generateId(),
+      type,
+      sendResolved: true,
+      settings: createDefaultJiraSettings(),
+    };
   }
 
-  return settings;
-}
-
-/**
- * Get the notifier definition for a type
- */
-export function getNotifierForType(type: CloudIntegrationType): NotifierDTO | undefined {
-  return cloudNotifierTypes.find((n) => n.type === type);
+  throw new Error('Unsupported receiver integration type');
 }
 
 /**
