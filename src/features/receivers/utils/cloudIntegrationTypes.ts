@@ -19,15 +19,7 @@ export const CLOUD_INTEGRATION_TYPES = [
   'wechat',
 ] as const;
 
-export const LEGACY_INTEGRATION_TYPES = [
-  'pushover',
-  'victorops',
-  'telegram',
-  'discord',
-  'msteams',
-  'wechat',
-  'jira',
-] as const;
+export const LEGACY_INTEGRATION_TYPES = ['victorops', 'telegram', 'discord', 'msteams', 'wechat', 'jira'] as const;
 
 export type CloudIntegrationType = (typeof CLOUD_INTEGRATION_TYPES)[number];
 

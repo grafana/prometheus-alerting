@@ -45,6 +45,8 @@ import { SlackIntegrationForm } from '../integrations/slack/SlackIntegrationForm
 
 import { OpsgenieIntegrationForm } from '../integrations/opsgenie/OpsgenieIntegrationForm';
 
+import { PushoverIntegrationForm } from '../integrations/pushover/PushoverIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -281,6 +283,8 @@ function IntegrationEditor({
           <SlackIntegrationForm index={index} />
         ) : integrationType === 'opsgenie' ? (
           <OpsgenieIntegrationForm index={index} />
+        ) : integrationType === 'pushover' ? (
+          <PushoverIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}
