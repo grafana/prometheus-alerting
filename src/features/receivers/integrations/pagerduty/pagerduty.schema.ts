@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 
 export function createPagerDutySettingsFormSchema() {
@@ -38,13 +39,7 @@ export function createPagerDutySettingsFormSchema() {
 }
 
 export function createPagerDutyIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('pagerduty'),
-    sendResolved: z.boolean(),
-    settings: createPagerDutySettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('pagerduty', createPagerDutySettingsFormSchema());
 }
 
 export type PagerDutySettingsFormValues = z.infer<ReturnType<typeof createPagerDutySettingsFormSchema>>;

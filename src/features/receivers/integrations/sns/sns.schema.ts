@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 
 const SNSSigV4FormSchema = z
@@ -46,13 +47,7 @@ export function createSNSSettingsFormSchema() {
 }
 
 export function createSNSIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('sns'),
-    sendResolved: z.boolean(),
-    settings: createSNSSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('sns', createSNSSettingsFormSchema());
 }
 
 export type SNSSettingsFormValues = z.infer<ReturnType<typeof createSNSSettingsFormSchema>>;

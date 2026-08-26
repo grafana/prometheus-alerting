@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
 
@@ -60,13 +61,7 @@ export function createSlackSettingsFormSchema(validateForSubmission = true) {
 }
 
 export function createSlackIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('slack'),
-    sendResolved: z.boolean(),
-    settings: createSlackSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('slack', createSlackSettingsFormSchema());
 }
 
 export type SlackSettingsFormValues = z.infer<ReturnType<typeof createSlackSettingsFormSchema>>;

@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
 
@@ -43,12 +44,6 @@ export function createVictorOpsSettingsFormSchema(validateForSubmission = true) 
     });
 }
 export function createVictorOpsIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('victorops'),
-    sendResolved: z.boolean(),
-    settings: createVictorOpsSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('victorops', createVictorOpsSettingsFormSchema());
 }
 export type VictorOpsSettingsFormValues = z.infer<ReturnType<typeof createVictorOpsSettingsFormSchema>>;

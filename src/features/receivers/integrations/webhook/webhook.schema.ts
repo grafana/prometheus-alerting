@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
 
@@ -29,13 +30,7 @@ export function createWebhookSettingsFormSchema() {
 }
 
 export function createWebhookIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('webhook'),
-    sendResolved: z.boolean(),
-    settings: createWebhookSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('webhook', createWebhookSettingsFormSchema());
 }
 
 export type WebhookSettingsFormValues = z.infer<ReturnType<typeof createWebhookSettingsFormSchema>>;

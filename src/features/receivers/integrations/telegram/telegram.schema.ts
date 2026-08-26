@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
 
@@ -38,12 +39,6 @@ export function createTelegramSettingsFormSchema(validateForSubmission = true) {
   });
 }
 export function createTelegramIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('telegram'),
-    sendResolved: z.boolean(),
-    settings: createTelegramSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('telegram', createTelegramSettingsFormSchema());
 }
 export type TelegramSettingsFormValues = z.infer<ReturnType<typeof createTelegramSettingsFormSchema>>;

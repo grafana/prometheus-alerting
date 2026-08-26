@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 
 // Webex can't post anything without credentials, so it adds a "must be filled in" check on top of
@@ -31,13 +32,7 @@ export function createWebexSettingsFormSchema(validateForSubmission = true) {
 }
 
 export function createWebexIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('webex'),
-    sendResolved: z.boolean(),
-    settings: createWebexSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('webex', createWebexSettingsFormSchema());
 }
 
 export type WebexSettingsFormValues = z.infer<ReturnType<typeof createWebexSettingsFormSchema>>;

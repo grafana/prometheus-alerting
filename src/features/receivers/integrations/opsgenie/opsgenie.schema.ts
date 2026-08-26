@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
 
@@ -52,12 +53,6 @@ export function createOpsgenieSettingsFormSchema(validateRequired = true) {
     });
 }
 export function createOpsgenieIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('opsgenie'),
-    sendResolved: z.boolean(),
-    settings: createOpsgenieSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('opsgenie', createOpsgenieSettingsFormSchema());
 }
 export type OpsgenieSettingsFormValues = z.infer<ReturnType<typeof createOpsgenieSettingsFormSchema>>;

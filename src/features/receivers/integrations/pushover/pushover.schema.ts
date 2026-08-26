@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
 
@@ -59,12 +60,6 @@ export function createPushoverSettingsFormSchema(validateForSubmission = true) {
     });
 }
 export function createPushoverIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('pushover'),
-    sendResolved: z.boolean(),
-    settings: createPushoverSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('pushover', createPushoverSettingsFormSchema());
 }
 export type PushoverSettingsFormValues = z.infer<ReturnType<typeof createPushoverSettingsFormSchema>>;

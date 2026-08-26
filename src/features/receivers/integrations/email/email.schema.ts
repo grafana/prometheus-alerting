@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
 
 const EmailTLSConfigFormSchema = z.looseObject({
@@ -42,13 +43,7 @@ export function createEmailSettingsFormSchema(validateForSubmission = true) {
 }
 
 export function createEmailIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('email'),
-    sendResolved: z.boolean(),
-    settings: createEmailSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('email', createEmailSettingsFormSchema());
 }
 
 export type EmailSettingsFormValues = z.infer<ReturnType<typeof createEmailSettingsFormSchema>>;

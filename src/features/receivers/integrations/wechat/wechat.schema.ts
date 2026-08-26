@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 
 export function createWeChatSettingsFormSchema() {
@@ -17,12 +18,6 @@ export function createWeChatSettingsFormSchema() {
   });
 }
 export function createWeChatIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('wechat'),
-    sendResolved: z.boolean(),
-    settings: createWeChatSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('wechat', createWeChatSettingsFormSchema());
 }
 export type WeChatSettingsFormValues = z.infer<ReturnType<typeof createWeChatSettingsFormSchema>>;

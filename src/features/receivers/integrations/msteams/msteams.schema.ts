@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
 
@@ -18,12 +19,6 @@ export function createMSTeamsSettingsFormSchema() {
   });
 }
 export function createMSTeamsIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('msteams'),
-    sendResolved: z.boolean(),
-    settings: createMSTeamsSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('msteams', createMSTeamsSettingsFormSchema());
 }
 export type MSTeamsSettingsFormValues = z.infer<ReturnType<typeof createMSTeamsSettingsFormSchema>>;

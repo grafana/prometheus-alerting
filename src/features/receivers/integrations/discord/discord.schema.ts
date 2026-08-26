@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
 
@@ -20,12 +21,6 @@ export function createDiscordSettingsFormSchema() {
   });
 }
 export function createDiscordIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('discord'),
-    sendResolved: z.boolean(),
-    settings: createDiscordSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('discord', createDiscordSettingsFormSchema());
 }
 export type DiscordSettingsFormValues = z.infer<ReturnType<typeof createDiscordSettingsFormSchema>>;

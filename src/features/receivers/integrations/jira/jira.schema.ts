@@ -1,6 +1,7 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 
 function createDurationSchema() {
@@ -48,12 +49,6 @@ export function createJiraSettingsFormSchema(validateRequired = true) {
     });
 }
 export function createJiraIntegrationFormSchema() {
-  return z.object({
-    __id: z.string(),
-    __deleted: z.boolean().optional(),
-    type: z.literal('jira'),
-    sendResolved: z.boolean(),
-    settings: createJiraSettingsFormSchema(),
-  });
+  return createIntegrationFormSchema('jira', createJiraSettingsFormSchema());
 }
 export type JiraSettingsFormValues = z.infer<ReturnType<typeof createJiraSettingsFormSchema>>;
