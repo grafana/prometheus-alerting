@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { createWebhookIntegrationFormSchema } from '../integrations/webhook/webhook.schema';
 import { createWebexIntegrationFormSchema } from '../integrations/webex/webex.schema';
 import { createPagerDutyIntegrationFormSchema } from '../integrations/pagerduty/pagerduty.schema';
+import { createSNSIntegrationFormSchema } from '../integrations/sns/sns.schema';
 import { LEGACY_INTEGRATION_TYPES } from './cloudIntegrationTypes';
 
 const LegacyIntegrationFormSchema = z.object({
@@ -22,6 +23,7 @@ export function createReceiverFormSchema() {
         createWebhookIntegrationFormSchema(),
         createWebexIntegrationFormSchema(),
         createPagerDutyIntegrationFormSchema(),
+        createSNSIntegrationFormSchema(),
         LegacyIntegrationFormSchema,
       ])
     ),

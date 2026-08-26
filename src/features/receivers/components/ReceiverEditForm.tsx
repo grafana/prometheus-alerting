@@ -37,6 +37,8 @@ import { WebexIntegrationForm } from '../integrations/webex/WebexIntegrationForm
 
 import { PagerDutyIntegrationForm } from '../integrations/pagerduty/PagerDutyIntegrationForm';
 
+import { SNSIntegrationForm } from '../integrations/sns/SNSIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -265,6 +267,8 @@ function IntegrationEditor({
           <WebexIntegrationForm index={index} />
         ) : integrationType === 'pagerduty' ? (
           <PagerDutyIntegrationForm index={index} />
+        ) : integrationType === 'sns' ? (
+          <SNSIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}

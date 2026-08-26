@@ -5,6 +5,7 @@ import {
   WebhookConfigSchema,
   WebexConfigSchema,
   PagerdutyConfigSchema,
+  SNSConfigSchema,
   type Receiver,
 } from '@grafana/external-alertmanager/vanilla';
 import {
@@ -22,6 +23,11 @@ import {
   pagerDutyConfigToFormSettings,
   pagerDutyFormSettingsToConfig,
 } from '../integrations/pagerduty/pagerduty.mapper';
+import {
+  createDefaultSNSSettings,
+  snsConfigToFormSettings,
+  snsFormSettingsToConfig,
+} from '../integrations/sns/sns.mapper';
 import { cloudNotifierTypes, NotifierDTO } from './notifierTypes';
 import { CLOUD_INTEGRATION_TYPES, CloudIntegrationType, INTEGRATION_TYPE_MAP } from './cloudIntegrationTypes';
 import type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
@@ -89,6 +95,17 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
           continue;
         }
 
+        if (type === 'sns') {
+          const typedConfig = SNSConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: typedConfig.send_resolved !== false,
+            settings: snsConfigToFormSettings(typedConfig),
+          });
+          continue;
+        }
+
         const { send_resolved, ...settings } = config;
         integrations.push({
           __id: id,
@@ -149,6 +166,15 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
 
     if (integration.type === 'pagerduty') {
       const typedConfig = pagerDutyFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...typedConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+
+    if (integration.type === 'sns') {
+      const typedConfig = snsFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
         ...typedConfig,
         send_resolved: integration.sendResolved,
@@ -245,6 +271,15 @@ export function createDefaultIntegration(type: CloudIntegrationType): Integratio
       type,
       sendResolved: true,
       settings: createDefaultPagerDutySettings(),
+    };
+  }
+
+  if (type === 'sns') {
+    return {
+      __id: generateId(),
+      type,
+      sendResolved: true,
+      settings: createDefaultSNSSettings(),
     };
   }
 
