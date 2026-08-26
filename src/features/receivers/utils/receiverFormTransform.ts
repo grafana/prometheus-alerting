@@ -14,6 +14,7 @@ import {
   TelegramConfigSchema,
   DiscordConfigSchema,
   MSTeamsConfigSchema,
+  WechatConfigSchema,
   type Receiver,
 } from '@grafana/external-alertmanager/vanilla';
 import {
@@ -76,6 +77,11 @@ import {
   msTeamsConfigToFormSettings,
   msTeamsFormSettingsToConfig,
 } from '../integrations/msteams/msteams.mapper';
+import {
+  createDefaultWeChatSettings,
+  weChatConfigToFormSettings,
+  weChatFormSettingsToConfig,
+} from '../integrations/wechat/wechat.mapper';
 import { cloudNotifierTypes, NotifierDTO } from './notifierTypes';
 import { CLOUD_INTEGRATION_TYPES, CloudIntegrationType, INTEGRATION_TYPE_MAP } from './cloudIntegrationTypes';
 import type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
@@ -242,6 +248,17 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
           continue;
         }
 
+        if (type === 'wechat') {
+          const typedConfig = WechatConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: typedConfig.send_resolved !== false,
+            settings: weChatConfigToFormSettings(typedConfig),
+          });
+          continue;
+        }
+
         const { send_resolved, ...settings } = config;
         integrations.push({
           __id: id,
@@ -383,6 +400,15 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
 
     if (integration.type === 'msteams') {
       const typedConfig = msTeamsFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...typedConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+
+    if (integration.type === 'wechat') {
+      const typedConfig = weChatFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
         ...typedConfig,
         send_resolved: integration.sendResolved,
@@ -560,6 +586,15 @@ export function createDefaultIntegration(type: CloudIntegrationType): Integratio
       type,
       sendResolved: true,
       settings: createDefaultMSTeamsSettings(),
+    };
+  }
+
+  if (type === 'wechat') {
+    return {
+      __id: generateId(),
+      type,
+      sendResolved: true,
+      settings: createDefaultWeChatSettings(),
     };
   }
 

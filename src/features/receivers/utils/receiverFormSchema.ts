@@ -13,6 +13,7 @@ import { createVictorOpsIntegrationFormSchema } from '../integrations/victorops/
 import { createTelegramIntegrationFormSchema } from '../integrations/telegram/telegram.schema';
 import { createDiscordIntegrationFormSchema } from '../integrations/discord/discord.schema';
 import { createMSTeamsIntegrationFormSchema } from '../integrations/msteams/msteams.schema';
+import { createWeChatIntegrationFormSchema } from '../integrations/wechat/wechat.schema';
 import { LEGACY_INTEGRATION_TYPES } from './cloudIntegrationTypes';
 
 const LegacyIntegrationFormSchema = z.object({
@@ -40,6 +41,7 @@ export function createReceiverFormSchema() {
         createTelegramIntegrationFormSchema(),
         createDiscordIntegrationFormSchema(),
         createMSTeamsIntegrationFormSchema(),
+        createWeChatIntegrationFormSchema(),
         LegacyIntegrationFormSchema,
       ])
     ),

@@ -55,6 +55,8 @@ import { DiscordIntegrationForm } from '../integrations/discord/DiscordIntegrati
 
 import { MSTeamsIntegrationForm } from '../integrations/msteams/MSTeamsIntegrationForm';
 
+import { WeChatIntegrationForm } from '../integrations/wechat/WeChatIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -301,6 +303,8 @@ function IntegrationEditor({
           <DiscordIntegrationForm index={index} />
         ) : integrationType === 'msteams' ? (
           <MSTeamsIntegrationForm index={index} />
+        ) : integrationType === 'wechat' ? (
+          <WeChatIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}
