@@ -2,6 +2,7 @@ import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
 import { createWebhookIntegrationFormSchema } from '../integrations/webhook/webhook.schema';
+import { createWebexIntegrationFormSchema } from '../integrations/webex/webex.schema';
 import { LEGACY_INTEGRATION_TYPES } from './cloudIntegrationTypes';
 
 const LegacyIntegrationFormSchema = z.object({
@@ -16,7 +17,11 @@ export function createReceiverFormSchema() {
   return z.object({
     name: z.string().trim().min(1, t('receivers.form.name-required', 'Receiver name is required')),
     integrations: z.array(
-      z.discriminatedUnion('type', [createWebhookIntegrationFormSchema(), LegacyIntegrationFormSchema])
+      z.discriminatedUnion('type', [
+        createWebhookIntegrationFormSchema(),
+        createWebexIntegrationFormSchema(),
+        LegacyIntegrationFormSchema,
+      ])
     ),
   });
 }

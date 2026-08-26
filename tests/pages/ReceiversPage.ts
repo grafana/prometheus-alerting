@@ -3,6 +3,7 @@ import { AlertmanagerPage } from './AlertmanagerPage';
 import { EmailIntegrationForm } from './receivers/EmailIntegrationForm';
 import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
 import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
+import { WebexIntegrationForm } from './receivers/WebexIntegrationForm';
 
 /**
  * Page object for the Receivers view (`/receivers`).
@@ -178,6 +179,11 @@ export class ReceiversPage extends AlertmanagerPage {
   async selectSlackIntegration(index: number): Promise<SlackIntegrationForm> {
     await this.selectIntegrationType(index, 'Slack');
     return new SlackIntegrationForm(this.drawer);
+  }
+
+  async selectWebexIntegration(index: number): Promise<WebexIntegrationForm> {
+    await this.selectIntegrationType(index, 'Cisco Webex Teams');
+    return new WebexIntegrationForm(this.drawer);
   }
 
   async submitCreate() {

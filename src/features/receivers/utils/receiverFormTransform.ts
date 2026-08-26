@@ -1,12 +1,17 @@
 /**
  * Utilities for transforming between Alertmanager receiver format and form values.
  */
-import { WebhookConfigSchema, type Receiver } from '@grafana/external-alertmanager/vanilla';
+import { WebhookConfigSchema, WebexConfigSchema, type Receiver } from '@grafana/external-alertmanager/vanilla';
 import {
   createDefaultWebhookSettings,
   webhookConfigToFormSettings,
   webhookFormSettingsToConfig,
 } from '../integrations/webhook/webhook.mapper';
+import {
+  createDefaultWebexSettings,
+  webexConfigToFormSettings,
+  webexFormSettingsToConfig,
+} from '../integrations/webex/webex.mapper';
 import { cloudNotifierTypes, NotifierDTO } from './notifierTypes';
 import { CLOUD_INTEGRATION_TYPES, CloudIntegrationType, INTEGRATION_TYPE_MAP } from './cloudIntegrationTypes';
 import type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
@@ -48,6 +53,17 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
             type,
             sendResolved: typedConfig.send_resolved !== false,
             settings: webhookConfigToFormSettings(typedConfig),
+          });
+          continue;
+        }
+
+        if (type === 'webex') {
+          const typedConfig = WebexConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: typedConfig.send_resolved !== false,
+            settings: webexConfigToFormSettings(typedConfig),
           });
           continue;
         }
@@ -94,6 +110,15 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
 
     if (integration.type === 'webhook') {
       const typedConfig = webhookFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...typedConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+
+    if (integration.type === 'webex') {
+      const typedConfig = webexFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
         ...typedConfig,
         send_resolved: integration.sendResolved,
@@ -172,6 +197,15 @@ export function createDefaultIntegration(type: CloudIntegrationType): Integratio
       type,
       sendResolved: true,
       settings: createDefaultWebhookSettings(),
+    };
+  }
+
+  if (type === 'webex') {
+    return {
+      __id: generateId(),
+      type,
+      sendResolved: true,
+      settings: createDefaultWebexSettings(),
     };
   }
 

@@ -33,6 +33,8 @@ import { CloudIntegrationType, isCloudIntegrationType } from '../utils/cloudInte
 
 import { WebhookIntegrationForm } from '../integrations/webhook/WebhookIntegrationForm';
 
+import { WebexIntegrationForm } from '../integrations/webex/WebexIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -257,6 +259,8 @@ function IntegrationEditor({
       <Box padding={2} borderColor="weak" borderStyle="solid">
         {integrationType === 'webhook' ? (
           <WebhookIntegrationForm index={index} />
+        ) : integrationType === 'webex' ? (
+          <WebexIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}
