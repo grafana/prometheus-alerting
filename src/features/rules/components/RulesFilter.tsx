@@ -33,8 +33,12 @@ export function RulesFilter() {
             id="rulesSearchInput"
             data-testid="search-query-input"
             placeholder={t('alerting.rules-filter.search-placeholder', 'Search by name or enter filter query...')}
+            escapeRegex={false}
             onChange={(next) => {
               field.onChange(next);
+              if (!next) {
+                setSearchQuery(undefined);
+              }
             }}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === 'NumpadEnter') {
