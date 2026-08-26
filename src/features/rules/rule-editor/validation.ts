@@ -78,7 +78,10 @@ export function createRuleFormSchema() {
     })
     .refine(
       (values) =>
-        // Empty names are already reported by the `name` field's own `min(1)` check.
+        // A recording rule's name becomes a metric name, so it needs the metric-name character
+        // set. An alerting rule's name just becomes a label value, which accepts anything, so we
+        // only check this for recording rules. Empty names are already reported by the `name`
+        // field's own `min(1)` check.
         !isCloudRecordingRuleByType(values.type) || values.name.length === 0 || isValidMetricName(values.name),
       {
         message: t(
