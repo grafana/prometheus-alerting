@@ -22,5 +22,5 @@ Rules don't run individually. They run as part of a group, on that group's sched
 
 ## In this section
 
-- [Rule groups and evaluation](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rule-evaluation/rule-groups/)—when rules run and in what order.
-- [Alert rule state and health](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rule-evaluation/alert-rule-state-and-health/)—what the plugin is telling you about a rule.
+- [Rule groups and evaluation](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rule-evaluation/rule-groups/): when rules run and in what order.
+- [Alert rule state and health](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rule-evaluation/alert-rule-state-and-health/): what the plugin is telling you about a rule.

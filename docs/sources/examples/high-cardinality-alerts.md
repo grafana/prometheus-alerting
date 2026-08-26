@@ -43,7 +43,7 @@ count by (namespace, service) (
 ) > 5
 ```
 
-This produces one alert per service, not one per pod. You lose the list of individual pods—put a dashboard link in the annotations so whoever responds can get it.
+This produces one alert per service, not one per pod. You lose the list of individual pods. Put a dashboard link in the annotations so whoever responds can get it.
 
 ## Drop labels you don't need
 

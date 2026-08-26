@@ -32,7 +32,7 @@ If a data source can't be read, the plugin shows that it can't load rules for th
 
 The filter sidebar narrows the list by:
 
-- **Search**—free text against rule names.
+- **Search**: free text against rule names.
 - **Data source**
 - **Namespace** and **Group**
 - **Labels**
@@ -43,7 +43,7 @@ When nothing matches, the plugin says no alert or recording rules matched your f
 
 Select a rule to open its detail page, which has three tabs:
 
-**Details** shows evaluation behavior—**Pending Period**, **Evaluation interval**, **Last Evaluation**, **Evaluation Time**, and **Health**, plus **Last Error** when the last evaluation failed. It also shows the rule's labels and annotations, and states whether the ruler API is available, which is what decides if the rule is editable.
+**Details** shows evaluation behavior: **Pending Period**, **Evaluation interval**, **Last Evaluation**, **Evaluation Time**, and **Health**, plus **Last Error** when the last evaluation failed. It also shows the rule's labels and annotations, and states whether the ruler API is available, which is what decides if the rule is editable.
 
 **Query** shows the expression, with **View in Explore** to open it in Explore.
 

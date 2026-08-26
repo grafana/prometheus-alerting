@@ -24,7 +24,7 @@ A receiver is a named destination for notifications. Routes refer to receivers b
 
 ## A receiver holds integrations
 
-A receiver isn't a single destination—it's a named set of **integrations**, each one a configured connection to a notification system. A receiver with a Slack integration and a PagerDuty integration sends to both whenever it's used.
+A receiver isn't a single destination. It's a named set of **integrations**, each one a configured connection to a notification system. A receiver with a Slack integration and a PagerDuty integration sends to both whenever it's used.
 
 A receiver with no integrations is valid configuration and delivers nothing. The plugin points this out when you create one, since it's rarely what you want.
 

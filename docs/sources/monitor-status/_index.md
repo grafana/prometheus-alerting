@@ -26,7 +26,7 @@ Checking both matters, because they answer different questions. A rule producing
 
 ## In this section
 
-- [Alerts page](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/monitor-status/alerts-page/)—what's firing right now.
-- [View alert rules](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/monitor-status/view-alert-rules/)—browse and inspect rules.
-- [View alert state](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/monitor-status/view-alert-state/)—read an individual alert instance.
-- [View active notifications](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/monitor-status/view-active-notifications/)—confirm routing and suppression.
+- [Alerts page](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/monitor-status/alerts-page/): what's firing right now.
+- [View alert rules](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/monitor-status/view-alert-rules/): browse and inspect rules.
+- [View alert state](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/monitor-status/view-alert-state/): read an individual alert instance.
+- [View active notifications](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/monitor-status/view-active-notifications/): confirm routing and suppression.

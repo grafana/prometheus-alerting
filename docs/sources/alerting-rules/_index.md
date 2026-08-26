@@ -26,7 +26,7 @@ Editing rules needs two things:
 - The `alert.rules.external:write` permission. Refer to [Configure access control](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/configure-rbac/).
 - A data source with a writable ruler API. Mimir, Cortex, and Loki have one; vanilla Prometheus doesn't, and its rules are read-only here. Refer to [Configure data sources](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/configure-data-sources/).
 
-If either is missing you can still browse rules—the create and edit actions are absent.
+If either is missing you can still browse rules. The create and edit actions are absent.
 
 ## In this section
 

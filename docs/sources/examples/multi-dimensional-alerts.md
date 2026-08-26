@@ -17,7 +17,7 @@ review_date: '2026-08-19'
 
 # Multi-dimensional alerts
 
-A single rule normally produces many alerts—one per series its expression returns. This is the default behavior rather than something you enable, and understanding it explains a lot of alerting behavior.
+A single rule normally produces many alerts, one per series its expression returns. This is the default behavior rather than something you enable, and understanding it explains a lot of alerting behavior.
 
 ## The pattern
 
@@ -39,7 +39,7 @@ One rule covers every filesystem on every host. You don't write a rule per host,
 
 ## Why this works
 
-An alert instance's identity is its label set, which comes from the series the expression returned. Because each filesystem is a distinct series with distinct labels, each becomes a distinct alert—tracked separately, firing and resolving on its own schedule.
+An alert instance's identity is its label set, which comes from the series the expression returned. Because each filesystem is a distinct series with distinct labels, each becomes a distinct alert, tracked separately, firing and resolving on its own schedule.
 
 The annotations are templated per instance, so each alert names its own filesystem. Refer to [Template annotations and labels](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/alerting-rules/template-annotations-and-labels/).
 
@@ -59,17 +59,17 @@ Grouping by `alertname` alone gives one notification covering everything. Refer 
 
 The rule editor's **Query Preview** shows what the expression returns right now. If it comes back with hundreds of rows, the rule will produce hundreds of alerts the moment it's saved.
 
-That's the point at which to reconsider—either aggregate the expression, or plan the grouping to match. Refer to [High-cardinality alerts](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/examples/high-cardinality-alerts/).
+That's the point at which to reconsider. Either aggregate the expression, or plan the grouping to match. Refer to [High-cardinality alerts](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/examples/high-cardinality-alerts/).
 
 ## Preserve the labels you route on
 
 Aggregating away a label you need for routing breaks the routing silently:
 
 ```promql
-# Keeps instance and mountpoint — routable per host
+# Keeps instance and mountpoint: routable per host
 node_filesystem_avail_bytes / node_filesystem_size_bytes * 100 < 10
 
-# Drops every label — one anonymous alert, nothing to route on
+# Drops every label: one anonymous alert, nothing to route on
 count(node_filesystem_avail_bytes / node_filesystem_size_bytes * 100 < 10) > 5
 ```
 
