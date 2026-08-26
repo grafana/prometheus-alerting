@@ -11,6 +11,7 @@ import {
   OpsGenieConfigSchema,
   PushoverConfigSchema,
   VictorOpsConfigSchema,
+  TelegramConfigSchema,
   type Receiver,
 } from '@grafana/external-alertmanager/vanilla';
 import {
@@ -58,6 +59,11 @@ import {
   victorOpsConfigToFormSettings,
   victorOpsFormSettingsToConfig,
 } from '../integrations/victorops/victorops.mapper';
+import {
+  createDefaultTelegramSettings,
+  telegramConfigToFormSettings,
+  telegramFormSettingsToConfig,
+} from '../integrations/telegram/telegram.mapper';
 import { cloudNotifierTypes, NotifierDTO } from './notifierTypes';
 import { CLOUD_INTEGRATION_TYPES, CloudIntegrationType, INTEGRATION_TYPE_MAP } from './cloudIntegrationTypes';
 import type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
@@ -191,6 +197,17 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
           continue;
         }
 
+        if (type === 'telegram') {
+          const typedConfig = TelegramConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: typedConfig.send_resolved !== false,
+            settings: telegramConfigToFormSettings(typedConfig),
+          });
+          continue;
+        }
+
         const { send_resolved, ...settings } = config;
         integrations.push({
           __id: id,
@@ -305,6 +322,15 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
 
     if (integration.type === 'victorops') {
       const typedConfig = victorOpsFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...typedConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+
+    if (integration.type === 'telegram') {
+      const typedConfig = telegramFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
         ...typedConfig,
         send_resolved: integration.sendResolved,
@@ -455,6 +481,15 @@ export function createDefaultIntegration(type: CloudIntegrationType): Integratio
       type,
       sendResolved: true,
       settings: createDefaultVictorOpsSettings(),
+    };
+  }
+
+  if (type === 'telegram') {
+    return {
+      __id: generateId(),
+      type,
+      sendResolved: true,
+      settings: createDefaultTelegramSettings(),
     };
   }
 

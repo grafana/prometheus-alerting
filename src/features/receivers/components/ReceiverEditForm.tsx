@@ -49,6 +49,8 @@ import { PushoverIntegrationForm } from '../integrations/pushover/PushoverIntegr
 
 import { VictorOpsIntegrationForm } from '../integrations/victorops/VictorOpsIntegrationForm';
 
+import { TelegramIntegrationForm } from '../integrations/telegram/TelegramIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -289,6 +291,8 @@ function IntegrationEditor({
           <PushoverIntegrationForm index={index} />
         ) : integrationType === 'victorops' ? (
           <VictorOpsIntegrationForm index={index} />
+        ) : integrationType === 'telegram' ? (
+          <TelegramIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}

@@ -10,6 +10,7 @@ import { createSlackIntegrationFormSchema } from '../integrations/slack/slack.sc
 import { createOpsgenieIntegrationFormSchema } from '../integrations/opsgenie/opsgenie.schema';
 import { createPushoverIntegrationFormSchema } from '../integrations/pushover/pushover.schema';
 import { createVictorOpsIntegrationFormSchema } from '../integrations/victorops/victorops.schema';
+import { createTelegramIntegrationFormSchema } from '../integrations/telegram/telegram.schema';
 import { LEGACY_INTEGRATION_TYPES } from './cloudIntegrationTypes';
 
 const LegacyIntegrationFormSchema = z.object({
@@ -34,6 +35,7 @@ export function createReceiverFormSchema() {
         createOpsgenieIntegrationFormSchema(),
         createPushoverIntegrationFormSchema(),
         createVictorOpsIntegrationFormSchema(),
+        createTelegramIntegrationFormSchema(),
         LegacyIntegrationFormSchema,
       ])
     ),
