@@ -1,6 +1,6 @@
 import { getRuleName } from '@grafana/external-rules/utils';
 import { expect, test } from './fixtures/ruler';
-import { getMimirRuleGroup } from './api/mimir';
+import { getMimirRuleGroup, postMimirRuleGroup } from './api/mimir';
 import { TEST_DATASOURCE_UID, TEST_NAMESPACE } from './factories/rules';
 
 test.describe('Group Edit', () => {
@@ -46,13 +46,45 @@ test.describe('Group Edit', () => {
     await groupEditPage.saveButton.click();
     await expect
       .poll(async () => {
-        const persistedGroup = await getMimirRuleGroup(
-          mimirRuler.tenantId,
-          mimirRuler.namespace,
-          mimirRuler.groupName
-        );
+        const persistedGroup = await getMimirRuleGroup(mimirRuler.tenantId, mimirRuler.namespace, mimirRuler.groupName);
         return persistedGroup?.rules.map(getRuleName);
       })
       .toEqual(['TestCloneRule', 'test:recording:rule', 'TestEditRule']);
+  });
+
+  test('keeps the group settings the form has no field for', async ({ groupEditPage, mimirRuler, mimirGroup }) => {
+    const groupName = mimirGroup('federated');
+    await postMimirRuleGroup(
+      mimirRuler.tenantId,
+      mimirRuler.namespace,
+      `name: ${groupName}
+interval: 1m
+limit: 10
+query_offset: 2m
+source_tenants: [tenant-a, tenant-b]
+align_evaluation_time_on_interval: true
+rules:
+  - alert: FederatedRule
+    expr: up == 0
+    for: 5m
+`
+    );
+
+    await groupEditPage.goto(mimirRuler.uid, mimirRuler.namespace, groupName);
+    await groupEditPage.waitForLoad();
+    await groupEditPage.pageContent.getByRole('button', { name: '30s', exact: true }).click();
+    await groupEditPage.saveButton.click();
+
+    // The payload used to be rebuilt from name, interval and rules alone, which de-federated the
+    // group -- its rules then evaluated against this tenant's data instead of the source tenants'.
+    await expect
+      .poll(async () => getMimirRuleGroup(mimirRuler.tenantId, mimirRuler.namespace, groupName))
+      .toMatchObject({
+        interval: '30s',
+        limit: 10,
+        query_offset: '2m',
+        source_tenants: ['tenant-a', 'tenant-b'],
+        align_evaluation_time_on_interval: true,
+      });
   });
 });

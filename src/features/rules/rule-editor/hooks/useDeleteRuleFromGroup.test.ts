@@ -103,6 +103,32 @@ describe('useDeleteRuleFromGroup', () => {
     ]);
   });
 
+  it('keeps the group settings the plugin has no form field for', async () => {
+    // A federated Mimir group. Editing any rule in it used to strip source_tenants and friends,
+    // so the group silently stopped reading the other tenants' data.
+    const federatedGroup = {
+      name: GROUP_NAME,
+      interval: '1m',
+      limit: 10,
+      query_offset: '2m',
+      source_tenants: ['tenant-a', 'tenant-b'],
+      align_evaluation_time_on_interval: true,
+      rules: [firstRule, secondRule],
+    };
+
+    setMockNamespaces({ [NAMESPACE]: [federatedGroup] });
+    const { upserts } = captureRulerWrites();
+
+    const result = renderDeleteRuleFromGroup();
+    const [deleteRuleFromGroup] = result.current;
+
+    await act(async () => {
+      await expect(deleteRuleFromGroup(identifierFor(secondRule))).resolves.toEqual({ groupDeleted: false });
+    });
+
+    expect(upserts).toEqual([{ ...federatedGroup, rules: [firstRule] }]);
+  });
+
   it('deletes the group when the deleted rule was the last one', async () => {
     setMockNamespaces({
       [NAMESPACE]: [{ name: GROUP_NAME, interval: '1m', rules: [firstRule] }],

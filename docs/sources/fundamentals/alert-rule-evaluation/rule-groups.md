@@ -21,7 +21,7 @@ A rule group is the unit of scheduling. Everything in it is evaluated together, 
 
 ## Groups and namespaces
 
-Rules sit in a **group**, and groups sit in a **namespace**. Namespaces are containers for organizing groups—in Mimir and Cortex a namespace is roughly a file's worth of rules, and in vanilla Prometheus it corresponds to a rule file on disk.
+Rules sit in a **group**, and groups sit in a **namespace**. Namespaces are containers for organizing groups. In Mimir and Cortex a namespace is roughly a file's worth of rules, and in vanilla Prometheus it corresponds to a rule file on disk.
 
 A rule is identified by all three: its namespace, its group, and its name.
 
@@ -35,7 +35,7 @@ The interval is a floor on how quickly you can learn about a problem. A group ev
 
 This is the part that catches people out. The pending period is checked at evaluation time, so it's effectively rounded up to a multiple of the interval.
 
-A rule with `for: 1m` in a group evaluated every 5 minutes doesn't fire after 1 minute. It fires on the second consecutive evaluation where the condition holds—up to 10 minutes after the problem started.
+A rule with `for: 1m` in a group evaluated every 5 minutes doesn't fire after 1 minute. It fires on the second consecutive evaluation where the condition holds, up to 10 minutes after the problem started.
 
 Keep the interval comfortably below the pending period. As a rule of thumb, aim for the pending period to span at least three or four evaluations, so a single missed or noisy evaluation doesn't decide the outcome.
 
@@ -49,7 +49,7 @@ This evaluation interval belongs to a rule group and controls how often rules ru
 
 Within a group, rules are evaluated sequentially, top to bottom. Different groups can run in parallel, but a single group is ordered.
 
-This matters when one rule depends on another. If an alerting rule uses a metric produced by a recording rule, the recording rule has to be in the same group and listed before it—otherwise the alerting rule reads whatever the previous cycle produced, or nothing at all on the first run.
+This matters when one rule depends on another. If an alerting rule uses a metric produced by a recording rule, the recording rule has to be in the same group and listed before it. Otherwise the alerting rule reads whatever the previous cycle produced, or nothing at all on the first run.
 
 The plugin's group edit page lets you drag rules to reorder them, which is how you fix a dependency that's in the wrong order.
 

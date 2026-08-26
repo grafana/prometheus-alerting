@@ -39,7 +39,7 @@ The trailing `.` passes the current context through. Leaving it off gives the te
 
 ## The dot
 
-`.` is the current context. At the top of a notification template it's the notification data—the group of alerts and their shared labels. Inside a `range` it becomes the current item.
+`.` is the current context. At the top of a notification template it's the notification data: the group of alerts and their shared labels. Inside a `range` it becomes the current item.
 
 ```go
 {{ .GroupLabels.alertname }}       one field of the notification

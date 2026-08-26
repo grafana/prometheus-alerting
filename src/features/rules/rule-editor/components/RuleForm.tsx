@@ -16,6 +16,7 @@ import { getRuleName } from '@grafana/external-rules/utils';
 
 import { rulerApi } from '../../../../api/rules/ruler.endpoints';
 import { rules as rulesNav } from '../../../../utils/navigation';
+import { RulesErrorAlert } from '../../components/RulesErrorAlert';
 
 const { useUpsertRuleGroupMutation } = rulerApi;
 
@@ -51,6 +52,9 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
   const initialUid = existingRuleIdentifier?.uid ?? prefill?.dataSourceUid ?? null;
 
   const [currentDataSourceUid, setCurrentDataSourceUid] = useState<string | null>(initialUid);
+
+  // The last failure from the Ruler, kept raw so the alert can decide how to present it
+  const [submitError, setSubmitError] = useState<unknown>(null);
 
   // Create default form values, merging with prefill if provided
   const defaultValues: RuleFormValues = useMemo(() => {
@@ -88,32 +92,24 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
   };
 
   const onSubmit = async (values: RuleFormValues) => {
-    console.log('Form submitted with values:', values);
-    console.log('Current data source UID:', currentDataSourceUid);
-    console.log('Existing rule identifier (for edit mode):', existingRuleIdentifier);
+    setSubmitError(null);
 
     try {
       // Data source UID validation (not in form values)
       if (!currentDataSourceUid) {
-        console.error('No data source selected');
         throw new Error('No data source selected');
       }
 
       // All other validations are handled by Zod schema
       // Convert form values to RulerRuleDTO
-      console.log('Converting form values to RulerRuleDTO...');
       const ruleDTO: RulerRuleDTO = formValuesToRulerRuleDTO(values);
-      console.log('RulerRuleDTO:', ruleDTO);
 
       // Determine which action to use
       const action = existingRuleIdentifier
         ? updateRuleAction({ identifier: existingRuleIdentifier, rule: ruleDTO })
         : addRuleAction({ rule: ruleDTO, groupName: values.group });
 
-      console.log('Action to apply:', action.type);
-
       // Use the hook to safely fetch and update the rule group
-      console.log('Producing new rule group...');
       const newRuleGroup = await produceNewRuleGroup(
         currentDataSourceUid,
         values.namespace,
@@ -121,16 +117,12 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
         [action] // Pass actions array
       );
 
-      console.log('New rule group produced with', newRuleGroup.rules.length, 'rules:', newRuleGroup);
-
       // Submit to API
-      console.log('Submitting to API...');
-      const result = await upsertRuleGroup({
+      await upsertRuleGroup({
         dataSourceUid: currentDataSourceUid,
         namespace: values.namespace,
         payload: newRuleGroup,
       }).unwrap();
-      console.log('API call successful:', result);
 
       // Build the rule identifier for navigation
       const ruleIdentifier: CloudRuleIdentifier = {
@@ -148,8 +140,7 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
       locationService.push(rulesNav.detailsPageLink(ruleIdentifier));
     } catch (error) {
       console.error('Failed to save rule:', error);
-      // TODO: Show error notification
-      alert(`Failed to save rule: ${error instanceof Error ? error.message : String(error)}`);
+      setSubmitError(error);
     }
   };
 
@@ -180,6 +171,16 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
               {/* Step 4: Annotations (alerting only) */}
               {isAlerting && <AnnotationsStep />}
             </div>
+
+            {/* Whatever the Ruler rejected, shown next to the button that triggered the save */}
+            {submitError !== null && (
+              <div className={styles.submitError}>
+                <RulesErrorAlert
+                  error={submitError}
+                  title={t('alerting.rule-form.submit-error', 'Failed to save rule')}
+                />
+              </div>
+            )}
 
             {/* Actions */}
             <div className={styles.actions}>
@@ -222,6 +223,9 @@ const getStyles = (theme: GrafanaTheme2) => ({
     // Container for form sections - allows :last-child selector to work properly
   }),
   actions: css({
+    paddingTop: theme.spacing(2),
+  }),
+  submitError: css({
     paddingTop: theme.spacing(2),
   }),
 });

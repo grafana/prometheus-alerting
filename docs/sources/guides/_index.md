@@ -16,5 +16,5 @@ review_date: '2026-08-19'
 
 # Guides
 
-- [Best practices](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/guides/best-practices/)—keeping an alerting setup maintainable.
-- [Troubleshooting](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/guides/troubleshooting/)—diagnosing common problems.
+- [Best practices](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/guides/best-practices/): keeping an alerting setup maintainable.
+- [Troubleshooting](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/guides/troubleshooting/): diagnosing common problems.

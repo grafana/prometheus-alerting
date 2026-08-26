@@ -23,4 +23,14 @@ export interface RuleFormValues {
   expression: string;
   forTime: number;
   forTimeUnit: string;
+  /**
+   * `keep_firing_for` on the rule — how long it stays firing after the query stops matching.
+   *
+   * One free-text duration string rather than a number and a unit, because Prometheus accepts
+   * compound durations like `1h30m` and splitting one apart just to put it back together is a
+   * good way to lose it. Empty means the rule has no `keep_firing_for` at all.
+   *
+   * Grafana core has no field for this; we deliberately show one.
+   */
+  keepFiringFor?: string;
 }

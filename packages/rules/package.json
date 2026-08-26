@@ -14,7 +14,7 @@
   "exports": {
     "./identifiers": "./src/identifiers/index.ts",
     "./hashing": "./src/hashing/index.ts",
-    "./utils": "./src/utils/index.ts",
+    "./utils": "./src/utils/rule.ts",
     "./matching": "./src/matching.ts",
     "./vanilla": "./src/vanilla/index.ts",
     "./ruler": "./src/ruler/types.ts",
