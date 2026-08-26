@@ -44,6 +44,11 @@ export function createVictorOpsSettingsFormSchema(validateForSubmission = true) 
     });
 }
 export function createVictorOpsIntegrationFormSchema() {
-  return createIntegrationFormSchema('victorops', createVictorOpsSettingsFormSchema());
+  return createIntegrationFormSchema('victorops', createVictorOpsSettingsFormSchema(), [
+    {
+      name: 'api_url',
+      message: t('receivers.form.victorops-api-url-invalid', 'API URL must start with http:// or https://'),
+    },
+  ]);
 }
 export type VictorOpsSettingsFormValues = z.infer<ReturnType<typeof createVictorOpsSettingsFormSchema>>;

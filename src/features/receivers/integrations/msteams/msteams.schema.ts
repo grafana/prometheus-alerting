@@ -19,6 +19,11 @@ export function createMSTeamsSettingsFormSchema() {
   });
 }
 export function createMSTeamsIntegrationFormSchema() {
-  return createIntegrationFormSchema('msteams', createMSTeamsSettingsFormSchema());
+  return createIntegrationFormSchema('msteams', createMSTeamsSettingsFormSchema(), [
+    {
+      name: 'webhook_url',
+      message: t('receivers.form.msteams-webhook-url-invalid', 'Webhook URL must start with http:// or https://'),
+    },
+  ]);
 }
 export type MSTeamsSettingsFormValues = z.infer<ReturnType<typeof createMSTeamsSettingsFormSchema>>;

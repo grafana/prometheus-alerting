@@ -47,7 +47,12 @@ export function createSNSSettingsFormSchema() {
 }
 
 export function createSNSIntegrationFormSchema() {
-  return createIntegrationFormSchema('sns', createSNSSettingsFormSchema());
+  return createIntegrationFormSchema('sns', createSNSSettingsFormSchema(), [
+    {
+      name: 'api_url',
+      message: t('receivers.form.sns-api-url-invalid', 'API URL must start with http:// or https://'),
+    },
+  ]);
 }
 
 export type SNSSettingsFormValues = z.infer<ReturnType<typeof createSNSSettingsFormSchema>>;

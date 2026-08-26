@@ -270,8 +270,8 @@ describe('ReceiverEditForm integrations', () => {
     const user = userEvent.setup();
     const receiver = {
       name: 'final-typed-batch',
-      discord_configs: [{ webhook_url: 'discord-secret', title: 'Discord alert' }],
-      msteams_configs: [{ webhook_url: 'teams-secret', title: 'Teams alert' }],
+      discord_configs: [{ webhook_url: 'https://discord.example/hook', title: 'Discord alert' }],
+      msteams_configs: [{ webhook_url: 'https://teams.example/hook', title: 'Teams alert' }],
       wechat_configs: [{ api_secret: 'wechat-secret', corp_id: 'corp', message_type: 'markdown' }],
       jira_configs: [
         {

@@ -61,7 +61,12 @@ export function createSlackSettingsFormSchema(validateForSubmission = true) {
 }
 
 export function createSlackIntegrationFormSchema() {
-  return createIntegrationFormSchema('slack', createSlackSettingsFormSchema());
+  return createIntegrationFormSchema('slack', createSlackSettingsFormSchema(), [
+    {
+      name: 'api_url',
+      message: t('receivers.form.slack-api-url-invalid', 'Webhook URL must start with http:// or https://'),
+    },
+  ]);
 }
 
 export type SlackSettingsFormValues = z.infer<ReturnType<typeof createSlackSettingsFormSchema>>;

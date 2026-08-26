@@ -39,6 +39,11 @@ export function createTelegramSettingsFormSchema(validateForSubmission = true) {
   });
 }
 export function createTelegramIntegrationFormSchema() {
-  return createIntegrationFormSchema('telegram', createTelegramSettingsFormSchema());
+  return createIntegrationFormSchema('telegram', createTelegramSettingsFormSchema(), [
+    {
+      name: 'api_url',
+      message: t('receivers.form.telegram-api-url-invalid', 'API URL must start with http:// or https://'),
+    },
+  ]);
 }
 export type TelegramSettingsFormValues = z.infer<ReturnType<typeof createTelegramSettingsFormSchema>>;
