@@ -1,8 +1,13 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, Field, IconButton, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { useFormContext } from 'react-hook-form';
-import { CheckboxField, ControlledField, TextField } from '../shared/FormFields';
+import { useFormContext, type FieldPath } from 'react-hook-form';
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { PagerDutySettingsFormValues } from './pagerduty.schema';
+
+type PagerDutyFormValues = IntegrationFormValues<PagerDutySettingsFormValues>;
+const { CheckboxField, ControlledField, TextField } = createFormFields<PagerDutyFormValues>();
 
 import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
 
@@ -11,7 +16,7 @@ interface PagerDutyIntegrationFormProps {
 }
 
 type PagerDutySettingsPath = `integrations.${number}.settings`;
-type PagerDutyFieldPath = `integrations.${number}.settings.${string}`;
+type PagerDutyFieldPath = FieldPath<PagerDutyFormValues>;
 
 export function PagerDutyIntegrationForm({ index }: PagerDutyIntegrationFormProps) {
   const { register } = useFormContext<ReceiverFormValues>();

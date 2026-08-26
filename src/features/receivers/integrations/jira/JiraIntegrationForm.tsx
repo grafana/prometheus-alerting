@@ -1,8 +1,14 @@
 import React from 'react';
+import type { FieldPath } from 'react-hook-form';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, IconButton, Input, Stack, Text } from '@grafana/ui';
-import { CheckboxField, ControlledField, TextAreaField, TextField } from '../shared/FormFields';
-type Path = `integrations.${number}.settings.${string}`;
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { JiraSettingsFormValues } from './jira.schema';
+
+type JiraFormValues = IntegrationFormValues<JiraSettingsFormValues>;
+const { CheckboxField, ControlledField, TextAreaField, TextField } = createFormFields<JiraFormValues>();
+type Path = FieldPath<JiraFormValues>;
 export function JiraIntegrationForm({ index }: { index: number }) {
   const path = `integrations.${index}.settings` as const;
   return (

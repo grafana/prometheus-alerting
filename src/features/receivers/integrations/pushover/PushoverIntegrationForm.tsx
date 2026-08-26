@@ -1,7 +1,12 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Stack, Text } from '@grafana/ui';
-import { CheckboxField, TextAreaField, TextField } from '../shared/FormFields';
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { PushoverSettingsFormValues } from './pushover.schema';
+
+type PushoverFormValues = IntegrationFormValues<PushoverSettingsFormValues>;
+const { CheckboxField, TextAreaField, TextField } = createFormFields<PushoverFormValues>();
 interface PushoverIntegrationFormProps {
   index: number;
 }

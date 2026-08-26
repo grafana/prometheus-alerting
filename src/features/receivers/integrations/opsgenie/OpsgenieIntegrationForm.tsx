@@ -1,11 +1,17 @@
 import React from 'react';
+import type { FieldPath } from 'react-hook-form';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, IconButton, Input, Stack, Text } from '@grafana/ui';
-import { CheckboxField, ControlledField, TextAreaField, TextField } from '../shared/FormFields';
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { OpsgenieSettingsFormValues } from './opsgenie.schema';
+
+type OpsgenieFormValues = IntegrationFormValues<OpsgenieSettingsFormValues>;
+const { CheckboxField, ControlledField, TextAreaField, TextField } = createFormFields<OpsgenieFormValues>();
 interface OpsgenieIntegrationFormProps {
   index: number;
 }
-type OpsgenieFieldPath = `integrations.${number}.settings.${string}`;
+type OpsgenieFieldPath = FieldPath<OpsgenieFormValues>;
 export function OpsgenieIntegrationForm({ index }: OpsgenieIntegrationFormProps) {
   const path = `integrations.${index}.settings` as const;
   return (

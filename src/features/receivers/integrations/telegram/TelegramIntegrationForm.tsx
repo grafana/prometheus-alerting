@@ -1,7 +1,12 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Combobox, Stack, Text } from '@grafana/ui';
-import { CheckboxField, ControlledField, TextAreaField, TextField } from '../shared/FormFields';
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { TelegramSettingsFormValues } from './telegram.schema';
+
+type TelegramFormValues = IntegrationFormValues<TelegramSettingsFormValues>;
+const { CheckboxField, ControlledField, TextAreaField, TextField } = createFormFields<TelegramFormValues>();
 interface TelegramIntegrationFormProps {
   index: number;
 }

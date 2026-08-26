@@ -1,7 +1,12 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Stack, Text } from '@grafana/ui';
-import { CheckboxField, TextField } from '../shared/FormFields';
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { WebhookSettingsFormValues } from './webhook.schema';
+
+type WebhookFormValues = IntegrationFormValues<WebhookSettingsFormValues>;
+const { CheckboxField, TextField } = createFormFields<WebhookFormValues>();
 
 interface WebhookIntegrationFormProps {
   index: number;

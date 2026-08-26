@@ -1,15 +1,20 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, Field, IconButton, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { useFormContext } from 'react-hook-form';
-import { CheckboxField, ControlledField, TextAreaField, TextField } from '../shared/FormFields';
+import { useFormContext, type FieldPath } from 'react-hook-form';
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { EmailSettingsFormValues } from './email.schema';
+
+type EmailFormValues = IntegrationFormValues<EmailSettingsFormValues>;
+const { CheckboxField, ControlledField, TextAreaField, TextField } = createFormFields<EmailFormValues>();
 
 import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
 
 interface EmailIntegrationFormProps {
   index: number;
 }
-type EmailFieldPath = `integrations.${number}.settings.${string}`;
+type EmailFieldPath = FieldPath<EmailFormValues>;
 
 export function EmailIntegrationForm({ index }: EmailIntegrationFormProps) {
   const { register } = useFormContext<ReceiverFormValues>();

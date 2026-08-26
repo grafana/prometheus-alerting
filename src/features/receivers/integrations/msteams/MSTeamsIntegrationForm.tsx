@@ -1,7 +1,12 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Stack, Text } from '@grafana/ui';
-import { CheckboxField, TextAreaField, TextField } from '../shared/FormFields';
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { MSTeamsSettingsFormValues } from './msteams.schema';
+
+type MSTeamsFormValues = IntegrationFormValues<MSTeamsSettingsFormValues>;
+const { CheckboxField, TextAreaField, TextField } = createFormFields<MSTeamsFormValues>();
 export function MSTeamsIntegrationForm({ index }: { index: number }) {
   const path = `integrations.${index}.settings` as const;
   return (

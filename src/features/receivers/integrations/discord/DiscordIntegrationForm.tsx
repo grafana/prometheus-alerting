@@ -1,7 +1,12 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Stack, Text } from '@grafana/ui';
-import { CheckboxField, TextAreaField, TextField } from '../shared/FormFields';
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { DiscordSettingsFormValues } from './discord.schema';
+
+type DiscordFormValues = IntegrationFormValues<DiscordSettingsFormValues>;
+const { CheckboxField, TextAreaField, TextField } = createFormFields<DiscordFormValues>();
 export function DiscordIntegrationForm({ index }: { index: number }) {
   const path = `integrations.${index}.settings` as const;
   return (

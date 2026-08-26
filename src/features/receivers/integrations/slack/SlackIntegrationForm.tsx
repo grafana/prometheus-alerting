@@ -1,12 +1,18 @@
 import React from 'react';
+import type { FieldPath } from 'react-hook-form';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, IconButton, Input, Stack, Text } from '@grafana/ui';
-import { CheckboxField, ControlledField, TextAreaField, TextField } from '../shared/FormFields';
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { SlackSettingsFormValues } from './slack.schema';
+
+type SlackFormValues = IntegrationFormValues<SlackSettingsFormValues>;
+const { CheckboxField, ControlledField, TextAreaField, TextField } = createFormFields<SlackFormValues>();
 
 interface SlackIntegrationFormProps {
   index: number;
 }
-type SlackFieldPath = `integrations.${number}.settings.${string}`;
+type SlackFieldPath = FieldPath<SlackFormValues>;
 
 export function SlackIntegrationForm({ index }: SlackIntegrationFormProps) {
   const path = `integrations.${index}.settings` as const;

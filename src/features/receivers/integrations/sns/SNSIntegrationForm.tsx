@@ -1,15 +1,20 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, Field, IconButton, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { useFormContext } from 'react-hook-form';
-import { CheckboxField, ControlledField, TextField } from '../shared/FormFields';
+import { useFormContext, type FieldPath } from 'react-hook-form';
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { SNSSettingsFormValues } from './sns.schema';
+
+type SNSFormValues = IntegrationFormValues<SNSSettingsFormValues>;
+const { CheckboxField, ControlledField, TextField } = createFormFields<SNSFormValues>();
 
 import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
 
 interface SNSIntegrationFormProps {
   index: number;
 }
-type SNSFieldPath = `integrations.${number}.settings.${string}`;
+type SNSFieldPath = FieldPath<SNSFormValues>;
 
 export function SNSIntegrationForm({ index }: SNSIntegrationFormProps) {
   const { register } = useFormContext<ReceiverFormValues>();

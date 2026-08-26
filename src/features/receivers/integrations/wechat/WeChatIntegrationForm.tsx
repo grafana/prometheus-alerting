@@ -1,7 +1,12 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Combobox, Stack, Text } from '@grafana/ui';
-import { CheckboxField, ControlledField, TextAreaField, TextField } from '../shared/FormFields';
+import { createFormFields } from '../shared/FormFields';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { WeChatSettingsFormValues } from './wechat.schema';
+
+type WeChatFormValues = IntegrationFormValues<WeChatSettingsFormValues>;
+const { CheckboxField, ControlledField, TextAreaField, TextField } = createFormFields<WeChatFormValues>();
 export function WeChatIntegrationForm({ index }: { index: number }) {
   const path = `integrations.${index}.settings` as const;
   return (

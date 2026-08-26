@@ -1,108 +1,135 @@
 import React from 'react';
-import { useController, useFormContext, type ControllerRenderProps } from 'react-hook-form';
+import {
+  useController,
+  useFormContext,
+  type ControllerRenderProps,
+  type FieldPath,
+  type FieldPathByValue,
+  type FieldValues,
+} from 'react-hook-form';
 import { Checkbox, Field, Input, TextArea } from '@grafana/ui';
 
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
-
-/** Path to a field inside one integration's settings, e.g. `integrations.0.settings.webhook_url`. */
-export type IntegrationFieldPath = `integrations.${number}.settings.${string}`;
-
-type FieldApi = ControllerRenderProps<ReceiverFormValues, IntegrationFieldPath>;
-
 /**
- * The validation message for a field, if it has one.
+ * Builds the form fields for one integration, tied to that integration's own settings type.
  *
- * Every component here reads it the same way, so an input that can't show its error is not
- * something you can accidentally write - which is the whole point of going through these.
- */
-function useFieldError(name: IntegrationFieldPath) {
-  const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
-  return getFieldState(name, formState).error?.message;
-}
-
-/**
- * A labelled field for a control that isn't a plain input - a checkbox, a combobox, a list editor.
+ * Call it once at module scope and destructure what you need. Field names are then checked against
+ * the schema - a typo, or a checkbox pointed at a string, is a compile error rather than an input
+ * that quietly edits nothing.
  *
- * Those need `useController` because there is no DOM input to hand to `register`. Plain text
- * inputs don't: see `TextField`.
+ * Every field here shows its own validation message, so there is nowhere left to forget it.
  */
-export function ControlledField({
-  name,
-  label,
-  description,
-  required = false,
-  children,
-}: {
-  name: IntegrationFieldPath;
-  label: string;
-  description?: string;
-  required?: boolean;
-  children: (field: FieldApi) => React.ReactElement;
-}) {
-  const { field } = useController<ReceiverFormValues, IntegrationFieldPath>({ name });
-  const error = useFieldError(name);
-  return (
-    <Field noMargin label={label} description={description} required={required} invalid={Boolean(error)} error={error}>
-      {children(field)}
-    </Field>
-  );
-}
+export function createFormFields<Values extends FieldValues>() {
+  type TextPath = FieldPathByValue<Values, string | undefined>;
+  type BooleanPath = FieldPathByValue<Values, boolean | undefined>;
 
-export function TextField({
-  name,
-  label,
-  type = 'text',
-  description,
-  placeholder,
-  inputMode,
-  required = false,
-}: {
-  name: IntegrationFieldPath;
-  label: string;
-  type?: string;
-  description?: string;
-  placeholder?: string;
-  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
-  required?: boolean;
-}) {
-  const { register } = useFormContext<ReceiverFormValues>();
-  const error = useFieldError(name);
-  return (
-    <Field noMargin label={label} description={description} required={required} invalid={Boolean(error)} error={error}>
-      <Input {...register(name)} type={type} placeholder={placeholder} inputMode={inputMode} aria-label={label} />
-    </Field>
-  );
-}
+  /** The validation message for a field, if it has one. */
+  function useFieldError(name: FieldPath<Values>) {
+    const { formState, getFieldState } = useFormContext<Values>();
+    return getFieldState(name, formState).error?.message;
+  }
 
-export function TextAreaField({ name, label, rows = 3 }: { name: IntegrationFieldPath; label: string; rows?: number }) {
-  const { register } = useFormContext<ReceiverFormValues>();
-  const error = useFieldError(name);
-  return (
-    <Field noMargin label={label} invalid={Boolean(error)} error={error}>
-      <TextArea {...register(name)} rows={rows} aria-label={label} />
-    </Field>
-  );
-}
+  function TextField({
+    name,
+    label,
+    type = 'text',
+    description,
+    placeholder,
+    inputMode,
+    required = false,
+  }: {
+    name: TextPath;
+    label: string;
+    type?: string;
+    description?: string;
+    placeholder?: string;
+    inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+    required?: boolean;
+  }) {
+    const { register } = useFormContext<Values>();
+    const error = useFieldError(name);
+    return (
+      <Field
+        noMargin
+        label={label}
+        description={description}
+        required={required}
+        invalid={Boolean(error)}
+        error={error}
+      >
+        <Input {...register(name)} type={type} placeholder={placeholder} inputMode={inputMode} aria-label={label} />
+      </Field>
+    );
+  }
 
-export function CheckboxField({
-  name,
-  label,
-  defaultChecked = false,
-}: {
-  name: IntegrationFieldPath;
-  label: string;
-  defaultChecked?: boolean;
-}) {
-  return (
-    <ControlledField name={name} label={label}>
-      {({ value, onChange, onBlur }) => (
+  function TextAreaField({ name, label, rows = 3 }: { name: TextPath; label: string; rows?: number }) {
+    const { register } = useFormContext<Values>();
+    const error = useFieldError(name);
+    return (
+      <Field noMargin label={label} invalid={Boolean(error)} error={error}>
+        <TextArea {...register(name)} rows={rows} aria-label={label} />
+      </Field>
+    );
+  }
+
+  function CheckboxField({
+    name,
+    label,
+    defaultChecked = false,
+  }: {
+    name: BooleanPath;
+    label: string;
+    defaultChecked?: boolean;
+  }) {
+    const { control } = useFormContext<Values>();
+    const { field } = useController<Values, BooleanPath>({ name, control });
+    const error = useFieldError(name);
+    return (
+      <Field noMargin label={label} invalid={Boolean(error)} error={error}>
         <Checkbox
-          checked={(typeof value === 'boolean' ? value : undefined) ?? defaultChecked}
-          onChange={(event) => onChange(event.currentTarget.checked)}
-          onBlur={onBlur}
+          checked={(typeof field.value === 'boolean' ? field.value : undefined) ?? defaultChecked}
+          onChange={(event) => field.onChange(event.currentTarget.checked)}
+          onBlur={field.onBlur}
           aria-label={label}
         />
-      )}
-    </ControlledField>
-  );
+      </Field>
+    );
+  }
+
+  /**
+   * A labelled field for a control that isn't a plain input - a combobox, a list editor.
+   *
+   * Those need `useController` because there is no DOM input to hand to `register`. The value
+   * handed to the render prop is typed from the field name.
+   */
+  function ControlledField<Name extends FieldPath<Values>>({
+    name,
+    label,
+    description,
+    required = false,
+    children,
+  }: {
+    name: Name;
+    label: string;
+    description?: string;
+    required?: boolean;
+    children: (field: ControllerRenderProps<Values, Name>) => React.ReactElement;
+  }) {
+    const { control } = useFormContext<Values>();
+    const { field } = useController<Values, Name>({ name, control });
+    const error = useFieldError(name);
+    return (
+      <Field
+        noMargin
+        label={label}
+        description={description}
+        required={required}
+        invalid={Boolean(error)}
+        error={error}
+      >
+        {children(field)}
+      </Field>
+    );
+  }
+
+  return { TextField, TextAreaField, CheckboxField, ControlledField };
 }
