@@ -4,6 +4,7 @@ import { getBackendSrv } from '@grafana/runtime';
 
 import { resolveFlavorOrThrow } from '../../../api/rules/flavors/registry';
 import { buildDatasourceProxyUrl } from '../../../api/utils/proxyPath';
+import { extractErrorMessage } from '../../../utils/errors';
 
 /**
  * Prometheus instant query result types
@@ -79,20 +80,11 @@ export function useQueryPreview(dataSourceUid: string) {
         const now = Math.floor(Date.now() / 1000);
 
         // Execute instant query via datasource proxy
-        // Prometheus expects form-encoded data, not JSON
-        const params = new URLSearchParams();
-        params.append('query', expression);
-        params.append('time', now.toString());
-
+        // GET is accepted by both Prometheus and Loki datasource proxies.
         const queryApiPath = (await resolveFlavorOrThrow(dataSourceUid)).queryPath;
-        const response = await getBackendSrv().post<PrometheusQueryResponse>(
+        const response = await getBackendSrv().get<PrometheusQueryResponse>(
           buildDatasourceProxyUrl(dataSourceUid, ...queryApiPath.split('/')),
-          params.toString(),
-          {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-          }
+          { query: expression, time: now }
         );
 
         if (response.status === 'error') {
@@ -136,11 +128,10 @@ export function useQueryPreview(dataSourceUid: string) {
           hasRun: true,
         });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Query failed';
         setState({
           results: [],
           isLoading: false,
-          error: errorMessage,
+          error: extractErrorMessage(error),
           resultType: null,
           hasRun: true,
         });
