@@ -13,6 +13,7 @@ import {
   VictorOpsConfigSchema,
   TelegramConfigSchema,
   DiscordConfigSchema,
+  MSTeamsConfigSchema,
   type Receiver,
 } from '@grafana/external-alertmanager/vanilla';
 import {
@@ -70,6 +71,11 @@ import {
   discordConfigToFormSettings,
   discordFormSettingsToConfig,
 } from '../integrations/discord/discord.mapper';
+import {
+  createDefaultMSTeamsSettings,
+  msTeamsConfigToFormSettings,
+  msTeamsFormSettingsToConfig,
+} from '../integrations/msteams/msteams.mapper';
 import { cloudNotifierTypes, NotifierDTO } from './notifierTypes';
 import { CLOUD_INTEGRATION_TYPES, CloudIntegrationType, INTEGRATION_TYPE_MAP } from './cloudIntegrationTypes';
 import type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
@@ -225,6 +231,17 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
           continue;
         }
 
+        if (type === 'msteams') {
+          const typedConfig = MSTeamsConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: typedConfig.send_resolved !== false,
+            settings: msTeamsConfigToFormSettings(typedConfig),
+          });
+          continue;
+        }
+
         const { send_resolved, ...settings } = config;
         integrations.push({
           __id: id,
@@ -357,6 +374,15 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
 
     if (integration.type === 'discord') {
       const typedConfig = discordFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...typedConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+
+    if (integration.type === 'msteams') {
+      const typedConfig = msTeamsFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
         ...typedConfig,
         send_resolved: integration.sendResolved,
@@ -525,6 +551,15 @@ export function createDefaultIntegration(type: CloudIntegrationType): Integratio
       type,
       sendResolved: true,
       settings: createDefaultDiscordSettings(),
+    };
+  }
+
+  if (type === 'msteams') {
+    return {
+      __id: generateId(),
+      type,
+      sendResolved: true,
+      settings: createDefaultMSTeamsSettings(),
     };
   }
 

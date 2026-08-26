@@ -53,6 +53,8 @@ import { TelegramIntegrationForm } from '../integrations/telegram/TelegramIntegr
 
 import { DiscordIntegrationForm } from '../integrations/discord/DiscordIntegrationForm';
 
+import { MSTeamsIntegrationForm } from '../integrations/msteams/MSTeamsIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -297,6 +299,8 @@ function IntegrationEditor({
           <TelegramIntegrationForm index={index} />
         ) : integrationType === 'discord' ? (
           <DiscordIntegrationForm index={index} />
+        ) : integrationType === 'msteams' ? (
+          <MSTeamsIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}
