@@ -1,7 +1,12 @@
 /**
  * Utilities for transforming between Alertmanager receiver format and form values.
  */
-import { WebhookConfigSchema, WebexConfigSchema, type Receiver } from '@grafana/external-alertmanager/vanilla';
+import {
+  WebhookConfigSchema,
+  WebexConfigSchema,
+  PagerdutyConfigSchema,
+  type Receiver,
+} from '@grafana/external-alertmanager/vanilla';
 import {
   createDefaultWebhookSettings,
   webhookConfigToFormSettings,
@@ -12,6 +17,11 @@ import {
   webexConfigToFormSettings,
   webexFormSettingsToConfig,
 } from '../integrations/webex/webex.mapper';
+import {
+  createDefaultPagerDutySettings,
+  pagerDutyConfigToFormSettings,
+  pagerDutyFormSettingsToConfig,
+} from '../integrations/pagerduty/pagerduty.mapper';
 import { cloudNotifierTypes, NotifierDTO } from './notifierTypes';
 import { CLOUD_INTEGRATION_TYPES, CloudIntegrationType, INTEGRATION_TYPE_MAP } from './cloudIntegrationTypes';
 import type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
@@ -68,6 +78,17 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
           continue;
         }
 
+        if (type === 'pagerduty') {
+          const typedConfig = PagerdutyConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: typedConfig.send_resolved !== false,
+            settings: pagerDutyConfigToFormSettings(typedConfig),
+          });
+          continue;
+        }
+
         const { send_resolved, ...settings } = config;
         integrations.push({
           __id: id,
@@ -119,6 +140,15 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
 
     if (integration.type === 'webex') {
       const typedConfig = webexFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...typedConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+
+    if (integration.type === 'pagerduty') {
+      const typedConfig = pagerDutyFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
         ...typedConfig,
         send_resolved: integration.sendResolved,
@@ -206,6 +236,15 @@ export function createDefaultIntegration(type: CloudIntegrationType): Integratio
       type,
       sendResolved: true,
       settings: createDefaultWebexSettings(),
+    };
+  }
+
+  if (type === 'pagerduty') {
+    return {
+      __id: generateId(),
+      type,
+      sendResolved: true,
+      settings: createDefaultPagerDutySettings(),
     };
   }
 

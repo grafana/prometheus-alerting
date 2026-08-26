@@ -35,6 +35,8 @@ import { WebhookIntegrationForm } from '../integrations/webhook/WebhookIntegrati
 
 import { WebexIntegrationForm } from '../integrations/webex/WebexIntegrationForm';
 
+import { PagerDutyIntegrationForm } from '../integrations/pagerduty/PagerDutyIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -261,6 +263,8 @@ function IntegrationEditor({
           <WebhookIntegrationForm index={index} />
         ) : integrationType === 'webex' ? (
           <WebexIntegrationForm index={index} />
+        ) : integrationType === 'pagerduty' ? (
+          <PagerDutyIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}
