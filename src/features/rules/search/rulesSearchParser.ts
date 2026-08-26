@@ -89,6 +89,11 @@ export function getSearchFilterFromQuery(query: string): RulesFilter {
     processedQuery = processedQuery.replace(typeMatch[0], ' ');
   }
 
+  const freeText = processedQuery.replace(/\s+/g, ' ').trim();
+  if (!filter.ruleName && freeText) {
+    filter.ruleName = freeText;
+  }
+
   return filter;
 }
 
@@ -96,7 +101,7 @@ export function getSearchFilterFromQuery(query: string): RulesFilter {
  * Convert a RulesFilter object back to a search query string
  * Simplified version: just builds the query from filter values
  */
-export function applySearchFilterToQuery(query: string, filter: RulesFilter): string {
+export function applySearchFilterToQuery(filter: RulesFilter): string {
   const parts: string[] = [];
 
   // Helper to format value
