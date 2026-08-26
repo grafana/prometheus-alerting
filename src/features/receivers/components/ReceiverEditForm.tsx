@@ -41,6 +41,8 @@ import { SNSIntegrationForm } from '../integrations/sns/SNSIntegrationForm';
 
 import { EmailIntegrationForm } from '../integrations/email/EmailIntegrationForm';
 
+import { SlackIntegrationForm } from '../integrations/slack/SlackIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -273,6 +275,8 @@ function IntegrationEditor({
           <SNSIntegrationForm index={index} />
         ) : integrationType === 'email' ? (
           <EmailIntegrationForm index={index} />
+        ) : integrationType === 'slack' ? (
+          <SlackIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}
