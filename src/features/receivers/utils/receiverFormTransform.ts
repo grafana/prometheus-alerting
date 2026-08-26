@@ -2,22 +2,82 @@
  * Utilities for transforming between Alertmanager receiver format and form values.
  */
 import {
-  WebhookConfigSchema,
-  WebexConfigSchema,
-  PagerdutyConfigSchema,
-  SNSConfigSchema,
-  EmailConfigSchema,
-  SlackConfigSchema,
-  OpsGenieConfigSchema,
-  PushoverConfigSchema,
-  VictorOpsConfigSchema,
-  TelegramConfigSchema,
   DiscordConfigSchema,
-  MSTeamsConfigSchema,
-  WechatConfigSchema,
+  EmailConfigSchema,
   JiraConfigSchema,
+  MSTeamsConfigSchema,
+  OpsGenieConfigSchema,
+  PagerdutyConfigSchema,
+  PushoverConfigSchema,
+  SlackConfigSchema,
+  SNSConfigSchema,
+  TelegramConfigSchema,
+  VictorOpsConfigSchema,
+  WechatConfigSchema,
+  WebexConfigSchema,
+  WebhookConfigSchema,
   type Receiver,
 } from '@grafana/external-alertmanager/vanilla';
+import {
+  createDefaultDiscordSettings,
+  discordConfigToFormSettings,
+  discordFormSettingsToConfig,
+} from '../integrations/discord/discord.mapper';
+import {
+  createDefaultEmailSettings,
+  emailConfigToFormSettings,
+  emailFormSettingsToConfig,
+} from '../integrations/email/email.mapper';
+import {
+  createDefaultJiraSettings,
+  jiraConfigToFormSettings,
+  jiraFormSettingsToConfig,
+} from '../integrations/jira/jira.mapper';
+import {
+  createDefaultMSTeamsSettings,
+  msTeamsConfigToFormSettings,
+  msTeamsFormSettingsToConfig,
+} from '../integrations/msteams/msteams.mapper';
+import {
+  createDefaultOpsgenieSettings,
+  opsgenieConfigToFormSettings,
+  opsgenieFormSettingsToConfig,
+} from '../integrations/opsgenie/opsgenie.mapper';
+import {
+  createDefaultPagerDutySettings,
+  pagerDutyConfigToFormSettings,
+  pagerDutyFormSettingsToConfig,
+} from '../integrations/pagerduty/pagerduty.mapper';
+import {
+  createDefaultPushoverSettings,
+  pushoverConfigToFormSettings,
+  pushoverFormSettingsToConfig,
+} from '../integrations/pushover/pushover.mapper';
+import {
+  createDefaultSlackSettings,
+  slackConfigToFormSettings,
+  slackFormSettingsToConfig,
+} from '../integrations/slack/slack.mapper';
+import {
+  createDefaultSNSSettings,
+  snsConfigToFormSettings,
+  snsFormSettingsToConfig,
+} from '../integrations/sns/sns.mapper';
+import {
+  createDefaultTelegramSettings,
+  telegramConfigToFormSettings,
+  telegramFormSettingsToConfig,
+} from '../integrations/telegram/telegram.mapper';
+import {
+  createDefaultVictorOpsSettings,
+  victorOpsConfigToFormSettings,
+  victorOpsFormSettingsToConfig,
+} from '../integrations/victorops/victorops.mapper';
+import {
+  createDefaultWeChatSettings,
+  weChatConfigToFormSettings,
+  weChatFormSettingsToConfig,
+} from '../integrations/wechat/wechat.mapper';
 import {
   createDefaultWebhookSettings,
   webhookConfigToFormSettings,
@@ -28,71 +88,17 @@ import {
   webexConfigToFormSettings,
   webexFormSettingsToConfig,
 } from '../integrations/webex/webex.mapper';
-import {
-  createDefaultPagerDutySettings,
-  pagerDutyConfigToFormSettings,
-  pagerDutyFormSettingsToConfig,
-} from '../integrations/pagerduty/pagerduty.mapper';
-import {
-  createDefaultSNSSettings,
-  snsConfigToFormSettings,
-  snsFormSettingsToConfig,
-} from '../integrations/sns/sns.mapper';
-import {
-  createDefaultEmailSettings,
-  emailConfigToFormSettings,
-  emailFormSettingsToConfig,
-} from '../integrations/email/email.mapper';
-import {
-  createDefaultSlackSettings,
-  slackConfigToFormSettings,
-  slackFormSettingsToConfig,
-} from '../integrations/slack/slack.mapper';
-import {
-  createDefaultOpsgenieSettings,
-  opsgenieConfigToFormSettings,
-  opsgenieFormSettingsToConfig,
-} from '../integrations/opsgenie/opsgenie.mapper';
-import {
-  createDefaultPushoverSettings,
-  pushoverConfigToFormSettings,
-  pushoverFormSettingsToConfig,
-} from '../integrations/pushover/pushover.mapper';
-import {
-  createDefaultVictorOpsSettings,
-  victorOpsConfigToFormSettings,
-  victorOpsFormSettingsToConfig,
-} from '../integrations/victorops/victorops.mapper';
-import {
-  createDefaultTelegramSettings,
-  telegramConfigToFormSettings,
-  telegramFormSettingsToConfig,
-} from '../integrations/telegram/telegram.mapper';
-import {
-  createDefaultDiscordSettings,
-  discordConfigToFormSettings,
-  discordFormSettingsToConfig,
-} from '../integrations/discord/discord.mapper';
-import {
-  createDefaultMSTeamsSettings,
-  msTeamsConfigToFormSettings,
-  msTeamsFormSettingsToConfig,
-} from '../integrations/msteams/msteams.mapper';
-import {
-  createDefaultWeChatSettings,
-  weChatConfigToFormSettings,
-  weChatFormSettingsToConfig,
-} from '../integrations/wechat/wechat.mapper';
-import {
-  createDefaultJiraSettings,
-  jiraConfigToFormSettings,
-  jiraFormSettingsToConfig,
-} from '../integrations/jira/jira.mapper';
 import { CLOUD_INTEGRATION_TYPES, CloudIntegrationType, INTEGRATION_TYPE_MAP } from './cloudIntegrationTypes';
 import type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
 
 export { CLOUD_INTEGRATION_TYPES } from './cloudIntegrationTypes';
 export type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
+
+const EDITABLE_CONFIG_KEYS = new Set<string>(Object.values(INTEGRATION_TYPE_MAP));
+
+function getSendResolved(value: boolean | undefined, type: CloudIntegrationType): boolean {
+  return value ?? (type !== 'slack' && type !== 'wechat');
+}
 
 /**
  * Generate a unique ID for form items
@@ -121,156 +127,143 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
       for (const config of configs) {
         const id = generateId();
 
-        if (type === 'webhook') {
-          const typedConfig = WebhookConfigSchema.parse(config);
-          integrations.push({
-            __id: id,
-            type,
-            sendResolved: typedConfig.send_resolved !== false,
-            settings: webhookConfigToFormSettings(typedConfig),
-          });
-          continue;
-        }
-
-        if (type === 'webex') {
-          const typedConfig = WebexConfigSchema.parse(config);
-          integrations.push({
-            __id: id,
-            type,
-            sendResolved: typedConfig.send_resolved !== false,
-            settings: webexConfigToFormSettings(typedConfig),
-          });
-          continue;
-        }
-
-        if (type === 'pagerduty') {
-          const typedConfig = PagerdutyConfigSchema.parse(config);
-          integrations.push({
-            __id: id,
-            type,
-            sendResolved: typedConfig.send_resolved !== false,
-            settings: pagerDutyConfigToFormSettings(typedConfig),
-          });
-          continue;
-        }
-
-        if (type === 'sns') {
-          const typedConfig = SNSConfigSchema.parse(config);
-          integrations.push({
-            __id: id,
-            type,
-            sendResolved: typedConfig.send_resolved !== false,
-            settings: snsConfigToFormSettings(typedConfig),
-          });
-          continue;
-        }
-
-        if (type === 'email') {
-          const typedConfig = EmailConfigSchema.parse(config);
-          integrations.push({
-            __id: id,
-            type,
-            sendResolved: typedConfig.send_resolved !== false,
-            settings: emailConfigToFormSettings(typedConfig),
-          });
-          continue;
-        }
-
-        if (type === 'slack') {
-          const typedConfig = SlackConfigSchema.parse(config);
-          integrations.push({
-            __id: id,
-            type,
-            sendResolved: typedConfig.send_resolved !== false,
-            settings: slackConfigToFormSettings(typedConfig),
-          });
-          continue;
-        }
-
-        if (type === 'opsgenie') {
-          const typedConfig = OpsGenieConfigSchema.parse(config);
-          integrations.push({
-            __id: id,
-            type,
-            sendResolved: typedConfig.send_resolved !== false,
-            settings: opsgenieConfigToFormSettings(typedConfig),
-          });
-          continue;
-        }
-
-        if (type === 'pushover') {
-          const typedConfig = PushoverConfigSchema.parse(config);
-          integrations.push({
-            __id: id,
-            type,
-            sendResolved: typedConfig.send_resolved !== false,
-            settings: pushoverConfigToFormSettings(typedConfig),
-          });
-          continue;
-        }
-
-        if (type === 'victorops') {
-          const typedConfig = VictorOpsConfigSchema.parse(config);
-          integrations.push({
-            __id: id,
-            type,
-            sendResolved: typedConfig.send_resolved !== false,
-            settings: victorOpsConfigToFormSettings(typedConfig),
-          });
-          continue;
-        }
-
-        if (type === 'telegram') {
-          const typedConfig = TelegramConfigSchema.parse(config);
-          integrations.push({
-            __id: id,
-            type,
-            sendResolved: typedConfig.send_resolved !== false,
-            settings: telegramConfigToFormSettings(typedConfig),
-          });
-          continue;
-        }
-
         if (type === 'discord') {
           const typedConfig = DiscordConfigSchema.parse(config);
           integrations.push({
             __id: id,
             type,
-            sendResolved: typedConfig.send_resolved !== false,
+            sendResolved: getSendResolved(typedConfig.send_resolved, type),
             settings: discordConfigToFormSettings(typedConfig),
           });
           continue;
         }
-
         if (type === 'msteams') {
           const typedConfig = MSTeamsConfigSchema.parse(config);
           integrations.push({
             __id: id,
             type,
-            sendResolved: typedConfig.send_resolved !== false,
+            sendResolved: getSendResolved(typedConfig.send_resolved, type),
             settings: msTeamsConfigToFormSettings(typedConfig),
           });
           continue;
         }
-
         if (type === 'wechat') {
           const typedConfig = WechatConfigSchema.parse(config);
           integrations.push({
             __id: id,
             type,
-            sendResolved: typedConfig.send_resolved !== false,
+            sendResolved: getSendResolved(typedConfig.send_resolved, type),
             settings: weChatConfigToFormSettings(typedConfig),
           });
           continue;
         }
-
         if (type === 'jira') {
           const typedConfig = JiraConfigSchema.parse(config);
           integrations.push({
             __id: id,
             type,
-            sendResolved: typedConfig.send_resolved !== false,
+            sendResolved: getSendResolved(typedConfig.send_resolved, type),
             settings: jiraConfigToFormSettings(typedConfig),
+          });
+          continue;
+        }
+        if (type === 'opsgenie') {
+          const opsgenieConfig = OpsGenieConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: getSendResolved(opsgenieConfig.send_resolved, type),
+            settings: opsgenieConfigToFormSettings(opsgenieConfig),
+          });
+          continue;
+        }
+        if (type === 'pushover') {
+          const pushoverConfig = PushoverConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: getSendResolved(pushoverConfig.send_resolved, type),
+            settings: pushoverConfigToFormSettings(pushoverConfig),
+          });
+          continue;
+        }
+        if (type === 'victorops') {
+          const victorOpsConfig = VictorOpsConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: getSendResolved(victorOpsConfig.send_resolved, type),
+            settings: victorOpsConfigToFormSettings(victorOpsConfig),
+          });
+          continue;
+        }
+        if (type === 'telegram') {
+          const telegramConfig = TelegramConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: getSendResolved(telegramConfig.send_resolved, type),
+            settings: telegramConfigToFormSettings(telegramConfig),
+          });
+          continue;
+        }
+        if (type === 'slack') {
+          const slackConfig = SlackConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: getSendResolved(slackConfig.send_resolved, type),
+            settings: slackConfigToFormSettings(slackConfig),
+          });
+          continue;
+        }
+        if (type === 'email') {
+          const emailConfig = EmailConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: getSendResolved(emailConfig.send_resolved, type),
+            settings: emailConfigToFormSettings(emailConfig),
+          });
+          continue;
+        }
+        if (type === 'sns') {
+          const snsConfig = SNSConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: getSendResolved(snsConfig.send_resolved, type),
+            settings: snsConfigToFormSettings(snsConfig),
+          });
+          continue;
+        }
+        if (type === 'pagerduty') {
+          const pagerDutyConfig = PagerdutyConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: getSendResolved(pagerDutyConfig.send_resolved, type),
+            settings: pagerDutyConfigToFormSettings(pagerDutyConfig),
+          });
+          continue;
+        }
+        if (type === 'webhook') {
+          const webhookConfig = WebhookConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: getSendResolved(webhookConfig.send_resolved, type),
+            settings: webhookConfigToFormSettings(webhookConfig),
+          });
+          continue;
+        }
+        if (type === 'webex') {
+          const webexConfig = WebexConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: getSendResolved(webexConfig.send_resolved, type),
+            settings: webexConfigToFormSettings(webexConfig),
           });
           continue;
         }
@@ -278,8 +271,11 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
     }
   }
 
+  const preservedEntries = Object.entries(receiver).filter(([key]) => key !== 'name' && !EDITABLE_CONFIG_KEYS.has(key));
+
   return {
     name: receiver.name,
+    __preserved: structuredClone(Object.fromEntries(preservedEntries)),
     integrations,
   };
 }
@@ -289,6 +285,7 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
  */
 export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
   const receiver: Receiver = {
+    ...structuredClone(values.__preserved ?? {}),
     name: values.name,
   };
 
@@ -307,127 +304,114 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
       (receiver as Record<string, unknown>)[configKey] = [];
     }
 
-    if (integration.type === 'webhook') {
-      const typedConfig = webhookFormSettingsToConfig(integration.settings);
-      (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
-        send_resolved: integration.sendResolved,
-      });
-      continue;
-    }
-
-    if (integration.type === 'webex') {
-      const typedConfig = webexFormSettingsToConfig(integration.settings);
-      (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
-        send_resolved: integration.sendResolved,
-      });
-      continue;
-    }
-
-    if (integration.type === 'pagerduty') {
-      const typedConfig = pagerDutyFormSettingsToConfig(integration.settings);
-      (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
-        send_resolved: integration.sendResolved,
-      });
-      continue;
-    }
-
-    if (integration.type === 'sns') {
-      const typedConfig = snsFormSettingsToConfig(integration.settings);
-      (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
-        send_resolved: integration.sendResolved,
-      });
-      continue;
-    }
-
-    if (integration.type === 'email') {
-      const typedConfig = emailFormSettingsToConfig(integration.settings);
-      (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
-        send_resolved: integration.sendResolved,
-      });
-      continue;
-    }
-
-    if (integration.type === 'slack') {
-      const typedConfig = slackFormSettingsToConfig(integration.settings);
-      (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
-        send_resolved: integration.sendResolved,
-      });
-      continue;
-    }
-
-    if (integration.type === 'opsgenie') {
-      const typedConfig = opsgenieFormSettingsToConfig(integration.settings);
-      (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
-        send_resolved: integration.sendResolved,
-      });
-      continue;
-    }
-
-    if (integration.type === 'pushover') {
-      const typedConfig = pushoverFormSettingsToConfig(integration.settings);
-      (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
-        send_resolved: integration.sendResolved,
-      });
-      continue;
-    }
-
-    if (integration.type === 'victorops') {
-      const typedConfig = victorOpsFormSettingsToConfig(integration.settings);
-      (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
-        send_resolved: integration.sendResolved,
-      });
-      continue;
-    }
-
-    if (integration.type === 'telegram') {
-      const typedConfig = telegramFormSettingsToConfig(integration.settings);
-      (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
-        send_resolved: integration.sendResolved,
-      });
-      continue;
-    }
-
     if (integration.type === 'discord') {
-      const typedConfig = discordFormSettingsToConfig(integration.settings);
+      const config = discordFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
+        ...config,
         send_resolved: integration.sendResolved,
       });
       continue;
     }
-
     if (integration.type === 'msteams') {
-      const typedConfig = msTeamsFormSettingsToConfig(integration.settings);
+      const config = msTeamsFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
+        ...config,
         send_resolved: integration.sendResolved,
       });
       continue;
     }
-
     if (integration.type === 'wechat') {
-      const typedConfig = weChatFormSettingsToConfig(integration.settings);
+      const config = weChatFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
+        ...config,
         send_resolved: integration.sendResolved,
       });
       continue;
     }
-
     if (integration.type === 'jira') {
-      const typedConfig = jiraFormSettingsToConfig(integration.settings);
+      const config = jiraFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
-        ...typedConfig,
+        ...config,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+    if (integration.type === 'opsgenie') {
+      const config = opsgenieFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...config,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+    if (integration.type === 'pushover') {
+      const config = pushoverFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...config,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+    if (integration.type === 'victorops') {
+      const config = victorOpsFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...config,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+    if (integration.type === 'telegram') {
+      const config = telegramFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...config,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+    if (integration.type === 'slack') {
+      const slackConfig = slackFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...slackConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+    if (integration.type === 'email') {
+      const emailConfig = emailFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...emailConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+    if (integration.type === 'sns') {
+      const snsConfig = snsFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...snsConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+    if (integration.type === 'pagerduty') {
+      const pagerDutyConfig = pagerDutyFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...pagerDutyConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+    if (integration.type === 'webhook') {
+      const webhookConfig = webhookFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...webhookConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+    if (integration.type === 'webex') {
+      const webexConfig = webexFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...webexConfig,
         send_resolved: integration.sendResolved,
       });
       continue;
@@ -451,51 +435,30 @@ export function createDefaultReceiverFormValues(): ReceiverFormValues {
  * Create a new integration with default values for a given type
  */
 export function createDefaultIntegration(type: CloudIntegrationType): IntegrationFormValues {
-  if (type === 'webhook') {
-    return {
-      __id: generateId(),
-      type,
-      sendResolved: true,
-      settings: createDefaultWebhookSettings(),
-    };
+  if (type === 'discord') {
+    return { __id: generateId(), type, sendResolved: true, settings: createDefaultDiscordSettings() };
   }
-
-  if (type === 'webex') {
-    return {
-      __id: generateId(),
-      type,
-      sendResolved: true,
-      settings: createDefaultWebexSettings(),
-    };
+  if (type === 'msteams') {
+    return { __id: generateId(), type, sendResolved: true, settings: createDefaultMSTeamsSettings() };
   }
-
-  if (type === 'pagerduty') {
-    return {
-      __id: generateId(),
-      type,
-      sendResolved: true,
-      settings: createDefaultPagerDutySettings(),
-    };
+  if (type === 'wechat') {
+    return { __id: generateId(), type, sendResolved: true, settings: createDefaultWeChatSettings() };
   }
-
-  if (type === 'sns') {
-    return {
-      __id: generateId(),
-      type,
-      sendResolved: true,
-      settings: createDefaultSNSSettings(),
-    };
+  if (type === 'jira') {
+    return { __id: generateId(), type, sendResolved: true, settings: createDefaultJiraSettings() };
   }
-
-  if (type === 'email') {
-    return {
-      __id: generateId(),
-      type,
-      sendResolved: true,
-      settings: createDefaultEmailSettings(),
-    };
+  if (type === 'opsgenie') {
+    return { __id: generateId(), type, sendResolved: true, settings: createDefaultOpsgenieSettings() };
   }
-
+  if (type === 'pushover') {
+    return { __id: generateId(), type, sendResolved: true, settings: createDefaultPushoverSettings() };
+  }
+  if (type === 'victorops') {
+    return { __id: generateId(), type, sendResolved: true, settings: createDefaultVictorOpsSettings() };
+  }
+  if (type === 'telegram') {
+    return { __id: generateId(), type, sendResolved: true, settings: createDefaultTelegramSettings() };
+  }
   if (type === 'slack') {
     return {
       __id: generateId(),
@@ -504,76 +467,44 @@ export function createDefaultIntegration(type: CloudIntegrationType): Integratio
       settings: createDefaultSlackSettings(),
     };
   }
-
-  if (type === 'opsgenie') {
+  if (type === 'email') {
     return {
       __id: generateId(),
       type,
       sendResolved: true,
-      settings: createDefaultOpsgenieSettings(),
+      settings: createDefaultEmailSettings(),
     };
   }
-
-  if (type === 'pushover') {
+  if (type === 'sns') {
     return {
       __id: generateId(),
       type,
       sendResolved: true,
-      settings: createDefaultPushoverSettings(),
+      settings: createDefaultSNSSettings(),
     };
   }
-
-  if (type === 'victorops') {
+  if (type === 'pagerduty') {
     return {
       __id: generateId(),
       type,
       sendResolved: true,
-      settings: createDefaultVictorOpsSettings(),
+      settings: createDefaultPagerDutySettings(),
     };
   }
-
-  if (type === 'telegram') {
+  if (type === 'webhook') {
     return {
       __id: generateId(),
       type,
       sendResolved: true,
-      settings: createDefaultTelegramSettings(),
+      settings: createDefaultWebhookSettings(),
     };
   }
-
-  if (type === 'discord') {
+  if (type === 'webex') {
     return {
       __id: generateId(),
       type,
       sendResolved: true,
-      settings: createDefaultDiscordSettings(),
-    };
-  }
-
-  if (type === 'msteams') {
-    return {
-      __id: generateId(),
-      type,
-      sendResolved: true,
-      settings: createDefaultMSTeamsSettings(),
-    };
-  }
-
-  if (type === 'wechat') {
-    return {
-      __id: generateId(),
-      type,
-      sendResolved: true,
-      settings: createDefaultWeChatSettings(),
-    };
-  }
-
-  if (type === 'jira') {
-    return {
-      __id: generateId(),
-      type,
-      sendResolved: true,
-      settings: createDefaultJiraSettings(),
+      settings: createDefaultWebexSettings(),
     };
   }
 

@@ -12,7 +12,7 @@ import {
   deleteReceiverAction,
   updateReceiverAction,
 } from '../../../reducers/alertmanager/receivers';
-import { filterAndTransformConfigEntries } from '../utils/receiversUtils';
+import { filterAndTransformConfigEntries, maskSensitiveConfig } from '../utils/receiversUtils';
 import { JsonValue } from 'type-fest';
 import { ReceiverEditForm } from './ReceiverEditForm';
 import { useReceiverInUse } from '../hooks/useReceiverInUse';
@@ -34,11 +34,12 @@ interface IntegrationItemProps {
 }
 
 function IntegrationItem({ type, config }: IntegrationItemProps) {
+  const maskedConfig = maskSensitiveConfig(type, config);
   // Extract http_config if it exists
-  const httpConfig = (config.http_config as Record<string, JsonValue>) ?? {};
+  const httpConfig = (maskedConfig.http_config as Record<string, JsonValue>) ?? {};
 
   // Filter and transform main config entries (excluding http_config which is handled separately)
-  const displayEntries = filterAndTransformConfigEntries(config, {
+  const displayEntries = filterAndTransformConfigEntries(maskedConfig, {
     excludeKeys: ['http_config'],
   });
 
@@ -88,7 +89,7 @@ interface ReceiverIntegrationsProps {
   receiver: Receiver;
 }
 
-function ReceiverIntegrations({ receiver }: ReceiverIntegrationsProps) {
+export function ReceiverIntegrations({ receiver }: ReceiverIntegrationsProps) {
   // Use centralized function to extract all integrations
   const integrations = extractIntegrationsFromReceiver(receiver);
 
@@ -107,6 +108,15 @@ function ReceiverIntegrations({ receiver }: ReceiverIntegrationsProps) {
       ))}
     </Stack>
   );
+}
+
+export function canDeleteReceiver(
+  canEdit: boolean,
+  isDefaultReceiver: boolean,
+  isInUse: boolean,
+  isUsageLoading = false
+): boolean {
+  return canEdit && !isDefaultReceiver && !isInUse && !isUsageLoading;
 }
 
 interface ReceiverDrawerProps {
@@ -132,7 +142,7 @@ export function ReceiverDrawer({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [produceNewConfig, { error: configError, isLoading }] = useProduceNewAlertmanagerConfiguration();
   const canMutateConfiguration = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
-  const { isInUse, isDefaultReceiver, usageCount } = useReceiverInUse(receiver?.name);
+  const { isInUse, isDefaultReceiver, usageCount, isLoading: isUsageLoading } = useReceiverInUse(receiver?.name);
   const { success: notifySuccess, error: notifyError } = useAppNotifications();
 
   const canEdit = canMutateConfiguration && !readOnly;
@@ -140,7 +150,7 @@ export function ReceiverDrawer({
   const isEditMode = mode === DrawerMode.Edit;
   const isAddMode = mode === DrawerMode.Add;
   // Cannot delete the default receiver or a receiver that's in use
-  const canDelete = canEdit && !isDefaultReceiver;
+  const canDelete = canDeleteReceiver(canEdit, isDefaultReceiver, isInUse, isUsageLoading);
 
   const handleEdit = useCallback(() => {
     setMode(DrawerMode.Edit);
@@ -180,7 +190,7 @@ export function ReceiverDrawer({
   );
 
   const handleDelete = useCallback(async () => {
-    if (!receiver || isDefaultReceiver) {
+    if (!receiver || isDefaultReceiver || isInUse || isUsageLoading) {
       return;
     }
     try {
@@ -196,7 +206,17 @@ export function ReceiverDrawer({
       notifyError(feedback.title, feedback.description);
     }
     setShowDeleteConfirm(false);
-  }, [receiver, isDefaultReceiver, produceNewConfig, notifySuccess, notifyError, onSaved, onClose]);
+  }, [
+    receiver,
+    isDefaultReceiver,
+    isInUse,
+    isUsageLoading,
+    produceNewConfig,
+    notifySuccess,
+    notifyError,
+    onSaved,
+    onClose,
+  ]);
 
   // Don't render if no receiver and not in add mode
   if (!receiver && !isAddMode) {
@@ -268,9 +288,13 @@ export function ReceiverDrawer({
             icon="trash-alt"
             onClick={() => setShowDeleteConfirm(true)}
             disabled={isLoading || !canDelete}
-            {...(isDefaultReceiver && {
-              tooltip: t('receivers.drawer.cannot-delete-default', 'Cannot delete the default receiver'),
-            })}
+            tooltip={
+              isDefaultReceiver
+                ? t('receivers.drawer.cannot-delete-default', 'Cannot delete the default receiver')
+                : isInUse
+                  ? t('receivers.drawer.cannot-delete-in-use', 'Cannot delete a receiver used by a route')
+                  : undefined
+            }
           >
             <Trans i18nKey="receivers.drawer.remove">Delete</Trans>
           </Button>

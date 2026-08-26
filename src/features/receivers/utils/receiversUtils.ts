@@ -62,6 +62,47 @@ export function getContactPointDescription(receiver: Receiver): string {
 // Vanilla Alertmanager will respond with this value for sensitive fields
 const SECRET_TOKEN = '<secret>';
 const OUR_SECRET_TOKEN = '*************';
+const SECRET_KEYS = new Set([
+  'api_key',
+  'api_secret',
+  'auth_password',
+  'auth_secret',
+  'bot_token',
+  'client_secret',
+  'credentials',
+  'password',
+  'routing_key',
+  'secret_key',
+  'service_key',
+  'token',
+  'user_key',
+]);
+
+const TYPE_SPECIFIC_SECRET_KEYS: Partial<Record<string, ReadonlySet<string>>> = {
+  discord: new Set(['webhook_url']),
+  msteams: new Set(['webhook_url']),
+  msteamsv2: new Set(['webhook_url']),
+  slack: new Set(['api_url']),
+};
+
+export function maskSensitiveConfig(type: string, config: Record<string, JsonValue>): Record<string, JsonValue> {
+  return Object.fromEntries(Object.entries(config).map(([key, value]) => [key, maskSensitiveValue(type, value, key)]));
+}
+
+function maskSensitiveValue(type: string, value: JsonValue, key?: string): JsonValue {
+  if (key && (SECRET_KEYS.has(key) || TYPE_SPECIFIC_SECRET_KEYS[type]?.has(key))) {
+    return OUR_SECRET_TOKEN;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => maskSensitiveValue(type, item));
+  }
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([childKey, child]) => [childKey, maskSensitiveValue(type, child, childKey)])
+    );
+  }
+  return value;
+}
 
 /**
  * This function will transform a receiver's key-value pair recursively.

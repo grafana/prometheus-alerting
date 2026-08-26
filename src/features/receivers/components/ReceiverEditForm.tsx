@@ -13,37 +13,26 @@ import {
   createDefaultIntegration,
   isReceiverNameUnique,
 } from '../utils/receiverFormTransform';
-import { getNotifierTypeOptions } from '../utils/notifierTypes';
 import { createReceiverFormSchema } from '../utils/receiverFormSchema';
-import { CloudIntegrationType, isCloudIntegrationType } from '../utils/cloudIntegrationTypes';
-
-import { WebhookIntegrationForm } from '../integrations/webhook/WebhookIntegrationForm';
-
-import { WebexIntegrationForm } from '../integrations/webex/WebexIntegrationForm';
-
-import { PagerDutyIntegrationForm } from '../integrations/pagerduty/PagerDutyIntegrationForm';
-
-import { SNSIntegrationForm } from '../integrations/sns/SNSIntegrationForm';
-
-import { EmailIntegrationForm } from '../integrations/email/EmailIntegrationForm';
-
-import { SlackIntegrationForm } from '../integrations/slack/SlackIntegrationForm';
-
-import { OpsgenieIntegrationForm } from '../integrations/opsgenie/OpsgenieIntegrationForm';
-
-import { PushoverIntegrationForm } from '../integrations/pushover/PushoverIntegrationForm';
-
-import { VictorOpsIntegrationForm } from '../integrations/victorops/VictorOpsIntegrationForm';
-
-import { TelegramIntegrationForm } from '../integrations/telegram/TelegramIntegrationForm';
-
+import {
+  CloudIntegrationType,
+  getCloudIntegrationTypeOptions,
+  isCloudIntegrationType,
+} from '../utils/cloudIntegrationTypes';
 import { DiscordIntegrationForm } from '../integrations/discord/DiscordIntegrationForm';
-
-import { MSTeamsIntegrationForm } from '../integrations/msteams/MSTeamsIntegrationForm';
-
-import { WeChatIntegrationForm } from '../integrations/wechat/WeChatIntegrationForm';
-
+import { EmailIntegrationForm } from '../integrations/email/EmailIntegrationForm';
 import { JiraIntegrationForm } from '../integrations/jira/JiraIntegrationForm';
+import { MSTeamsIntegrationForm } from '../integrations/msteams/MSTeamsIntegrationForm';
+import { OpsgenieIntegrationForm } from '../integrations/opsgenie/OpsgenieIntegrationForm';
+import { PagerDutyIntegrationForm } from '../integrations/pagerduty/PagerDutyIntegrationForm';
+import { PushoverIntegrationForm } from '../integrations/pushover/PushoverIntegrationForm';
+import { SlackIntegrationForm } from '../integrations/slack/SlackIntegrationForm';
+import { SNSIntegrationForm } from '../integrations/sns/SNSIntegrationForm';
+import { TelegramIntegrationForm } from '../integrations/telegram/TelegramIntegrationForm';
+import { VictorOpsIntegrationForm } from '../integrations/victorops/VictorOpsIntegrationForm';
+import { WeChatIntegrationForm } from '../integrations/wechat/WeChatIntegrationForm';
+import { WebhookIntegrationForm } from '../integrations/webhook/WebhookIntegrationForm';
+import { WebexIntegrationForm } from '../integrations/webex/WebexIntegrationForm';
 
 interface ReceiverEditFormProps {
   receiver?: Receiver;
@@ -99,7 +88,7 @@ export function ReceiverEditForm({
     append(createDefaultIntegration('webhook'));
   }, [append]);
 
-  const notifierTypeOptions = useMemo(() => getNotifierTypeOptions(), []);
+  const notifierTypeOptions = useMemo(() => getCloudIntegrationTypeOptions(), []);
 
   return (
     <FormProvider {...formAPI}>
@@ -154,10 +143,11 @@ export function ReceiverEditForm({
               key={field.id}
               index={index}
               control={control}
+              register={register}
               notifierTypeOptions={notifierTypeOptions}
               onRemove={() => remove(index)}
               onTypeChange={(type) => update(index, createDefaultIntegration(type))}
-              canRemove={fields.length > 1}
+              canRemove={fields.length > 0}
             />
           ))}
 
@@ -189,6 +179,7 @@ export function ReceiverEditForm({
 interface IntegrationEditorProps {
   index: number;
   control: ReturnType<typeof useForm<ReceiverFormValues>>['control'];
+  register: ReturnType<typeof useForm<ReceiverFormValues>>['register'];
   notifierTypeOptions: Array<{ label: string; value: string; description: string }>;
   onRemove: () => void;
   onTypeChange: (type: CloudIntegrationType) => void;
@@ -198,6 +189,7 @@ interface IntegrationEditorProps {
 function IntegrationEditor({
   index,
   control,
+  register,
   notifierTypeOptions,
   onRemove,
   onTypeChange,
@@ -263,18 +255,14 @@ function IntegrationEditor({
 
       {/* Settings box - only the actual integration settings are boxed */}
       <Box padding={2} borderColor="weak" borderStyle="solid">
-        {integrationType === 'webhook' ? (
-          <WebhookIntegrationForm index={index} />
-        ) : integrationType === 'webex' ? (
-          <WebexIntegrationForm index={index} />
-        ) : integrationType === 'pagerduty' ? (
-          <PagerDutyIntegrationForm index={index} />
-        ) : integrationType === 'sns' ? (
-          <SNSIntegrationForm index={index} />
-        ) : integrationType === 'email' ? (
-          <EmailIntegrationForm index={index} />
-        ) : integrationType === 'slack' ? (
-          <SlackIntegrationForm index={index} />
+        {integrationType === 'discord' ? (
+          <DiscordIntegrationForm index={index} />
+        ) : integrationType === 'msteams' ? (
+          <MSTeamsIntegrationForm index={index} />
+        ) : integrationType === 'wechat' ? (
+          <WeChatIntegrationForm index={index} />
+        ) : integrationType === 'jira' ? (
+          <JiraIntegrationForm index={index} />
         ) : integrationType === 'opsgenie' ? (
           <OpsgenieIntegrationForm index={index} />
         ) : integrationType === 'pushover' ? (
@@ -283,14 +271,18 @@ function IntegrationEditor({
           <VictorOpsIntegrationForm index={index} />
         ) : integrationType === 'telegram' ? (
           <TelegramIntegrationForm index={index} />
-        ) : integrationType === 'discord' ? (
-          <DiscordIntegrationForm index={index} />
-        ) : integrationType === 'msteams' ? (
-          <MSTeamsIntegrationForm index={index} />
-        ) : integrationType === 'wechat' ? (
-          <WeChatIntegrationForm index={index} />
-        ) : integrationType === 'jira' ? (
-          <JiraIntegrationForm index={index} />
+        ) : integrationType === 'slack' ? (
+          <SlackIntegrationForm index={index} />
+        ) : integrationType === 'email' ? (
+          <EmailIntegrationForm index={index} />
+        ) : integrationType === 'sns' ? (
+          <SNSIntegrationForm index={index} />
+        ) : integrationType === 'pagerduty' ? (
+          <PagerDutyIntegrationForm index={index} />
+        ) : integrationType === 'webhook' ? (
+          <WebhookIntegrationForm index={index} />
+        ) : integrationType === 'webex' ? (
+          <WebexIntegrationForm index={index} />
         ) : null}
       </Box>
     </Stack>
