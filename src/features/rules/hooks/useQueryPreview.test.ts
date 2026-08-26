@@ -3,14 +3,13 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { useQueryPreview } from './useQueryPreview';
 
-// Mock getBackendSrv
-const mockPost = vi.fn();
+const mockGet = vi.fn();
 
 // The query path comes from the data source's flavor, so the registry needs to be able to
 // resolve the data source's type. Every uid used in these tests resolves as a Prometheus data
 // source, since that's the flavor whose query path the tests exercise.
 vi.mock('@grafana/runtime', () => ({
-  getBackendSrv: () => ({ post: mockPost }),
+  getBackendSrv: () => ({ get: mockGet }),
 }));
 
 vi.mock('@grafana/runtime/unstable', () => ({
@@ -41,7 +40,7 @@ describe('useQueryPreview', () => {
 
     expect(result.current.error).toBe('Expression is empty');
     expect(result.current.hasRun).toBe(true);
-    expect(mockPost).not.toHaveBeenCalled();
+    expect(mockGet).not.toHaveBeenCalled();
   });
 
   it('should execute query and parse vector results', async () => {
@@ -62,7 +61,7 @@ describe('useQueryPreview', () => {
       },
     };
 
-    mockPost.mockResolvedValue(mockResponse);
+    mockGet.mockResolvedValue(mockResponse);
 
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
@@ -94,7 +93,7 @@ describe('useQueryPreview', () => {
       },
     };
 
-    mockPost.mockResolvedValue(mockResponse);
+    mockGet.mockResolvedValue(mockResponse);
 
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
@@ -117,7 +116,7 @@ describe('useQueryPreview', () => {
       error: 'invalid query syntax',
     };
 
-    mockPost.mockResolvedValue(mockResponse);
+    mockGet.mockResolvedValue(mockResponse);
 
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
@@ -134,7 +133,7 @@ describe('useQueryPreview', () => {
   });
 
   it('should handle network error', async () => {
-    mockPost.mockRejectedValue(new Error('Network error'));
+    mockGet.mockRejectedValue(new Error('Network error'));
 
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
@@ -150,6 +149,18 @@ describe('useQueryPreview', () => {
     expect(result.current.hasRun).toBe(true);
   });
 
+  it('should preserve datasource error details', async () => {
+    mockGet.mockRejectedValue({ status: 400, data: { message: 'parse error: unexpected token' } });
+
+    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
+
+    await act(async () => {
+      await result.current.runQuery('invalid{');
+    });
+
+    expect(result.current.error).toBe('parse error: unexpected token');
+  });
+
   it('should clear results', async () => {
     const mockResponse = {
       status: 'success',
@@ -159,7 +170,7 @@ describe('useQueryPreview', () => {
       },
     };
 
-    mockPost.mockResolvedValue(mockResponse);
+    mockGet.mockResolvedValue(mockResponse);
 
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
@@ -182,8 +193,8 @@ describe('useQueryPreview', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should send form-encoded data to Prometheus API', async () => {
-    mockPost.mockResolvedValue({
+  it('should send query parameters with a GET request', async () => {
+    mockGet.mockResolvedValue({
       status: 'success',
       data: { resultType: 'vector', result: [] },
     });
@@ -194,12 +205,9 @@ describe('useQueryPreview', () => {
       await result.current.runQuery('up{job="test"}');
     });
 
-    expect(mockPost).toHaveBeenCalledWith(
-      '/api/datasources/proxy/uid/my-ds-uid/api/v1/query',
-      expect.stringContaining('query=up%7Bjob%3D%22test%22%7D'),
-      expect.objectContaining({
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      })
-    );
+    expect(mockGet).toHaveBeenCalledWith('/api/datasources/proxy/uid/my-ds-uid/api/v1/query', {
+      query: 'up{job="test"}',
+      time: expect.any(Number),
+    });
   });
 });
