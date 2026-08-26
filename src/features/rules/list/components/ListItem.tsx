@@ -89,9 +89,16 @@ const getStyles = (theme: GrafanaTheme2) => ({
     },
   }),
   textOverflow: css({
+    minWidth: 0,
     overflow: 'hidden',
-    textOverflow: 'ellipsis',
     color: 'inherit',
+
+    '& a': {
+      display: 'block',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    },
   }),
   // this will line up the icon with the title of the rule
   statusIcon: css({

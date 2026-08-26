@@ -57,7 +57,11 @@ export function AlertRuleListItem({
   const normalizedState = normalizeState(state);
   const normalizedHealth = normalizeHealth(health);
 
-  const metadata: ReactNode[] = [];
+  const metadata: ReactNode[] = [
+    <Text color="secondary" variant="bodySmall" key="type">
+      <Trans i18nKey="alerting.rules.type.alert">Alert rule</Trans>
+    </Text>,
+  ];
 
   // Add location if needed
   if (showLocation && namespace && group) {
@@ -151,7 +155,11 @@ export function RecordingRuleListItem({
 }: RecordingRuleListItemProps) {
   const normalizedHealth = normalizeHealth(health);
 
-  const metadata: ReactNode[] = [];
+  const metadata: ReactNode[] = [
+    <Text color="secondary" variant="bodySmall" key="type">
+      <Trans i18nKey="alerting.rules.type.recording">Recording rule</Trans>
+    </Text>,
+  ];
 
   // Add location if needed
   if (showLocation && namespace && group) {

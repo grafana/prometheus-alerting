@@ -1,7 +1,7 @@
 import React from 'react';
 import { css } from '@emotion/css';
 
-import { GrafanaTheme2, SelectableValue } from '@grafana/data';
+import { SelectableValue } from '@grafana/data';
 import { t } from '@grafana/i18n';
 import { FilterInput, RadioButtonGroup, useStyles2, Stack, Label } from '@grafana/ui';
 
@@ -51,7 +51,7 @@ export function InstancesFilters({ searchText, stateFilter, stateCounts, onSearc
       {/* Search by label */}
       <div className={styles.searchContainer}>
         <FilterInput
-          placeholder={t('rule-details.instances.filter.search-placeholder', 'Search by label')}
+          placeholder={t('rule-details.instances.filter.search-placeholder', 'Search label keys, values, or key=value')}
           value={searchText}
           onChange={onSearchChange}
           escapeRegex={false}
@@ -67,7 +67,7 @@ export function InstancesFilters({ searchText, stateFilter, stateCounts, onSearc
   );
 }
 
-const getStyles = (theme: GrafanaTheme2) => ({
+const getStyles = () => ({
   searchContainer: css({
     width: '300px',
   }),
