@@ -39,28 +39,23 @@ const getRulerRulesHandler = (path: string) =>
  * Returns a specific rule group.
  */
 const getRulerRuleGroupHandler = (path: string) =>
-  http.get<{ dataSourceUid: string; namespace: string; group: string }>(
-    path,
-    ({ params }) => {
-      const { namespace, group } = params;
+  http.get<{ dataSourceUid: string; namespace: string; group: string }>(path, ({ params }) => {
+    const { namespace, group } = params;
 
-      const namespaceGroups = mockNamespaces[namespace];
-      if (!namespaceGroups) {
-        return HttpResponse.json({ message: 'group does not exist\n' }, { status: 404 });
-      }
-
-      const matchingGroup = namespaceGroups.find((g) => g.name === group);
-      if (!matchingGroup) {
-        return HttpResponse.json({ message: 'group does not exist\n' }, { status: 404 });
-      }
-
-      return HttpResponse.json({
-        name: matchingGroup.name,
-        interval: matchingGroup.interval,
-        rules: matchingGroup.rules,
-      });
+    const namespaceGroups = mockNamespaces[namespace];
+    if (!namespaceGroups) {
+      return HttpResponse.json({ message: 'group does not exist\n' }, { status: 404 });
     }
-  );
+
+    const matchingGroup = namespaceGroups.find((g) => g.name === group);
+    if (!matchingGroup) {
+      return HttpResponse.json({ message: 'group does not exist\n' }, { status: 404 });
+    }
+
+    // Answer with the group as it is stored -- picking fields apart here would hide the very
+    // thing some of these tests check, which is that a write keeps what it read.
+    return HttpResponse.json(matchingGroup);
+  });
 
 /**
  * Creates or updates a rule group in a namespace.
