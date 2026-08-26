@@ -259,38 +259,36 @@ function IntegrationEditor({
         />
       </Field>
 
-      {/* Settings box - only the actual integration settings are boxed */}
-      <Box padding={2} borderColor="weak" borderStyle="solid">
-        {integrationType === 'discord' ? (
-          <DiscordIntegrationForm index={index} />
-        ) : integrationType === 'msteams' ? (
-          <MSTeamsIntegrationForm index={index} />
-        ) : integrationType === 'wechat' ? (
-          <WeChatIntegrationForm index={index} />
-        ) : integrationType === 'jira' ? (
-          <JiraIntegrationForm index={index} />
-        ) : integrationType === 'opsgenie' ? (
-          <OpsgenieIntegrationForm index={index} />
-        ) : integrationType === 'pushover' ? (
-          <PushoverIntegrationForm index={index} />
-        ) : integrationType === 'victorops' ? (
-          <VictorOpsIntegrationForm index={index} />
-        ) : integrationType === 'telegram' ? (
-          <TelegramIntegrationForm index={index} />
-        ) : integrationType === 'slack' ? (
-          <SlackIntegrationForm index={index} />
-        ) : integrationType === 'email' ? (
-          <EmailIntegrationForm index={index} />
-        ) : integrationType === 'sns' ? (
-          <SNSIntegrationForm index={index} />
-        ) : integrationType === 'pagerduty' ? (
-          <PagerDutyIntegrationForm index={index} />
-        ) : integrationType === 'webhook' ? (
-          <WebhookIntegrationForm index={index} />
-        ) : integrationType === 'webex' ? (
-          <WebexIntegrationForm index={index} />
-        ) : null}
-      </Box>
+      {/* Integration-specific settings */}
+      {integrationType === 'discord' ? (
+        <DiscordIntegrationForm index={index} />
+      ) : integrationType === 'msteams' ? (
+        <MSTeamsIntegrationForm index={index} />
+      ) : integrationType === 'wechat' ? (
+        <WeChatIntegrationForm index={index} />
+      ) : integrationType === 'jira' ? (
+        <JiraIntegrationForm index={index} />
+      ) : integrationType === 'opsgenie' ? (
+        <OpsgenieIntegrationForm index={index} />
+      ) : integrationType === 'pushover' ? (
+        <PushoverIntegrationForm index={index} />
+      ) : integrationType === 'victorops' ? (
+        <VictorOpsIntegrationForm index={index} />
+      ) : integrationType === 'telegram' ? (
+        <TelegramIntegrationForm index={index} />
+      ) : integrationType === 'slack' ? (
+        <SlackIntegrationForm index={index} />
+      ) : integrationType === 'email' ? (
+        <EmailIntegrationForm index={index} />
+      ) : integrationType === 'sns' ? (
+        <SNSIntegrationForm index={index} />
+      ) : integrationType === 'pagerduty' ? (
+        <PagerDutyIntegrationForm index={index} />
+      ) : integrationType === 'webhook' ? (
+        <WebhookIntegrationForm index={index} />
+      ) : integrationType === 'webex' ? (
+        <WebexIntegrationForm index={index} />
+      ) : null}
     </Stack>
   );
 }
