@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, Controller, useWatch, FormProvider } from 'react-hook-form';
 import { t, Trans } from '@grafana/i18n';
 import {
@@ -27,6 +28,8 @@ import {
   isReceiverNameUnique,
 } from '../utils/receiverFormTransform';
 import { NotificationChannelOption, getNotifierTypeOptions } from '../utils/notifierTypes';
+import { createReceiverFormSchema } from '../utils/receiverFormSchema';
+import { CloudIntegrationType, isCloudIntegrationType } from '../utils/cloudIntegrationTypes';
 
 interface ReceiverEditFormProps {
   receiver?: Receiver;
@@ -46,12 +49,15 @@ export function ReceiverEditForm({
   const isEditMode = Boolean(receiver);
   const originalName = receiver?.name;
 
-  const defaultValues = useMemo(() => {
-    return receiver ? receiverToFormValues(receiver) : createDefaultReceiverFormValues();
-  }, [receiver]);
+  const defaultValues = useMemo(
+    () => (receiver ? receiverToFormValues(receiver) : createDefaultReceiverFormValues()),
+    [receiver]
+  );
 
+  const receiverFormSchema = useMemo(() => createReceiverFormSchema(), []);
   const formAPI = useForm<ReceiverFormValues>({
     defaultValues,
+    resolver: zodResolver(receiverFormSchema),
     mode: 'onBlur',
   });
 
@@ -62,7 +68,7 @@ export function ReceiverEditForm({
     formState: { errors, isSubmitting },
   } = formAPI;
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control,
     name: 'integrations',
   });
@@ -137,6 +143,7 @@ export function ReceiverEditForm({
               register={register}
               notifierTypeOptions={notifierTypeOptions}
               onRemove={() => remove(index)}
+              onTypeChange={(type) => update(index, createDefaultIntegration(type))}
               canRemove={fields.length > 1}
             />
           ))}
@@ -172,6 +179,7 @@ interface IntegrationEditorProps {
   register: ReturnType<typeof useForm<ReceiverFormValues>>['register'];
   notifierTypeOptions: Array<{ label: string; value: string; description: string }>;
   onRemove: () => void;
+  onTypeChange: (type: CloudIntegrationType) => void;
   canRemove: boolean;
 }
 
@@ -181,6 +189,7 @@ function IntegrationEditor({
   register,
   notifierTypeOptions,
   onRemove,
+  onTypeChange,
   canRemove,
 }: IntegrationEditorProps) {
   const integrationType = useWatch({
@@ -202,11 +211,16 @@ function IntegrationEditor({
           <Controller
             name={`integrations.${index}.type`}
             control={control}
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <Combobox
                 options={comboboxOptions}
                 value={value}
-                onChange={(selected) => onChange(selected?.value ?? 'webhook')}
+                onChange={(selected) => {
+                  const selectedType = selected?.value ?? 'webhook';
+                  if (isCloudIntegrationType(selectedType)) {
+                    onTypeChange(selectedType);
+                  }
+                }}
                 placeholder={t('receivers.form.select-type', 'Select integration type')}
                 aria-label={t('receivers.form.integration-type', 'Integration type')}
               />
@@ -238,11 +252,11 @@ function IntegrationEditor({
       </Field>
 
       {/* Settings box - only the actual integration settings are boxed */}
-      {notifier && (
-        <Box padding={2} borderColor="weak" borderStyle="solid">
+      <Box padding={2} borderColor="weak" borderStyle="solid">
+        {notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
-        </Box>
-      )}
+        ) : null}
+      </Box>
     </Stack>
   );
 }
@@ -276,16 +290,23 @@ function IntegrationFields({ notifier, index, control, register }: IntegrationFi
   );
 }
 
+type IntegrationSettingsPath = `integrations.${number}.settings` | `integrations.${number}.settings.${string}`;
+type IntegrationSettingsFieldPath = `integrations.${number}.settings.${string}`;
+
+function appendFieldPath(basePath: IntegrationSettingsPath, propertyName: string): IntegrationSettingsFieldPath {
+  return `${basePath}.${propertyName}`;
+}
+
 interface OptionFieldProps {
   option: NotificationChannelOption;
   index: number;
   control: ReturnType<typeof useForm<ReceiverFormValues>>['control'];
   register: ReturnType<typeof useForm<ReceiverFormValues>>['register'];
-  basePath: string;
+  basePath: IntegrationSettingsPath;
 }
 
 function OptionField({ option, index, control, register, basePath }: OptionFieldProps) {
-  const fieldPath = `${basePath}.${option.propertyName}` as const;
+  const fieldPath = appendFieldPath(basePath, option.propertyName);
 
   // Render subform fields (like http_config, tls_config) with a section header
   if (option.element === 'subform' || option.element === 'subform_array') {
@@ -303,7 +324,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
                 index={index}
                 control={control}
                 register={register}
-                basePath={`${basePath}.${option.propertyName}`}
+                basePath={fieldPath}
               />
             ))}
           </Stack>
@@ -318,7 +339,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
     return (
       <Field label={option.label} description={option.description}>
         <Controller
-          name={fieldPath as `integrations.${number}.settings.${string}`}
+          name={fieldPath}
           control={control}
           render={({ field: { onChange, value } }) => (
             <Checkbox
@@ -338,7 +359,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
     return (
       <Field label={option.label} description={option.description}>
         <Controller
-          name={fieldPath as `integrations.${number}.settings.${string}`}
+          name={fieldPath}
           control={control}
           render={({ field: { onChange, value } }) => (
             <Combobox
@@ -357,12 +378,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
   if (option.element === 'textarea') {
     return (
       <Field label={option.label} description={option.description}>
-        <TextArea
-          {...register(fieldPath as `integrations.${number}.settings.${string}`)}
-          placeholder={option.placeholder}
-          rows={3}
-          aria-label={option.label}
-        />
+        <TextArea {...register(fieldPath)} placeholder={option.placeholder} rows={3} aria-label={option.label} />
       </Field>
     );
   }
@@ -371,7 +387,7 @@ function OptionField({ option, index, control, register, basePath }: OptionField
   return (
     <Field label={option.label} description={option.description} required={option.required}>
       <Input
-        {...register(fieldPath as `integrations.${number}.settings.${string}`, {
+        {...register(fieldPath, {
           required: option.required ? t('receivers.form.field-required', 'This field is required') : false,
           setValueAs: option.setValueAs,
         })}

@@ -19,6 +19,8 @@ export const CLOUD_INTEGRATION_TYPES = [
   'wechat',
 ] as const;
 
+export const LEGACY_INTEGRATION_TYPES = CLOUD_INTEGRATION_TYPES;
+
 export type CloudIntegrationType = (typeof CLOUD_INTEGRATION_TYPES)[number];
 
 export function isCloudIntegrationType(value: string): value is CloudIntegrationType {
