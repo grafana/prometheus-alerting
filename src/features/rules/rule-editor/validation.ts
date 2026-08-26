@@ -76,23 +76,18 @@ export function createRuleFormSchema() {
         })
       ),
     })
-    .superRefine((values, ctx) => {
-      if (!isCloudRecordingRuleByType(values.type) || values.name.length === 0) {
+    .refine(
+      (values) =>
         // Empty names are already reported by the `name` field's own `min(1)` check.
-        return;
+        !isCloudRecordingRuleByType(values.type) || values.name.length === 0 || isValidMetricName(values.name),
+      {
+        message: t(
+          'alerting.rule-form.validation.name-invalid-metric-name',
+          "Recording rule names can only contain letters, numbers, underscores and colons, and can't start with a number"
+        ),
+        path: ['name'],
       }
-
-      if (!isValidMetricName(values.name)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['name'],
-          message: t(
-            'alerting.rule-form.validation.name-invalid-metric-name',
-            "Recording rule names can only contain letters, numbers, underscores and colons, and can't start with a number"
-          ),
-        });
-      }
-    });
+    );
 }
 
 export type RuleFormSchema = z.infer<ReturnType<typeof createRuleFormSchema>>;
