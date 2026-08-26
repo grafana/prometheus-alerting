@@ -47,6 +47,8 @@ import { OpsgenieIntegrationForm } from '../integrations/opsgenie/OpsgenieIntegr
 
 import { PushoverIntegrationForm } from '../integrations/pushover/PushoverIntegrationForm';
 
+import { VictorOpsIntegrationForm } from '../integrations/victorops/VictorOpsIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -285,6 +287,8 @@ function IntegrationEditor({
           <OpsgenieIntegrationForm index={index} />
         ) : integrationType === 'pushover' ? (
           <PushoverIntegrationForm index={index} />
+        ) : integrationType === 'victorops' ? (
+          <VictorOpsIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}

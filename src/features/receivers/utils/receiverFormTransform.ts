@@ -10,6 +10,7 @@ import {
   SlackConfigSchema,
   OpsGenieConfigSchema,
   PushoverConfigSchema,
+  VictorOpsConfigSchema,
   type Receiver,
 } from '@grafana/external-alertmanager/vanilla';
 import {
@@ -52,6 +53,11 @@ import {
   pushoverConfigToFormSettings,
   pushoverFormSettingsToConfig,
 } from '../integrations/pushover/pushover.mapper';
+import {
+  createDefaultVictorOpsSettings,
+  victorOpsConfigToFormSettings,
+  victorOpsFormSettingsToConfig,
+} from '../integrations/victorops/victorops.mapper';
 import { cloudNotifierTypes, NotifierDTO } from './notifierTypes';
 import { CLOUD_INTEGRATION_TYPES, CloudIntegrationType, INTEGRATION_TYPE_MAP } from './cloudIntegrationTypes';
 import type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
@@ -174,6 +180,17 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
           continue;
         }
 
+        if (type === 'victorops') {
+          const typedConfig = VictorOpsConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: typedConfig.send_resolved !== false,
+            settings: victorOpsConfigToFormSettings(typedConfig),
+          });
+          continue;
+        }
+
         const { send_resolved, ...settings } = config;
         integrations.push({
           __id: id,
@@ -279,6 +296,15 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
 
     if (integration.type === 'pushover') {
       const typedConfig = pushoverFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...typedConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
+    }
+
+    if (integration.type === 'victorops') {
+      const typedConfig = victorOpsFormSettingsToConfig(integration.settings);
       (receiver[configKey] as Array<Record<string, unknown>>).push({
         ...typedConfig,
         send_resolved: integration.sendResolved,
@@ -420,6 +446,15 @@ export function createDefaultIntegration(type: CloudIntegrationType): Integratio
       type,
       sendResolved: true,
       settings: createDefaultPushoverSettings(),
+    };
+  }
+
+  if (type === 'victorops') {
+    return {
+      __id: generateId(),
+      type,
+      sendResolved: true,
+      settings: createDefaultVictorOpsSettings(),
     };
   }
 
