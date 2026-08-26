@@ -109,15 +109,6 @@ export function ReceiverIntegrations({ receiver }: ReceiverIntegrationsProps) {
   );
 }
 
-export function canDeleteReceiver(
-  canEdit: boolean,
-  isDefaultReceiver: boolean,
-  isInUse: boolean,
-  isUsageLoading = false
-): boolean {
-  return canEdit && !isDefaultReceiver && !isInUse && !isUsageLoading;
-}
-
 interface ReceiverDrawerProps {
   receiver: Receiver | null;
   existingReceivers?: Receiver[];
@@ -152,8 +143,8 @@ export function ReceiverDrawer({
   const isViewMode = mode === DrawerMode.View;
   const isEditMode = mode === DrawerMode.Edit;
   const isAddMode = mode === DrawerMode.Add;
-  // Cannot delete the default receiver or a receiver that's in use
-  const canDelete = canDeleteReceiver(canEdit, isDefaultReceiver, isInUse, isUsageLoading);
+  // Cannot delete while usage is unknown, or when the receiver is the default or in use.
+  const canDelete = canEdit && !isDefaultReceiver && !isInUse && !isUsageLoading;
 
   const handleEdit = useCallback(() => {
     setSaveError(null);
