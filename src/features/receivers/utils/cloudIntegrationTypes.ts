@@ -20,7 +20,6 @@ export const CLOUD_INTEGRATION_TYPES = [
 ] as const;
 
 export const LEGACY_INTEGRATION_TYPES = [
-  'email',
   'slack',
   'opsgenie',
   'pushover',

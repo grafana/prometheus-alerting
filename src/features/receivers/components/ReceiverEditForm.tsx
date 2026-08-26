@@ -39,6 +39,8 @@ import { PagerDutyIntegrationForm } from '../integrations/pagerduty/PagerDutyInt
 
 import { SNSIntegrationForm } from '../integrations/sns/SNSIntegrationForm';
 
+import { EmailIntegrationForm } from '../integrations/email/EmailIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -269,6 +271,8 @@ function IntegrationEditor({
           <PagerDutyIntegrationForm index={index} />
         ) : integrationType === 'sns' ? (
           <SNSIntegrationForm index={index} />
+        ) : integrationType === 'email' ? (
+          <EmailIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}
