@@ -186,6 +186,24 @@ export class RoutesListPage extends AlertmanagerPage {
     await this.matcherValueInput(index).fill(params.value);
   }
 
+  /**
+   * Turn on "Override general timings" and fill the three duration fields. Saving a route with
+   * timings runs them through the duration validator, which a route without timings never
+   * exercises — the fields only render while the toggle is on.
+   */
+  async setTimings(params: { groupWait: string; groupInterval: string; repeatInterval: string }) {
+    // Grafana's `Switch` stacks a `<label>` on top of the visually-hidden `<input>`, so the input
+    // is never "actionable" per Playwright's overlap check — the label always intercepts. Force
+    // it, the same way the receiver form's checkboxes do; the browser still forwards the click to
+    // the input via the enclosing label.
+    if (!(await this.overrideTimingsToggle.isChecked())) {
+      await this.overrideTimingsToggle.click({ force: true });
+    }
+    await this.groupWaitInput.fill(params.groupWait);
+    await this.groupIntervalInput.fill(params.groupInterval);
+    await this.repeatIntervalInput.fill(params.repeatInterval);
+  }
+
   async selectReceiver(name: string) {
     await this.receiverSelector.click();
     await this.page.getByRole('option', { name, exact: true }).click();

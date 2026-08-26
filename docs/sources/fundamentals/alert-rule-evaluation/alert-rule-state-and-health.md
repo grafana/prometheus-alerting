@@ -1,6 +1,6 @@
 ---
 title: Alert rule state and health
-description: Understand the inactive, pending, and firing states, and what rule health tells you.
+description: Understand the inactive, pending, and firing states of an alert instance, and how rule health tells you whether the rule itself evaluated successfully in the Prometheus Alerting plugin.
 keywords:
   - alert state
   - inactive
@@ -14,14 +14,14 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Alert rule state and health
 
 The plugin reports two independent things about a rule: its **state**, which is about the alerts it's producing, and its **health**, which is about whether the rule itself is working.
 
-They're worth keeping separate. A rule can be perfectly healthy and producing no alerts, or badly broken and therefore silent—and those look identical if you only watch for firing alerts.
+They're worth keeping separate. A rule can be perfectly healthy and producing no alerts, or badly broken and therefore silent, and those look identical if you only watch for firing alerts.
 
 ## Alert state
 
@@ -45,7 +45,7 @@ Health answers a different question: did the last evaluation succeed?
 | ----------- | -------------------------------------------------------------------------------------- |
 | **ok**      | The rule evaluated without error.                                                      |
 | **error**   | The last evaluation failed. **Last Error** on the rule detail page carries the reason. |
-| **unknown** | The rule hasn't been evaluated yet—usually a rule that was only just created.          |
+| **unknown** | The rule hasn't been evaluated yet, usually a rule that was only just created.         |
 
 A rule in **error** health produces no alerts, which is the dangerous case: the thing it was watching could be broken and you'd hear nothing. Common causes are a query that references a metric that no longer exists, a syntax error introduced by an edit, or a query too expensive to complete.
 
@@ -57,4 +57,4 @@ Watch rule health, not just firing alerts. A silent alerting stack looks the sam
 
 ## Newly created rules
 
-Rules take a moment to reach the ruler after you save them. During that window the plugin shows that the rule is being propagated to the monitoring system and refreshes on its own once it lands. This is normal and usually takes a few seconds—the same applies after deleting a rule.
+Rules take a moment to reach the ruler after you save them. During that window the plugin shows that the rule is being propagated to the monitoring system and refreshes on its own once it lands. This is normal and usually takes a few seconds. The same applies after deleting a rule.

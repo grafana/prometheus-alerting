@@ -1,6 +1,6 @@
 ---
 title: Notifications
-description: Learn how Alertmanager groups, routes, and delivers notifications for firing alerts.
+description: Learn how Alertmanager deduplicates, groups, routes, and suppresses alerts before delivering a notification, and how the Prometheus Alerting plugin exposes each step of that process.
 keywords:
   - alertmanager
   - notifications
@@ -13,12 +13,12 @@ labels:
     - enterprise
     - cloud
 weight: 300
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Notifications
 
-Once a rule fires, the ruler's job is done—it just keeps reporting the alert. Everything from that point is Alertmanager's decision.
+Once a rule fires, the ruler's job is done. It just keeps reporting the alert. Everything from that point is Alertmanager's decision.
 
 ## What Alertmanager does with an alert
 

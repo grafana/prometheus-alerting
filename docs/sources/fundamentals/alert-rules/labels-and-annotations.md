@@ -1,6 +1,6 @@
 ---
 title: Labels and annotations
-description: Learn how labels identify an alert instance and how annotations add context for notifications.
+description: Learn how labels give an alert instance its identity and drive routing, grouping, and silencing, while annotations carry the human-readable context that ends up in notifications.
 keywords:
   - labels
   - annotations
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Labels and annotations
@@ -26,11 +26,11 @@ An alert instance's identity is its complete set of labels. That set comes from 
 
 Identity matters because Alertmanager uses it for everything:
 
-- **Routing**—matchers in the routing tree are label matchers. Refer to [The routing tree](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/notifications/routing-tree/).
-- **Grouping**—alerts are batched by label value using `group_by`. Refer to [Group alert notifications](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/notifications/group-alert-notifications/).
-- **Silencing**—silences match on labels. Refer to [Create a silence](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/configure-notifications/create-silence/).
-- **Inhibition**—source and target matchers are label matchers, and `equal` compares label values. Refer to [Configure inhibition rules](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/configure-notifications/inhibition-rules/).
-- **Deduplication**—two alerts with identical labels are the same alert.
+- **Routing**: matchers in the routing tree are label matchers. Refer to [The routing tree](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/notifications/routing-tree/).
+- **Grouping**: alerts are batched by label value using `group_by`. Refer to [Group alert notifications](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/notifications/group-alert-notifications/).
+- **Silencing**: silences match on labels. Refer to [Create a silence](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/configure-notifications/create-silence/).
+- **Inhibition**: source and target matchers are label matchers, and `equal` compares label values. Refer to [Configure inhibition rules](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/configure-notifications/inhibition-rules/).
+- **Deduplication**: two alerts with identical labels are the same alert.
 
 Because identity is the whole label set, _changing any label produces a different alert_. An alert whose labels change mid-incident looks to Alertmanager like the old one resolving and a new one appearing, which can re-notify people. Avoid putting anything that varies over time—a timestamp, a current value—in a label.
 
@@ -61,7 +61,7 @@ annotations:
   runbook_url: https://runbooks.example.com/high-latency
 ```
 
-Annotations play no part in routing, grouping, silencing, or deduplication. Changing an annotation on a firing alert doesn't create a new alert—which is exactly why anything that varies belongs here rather than in a label.
+Annotations play no part in routing, grouping, silencing, or deduplication. Changing an annotation on a firing alert doesn't create a new alert, which is exactly why anything that varies belongs here rather than in a label.
 
 Annotation values are templated by the ruler at evaluation time, so `$labels` and `$value` are available. Refer to [Template annotations and labels](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/alerting-rules/template-annotations-and-labels/).
 
@@ -69,11 +69,11 @@ Annotation values are templated by the ruler at evaluation time, so `$labels` an
 
 Ask what the field is for:
 
-| The field                                       | Where it goes             |
-| ----------------------------------------------- | ------------------------- |
-| Routes, groups, silences, or inhibits the alert | Label                     |
-| Tells a person what happened or what to do      | Annotation                |
-| Changes while the alert is firing               | Annotation                |
-| Has many possible values                        | Neither—aggregate it away |
+| The field                                       | Where it goes              |
+| ----------------------------------------------- | -------------------------- |
+| Routes, groups, silences, or inhibits the alert | Label                      |
+| Tells a person what happened or what to do      | Annotation                 |
+| Changes while the alert is firing               | Annotation                 |
+| Has many possible values                        | Neither; aggregate it away |
 
 In the plugin, both are edited in the rule editor: labels in the rule definition, annotations under **Annotations**, where **Add custom annotation** adds keys beyond the standard ones.

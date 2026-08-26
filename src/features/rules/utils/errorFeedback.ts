@@ -19,5 +19,10 @@ export function getRulesErrorFeedback(error: unknown, fallbackTitle: string): Ru
     };
   }
 
-  return { title: fallbackTitle, description: extractErrorMessage(error) };
+  const message = extractErrorMessage(error).trim();
+
+  return {
+    title: fallbackTitle,
+    description: message.length > 0 ? message : t('alerting.rules-error.unknown', 'An unknown error occurred'),
+  };
 }

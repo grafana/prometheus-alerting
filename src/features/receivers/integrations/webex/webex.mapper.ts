@@ -5,17 +5,20 @@ import { createWebexSettingsFormSchema, WebexSettingsFormValues } from './webex.
 
 export function webexConfigToFormSettings(config: WebexConfig): WebexSettingsFormValues {
   const settings = structuredClone(config);
-  const { bearer_token: legacyBearerTokenValue, ...httpConfig } = settings.http_config ?? {};
-  const legacyBearerToken = typeof legacyBearerTokenValue === 'string' ? legacyBearerTokenValue : undefined;
-  const authorizationCredentials = httpConfig.authorization?.credentials ?? legacyBearerToken;
+  const {
+    bearer_token: legacyBearerToken,
+    bearer_token_file: legacyBearerTokenFile,
+    ...httpConfig
+  } = settings.http_config ?? {};
+  const legacyAuthorization = legacyBearerToken
+    ? { type: 'Bearer', credentials: legacyBearerToken }
+    : legacyBearerTokenFile
+      ? { type: 'Bearer', credentials_file: legacyBearerTokenFile }
+      : undefined;
 
   const normalizedHttpConfig = {
     ...httpConfig,
-    authorization: {
-      ...httpConfig.authorization,
-      type: httpConfig.authorization?.type ?? (authorizationCredentials ? 'Bearer' : undefined),
-      credentials: authorizationCredentials,
-    },
+    authorization: httpConfig.authorization ?? legacyAuthorization ?? {},
   };
 
   settings.room_id ??= '';

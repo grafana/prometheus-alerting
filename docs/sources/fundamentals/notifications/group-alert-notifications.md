@@ -1,6 +1,6 @@
 ---
 title: Group alert notifications
-description: Learn how Alertmanager batches related alerts into a single notification.
+description: Learn how Alertmanager batches related alerts into a single notification, and how group by, group wait, group interval, and repeat interval decide when that notification is sent.
 keywords:
   - alertmanager
   - grouping
@@ -14,7 +14,7 @@ labels:
     - enterprise
     - cloud
 weight: 300
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Group alert notifications
@@ -29,8 +29,8 @@ Grouping by `alertname` and `cluster` means all `InstanceDown` alerts in one clu
 
 The choice is a trade-off:
 
-- **Group by few labels**—fewer, larger notifications. Good for reducing noise, but individual alerts are easier to overlook inside a long list.
-- **Group by many labels**—more, smaller notifications. Each is specific, but a wide outage floods the channel.
+- **Group by few labels**: fewer, larger notifications. Good for reducing noise, but individual alerts are easier to overlook inside a long list.
+- **Group by many labels**: more, smaller notifications. Each is specific, but a wide outage floods the channel.
 
 Grouping by nothing at all puts every alert into one group, which produces a single notification per route no matter what's happening.
 
@@ -38,11 +38,11 @@ Grouping by nothing at all puts every alert into one group, which produces a sin
 
 Three settings control when a group's notification is sent. They look similar and are easy to confuse. The key to keeping them straight is that Alertmanager works on a repeating cycle for each group, rather than reacting to each alert as it arrives. Every group runs its own cycle, independently of the others.
 
-**Group wait**—how long Alertmanager waits between creating a new group and sending its first notification. Nothing goes out during this window, which gives related alerts a chance to arrive and be batched together, and gives inhibition rules a chance to take effect. Defaults to 30 seconds.
+**Group wait**: how long Alertmanager waits between creating a new group and sending its first notification. Nothing goes out during this window, which gives related alerts a chance to arrive and be batched together, and gives inhibition rules a chance to take effect. Defaults to 30 seconds.
 
-**Group interval**—how long between one check of a group and the next, after the first notification. The timer restarts at each check, not when an alert arrives. Defaults to 5 minutes.
+**Group interval**: how long between one check of a group and the next, after the first notification. The timer restarts at each check, not when an alert arrives. Defaults to 5 minutes.
 
-**Repeat interval**—how long before an unchanged group is sent again, as a reminder that something is still broken. Defaults to 4 hours.
+**Repeat interval**: how long before an unchanged group is sent again, as a reminder that something is still broken. Defaults to 4 hours.
 
 The one people most often get wrong is the group interval. It isn't a delay that starts when a new alert shows up; it's a fixed cycle. An alert joining just before a check goes out almost immediately, and one joining just after waits nearly the full interval.
 

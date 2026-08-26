@@ -25,7 +25,6 @@ import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
 const { useGetRuleGroupQuery, useDeleteRuleGroupMutation, useUpsertRuleGroupMutation } = rulerApi;
 import { useReturnTo } from '../../../hooks/useReturnTo';
-import { extractErrorMessage } from '../../../utils/errors';
 import { groups } from '../../../utils/navigation';
 import { AlertingAction, isAbilityAllowed, useScopedAbilities } from '../../../access-control/abilities';
 
@@ -170,7 +169,8 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
 
   const [swapOperations, setSwapOperations] = useState<SwapOperation[]>([]);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  // The last failure, kept raw so the alert can decide how to present it
+  const [submitError, setSubmitError] = useState<unknown>(null);
   const [isWaitingForConsistency, setIsWaitingForConsistency] = useState(false);
 
   const defaultInterval = rulerGroup.interval ?? '1m';
@@ -219,8 +219,12 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
       // Apply rule reordering
       const reorderedRules = hasSwaps ? applySwaps(rulerGroup.rules, swapOperations) : rulerGroup.rules;
 
-      // Create the new rule group payload
+      // Create the new rule group payload.
+      // Spread the group we fetched first: this form edits the name, the interval and the rule
+      // order, and everything else on the group -- source_tenants, limit, query_offset and the
+      // rest -- has to survive a save untouched.
       const newGroupPayload = {
+        ...rulerGroup,
         name: data.name,
         interval: data.interval,
         rules: reorderedRules,
@@ -259,7 +263,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
       }
     } catch (error) {
       setIsWaitingForConsistency(false);
-      setSubmitError(extractErrorMessage(error));
+      setSubmitError(error);
     }
   };
 
@@ -294,7 +298,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
       locationService.push(`${PLUGIN_BASE_URL}/${ROUTES.Rules}`);
     } catch (error) {
       setIsWaitingForConsistency(false);
-      setSubmitError(error instanceof Error ? error.message : String(error));
+      setSubmitError(error);
     }
   };
 
@@ -303,10 +307,11 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)}>
-        {submitError && (
-          <Alert severity="error" title={t('alerting.group-edit.submit-error', 'Failed to save changes')}>
-            {submitError}
-          </Alert>
+        {submitError !== null && (
+          <RulesErrorAlert
+            error={submitError}
+            title={t('alerting.group-edit.submit-error', 'Failed to save changes')}
+          />
         )}
 
         <Field

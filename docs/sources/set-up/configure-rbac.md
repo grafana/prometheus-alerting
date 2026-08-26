@@ -1,6 +1,6 @@
 ---
 title: Configure access control
-description: Control who can view and edit rules, silences, and Alertmanager configuration.
+description: Control who can view and edit rules, silences, and Alertmanager configuration in the Prometheus Alerting plugin using the Grafana RBAC permissions for external alerting resources.
 keywords:
   - rbac
   - permissions
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 300
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Configure access control
@@ -34,16 +34,16 @@ Access is enforced through Grafana role-based access control (RBAC), using the s
 
 Read permission controls whether a page is reachable at all. Write permission controls whether the create and edit actions on that page are offered.
 
-| Page           | Needs to view                       | Needs to change                      |
-| -------------- | ----------------------------------- | ------------------------------------ |
-| Rules          | `alert.rules.external:read`         | `alert.rules.external:write`         |
-| Alerts         | `alert.instances.external:read`     | Not applicable—the page is read-only |
-| Silences       | `alert.instances.external:read`     | `alert.instances.external:write`     |
-| Routes         | `alert.notifications.external:read` | `alert.notifications.external:write` |
-| Receivers      | `alert.notifications.external:read` | `alert.notifications.external:write` |
-| Templates      | `alert.notifications.external:read` | `alert.notifications.external:write` |
-| Time intervals | `alert.notifications.external:read` | `alert.notifications.external:write` |
-| Inhibit rules  | `alert.notifications.external:read` | `alert.notifications.external:write` |
+| Page           | Needs to view                       | Needs to change                       |
+| -------------- | ----------------------------------- | ------------------------------------- |
+| Rules          | `alert.rules.external:read`         | `alert.rules.external:write`          |
+| Alerts         | `alert.instances.external:read`     | Not applicable, the page is read-only |
+| Silences       | `alert.instances.external:read`     | `alert.instances.external:write`      |
+| Routes         | `alert.notifications.external:read` | `alert.notifications.external:write`  |
+| Receivers      | `alert.notifications.external:read` | `alert.notifications.external:write`  |
+| Templates      | `alert.notifications.external:read` | `alert.notifications.external:write`  |
+| Time intervals | `alert.notifications.external:read` | `alert.notifications.external:write`  |
+| Inhibit Rules  | `alert.notifications.external:read` | `alert.notifications.external:write`  |
 
 Pages a user can't read are hidden from the plugin navigation rather than shown and then refused. Someone with only `alert.rules.external:read` sees a plugin containing rule pages and nothing else.
 
@@ -52,7 +52,7 @@ Pages a user can't read are hidden from the plugin navigation rather than shown 
 An action can be missing for two quite different reasons, and it's worth telling them apart before granting anyone more access:
 
 - **Insufficient permissions.** The user's role doesn't include the required permission. Granting the permission fixes it.
-- **Not supported.** The data source itself can't do it—most commonly a vanilla Prometheus rules source with no writable ruler API. No amount of permission changes this; refer to [Configure data sources](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/configure-data-sources/).
+- **Not supported.** The data source itself can't do it, most commonly a vanilla Prometheus rules source with no writable ruler API. No amount of permission changes this; refer to [Configure data sources](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/configure-data-sources/).
 
 ## Assign permissions
 

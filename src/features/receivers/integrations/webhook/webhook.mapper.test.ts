@@ -62,6 +62,38 @@ describe('webhook mapper', () => {
     });
   });
 
+  it('migrates a legacy bearer token file when the inline token is empty', () => {
+    const original = {
+      url: 'https://example.com/webhook',
+      http_config: {
+        bearer_token: '',
+        bearer_token_file: '/var/run/secrets/token',
+      },
+    } satisfies WebhookConfig;
+
+    expect(webhookFormSettingsToConfig(webhookConfigToFormSettings(original))).toEqual({
+      url: 'https://example.com/webhook',
+      http_config: {
+        authorization: { type: 'Bearer', credentials_file: '/var/run/secrets/token' },
+      },
+    });
+  });
+
+  it('prefers modern authorization when legacy and modern values coexist', () => {
+    const original = {
+      url: 'https://example.com/webhook',
+      http_config: {
+        bearer_token: 'legacy-token',
+        authorization: { type: 'Custom', credentials: 'modern-token' },
+      },
+    } satisfies WebhookConfig;
+
+    expect(webhookFormSettingsToConfig(webhookConfigToFormSettings(original)).http_config?.authorization).toEqual({
+      type: 'Custom',
+      credentials: 'modern-token',
+    });
+  });
+
   it('preserves an explicitly changed false TLS value', () => {
     const settings = webhookConfigToFormSettings({
       url: 'https://example.com/webhook',

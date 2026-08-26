@@ -1,6 +1,6 @@
 ---
 title: View active notifications
-description: Confirm which receiver an alert was routed to and why a notification was suppressed.
+description: Confirm which receiver an alert was routed to and find out why a notification was suppressed, using the Alerts page to see what Alertmanager decided rather than what you configured.
 keywords:
   - alertmanager
   - routing
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 400
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # View active notifications
@@ -47,12 +47,12 @@ When an alert fired but nobody heard about it, work through it in this order:
 1. **Is the alert on the Alerts page at all?** If not, the ruler isn't reaching this Alertmanager, or you're looking at the wrong one in the picker.
 1. **Is it suppressed?** The drawer names the cause.
 1. **Which receiver did it go to?** If it's not the one you expected, the routing tree matched a different branch.
-1. **Is the receiver configured correctly?** Routing can be right while the integration itself fails—a stale Slack webhook, a rotated PagerDuty key.
+1. **Is the receiver configured correctly?** Routing can be right while the integration itself fails: a stale Slack webhook, a rotated PagerDuty key.
 
 The first three are answered on this page. The fourth is the one it can't tell you about, since Alertmanager considers its job done once it has attempted delivery.
 
 ## Alerts that resolve
 
-An alert disappears from the page once it stops firing and its grouping timers lapse. There's no history here—this page is a live view of what Alertmanager holds right now.
+An alert disappears from the page once it stops firing and its grouping timers lapse. There's no history here. This page is a live view of what Alertmanager holds right now.
 
 For history, use the notification system on the receiving end, or query the alert metrics in your monitoring backend.

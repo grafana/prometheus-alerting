@@ -1,6 +1,6 @@
 ---
 title: Create a receiver
-description: Add and manage Alertmanager receivers such as email, Slack, PagerDuty, and webhooks.
+description: Add and manage Alertmanager receivers such as email, Slack, PagerDuty, and webhooks, choose whether to send resolved notifications, and understand what renaming or deleting one breaks.
 keywords:
   - alertmanager
   - receivers
@@ -15,7 +15,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Create a receiver
@@ -26,7 +26,7 @@ A receiver is a named set of integrations. Routes refer to receivers by name, so
 
 1. Click **Receivers**.
 1. Click **Create receiver**.
-1. Enter a **Name**. Names have to be unique—the plugin tells you if one is already taken.
+1. Enter a **Name**. Names have to be unique. The plugin tells you if one is already taken.
 1. Click **Add integration** and select an **Integration type**.
 1. Fill in the fields for that integration. Required fields are marked, and the form won't submit until they're filled.
 1. Optionally enable **Send resolved** to also notify when the alert stops firing.
@@ -45,11 +45,11 @@ Each type has its own fields. A few of the common ones:
 | --------------- | ----------------------------------------------------------------- |
 | Email           | **To**, **From**, **SMTP host**, and optional SMTP authentication |
 | Slack           | **API URL** (the webhook URL) and **Channel**                     |
-| PagerDuty       | **Routing key**—the integration key from the PagerDuty service    |
+| PagerDuty       | **Routing key**: the integration key from the PagerDuty service   |
 | Microsoft Teams | **Webhook URL**                                                   |
 | Webhook         | The endpoint URL, plus HTTP configuration                         |
 
-If the Alertmanager configuration contains an integration type the plugin doesn't know, it says the type isn't supported rather than hiding it. Take care editing such a receiver—the plugin can show you that the integration exists, but not its fields.
+If the Alertmanager configuration contains an integration type the plugin doesn't know, it says the type isn't supported rather than hiding it. Take care editing such a receiver. The plugin can show you that the integration exists, but not its fields.
 
 ## Choosing send resolved
 
@@ -79,4 +79,4 @@ The default receiver can't be deleted. The default route always needs somewhere 
 
 ## Verify it works
 
-Receivers are only exercised when a notification is actually sent, so a configuration error tends to surface at the worst moment. The quickest check is to create a short silence-free test alert, or watch the **Alerts** page after a real alert fires and confirm the receiver column shows what you expect.
+Receivers are only exercised when a notification is actually sent, so a configuration error tends to surface at the worst moment. The plugin has no way to send a test notification, so the check is to wait for a real alert: after one fires, open the **Alerts** page and confirm the **Receiver** column shows the receiver you expect, then confirm the notification arrived in the receiving system.

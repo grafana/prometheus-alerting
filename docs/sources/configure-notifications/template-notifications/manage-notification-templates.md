@@ -1,6 +1,6 @@
 ---
 title: Manage notification templates
-description: Create, edit, and delete Alertmanager notification templates.
+description: Create, edit, and delete Alertmanager notification templates in the Prometheus Alerting plugin, and reference the names you define in them from a receiver's integration fields.
 keywords:
   - notification templates
   - create
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Manage notification templates
@@ -31,7 +31,7 @@ The name of the file and the names you `define` inside it are different things. 
 
 ## Use a template in a receiver
 
-Defining a template changes nothing on its own. To apply it, reference the defined name from the relevant field on a receiver's integration—a Slack integration's title and text fields, for example.
+Defining a template changes nothing on its own. To apply it, reference the defined name from the relevant field on a receiver's integration, such as a Slack integration's title and text fields.
 
 Refer to [Create a receiver](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/configure-notifications/create-receiver/).
 
@@ -49,7 +49,7 @@ The list shows a preview of each template's content, which is usually enough to 
 1. Select the template.
 1. Click **Delete** and confirm.
 
-Deleting can't be undone. Check that no receiver references any of the names defined in it—a receiver pointing at a definition that no longer exists falls back to the default formatting, quietly.
+Deleting can't be undone. Check that no receiver references any of the names defined in it. A receiver pointing at a definition that no longer exists falls back to the default formatting, quietly.
 
 ## Editing safely
 

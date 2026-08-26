@@ -1,6 +1,6 @@
 ---
 title: Alert rules
-description: Understand what a data source-managed alert rule is and what it's made of.
+description: Understand what a data source-managed alert rule is in the Prometheus Alerting plugin, how alerting and recording rules differ, and how rules are organized into groups and namespaces.
 keywords:
   - prometheus
   - alert rules
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Alert rules
@@ -46,15 +46,16 @@ The example above shows the two working together: the recording rule does the ar
 
 ## What a rule is made of
 
-| Part           | Applies to     | Purpose                                                        |
-| -------------- | -------------- | -------------------------------------------------------------- |
-| Name           | Both           | `alert:` names the alert; `record:` names the resulting metric |
-| Expression     | Both           | The PromQL or LogQL query to evaluate                          |
-| Pending period | Alerting rules | How long the condition must hold before the alert fires        |
-| Labels         | Alerting rules | Identify the alert and drive routing                           |
-| Annotations    | Alerting rules | Human-readable context, carried into notifications             |
+| Part            | Applies to     | Purpose                                                        |
+| --------------- | -------------- | -------------------------------------------------------------- |
+| Name            | Both           | `alert:` names the alert; `record:` names the resulting metric |
+| Expression      | Both           | The PromQL or LogQL query to evaluate                          |
+| Pending period  | Alerting rules | How long the condition must hold before the alert fires        |
+| Keep firing for | Alerting rules | How long the alert keeps firing after the condition clears     |
+| Labels          | Alerting rules | Identify the alert and drive routing                           |
+| Annotations     | Alerting rules | Human-readable context, carried into notifications             |
 
-Recording rules have no pending period or annotations, because there's no alert to delay or describe.
+Recording rules have no pending period, keep firing for, or annotations, because there's no alert to delay, hold open, or describe.
 
 ## Where rules live
 

@@ -70,6 +70,25 @@ export const CloudEvaluationBehavior = () => {
         </div>
       </Field>
 
+      {type === RuleFormType.cloudAlerting && (
+        <Field
+          label={t('alerting.cloud-evaluation-behavior.label-keep-firing-for', 'Keep firing for')}
+          description={t(
+            'alerting.cloud-evaluation-behavior.description-keep-firing-for',
+            'How long the alert keeps firing after the condition stops being met. Leave empty to resolve as soon as the condition clears. Accepts compound durations, for example 1h30m.'
+          )}
+          invalid={!!errors.keepFiringFor?.message}
+          error={errors.keepFiringFor?.message}
+        >
+          <Input
+            id="keep-firing-for"
+            {...register('keepFiringFor')}
+            width={30}
+            placeholder={t('alerting.cloud-evaluation-behavior.placeholder-keep-firing-for', '0s')}
+          />
+        </Field>
+      )}
+
       {/* Namespace and Group fields */}
       {type === RuleFormType.cloudAlerting && dataSourceUid && (
         <GroupAndNamespaceFields dataSourceUid={dataSourceUid} />

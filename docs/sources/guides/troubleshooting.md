@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Resolve common problems with the Prometheus Alerting plugin.
+description: Resolve common problems with the Prometheus Alerting plugin, from missing pages and read-only rules to alerts that fire without notifying anyone and templates that render empty.
 keywords:
   - troubleshooting
   - errors
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Troubleshooting
@@ -32,7 +32,7 @@ Common problems, roughly in the order you're likely to hit them.
 The data source exists but its rules can't be read. Check, in order:
 
 1. The data source URL points at something serving the Prometheus rules API.
-1. Grafana can reach that URL—network policies and authentication both apply.
+1. Grafana can reach that URL. Network policies and authentication both apply.
 1. The endpoint actually implements the API. The plugin's error suggests checking whether the data source supports the Prometheus API, which is the usual cause.
 
 Other data sources keep working, so this error appears next to the failing source rather than replacing the whole page.
@@ -58,7 +58,7 @@ Work through the possibilities in this order:
 
 Rules take a few seconds to propagate to the ruler. The plugin says the rule is being propagated and refreshes on its own. The same applies after deleting.
 
-If it hasn't appeared after a minute, reload the page and check the rule list filters—an active filter can hide a rule that saved successfully.
+If it hasn't appeared after a minute, reload the page and check the rule list filters. An active filter can hide a rule that saved successfully.
 
 ## A rule exists but never fires
 
@@ -82,7 +82,7 @@ Refer to [View active notifications](https://grafana.com/docs/plugins/grafana-pr
 
 ## Too many alerts arrive at once
 
-Usually grouping rather than the rules. Check `group_by` on the route—grouping by too many labels splits one incident into many notifications. Refer to [Group alert notifications](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/notifications/group-alert-notifications/).
+Usually grouping rather than the rules. Check `group_by` on the route. Grouping by too many labels splits one incident into many notifications. Refer to [Group alert notifications](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/notifications/group-alert-notifications/).
 
 If one rule is producing hundreds of instances, the expression probably needs aggregating. Refer to [High-cardinality alerts](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/examples/high-cardinality-alerts/).
 
@@ -96,8 +96,8 @@ If lowering it made no difference, check **Group interval** as well. Repeats are
 
 There's no preview, so mistakes appear in sent notifications.
 
-- **Empty output**—usually a lost context. Check that `{{ template "name" . }}` includes the trailing dot, and that `.` inside a `range` refers to what you think.
-- **A field that's sometimes empty**—probably `.CommonLabels`, which only holds labels shared by every alert in the group. Use `.GroupLabels`, or read the label per alert inside a range.
+- **Empty output**: usually a lost context. Check that `{{ template "name" . }}` includes the trailing dot, and that `.` inside a `range` refers to what you think.
+- **A field that's sometimes empty**: probably `.CommonLabels`, which only holds labels shared by every alert in the group. Use `.GroupLabels`, or read the label per alert inside a range.
 
 Refer to [Template reference](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/configure-notifications/template-notifications/reference/).
 

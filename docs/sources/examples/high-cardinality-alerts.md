@@ -1,6 +1,6 @@
 ---
 title: High-cardinality alerts
-description: Keep alert volume manageable when a rule matches a large number of series.
+description: Keep alert volume manageable when a rule matches a large number of series, by aggregating in the expression, dropping labels you don't route on, and letting Alertmanager group the rest.
 keywords:
   - cardinality
   - aggregation
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 200
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # High-cardinality alerts
@@ -43,7 +43,7 @@ count by (namespace, service) (
 ) > 5
 ```
 
-This produces one alert per service, not one per pod. You lose the list of individual pods—put a dashboard link in the annotations so whoever responds can get it.
+This produces one alert per service, not one per pod. You lose the list of individual pods. Put a dashboard link in the annotations so whoever responds can get it.
 
 ## Drop labels you don't need
 

@@ -1,6 +1,6 @@
 ---
 title: Configure routes
-description: Build the Alertmanager routing tree that decides which receiver each alert goes to.
+description: Build the Alertmanager routing tree that decides which receiver each alert goes to, order sibling routes correctly, and use the continue option to send one alert to two receivers.
 keywords:
   - alertmanager
   - routes
@@ -13,7 +13,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Configure routes
@@ -36,7 +36,7 @@ The plugin annotates two cases directly in the tree:
 1. Click **Routes**.
 1. Select the route that should be the parent. To add a top-level route, select the default route.
 1. Click to add a child route.
-1. Add **matchers**—a label name, an operator, and a value. Click **Add matcher** for more. All matchers on a route have to match.
+1. Add **matchers**: a label name, an operator, and a value. Click **Add matcher** for more. All matchers on a route have to match.
 1. Select a **Receiver**. Leave it unset to inherit the parent's.
 1. Optionally set **Group by**, **Group wait**, **Group interval**, and **Repeat interval**. Unset fields inherit from the parent. Refer to [Group alert notifications](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/notifications/group-alert-notifications/).
 1. Optionally enable **Continue matching subsequent sibling nodes** to let matching carry on past this route.
@@ -59,7 +59,7 @@ This is how you page on-call and post to a chat channel for the same alert.
 Open the route's drawer and click **Edit** or **Delete**.
 
 {{< admonition type="caution" >}}
-Deleting a route deletes all of its children. The confirmation says how many will go with it. There's no undo—the change is written straight to the Alertmanager configuration.
+Deleting a route deletes all of its children. The confirmation says how many will go with it. There's no undo. The change is written straight to the Alertmanager configuration.
 {{< /admonition >}}
 
 ## Conflicting matchers
@@ -68,4 +68,4 @@ The plugin rejects a route whose matchers conflict with an existing sibling, sin
 
 ## Test your routing
 
-The **Alerts** page shows the receiver each alert was routed to. After changing the tree, find a current alert and confirm it landed where you intended—this is faster and more reliable than reasoning about the tree on paper. Refer to [View active notifications](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/monitor-status/view-active-notifications/).
+The **Alerts** page shows the receiver each alert was routed to. After changing the tree, find a current alert and confirm it landed where you intended. This is faster and more reliable than reasoning about the tree on paper. Refer to [View active notifications](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/monitor-status/view-active-notifications/).

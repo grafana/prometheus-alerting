@@ -5,8 +5,17 @@ import { createWebhookSettingsFormSchema, WebhookSettingsFormValues } from './we
 
 export function webhookConfigToFormSettings(config: WebhookConfig): WebhookSettingsFormValues {
   const clonedConfig = structuredClone(config);
-  const { bearer_token: legacyBearerToken, ...httpConfig } = clonedConfig.http_config ?? {};
-  const authorizationCredentials = httpConfig.authorization?.credentials ?? legacyBearerToken;
+  const {
+    bearer_token: legacyBearerToken,
+    bearer_token_file: legacyBearerTokenFile,
+    ...httpConfig
+  } = clonedConfig.http_config ?? {};
+  const legacyAuthorization = legacyBearerToken
+    ? { type: 'Bearer', credentials: legacyBearerToken }
+    : legacyBearerTokenFile
+      ? { type: 'Bearer', credentials_file: legacyBearerTokenFile }
+      : undefined;
+  const authorization = httpConfig.authorization ?? legacyAuthorization;
 
   return createWebhookSettingsFormSchema().parse({
     ...clonedConfig,
@@ -14,14 +23,7 @@ export function webhookConfigToFormSettings(config: WebhookConfig): WebhookSetti
     max_alerts: clonedConfig.max_alerts?.toString() ?? '',
     http_config: {
       ...httpConfig,
-      authorization:
-        httpConfig.authorization || authorizationCredentials
-          ? {
-              ...httpConfig.authorization,
-              type: httpConfig.authorization?.type ?? (authorizationCredentials ? 'Bearer' : undefined),
-              credentials: authorizationCredentials,
-            }
-          : undefined,
+      authorization,
     },
   });
 }

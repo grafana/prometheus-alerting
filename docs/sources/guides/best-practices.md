@@ -1,6 +1,6 @@
 ---
 title: Best practices
-description: Recommendations for writing rules and organizing Alertmanager configuration that stays maintainable.
+description: Recommendations for writing alert rules and organizing Alertmanager configuration that stays maintainable as it grows, covering symptoms over causes, labels, grouping, and rule health.
 keywords:
   - best practices
   - alert fatigue
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Best practices
@@ -21,7 +21,7 @@ Advice for keeping a data source-managed alerting setup usable as it grows.
 
 ## Alert on symptoms, not causes
 
-Alert on what users experience—requests failing, latency rising, a queue growing without bound. Those alerts stay meaningful as the system changes underneath them.
+Alert on what users experience: requests failing, latency rising, a queue growing without bound. Those alerts stay meaningful as the system changes underneath them.
 
 Alerts on causes, like a specific process restarting or a disk filling on one host, tend to fire during situations that aren't actually problems, and miss failures that arrive by an unanticipated route. Keep the cause-level signals as dashboards, and alert on the symptom.
 
@@ -43,7 +43,7 @@ Refer to [Labels and annotations](https://grafana.com/docs/plugins/grafana-prome
 
 A pending period that's too short produces alerts that fire and resolve on their own. Too long, and you learn about problems late.
 
-Match it to how long the condition has to hold before it's genuinely worth interrupting someone. Then check the group's evaluation interval is well below it—a pending period shorter than the interval doesn't do what it looks like it does. Refer to [Rule groups and evaluation](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rule-evaluation/rule-groups/).
+Match it to how long the condition has to hold before it's genuinely worth interrupting someone. Then check the group's evaluation interval is well below it. A pending period shorter than the interval doesn't do what it looks like it does. Refer to [Rule groups and evaluation](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rule-evaluation/rule-groups/).
 
 ## Write annotations for whoever gets paged
 
@@ -57,7 +57,7 @@ An alert saying only `HighErrorRate` sends someone hunting. One saying which ser
 
 ## Group so that one incident is one notification
 
-Grouping is the main defence against a broad outage flooding a channel. Group by the labels that describe the scope of an incident—commonly `alertname` and a cluster or environment label.
+Grouping is the main defense against a broad outage flooding a channel. Group by the labels that describe the scope of an incident, commonly `alertname` and a cluster or environment label.
 
 Keep the repeat interval long. A short one is a reliable way to make people mute the channel. Refer to [Group alert notifications](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/notifications/group-alert-notifications/).
 
@@ -69,7 +69,7 @@ Always set equal labels, so the suppression is scoped. Refer to [Configure inhib
 
 ## Keep silences short and explained
 
-Always fill in the comment—a silence nobody understands is one nobody dares remove. Prefer a short silence you extend over a long one you forget.
+Always fill in the comment. A silence nobody understands is one nobody dares remove. Prefer a short silence you extend over a long one you forget.
 
 Review inactive silences periodically. A silence that keeps being recreated is telling you a rule needs fixing rather than muting.
 
@@ -77,7 +77,7 @@ Review inactive silences periodically. A silence that keeps being recreated is t
 
 A rule failing to evaluate produces no alerts, which looks exactly like everything being fine.
 
-Check rule health periodically, and consider alerting on it—most Prometheus-compatible backends expose rule evaluation failures as metrics, so you can write a rule that watches your other rules. Refer to [Alert rule state and health](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rule-evaluation/alert-rule-state-and-health/).
+Check rule health periodically, and consider alerting on it. Most Prometheus-compatible backends expose rule evaluation failures as metrics, so you can write a rule that watches your other rules. Refer to [Alert rule state and health](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rule-evaluation/alert-rule-state-and-health/).
 
 ## Test routing changes against real alerts
 
@@ -85,4 +85,4 @@ After changing the routing tree, check the **Receiver** column on the **Alerts**
 
 ## Keep rule groups small enough to finish
 
-A group has to evaluate within its interval. When evaluation time creeps toward the interval, split the group—several smaller groups run in parallel, one large one doesn't.
+A group has to evaluate within its interval. When evaluation time creeps toward the interval, split the group. Several smaller groups run in parallel, one large one doesn't.

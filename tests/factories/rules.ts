@@ -87,6 +87,28 @@ export class RuleBuilder {
   }
 
   /**
+   * Identifier for a rule the test seeded itself.
+   *
+   * The rule object has to match what the ruler holds byte for byte -- the identifier carries a
+   * hash of it, and the rule editor looks the rule up by that hash.
+   */
+  static identifierForRulerRule(
+    uid: string,
+    namespace: string,
+    groupName: string,
+    rule: RulerAlertingRuleDTO | RulerRecordingRuleDTO
+  ): CloudRuleIdentifier {
+    return {
+      type: 'cloud',
+      uid,
+      namespace,
+      groupName,
+      ruleName: 'alert' in rule ? rule.alert : rule.record,
+      rulerRuleHash: hashRulerRule(rule),
+    };
+  }
+
+  /**
    * Create a Prometheus alerting rule
    */
   static createPromAlertingRule(overrides: Partial<PromAlertingRuleDTO> & { name: string }): PromAlertingRuleDTO {

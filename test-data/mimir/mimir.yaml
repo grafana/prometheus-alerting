@@ -39,6 +39,11 @@ alertmanager:
 ruler:
   enable_api: true
   rule_path: /data/rules-tmp
+  # Let a rule group name other tenants in "source_tenants". Without this Mimir
+  # rejects such a group with a 400, so the E2E test that seeds a federated group
+  # cannot even set it up. Needs "tenant_federation" below turned on as well.
+  tenant_federation:
+    enabled: true
   alertmanager_url: http://mimir:9009/alertmanager
   # Speed up rule propagation for E2E tests. By default a rule created via the
   # config API is re-synced through a queue that is only polled every 10s
@@ -69,3 +74,8 @@ compactor:
 memberlist:
   join_members:
     - mimir-test:7946
+
+# Required alongside "ruler.tenant_federation" above -- Mimir refuses to start if
+# the ruler is allowed to federate but this is off.
+tenant_federation:
+  enabled: true

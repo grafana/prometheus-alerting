@@ -26,11 +26,14 @@
       }
     },
     "cloud-evaluation-behavior": {
+      "description-keep-firing-for": "How long the alert keeps firing after the condition stops being met. Leave empty to resolve as soon as the condition clears. Accepts compound durations, for example 1h30m.",
       "description-pending-period": "Period during which the threshold condition must be met to trigger an alert. Selecting \"None\" triggers the alert immediately once the condition is met.",
+      "label-keep-firing-for": "Keep firing for",
       "label-pending-period": "Pending period",
       "message": {
         "must-be-positive": "Must be a positive number."
       },
+      "placeholder-keep-firing-for": "0s",
       "title-set-evaluation-behavior": "Set evaluation behavior"
     },
     "cloud-rules-source-picker": {
@@ -276,6 +279,7 @@
     "rule-form": {
       "cancel": "Cancel",
       "save": "Save",
+      "submit-error": "Failed to save rule",
       "validation": {
         "datasource-required": "Data source is required",
         "expression-required": "Expression is required",
@@ -283,6 +287,7 @@
         "for-time-positive": "Must be a positive number",
         "group-required": "Group name is required",
         "group-too-long": "Group name must be less than 255 characters",
+        "keep-firing-for-invalid": "Invalid duration format. Use combinations like 30s, 5m, 1h30m",
         "name-required": "Rule name is required",
         "name-too-long": "Rule name must be less than 255 characters",
         "namespace-required": "Namespace is required",
@@ -334,7 +339,8 @@
     },
     "rules-error": {
       "permission-denied": "Permission denied",
-      "permission-denied-description": "You do not have permission to access rules from this data source."
+      "permission-denied-description": "You do not have permission to access rules from this data source.",
+      "unknown": "An unknown error occurred"
     },
     "rules-filter": {
       "data-source-label": "Data source",

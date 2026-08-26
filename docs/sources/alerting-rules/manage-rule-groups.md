@@ -1,6 +1,6 @@
 ---
 title: Manage rule groups
-description: Organize rules into namespaces and groups, and control how often they're evaluated.
+description: Organize data source-managed rules into namespaces and groups, change how often a group is evaluated, reorder rules to satisfy dependencies, and size groups so evaluations finish in time.
 keywords:
   - rule groups
   - namespaces
@@ -12,7 +12,7 @@ labels:
     - enterprise
     - cloud
 weight: 300
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Manage rule groups
@@ -30,7 +30,7 @@ The group page lists the alerting and recording rules it contains, along with it
 
 1. Open the group.
 1. Click **Edit**.
-1. Change **Evaluation interval**—how often the rules in this group are evaluated. Durations are written as `30s`, `1m`, `5m`.
+1. Change **Evaluation interval**, which sets how often the rules in this group are evaluated. Durations are written as `30s`, `1m`, `5m`.
 1. Click **Save**.
 
 The plugin validates the format, and warns you if the interval is longer than the pending period of rules in the group, since that combination can make alerts fire on their first matching evaluation rather than after the delay you intended. Refer to [Rule groups and evaluation](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/fundamentals/alert-rule-evaluation/rule-groups/).

@@ -76,6 +76,8 @@ export const HTTPConfigSchema = z
   .looseObject({
     basic_auth: BasicAuthConfigSchema.optional(),
     authorization: AuthorizationConfigSchema.optional(),
+    bearer_token: z.string().optional(),
+    bearer_token_file: z.string().optional(),
     oauth2: OAuth2ConfigSchema.optional(),
     proxy_url: z.string().optional(),
     no_proxy: z.string().optional(),
@@ -87,12 +89,27 @@ export const HTTPConfigSchema = z
     tls_config: TLSConfigSchema.optional(),
   })
   .superRefine((data, ctx) => {
-    const authMethods = [data.basic_auth, data.authorization, data.oauth2].filter(Boolean);
+    const hasBearerToken = [data.bearer_token, data.bearer_token_file].some(
+      (credential) => credential !== undefined && credential !== ''
+    );
+    const authMethods = [data.basic_auth, data.authorization, data.oauth2, hasBearerToken].filter(Boolean);
     if (authMethods.length > 1) {
       ctx.addIssue({
         code: 'custom',
-        message: 'basic_auth, authorization, and oauth2 are mutually exclusive',
+        message: 'basic_auth, authorization, bearer_token, and oauth2 are mutually exclusive',
         path: ['basic_auth'],
+      });
+    }
+    if (
+      data.bearer_token !== undefined &&
+      data.bearer_token !== '' &&
+      data.bearer_token_file !== undefined &&
+      data.bearer_token_file !== ''
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'bearer_token and bearer_token_file are mutually exclusive',
+        path: ['bearer_token'],
       });
     }
   });

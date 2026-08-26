@@ -1,6 +1,6 @@
 ---
 title: Alerts page
-description: View firing and suppressed alerts across the selected Alertmanager.
+description: View the firing and suppressed alerts the selected Alertmanager currently holds, filter them by label, receiver, or state, and find out why a suppressed alert sent no notification.
 keywords:
   - alerts page
   - firing
@@ -13,12 +13,12 @@ labels:
     - enterprise
     - cloud
 weight: 100
-review_date: '2027-08-19'
+review_date: '2026-08-19'
 ---
 
 # Alerts page
 
-The **Alerts** page shows what the selected Alertmanager currently holds. It's the Alertmanager's view, so it shows alerts that have finished their pending period and been sent—pending alerts don't appear here.
+The **Alerts** page shows what the selected Alertmanager currently holds. It's the Alertmanager's view, so it shows alerts that have finished their pending period and been sent. Pending alerts don't appear here.
 
 ## Alert states
 
@@ -43,7 +43,7 @@ A large suppressed count is worth a look. It usually means an over-broad silence
 | **Receiver**   | Which receiver the group was routed to |
 | **Started**    | When it started firing                 |
 
-The **Receiver** column is the one that answers "where did this go?"—it reflects the route that actually matched, not the route you think should have matched.
+The **Receiver** column is the one that answers "where did this go?" It reflects the route that actually matched, not the route you think should have matched.
 
 ## Filter alerts
 
@@ -55,10 +55,10 @@ The **Receiver** column is the one that answers "where did this go?"—it reflec
 
 Select an alert to open a drawer with:
 
-- **Labels** and **Annotations**—the alert's identity, and what it says about itself.
-- **Timing**—when it started, when it ends, and when it was last updated.
-- **Receivers**—where it was routed.
-- **Generator URL**—a link back to the rule in the source system.
+- **Labels** and **Annotations**: the alert's identity, and what it says about itself.
+- **Timing**: when it started, when it ends, and when it was last updated.
+- **Receivers**: where it was routed.
+- **Generator URL**: a link back to the rule in the source system.
 
 If the alert is suppressed, the drawer names the cause: which silence silenced it, which inhibition rule inhibited it, or which time interval muted it. This is the fastest way to answer why a firing alert didn't page anyone.
 

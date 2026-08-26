@@ -1,7 +1,7 @@
 ---
 title: Set up the Prometheus Alerting plugin
 menuTitle: Set up
-description: Install the plugin, connect your data sources, and configure access control.
+description: Install the Prometheus Alerting plugin in Grafana, connect a Prometheus-compatible rules source and an Alertmanager data source, and configure the permissions that control each page.
 keywords:
   - installation
   - setup
@@ -13,8 +13,8 @@ labels:
     - oss
     - enterprise
     - cloud
-weight: 110
-review_date: '2027-08-19'
+weight: 200
+review_date: '2026-08-19'
 ---
 
 # Set up the Prometheus Alerting plugin
@@ -25,6 +25,6 @@ The order matters a little. The plugin has nothing to show until at least one da
 
 ## In this section
 
-- [Install the plugin](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/install-plugin/)—install from the catalog and enable the app.
-- [Configure data sources](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/configure-data-sources/)—connect a rules source and an Alertmanager, and understand what each supports.
-- [Configure access control](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/configure-rbac/)—grant the permissions that control each page.
+- [Install the plugin](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/install-plugin/): install from the catalog and enable the app.
+- [Configure data sources](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/configure-data-sources/): connect a rules source and an Alertmanager, and understand what each supports.
+- [Configure access control](https://grafana.com/docs/plugins/grafana-prometheusalerting-app/latest/set-up/configure-rbac/): grant the permissions that control each page.

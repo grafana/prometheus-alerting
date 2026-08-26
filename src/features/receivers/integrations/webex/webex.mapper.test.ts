@@ -38,6 +38,38 @@ describe('webex mapper', () => {
     });
   });
 
+  it('migrates a legacy bearer token file when the inline token is empty', () => {
+    const original = {
+      room_id: 'room',
+      http_config: {
+        bearer_token: '',
+        bearer_token_file: '/var/run/secrets/token',
+      },
+    } satisfies WebexConfig;
+
+    expect(webexFormSettingsToConfig(webexConfigToFormSettings(original))).toEqual({
+      room_id: 'room',
+      http_config: {
+        authorization: { type: 'Bearer', credentials_file: '/var/run/secrets/token' },
+      },
+    });
+  });
+
+  it('prefers modern authorization when legacy and modern values coexist', () => {
+    const original = {
+      room_id: 'room',
+      http_config: {
+        bearer_token: 'legacy-token',
+        authorization: { type: 'Custom', credentials: 'modern-token' },
+      },
+    } satisfies WebexConfig;
+
+    expect(webexFormSettingsToConfig(webexConfigToFormSettings(original)).http_config?.authorization).toEqual({
+      type: 'Custom',
+      credentials: 'modern-token',
+    });
+  });
+
   it('preserves unrendered TLS material losslessly', () => {
     const original = {
       room_id: 'room',
