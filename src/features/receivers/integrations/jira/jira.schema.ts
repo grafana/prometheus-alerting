@@ -1,46 +1,8 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
-const JiraHttpConfigFormSchema = z
-  .looseObject({
-    authorization: z.looseObject({ type: z.string().optional(), credentials: z.string().optional() }).optional(),
-    proxy_url: z.string().optional(),
-    no_proxy: z.string().optional(),
-    proxy_from_environment: z.boolean().optional(),
-    follow_redirects: z.boolean().optional(),
-    enable_http2: z.boolean().optional(),
-    basic_auth: z.looseObject({ username: z.string().optional(), password: z.string().optional() }).optional(),
-    tls_config: z
-      .looseObject({
-        server_name: z.string().optional(),
-        insecure_skip_verify: z.boolean().optional(),
-        min_version: z.string().optional(),
-        max_version: z.string().optional(),
-      })
-      .optional(),
-  })
-  .superRefine((httpConfig, ctx) => {
-    if (httpConfig.proxy_from_environment && httpConfig.proxy_url) {
-      ctx.addIssue({
-        code: 'custom',
-        message: t(
-          'receivers.form.jira-proxy-conflict',
-          'Proxy URL and proxy from environment cannot be used together'
-        ),
-        path: ['proxy_url'],
-      });
-    }
-    if (httpConfig.authorization?.credentials && (httpConfig.basic_auth?.username || httpConfig.basic_auth?.password)) {
-      ctx.addIssue({
-        code: 'custom',
-        message: t(
-          'receivers.form.jira-authentication-conflict',
-          'Authorization and basic authentication cannot be used together'
-        ),
-        path: ['authorization', 'credentials'],
-      });
-    }
-  });
+import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
+
 function createDurationSchema() {
   return z
     .string()
@@ -67,7 +29,7 @@ export function createJiraSettingsFormSchema(validateRequired = true) {
       wont_fix_resolution: z.string().optional(),
       reopen_duration: createDurationSchema(),
       fields: z.record(z.string(), z.string()).optional(),
-      http_config: JiraHttpConfigFormSchema.optional(),
+      http_config: createHttpConfigFormSchema().optional(),
     })
     .superRefine((settings, ctx) => {
       if (!validateRequired) {

@@ -1,6 +1,8 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
+
 const EmailTLSConfigFormSchema = z.looseObject({
   server_name: z.string().optional(),
   insecure_skip_verify: z.boolean().optional(),
@@ -9,15 +11,17 @@ const EmailTLSConfigFormSchema = z.looseObject({
 });
 
 export function createEmailSettingsFormSchema(validateForSubmission = true) {
-  return z
-    .looseObject({
+  return inlineOrFileFields({
+    inline: 'auth_password',
+    file: 'auth_password_file',
+    conflict: t('receivers.form.email-password-conflict', 'Password and password file cannot be used together'),
+  })
+    .safeExtend({
       to: z.string().optional(),
       from: z.string().optional(),
       smarthost: z.string().optional(),
       hello: z.string().optional(),
       auth_username: z.string().optional(),
-      auth_password: z.string().optional(),
-      auth_password_file: z.string().optional(),
       auth_secret: z.string().optional(),
       auth_identity: z.string().optional(),
       headers: z.record(z.string(), z.string()).optional(),
@@ -32,13 +36,6 @@ export function createEmailSettingsFormSchema(validateForSubmission = true) {
           code: 'custom',
           message: t('receivers.form.email-to-required', 'Recipient is required'),
           path: ['to'],
-        });
-      }
-      if (settings.auth_password && settings.auth_password_file) {
-        ctx.addIssue({
-          code: 'custom',
-          message: t('receivers.form.email-password-conflict', 'Password and password file cannot be used together'),
-          path: ['auth_password'],
         });
       }
     });
