@@ -14,6 +14,7 @@ import {
   isReceiverNameUnique,
 } from '../utils/receiverFormTransform';
 import { createReceiverFormSchema } from '../utils/receiverFormSchema';
+import { MutationError } from '../../../access-control/components/MutationError';
 import {
   CloudIntegrationType,
   getCloudIntegrationTypeOptions,
@@ -40,6 +41,9 @@ interface ReceiverEditFormProps {
   onSave: (receiver: Receiver) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+  /** Set when the last save attempt failed, so we can show it next to the save button. */
+  saveError?: unknown;
+  saveErrorTitle?: string;
 }
 
 export function ReceiverEditForm({
@@ -48,6 +52,8 @@ export function ReceiverEditForm({
   onSave,
   onCancel,
   isLoading = false,
+  saveError,
+  saveErrorTitle,
 }: ReceiverEditFormProps) {
   const isEditMode = Boolean(receiver);
   const originalName = receiver?.name;
@@ -157,6 +163,11 @@ export function ReceiverEditForm({
           </Button>
 
           {/* Form Actions */}
+          <MutationError
+            error={saveError}
+            fallbackTitle={saveErrorTitle ?? t('receivers.form.save-error', 'Failed to save receiver')}
+            resource={t('receivers.resource-label', 'receivers')}
+          />
           <Stack direction="row" gap={2} justifyContent="flex-end">
             <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting || isLoading}>
               <Trans i18nKey="common.cancel">Cancel</Trans>

@@ -20,7 +20,6 @@ import { isAbilityAllowed } from '../../../access-control/abilities';
 import { useAppNotifications } from '../../../hooks/useAppNotifications';
 import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 import { MutationError } from '../../../access-control/components/MutationError';
-import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 
 export enum DrawerMode {
   View = 'view',
@@ -140,10 +139,14 @@ export function ReceiverDrawer({
 }: ReceiverDrawerProps) {
   const [mode, setMode] = useState<DrawerMode>(initialMode);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [produceNewConfig, { error: configError, isLoading }] = useProduceNewAlertmanagerConfiguration();
+  const [produceNewConfig, { isLoading }] = useProduceNewAlertmanagerConfiguration();
+  // Kept per action rather than read off the mutation hook, so a failed save does not linger on the
+  // delete confirmation (or the other way round) once you switch modes.
+  const [saveError, setSaveError] = useState<unknown>(null);
+  const [deleteError, setDeleteError] = useState<unknown>(null);
   const canMutateConfiguration = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
   const { isInUse, isDefaultReceiver, usageCount, isLoading: isUsageLoading } = useReceiverInUse(receiver?.name);
-  const { success: notifySuccess, error: notifyError } = useAppNotifications();
+  const { success: notifySuccess } = useAppNotifications();
 
   const canEdit = canMutateConfiguration && !readOnly;
   const isViewMode = mode === DrawerMode.View;
@@ -153,10 +156,13 @@ export function ReceiverDrawer({
   const canDelete = canDeleteReceiver(canEdit, isDefaultReceiver, isInUse, isUsageLoading);
 
   const handleEdit = useCallback(() => {
+    setSaveError(null);
+    setDeleteError(null);
     setMode(DrawerMode.Edit);
   }, []);
 
   const handleCancelEdit = useCallback(() => {
+    setSaveError(null);
     if (isAddMode) {
       onClose();
     } else {
@@ -166,6 +172,7 @@ export function ReceiverDrawer({
 
   const handleSave = useCallback(
     async (newReceiver: Receiver) => {
+      setSaveError(null);
       try {
         if (isAddMode) {
           await produceNewConfig(addReceiverAction(newReceiver));
@@ -177,46 +184,27 @@ export function ReceiverDrawer({
         await onSaved?.();
         onClose();
       } catch (err) {
-        const feedback = getMutationErrorFeedback(err, {
-          fallbackTitle: isAddMode
-            ? t('receivers.create.error', 'Failed to create receiver')
-            : t('receivers.update.error', 'Failed to update receiver'),
-          resource: t('receivers.resource-label', 'receivers'),
-        });
-        notifyError(feedback.title, feedback.description);
+        setSaveError(err);
       }
     },
-    [isAddMode, isEditMode, receiver, produceNewConfig, notifySuccess, notifyError, onSaved, onClose]
+    [isAddMode, isEditMode, receiver, produceNewConfig, notifySuccess, onSaved, onClose]
   );
 
   const handleDelete = useCallback(async () => {
     if (!receiver || isDefaultReceiver || isInUse || isUsageLoading) {
       return;
     }
+    setDeleteError(null);
     try {
       await produceNewConfig(deleteReceiverAction(receiver.name));
       notifySuccess(t('receivers.delete.success', 'Receiver deleted successfully'));
       await onSaved?.();
       onClose();
     } catch (err) {
-      const feedback = getMutationErrorFeedback(err, {
-        fallbackTitle: t('receivers.delete.error', 'Failed to delete receiver'),
-        resource: t('receivers.resource-label', 'receivers'),
-      });
-      notifyError(feedback.title, feedback.description);
+      setDeleteError(err);
     }
     setShowDeleteConfirm(false);
-  }, [
-    receiver,
-    isDefaultReceiver,
-    isInUse,
-    isUsageLoading,
-    produceNewConfig,
-    notifySuccess,
-    notifyError,
-    onSaved,
-    onClose,
-  ]);
+  }, [receiver, isDefaultReceiver, isInUse, isUsageLoading, produceNewConfig, notifySuccess, onSaved, onClose]);
 
   // Don't render if no receiver and not in add mode
   if (!receiver && !isAddMode) {
@@ -315,8 +303,8 @@ export function ReceiverDrawer({
       >
         <Stack direction="column" gap={2}>
           <MutationError
-            error={configError}
-            fallbackTitle={t('receivers.error-title', 'Error')}
+            error={deleteError}
+            fallbackTitle={t('receivers.delete.error', 'Failed to delete receiver')}
             resource={t('receivers.resource-label', 'receivers')}
           />
 
@@ -331,6 +319,12 @@ export function ReceiverDrawer({
               onSave={handleSave}
               onCancel={handleCancelEdit}
               isLoading={isLoading}
+              saveError={saveError}
+              saveErrorTitle={
+                isAddMode
+                  ? t('receivers.create.error', 'Failed to create receiver')
+                  : t('receivers.update.error', 'Failed to update receiver')
+              }
             />
           )}
         </Stack>

@@ -18,6 +18,28 @@ describe('ReceiverEditForm integrations', () => {
     expect(screen.getByText('Webhook URL is required')).toBeVisible();
   });
 
+  it('shows a failed save next to the save button rather than as a toast', async () => {
+    render(
+      <ReceiverEditForm
+        existingReceivers={[]}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        saveError={new Error('receiver "webhook" is invalid')}
+        saveErrorTitle="Failed to update receiver"
+      />
+    );
+
+    const alert = screen.getByRole('alert', { name: 'Failed to update receiver' });
+    expect(alert).toBeVisible();
+    expect(alert).toHaveTextContent('receiver "webhook" is invalid');
+  });
+
+  it('does not show a save error before anything has been submitted', () => {
+    render(<ReceiverEditForm existingReceivers={[]} onSave={vi.fn()} onCancel={vi.fn()} />);
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('allows removing the final integration and adding one back', async () => {
     const user = userEvent.setup();
     render(<ReceiverEditForm existingReceivers={[]} onSave={vi.fn()} onCancel={vi.fn()} />);

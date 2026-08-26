@@ -600,7 +600,6 @@
       "title": "Receiver"
     },
     "error-loading-title": "Error loading receivers",
-    "error-title": "Error",
     "form": {
       "add-email-header": "Add header",
       "add-integration": "Add integration",
@@ -841,6 +840,7 @@
       "remove-pagerduty-item": "Remove item",
       "remove-slack-action": "Remove action",
       "remove-sns-attribute": "Remove attribute",
+      "save-error": "Failed to save receiver",
       "select-type": "Select integration type",
       "send-resolved": "Send resolved",
       "send-resolved-description": "Send notifications when alerts are resolved",
