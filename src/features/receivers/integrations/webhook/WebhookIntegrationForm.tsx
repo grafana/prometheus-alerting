@@ -1,23 +1,16 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
-import { Box, Checkbox, Field, Input, Stack, Text } from '@grafana/ui';
-import { Controller, FieldPath, FieldPathByValue, useFormContext } from 'react-hook-form';
-
-import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
-import type { WebhookSettingsFormValues } from './webhook.schema';
+import { Box, Stack, Text } from '@grafana/ui';
+import { CheckboxField, TextField } from '../shared/FormFields';
 
 interface WebhookIntegrationFormProps {
   index: number;
 }
 
-type WebhookFormValues = IntegrationFormValues<WebhookSettingsFormValues>;
-
 export function WebhookIntegrationForm({ index }: WebhookIntegrationFormProps) {
   // A receiver is saved as one atomic form containing a heterogeneous integration array. This
   // component owns Webhook fields and schema, while the parent context supplies their root paths.
-  const { register, formState, getFieldState } = useFormContext<WebhookFormValues>();
   const path = webhookSettingsPath(index);
-  const error = (fieldPath: FieldPath<WebhookFormValues>) => getFieldState(fieldPath, formState).error?.message;
 
   return (
     <Stack direction="column" gap={1}>
@@ -25,50 +18,29 @@ export function WebhookIntegrationForm({ index }: WebhookIntegrationFormProps) {
         <Trans i18nKey="receivers.form.webhook-settings">Webhook settings</Trans>
       </Text>
 
-      <Field
-        noMargin
+      <TextField
+        name={`${path}.url`}
         label={t('receivers.form.webhook-url', 'URL')}
+        placeholder={t('receivers.form.webhook-url-placeholder', 'https://example.com/webhook')}
         required
-        invalid={Boolean(error(`${path}.url`))}
-        error={error(`${path}.url`)}
-      >
-        <Input
-          {...register(`${path}.url`)}
-          placeholder={t('receivers.form.webhook-url-placeholder', 'https://example.com/webhook')}
-          aria-label={t('receivers.form.webhook-url', 'URL')}
-        />
-      </Field>
+      />
 
-      <Field
-        noMargin
+      <TextField
+        name={`${path}.max_alerts`}
         label={t('receivers.form.webhook-max-alerts', 'Max alerts')}
         description={t(
           'receivers.form.webhook-max-alerts-description',
           'Maximum alerts per webhook message. Leave blank to use the Alertmanager default.'
         )}
-        invalid={Boolean(error(`${path}.max_alerts`))}
-        error={error(`${path}.max_alerts`)}
-      >
-        <Input
-          {...register(`${path}.max_alerts`)}
-          inputMode="numeric"
-          placeholder={t('receivers.form.webhook-max-alerts-placeholder', '0')}
-          aria-label={t('receivers.form.webhook-max-alerts', 'Max alerts')}
-        />
-      </Field>
+        inputMode="numeric"
+        placeholder={t('receivers.form.webhook-max-alerts-placeholder', '0')}
+      />
 
-      <Field
-        noMargin
+      <TextField
+        name={`${path}.timeout`}
         label={t('receivers.form.webhook-timeout', 'Timeout')}
-        invalid={Boolean(error(`${path}.timeout`))}
-        error={error(`${path}.timeout`)}
-      >
-        <Input
-          {...register(`${path}.timeout`)}
-          placeholder={t('receivers.form.webhook-timeout-placeholder', '10s')}
-          aria-label={t('receivers.form.webhook-timeout', 'Timeout')}
-        />
-      </Field>
+        placeholder={t('receivers.form.webhook-timeout-placeholder', '10s')}
+      />
 
       <Box marginTop={1}>
         <Stack direction="column" gap={1}>
@@ -76,105 +48,77 @@ export function WebhookIntegrationForm({ index }: WebhookIntegrationFormProps) {
             <Trans i18nKey="receivers.form.webhook-http-settings">Advanced HTTP settings</Trans>
           </Text>
 
-          <Field noMargin label={t('receivers.form.webhook-authorization-type', 'Authorization type')}>
-            <Input
-              {...register(`${path}.http_config.authorization.type`)}
-              placeholder={t('receivers.form.webhook-authorization-type-placeholder', 'Bearer')}
-              aria-label={t('receivers.form.webhook-authorization-type', 'Authorization type')}
-            />
-          </Field>
+          <TextField
+            name={`${path}.http_config.authorization.type`}
+            label={t('receivers.form.webhook-authorization-type', 'Authorization type')}
+            placeholder={t('receivers.form.webhook-authorization-type-placeholder', 'Bearer')}
+          />
 
-          <Field
-            noMargin
+          <TextField
+            name={`${path}.http_config.authorization.credentials`}
             label={t('receivers.form.webhook-authorization-credentials', 'Authorization credentials')}
-            invalid={Boolean(error(`${path}.http_config.authorization.credentials`))}
-            error={error(`${path}.http_config.authorization.credentials`)}
-          >
-            <Input
-              {...register(`${path}.http_config.authorization.credentials`)}
-              type="password"
-              aria-label={t('receivers.form.webhook-authorization-credentials', 'Authorization credentials')}
-            />
-          </Field>
+            type="password"
+          />
 
-          <Field
-            noMargin
+          <TextField
+            name={`${path}.http_config.proxy_url`}
             label={t('receivers.form.webhook-proxy-url', 'Proxy URL')}
-            invalid={Boolean(error(`${path}.http_config.proxy_url`))}
-            error={error(`${path}.http_config.proxy_url`)}
-          >
-            <Input
-              {...register(`${path}.http_config.proxy_url`)}
-              placeholder={t('receivers.form.webhook-proxy-url-placeholder', 'http://proxy.example.com:8080')}
-              aria-label={t('receivers.form.webhook-proxy-url', 'Proxy URL')}
-            />
-          </Field>
+            placeholder={t('receivers.form.webhook-proxy-url-placeholder', 'http://proxy.example.com:8080')}
+          />
 
-          <Field noMargin label={t('receivers.form.webhook-no-proxy', 'No proxy')}>
-            <Input
-              {...register(`${path}.http_config.no_proxy`)}
-              placeholder={t('receivers.form.webhook-no-proxy-placeholder', 'example.com,.internal')}
-              aria-label={t('receivers.form.webhook-no-proxy', 'No proxy')}
-            />
-          </Field>
+          <TextField
+            name={`${path}.http_config.no_proxy`}
+            label={t('receivers.form.webhook-no-proxy', 'No proxy')}
+            placeholder={t('receivers.form.webhook-no-proxy-placeholder', 'example.com,.internal')}
+          />
 
-          <WebhookCheckbox
+          <CheckboxField
             name={`${path}.http_config.proxy_from_environment`}
             label={t('receivers.form.webhook-proxy-from-environment', 'Use proxy from environment')}
           />
-          <WebhookCheckbox
+          <CheckboxField
             name={`${path}.http_config.follow_redirects`}
             label={t('receivers.form.webhook-follow-redirects', 'Follow redirects')}
             defaultChecked
           />
-          <WebhookCheckbox
+          <CheckboxField
             name={`${path}.http_config.enable_http2`}
             label={t('receivers.form.webhook-enable-http2', 'Enable HTTP/2')}
             defaultChecked
           />
 
-          <Field noMargin label={t('receivers.form.webhook-basic-auth-username', 'Username')}>
-            <Input
-              {...register(`${path}.http_config.basic_auth.username`)}
-              aria-label={t('receivers.form.webhook-basic-auth-username', 'Username')}
-            />
-          </Field>
+          <TextField
+            name={`${path}.http_config.basic_auth.username`}
+            label={t('receivers.form.webhook-basic-auth-username', 'Username')}
+          />
 
-          <Field noMargin label={t('receivers.form.webhook-basic-auth-password', 'Password')}>
-            <Input
-              {...register(`${path}.http_config.basic_auth.password`)}
-              type="password"
-              aria-label={t('receivers.form.webhook-basic-auth-password', 'Password')}
-            />
-          </Field>
+          <TextField
+            name={`${path}.http_config.basic_auth.password`}
+            label={t('receivers.form.webhook-basic-auth-password', 'Password')}
+            type="password"
+          />
 
-          <Field noMargin label={t('receivers.form.webhook-tls-server-name', 'Server name')}>
-            <Input
-              {...register(`${path}.http_config.tls_config.server_name`)}
-              aria-label={t('receivers.form.webhook-tls-server-name', 'Server name')}
-            />
-          </Field>
+          <TextField
+            name={`${path}.http_config.tls_config.server_name`}
+            label={t('receivers.form.webhook-tls-server-name', 'Server name')}
+          />
 
-          <WebhookCheckbox
+          <CheckboxField
             name={`${path}.http_config.tls_config.insecure_skip_verify`}
             label={t('receivers.form.webhook-tls-skip-verify', 'Skip verify')}
           />
 
-          <Field noMargin label={t('receivers.form.webhook-tls-min-version', 'Minimum TLS version')}>
-            <Input
-              {...register(`${path}.http_config.tls_config.min_version`)}
-              placeholder={t('receivers.form.webhook-tls-min-version-placeholder', 'TLS12')}
-              aria-label={t('receivers.form.webhook-tls-min-version', 'Minimum TLS version')}
-            />
-          </Field>
+          <TextField
+            name={`${path}.http_config.tls_config.min_version`}
+            label={t('receivers.form.webhook-tls-min-version', 'Minimum TLS version')}
+            placeholder={t('receivers.form.webhook-tls-min-version-placeholder', 'TLS12')}
+          />
 
-          <Field noMargin label={t('receivers.form.webhook-tls-max-version', 'Maximum TLS version')}>
-            <Input
-              {...register(`${path}.http_config.tls_config.max_version`)}
-              placeholder={t('receivers.form.webhook-tls-max-version-placeholder', 'TLS13')}
-              aria-label={t('receivers.form.webhook-tls-max-version', 'Maximum TLS version')}
-            />
-          </Field>
+          <TextField
+            name={`${path}.http_config.tls_config.max_version`}
+            label={t('receivers.form.webhook-tls-max-version', 'Maximum TLS version')}
+            placeholder={t('receivers.form.webhook-tls-max-version-placeholder', 'TLS13')}
+          />
         </Stack>
       </Box>
     </Stack>
@@ -183,34 +127,4 @@ export function WebhookIntegrationForm({ index }: WebhookIntegrationFormProps) {
 
 function webhookSettingsPath(index: number): `integrations.${number}.settings` {
   return `integrations.${index}.settings`;
-}
-
-type WebhookCheckboxPath = FieldPathByValue<WebhookFormValues, boolean | undefined>;
-
-function WebhookCheckbox({
-  name,
-  label,
-  defaultChecked = false,
-}: {
-  name: WebhookCheckboxPath;
-  label: string;
-  defaultChecked?: boolean;
-}) {
-  const { control } = useFormContext<WebhookFormValues>();
-
-  return (
-    <Field noMargin label={label}>
-      <Controller
-        name={name}
-        control={control}
-        render={({ field: { onChange, value } }) => (
-          <Checkbox
-            checked={value ?? defaultChecked}
-            onChange={(event) => onChange(event.currentTarget.checked)}
-            aria-label={label}
-          />
-        )}
-      />
-    </Field>
-  );
 }
