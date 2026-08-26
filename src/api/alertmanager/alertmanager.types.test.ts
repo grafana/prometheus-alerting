@@ -1,9 +1,6 @@
 import { stringify as stringifyYaml } from 'yaml';
 
-import {
-  TransformedAlertmanagerStatusApiResponseTransform,
-  toReadOnlyAlertmanagerConfiguration,
-} from './alertmanager.types';
+import { AlertmanagerStatusToReadOnlyConfiguration } from './alertmanager.types';
 
 function alertmanagerStatus(original: string) {
   return {
@@ -23,28 +20,26 @@ function alertmanagerStatus(original: string) {
   };
 }
 
-describe('toReadOnlyAlertmanagerConfiguration', () => {
+describe('AlertmanagerStatusToReadOnlyConfiguration', () => {
   it('keeps vanilla configuration separate from the writable Mimir envelope', () => {
-    const transformedStatus = TransformedAlertmanagerStatusApiResponseTransform.parse(
-      alertmanagerStatus(
-        stringifyYaml({
-          route: { receiver: 'mattermost' },
-          receivers: [
-            {
-              name: 'mattermost',
-              mattermost_configs: [
-                {
-                  webhook_url: 'https://mattermost.example.com/hooks/test',
-                  future_mattermost_setting: true,
-                },
-              ],
-            },
-          ],
-        })
-      )
+    const status = alertmanagerStatus(
+      stringifyYaml({
+        route: { receiver: 'mattermost' },
+        receivers: [
+          {
+            name: 'mattermost',
+            mattermost_configs: [
+              {
+                webhook_url: 'https://mattermost.example.com/hooks/test',
+                future_mattermost_setting: true,
+              },
+            ],
+          },
+        ],
+      })
     );
 
-    expect(toReadOnlyAlertmanagerConfiguration(transformedStatus)).toEqual({
+    expect(AlertmanagerStatusToReadOnlyConfiguration.parse(status)).toEqual({
       template_files: {},
       alertmanager_config: {
         route: { receiver: 'mattermost' },

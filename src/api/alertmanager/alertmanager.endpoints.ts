@@ -27,10 +27,9 @@ import { getDataSourceSrv } from '@grafana/runtime';
 import { AlertManagerDataSourceJsonData } from 'types/datasources';
 import { buildDatasourceProxyPath } from '../utils/proxyPath';
 import {
+  AlertmanagerStatusToReadOnlyConfiguration,
   ReadOnlyAlertmanagerConfiguration,
-  TransformedAlertmanagerStatusApiResponseTransform,
   WithDataSourceInformation,
-  toReadOnlyAlertmanagerConfiguration,
 } from './alertmanager.types';
 
 /**
@@ -77,10 +76,8 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       query: ({ dataSourceUID }) => ({
         url: createAlertmanagerPath(dataSourceUID, `/v2/status`),
       }),
-      transformResponse: (response: AlertmanagerStatus): ReadOnlyAlertmanagerConfiguration => {
-        const transformedStatus = TransformedAlertmanagerStatusApiResponseTransform.parse(response);
-        return toReadOnlyAlertmanagerConfiguration(transformedStatus);
-      },
+      transformResponse: (response: AlertmanagerStatus): ReadOnlyAlertmanagerConfiguration =>
+        AlertmanagerStatusToReadOnlyConfiguration.parse(response),
       providesTags: ['Configuration'],
     }),
     getSilences: build.query<GetSilencesApiResponse, WithDataSourceInformation<GetSilencesApiArg>>({
