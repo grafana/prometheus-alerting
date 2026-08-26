@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { t } from '@grafana/i18n';
+import { isValidPrometheusDuration } from '../../../utils/time.utils';
 import { RuleFormType } from './types';
 
 /**
@@ -41,6 +42,18 @@ export function createRuleFormSchema() {
       .min(0, t('alerting.rule-form.validation.for-time-positive', 'Must be a positive number')),
 
     forTimeUnit: z.string().min(1),
+
+    // The resolver's output is what gets submitted, so this has to be listed here or the value is
+    // stripped before the rule is built. Empty is allowed and means "no keep_firing_for".
+    keepFiringFor: z
+      .string()
+      .optional()
+      .refine((value) => !value || isValidPrometheusDuration(value), {
+        message: t(
+          'alerting.rule-form.validation.keep-firing-for-invalid',
+          'Invalid duration format. Use combinations like 30s, 5m, 1h30m'
+        ),
+      }),
 
     // Labels and annotations
     labels: z.array(

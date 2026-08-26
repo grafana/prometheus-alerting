@@ -4,7 +4,7 @@ import { defaultFormValuesForRuleType } from './formDefaults';
 
 // Convert form values to RulerRuleDTO for API submission
 export function formValuesToRulerRuleDTO(values: RuleFormValues): RulerRuleDTO {
-  const { name, expression, forTime, forTimeUnit, type } = values;
+  const { name, expression, forTime, forTimeUnit, keepFiringFor, type } = values;
 
   const annotations = arrayToRecord(cleanAnnotations(values.annotations));
   const labels = arrayToRecord(cleanLabels(values.labels));
@@ -16,6 +16,8 @@ export function formValuesToRulerRuleDTO(values: RuleFormValues): RulerRuleDTO {
       annotations,
       labels,
       expr: expression,
+      // Left off when the field is empty, so clearing it removes it from the rule
+      ...(keepFiringFor ? { keep_firing_for: keepFiringFor } : {}),
     };
     return alertingRule;
   } else if (type === RuleFormType.cloudRecording) {
@@ -53,6 +55,7 @@ export function rulerRuleToFormValues(
       expression: rule.expr,
       forTime: forDuration.value,
       forTimeUnit: forDuration.unit,
+      keepFiringFor: rule.keep_firing_for ?? '',
       annotations: listifyLabelsOrAnnotations(rule.annotations, false),
       labels: listifyLabelsOrAnnotations(rule.labels, true),
     };
@@ -89,12 +92,15 @@ export function listifyLabelsOrAnnotations(item: Record<string, string> | undefi
 
 // Convert key-value array to object
 export function arrayToRecord(kvArray: KVObject[]): Record<string, string> {
-  return kvArray.reduce((acc, { key, value }) => {
-    if (key) {
-      acc[key] = value;
-    }
-    return acc;
-  }, {} as Record<string, string>);
+  return kvArray.reduce(
+    (acc, { key, value }) => {
+      if (key) {
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {} as Record<string, string>
+  );
 }
 
 // Remove empty annotations
