@@ -21,6 +21,11 @@ export function createDiscordSettingsFormSchema() {
   });
 }
 export function createDiscordIntegrationFormSchema() {
-  return createIntegrationFormSchema('discord', createDiscordSettingsFormSchema());
+  return createIntegrationFormSchema('discord', createDiscordSettingsFormSchema(), [
+    {
+      name: 'webhook_url',
+      message: t('receivers.form.discord-webhook-url-invalid', 'Webhook URL must start with http:// or https://'),
+    },
+  ]);
 }
 export type DiscordSettingsFormValues = z.infer<ReturnType<typeof createDiscordSettingsFormSchema>>;

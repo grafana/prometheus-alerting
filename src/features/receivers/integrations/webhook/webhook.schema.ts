@@ -30,7 +30,12 @@ export function createWebhookSettingsFormSchema() {
 }
 
 export function createWebhookIntegrationFormSchema() {
-  return createIntegrationFormSchema('webhook', createWebhookSettingsFormSchema());
+  return createIntegrationFormSchema('webhook', createWebhookSettingsFormSchema(), [
+    {
+      name: 'url',
+      message: t('receivers.form.webhook-url-invalid', 'Webhook URL must start with http:// or https://'),
+    },
+  ]);
 }
 
 export type WebhookSettingsFormValues = z.infer<ReturnType<typeof createWebhookSettingsFormSchema>>;

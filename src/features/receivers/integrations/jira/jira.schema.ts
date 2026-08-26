@@ -49,6 +49,11 @@ export function createJiraSettingsFormSchema(validateRequired = true) {
     });
 }
 export function createJiraIntegrationFormSchema() {
-  return createIntegrationFormSchema('jira', createJiraSettingsFormSchema());
+  return createIntegrationFormSchema('jira', createJiraSettingsFormSchema(), [
+    {
+      name: 'api_url',
+      message: t('receivers.form.jira-api-url-invalid', 'API URL must start with http:// or https://'),
+    },
+  ]);
 }
 export type JiraSettingsFormValues = z.infer<ReturnType<typeof createJiraSettingsFormSchema>>;

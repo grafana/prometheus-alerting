@@ -1,3 +1,4 @@
+import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
 import { createIntegrationFormSchema } from '../shared/integration.schema';
@@ -18,6 +19,11 @@ export function createWeChatSettingsFormSchema() {
   });
 }
 export function createWeChatIntegrationFormSchema() {
-  return createIntegrationFormSchema('wechat', createWeChatSettingsFormSchema());
+  return createIntegrationFormSchema('wechat', createWeChatSettingsFormSchema(), [
+    {
+      name: 'api_url',
+      message: t('receivers.form.wechat-api-url-invalid', 'API URL must start with http:// or https://'),
+    },
+  ]);
 }
 export type WeChatSettingsFormValues = z.infer<ReturnType<typeof createWeChatSettingsFormSchema>>;

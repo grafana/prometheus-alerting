@@ -16,10 +16,10 @@ type StringFields<Pairs extends readonly InlineOrFilePair[]> = {
 };
 
 /**
- * Alertmanager lets you give a secret either directly or as the path to a file holding it, but
- * never both. Builds the pair of fields with that rule already attached, so an integration can add
- * its own fields on top with `.safeExtend()` - extending keeps the rule, and TypeScript will
- * complain if a new field would clash with one of the names used here.
+ * Alertmanager takes a secret either directly or as a path to a file holding it, never both.
+ *
+ * Returns the two fields with that rule attached. Add the integration's own fields on top with
+ * `.safeExtend()`: the rule survives, and reusing one of these field names is a compile error.
  */
 export function inlineOrFileFields<const Pairs extends readonly InlineOrFilePair[]>(...pairs: Pairs) {
   const shape = Object.fromEntries(

@@ -14,6 +14,7 @@ import {
   isReceiverNameUnique,
 } from '../utils/receiverFormTransform';
 import { createReceiverFormSchema } from '../utils/receiverFormSchema';
+import { extractErrorMessage } from '../../../utils/errors';
 import { MutationError } from '../../../access-control/components/MutationError';
 import {
   CloudIntegrationType,
@@ -58,14 +59,23 @@ export function ReceiverEditForm({
   const isEditMode = Boolean(receiver);
   const originalName = receiver?.name;
 
-  const defaultValues = useMemo(
-    () => (receiver ? receiverToFormValues(receiver) : createDefaultReceiverFormValues()),
-    [receiver]
-  );
+  // A stored configuration can hold something the form schema does not expect, and the mappers
+  // throw when it does. Catch it here: falling back to defaults would show an empty form that
+  // silently overwrites the real receiver on save, so we show what went wrong instead.
+  const initialValues = useMemo(() => {
+    if (!receiver) {
+      return { values: createDefaultReceiverFormValues(), error: null };
+    }
+    try {
+      return { values: receiverToFormValues(receiver), error: null };
+    } catch (error) {
+      return { values: createDefaultReceiverFormValues(), error };
+    }
+  }, [receiver]);
 
   const receiverFormSchema = useMemo(() => createReceiverFormSchema(), []);
   const formAPI = useForm<ReceiverFormValues>({
-    defaultValues,
+    defaultValues: initialValues.values,
     resolver: zodResolver(receiverFormSchema),
     mode: 'onBlur',
   });
@@ -95,6 +105,27 @@ export function ReceiverEditForm({
   }, [append]);
 
   const notifierTypeOptions = useMemo(() => getCloudIntegrationTypeOptions(), []);
+
+  if (initialValues.error) {
+    return (
+      <Stack direction="column" gap={2}>
+        <Alert title={t('receivers.form.unsupported-title', 'This receiver cannot be edited here')} severity="error">
+          <Stack direction="column" gap={1}>
+            <Trans i18nKey="receivers.form.unsupported-body">
+              Its configuration has a shape this form does not understand, so editing it here could drop settings. Edit
+              it in the Alertmanager configuration instead.
+            </Trans>
+            <Text variant="bodySmall">{extractErrorMessage(initialValues.error)}</Text>
+          </Stack>
+        </Alert>
+        <Stack direction="row" gap={2} justifyContent="flex-end">
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            <Trans i18nKey="common.cancel">Cancel</Trans>
+          </Button>
+        </Stack>
+      </Stack>
+    );
+  }
 
   return (
     <FormProvider {...formAPI}>

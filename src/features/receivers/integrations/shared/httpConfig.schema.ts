@@ -10,11 +10,10 @@ type HttpConfigOptions = {
 };
 
 /**
- * The HTTP client settings that Alertmanager accepts on nearly every integration - who to
- * authenticate as, which proxy to go through, and how to do TLS.
+ * The HTTP settings Alertmanager accepts on nearly every integration: how to authenticate, which
+ * proxy to use, and how to do TLS.
  *
- * Everything is a loose object so any keys we don't know about survive a round trip back to the
- * config file untouched.
+ * Loose objects throughout, so settings we don't know about survive the trip back to the config.
  */
 export function createHttpConfigFormSchema({ oauth2 = false }: HttpConfigOptions = {}) {
   return z

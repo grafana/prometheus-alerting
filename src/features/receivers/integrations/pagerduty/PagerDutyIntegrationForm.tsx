@@ -1,28 +1,25 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
-import { Box, Button, Checkbox, Field, IconButton, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { Controller, FieldPathByValue, useFormContext } from 'react-hook-form';
-
+import { Box, Button, Field, IconButton, Input, Stack, Text, TextArea } from '@grafana/ui';
+import { useFormContext, type FieldPath } from 'react-hook-form';
+import { createFormFields } from '../shared/FormFields';
 import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
 import type { PagerDutySettingsFormValues } from './pagerduty.schema';
 
 type PagerDutyFormValues = IntegrationFormValues<PagerDutySettingsFormValues>;
+const { CheckboxField, ControlledField, TextField } = createFormFields<PagerDutyFormValues>();
+
+import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
 
 interface PagerDutyIntegrationFormProps {
   index: number;
 }
 
 type PagerDutySettingsPath = `integrations.${number}.settings`;
-type PagerDutyTextPath = FieldPathByValue<PagerDutyFormValues, string | undefined>;
-type PagerDutyBooleanPath = FieldPathByValue<PagerDutyFormValues, boolean | undefined>;
-type PagerDutyDetailsPath = FieldPathByValue<PagerDutyFormValues, PagerDutySettingsFormValues['details']>;
-type PagerDutyObjectArrayPath = FieldPathByValue<
-  PagerDutyFormValues,
-  PagerDutySettingsFormValues['links'] | PagerDutySettingsFormValues['images']
->;
+type PagerDutyFieldPath = FieldPath<PagerDutyFormValues>;
 
 export function PagerDutyIntegrationForm({ index }: PagerDutyIntegrationFormProps) {
-  const { register } = useFormContext<PagerDutyFormValues>();
+  const { register } = useFormContext<ReceiverFormValues>();
   const path = `integrations.${index}.settings` satisfies PagerDutySettingsPath;
 
   return (
@@ -30,27 +27,23 @@ export function PagerDutyIntegrationForm({ index }: PagerDutyIntegrationFormProp
       <Text variant="h6">
         <Trans i18nKey="receivers.form.pagerduty-settings">PagerDuty settings</Trans>
       </Text>
-      <PagerDutyField
-        register={register}
+      <TextField
         name={`${path}.routing_key`}
         label={t('receivers.form.pagerduty-routing-key', 'Routing key')}
         type="password"
       />
-      <PagerDutyField
-        register={register}
+      <TextField
         name={`${path}.service_key`}
         label={t('receivers.form.pagerduty-service-key', 'Service key')}
         type="password"
       />
-      <PagerDutyField register={register} name={`${path}.url`} label={t('receivers.form.pagerduty-url', 'URL')} />
-      <PagerDutyField
-        register={register}
+      <TextField name={`${path}.url`} label={t('receivers.form.pagerduty-url', 'URL')} />
+      <TextField
         name={`${path}.client`}
         label={t('receivers.form.pagerduty-client', 'Client')}
         placeholder={t('receivers.form.pagerduty-client-placeholder', '{{ template "pagerduty.default.client" . }}')}
       />
-      <PagerDutyField
-        register={register}
+      <TextField
         name={`${path}.client_url`}
         label={t('receivers.form.pagerduty-client-url', 'Client URL')}
         placeholder={t(
@@ -69,24 +62,15 @@ export function PagerDutyIntegrationForm({ index }: PagerDutyIntegrationFormProp
           aria-label={t('receivers.form.pagerduty-description', 'Description')}
         />
       </Field>
-      <PagerDutyField
-        register={register}
+      <TextField
         name={`${path}.severity`}
         label={t('receivers.form.pagerduty-severity', 'Severity')}
         placeholder={t('receivers.form.pagerduty-severity-placeholder', 'error')}
       />
-      <PagerDutyField register={register} name={`${path}.class`} label={t('receivers.form.pagerduty-class', 'Class')} />
-      <PagerDutyField
-        register={register}
-        name={`${path}.component`}
-        label={t('receivers.form.pagerduty-component', 'Component')}
-      />
-      <PagerDutyField register={register} name={`${path}.group`} label={t('receivers.form.pagerduty-group', 'Group')} />
-      <PagerDutyField
-        register={register}
-        name={`${path}.source`}
-        label={t('receivers.form.pagerduty-source', 'Source')}
-      />
+      <TextField name={`${path}.class`} label={t('receivers.form.pagerduty-class', 'Class')} />
+      <TextField name={`${path}.component`} label={t('receivers.form.pagerduty-component', 'Component')} />
+      <TextField name={`${path}.group`} label={t('receivers.form.pagerduty-group', 'Group')} />
+      <TextField name={`${path}.source`} label={t('receivers.form.pagerduty-source', 'Source')} />
 
       <PagerDutyKeyValueMap name={`${path}.details`} label={t('receivers.form.pagerduty-details', 'Details')} />
       <PagerDutyObjectArray
@@ -112,68 +96,56 @@ export function PagerDutyIntegrationForm({ index }: PagerDutyIntegrationFormProp
           <Text variant="bodySmall" weight="medium" color="secondary">
             <Trans i18nKey="receivers.form.pagerduty-http-config">HTTP configuration</Trans>
           </Text>
-          <PagerDutyField
-            register={register}
+          <TextField
             name={`${path}.http_config.authorization.type`}
             label={t('receivers.form.pagerduty-authorization-type', 'Authorization type')}
           />
-          <PagerDutyField
-            register={register}
+          <TextField
             name={`${path}.http_config.authorization.credentials`}
             label={t('receivers.form.pagerduty-authorization-credentials', 'Authorization credentials')}
             type="password"
           />
-          <PagerDutyField
-            register={register}
+          <TextField
             name={`${path}.http_config.basic_auth.username`}
             label={t('receivers.form.pagerduty-basic-auth-username', 'Basic authentication username')}
           />
-          <PagerDutyField
-            register={register}
+          <TextField
             name={`${path}.http_config.basic_auth.password`}
             label={t('receivers.form.pagerduty-basic-auth-password', 'Basic authentication password')}
             type="password"
           />
-          <PagerDutyField
-            register={register}
+          <TextField
             name={`${path}.http_config.proxy_url`}
             label={t('receivers.form.pagerduty-proxy-url', 'Proxy URL')}
           />
-          <PagerDutyField
-            register={register}
-            name={`${path}.http_config.no_proxy`}
-            label={t('receivers.form.pagerduty-no-proxy', 'No proxy')}
-          />
-          <PagerDutyCheckbox
+          <TextField name={`${path}.http_config.no_proxy`} label={t('receivers.form.pagerduty-no-proxy', 'No proxy')} />
+          <CheckboxField
             name={`${path}.http_config.proxy_from_environment`}
             label={t('receivers.form.pagerduty-proxy-from-environment', 'Proxy from environment')}
           />
-          <PagerDutyCheckbox
+          <CheckboxField
             name={`${path}.http_config.follow_redirects`}
             label={t('receivers.form.pagerduty-follow-redirects', 'Follow redirects')}
             defaultChecked
           />
-          <PagerDutyCheckbox
+          <CheckboxField
             name={`${path}.http_config.enable_http2`}
             label={t('receivers.form.pagerduty-enable-http2', 'Enable HTTP/2')}
             defaultChecked
           />
-          <PagerDutyField
-            register={register}
+          <TextField
             name={`${path}.http_config.tls_config.server_name`}
             label={t('receivers.form.pagerduty-tls-server-name', 'TLS server name')}
           />
-          <PagerDutyCheckbox
+          <CheckboxField
             name={`${path}.http_config.tls_config.insecure_skip_verify`}
             label={t('receivers.form.pagerduty-tls-skip-verify', 'Skip TLS certificate verification')}
           />
-          <PagerDutyField
-            register={register}
+          <TextField
             name={`${path}.http_config.tls_config.min_version`}
             label={t('receivers.form.pagerduty-min-tls-version', 'Minimum TLS version')}
           />
-          <PagerDutyField
-            register={register}
+          <TextField
             name={`${path}.http_config.tls_config.max_version`}
             label={t('receivers.form.pagerduty-max-tls-version', 'Maximum TLS version')}
           />
@@ -183,99 +155,44 @@ export function PagerDutyIntegrationForm({ index }: PagerDutyIntegrationFormProp
   );
 }
 
-function PagerDutyField({
-  register,
-  name,
-  label,
-  type = 'text',
-  placeholder,
-}: {
-  register: ReturnType<typeof useFormContext<PagerDutyFormValues>>['register'];
-  name: PagerDutyTextPath;
-  label: string;
-  type?: string;
-  placeholder?: string;
-}) {
-  const { formState, getFieldState } = useFormContext<PagerDutyFormValues>();
-  const fieldError = getFieldState(name, formState).error?.message;
-
+function PagerDutyKeyValueMap({ name, label }: { name: PagerDutyFieldPath; label: string }) {
   return (
-    <Field noMargin label={label} invalid={Boolean(fieldError)} error={fieldError}>
-      <Input {...register(name)} type={type} placeholder={placeholder} aria-label={label} />
-    </Field>
-  );
-}
-
-function PagerDutyCheckbox({
-  name,
-  label,
-  defaultChecked = false,
-}: {
-  name: PagerDutyBooleanPath;
-  label: string;
-  defaultChecked?: boolean;
-}) {
-  const { control } = useFormContext<PagerDutyFormValues>();
-  return (
-    <Field noMargin label={label}>
-      <Controller
-        name={name}
-        control={control}
-        render={({ field: { onChange, value } }) => (
-          <Checkbox
-            checked={(typeof value === 'boolean' ? value : undefined) ?? defaultChecked}
-            onChange={(event) => onChange(event.currentTarget.checked)}
-            aria-label={label}
-          />
-        )}
-      />
-    </Field>
-  );
-}
-
-function PagerDutyKeyValueMap({ name, label }: { name: PagerDutyDetailsPath; label: string }) {
-  const { control } = useFormContext<PagerDutyFormValues>();
-  return (
-    <Field noMargin label={label}>
-      <Controller
-        name={name}
-        control={control}
-        render={({ field: { value, onChange } }) => {
-          const entries = isStringRecord(value) ? Object.entries(value) : [];
-          return (
-            <Stack direction="column" gap={1}>
-              {entries.map(([key, entryValue], entryIndex) => (
-                <Stack key={`${key}-${entryIndex}`} direction="row" gap={1}>
-                  <Input
-                    value={key}
-                    aria-label={t('receivers.form.pagerduty-detail-key', 'Detail key')}
-                    onChange={(event) => onChange(renameRecordKey(entries, entryIndex, event.currentTarget.value))}
-                  />
-                  <Input
-                    value={entryValue}
-                    aria-label={t('receivers.form.pagerduty-detail-value', 'Detail value')}
-                    onChange={(event) => onChange(updateRecordValue(entries, entryIndex, event.currentTarget.value))}
-                  />
-                  <IconButton
-                    name="trash-alt"
-                    type="button"
-                    tooltip={t('receivers.form.remove-pagerduty-detail', 'Remove detail')}
-                    onClick={() => onChange(Object.fromEntries(entries.filter((_, index) => index !== entryIndex)))}
-                  />
-                </Stack>
-              ))}
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => onChange({ ...Object.fromEntries(entries), [nextRecordKey(entries)]: '' })}
-              >
-                <Trans i18nKey="receivers.form.add-pagerduty-detail">Add detail</Trans>
-              </Button>
-            </Stack>
-          );
-        }}
-      />
-    </Field>
+    <ControlledField name={name} label={label}>
+      {({ value, onChange }) => {
+        const entries = isStringRecord(value) ? Object.entries(value) : [];
+        return (
+          <Stack direction="column" gap={1}>
+            {entries.map(([key, entryValue], entryIndex) => (
+              <Stack key={`${key}-${entryIndex}`} direction="row" gap={1}>
+                <Input
+                  value={key}
+                  aria-label={t('receivers.form.pagerduty-detail-key', 'Detail key')}
+                  onChange={(event) => onChange(renameRecordKey(entries, entryIndex, event.currentTarget.value))}
+                />
+                <Input
+                  value={entryValue}
+                  aria-label={t('receivers.form.pagerduty-detail-value', 'Detail value')}
+                  onChange={(event) => onChange(updateRecordValue(entries, entryIndex, event.currentTarget.value))}
+                />
+                <IconButton
+                  name="trash-alt"
+                  type="button"
+                  tooltip={t('receivers.form.remove-pagerduty-detail', 'Remove detail')}
+                  onClick={() => onChange(Object.fromEntries(entries.filter((_, index) => index !== entryIndex)))}
+                />
+              </Stack>
+            ))}
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => onChange({ ...Object.fromEntries(entries), [nextRecordKey(entries)]: '' })}
+            >
+              <Trans i18nKey="receivers.form.add-pagerduty-detail">Add detail</Trans>
+            </Button>
+          </Stack>
+        );
+      }}
+    </ControlledField>
   );
 }
 
@@ -284,52 +201,47 @@ function PagerDutyObjectArray({
   label,
   fields,
 }: {
-  name: PagerDutyObjectArrayPath;
+  name: PagerDutyFieldPath;
   label: string;
   fields: Array<[string, string]>;
 }) {
-  const { control } = useFormContext<PagerDutyFormValues>();
   return (
-    <Field noMargin label={label}>
-      <Controller
-        name={name}
-        control={control}
-        render={({ field: { value, onChange } }) => {
-          const items = Array.isArray(value) ? value.filter(isRecord) : [];
-          return (
-            <Stack direction="column" gap={1}>
-              {items.map((item, itemIndex) => (
-                <Stack key={itemIndex} direction="row" gap={1}>
-                  {fields.map(([fieldName, fieldLabel]) => (
-                    <Input
-                      key={fieldName}
-                      value={typeof item[fieldName] === 'string' ? item[fieldName] : ''}
-                      aria-label={fieldLabel}
-                      onChange={(event) =>
-                        onChange(
-                          items.map((current, index) =>
-                            index === itemIndex ? { ...current, [fieldName]: event.currentTarget.value } : current
-                          )
+    <ControlledField name={name} label={label}>
+      {({ value, onChange }) => {
+        const items = Array.isArray(value) ? value.filter(isRecord) : [];
+        return (
+          <Stack direction="column" gap={1}>
+            {items.map((item, itemIndex) => (
+              <Stack key={itemIndex} direction="row" gap={1}>
+                {fields.map(([fieldName, fieldLabel]) => (
+                  <Input
+                    key={fieldName}
+                    value={typeof item[fieldName] === 'string' ? item[fieldName] : ''}
+                    aria-label={fieldLabel}
+                    onChange={(event) =>
+                      onChange(
+                        items.map((current, index) =>
+                          index === itemIndex ? { ...current, [fieldName]: event.currentTarget.value } : current
                         )
-                      }
-                    />
-                  ))}
-                  <IconButton
-                    name="trash-alt"
-                    type="button"
-                    tooltip={t('receivers.form.remove-pagerduty-item', 'Remove item')}
-                    onClick={() => onChange(items.filter((_, index) => index !== itemIndex))}
+                      )
+                    }
                   />
-                </Stack>
-              ))}
-              <Button type="button" variant="secondary" onClick={() => onChange([...items, {}])}>
-                <Trans i18nKey="receivers.form.add-pagerduty-item">Add item</Trans>
-              </Button>
-            </Stack>
-          );
-        }}
-      />
-    </Field>
+                ))}
+                <IconButton
+                  name="trash-alt"
+                  type="button"
+                  tooltip={t('receivers.form.remove-pagerduty-item', 'Remove item')}
+                  onClick={() => onChange(items.filter((_, index) => index !== itemIndex))}
+                />
+              </Stack>
+            ))}
+            <Button type="button" variant="secondary" onClick={() => onChange([...items, {}])}>
+              <Trans i18nKey="receivers.form.add-pagerduty-item">Add item</Trans>
+            </Button>
+          </Stack>
+        );
+      }}
+    </ControlledField>
   );
 }
 

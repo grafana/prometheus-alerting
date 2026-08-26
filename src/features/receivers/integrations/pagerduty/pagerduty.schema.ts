@@ -1,3 +1,4 @@
+import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
 import { createIntegrationFormSchema } from '../shared/integration.schema';
@@ -39,7 +40,12 @@ export function createPagerDutySettingsFormSchema() {
 }
 
 export function createPagerDutyIntegrationFormSchema() {
-  return createIntegrationFormSchema('pagerduty', createPagerDutySettingsFormSchema());
+  return createIntegrationFormSchema('pagerduty', createPagerDutySettingsFormSchema(), [
+    {
+      name: 'url',
+      message: t('receivers.form.pagerduty-url-invalid', 'URL must start with http:// or https://'),
+    },
+  ]);
 }
 
 export type PagerDutySettingsFormValues = z.infer<ReturnType<typeof createPagerDutySettingsFormSchema>>;

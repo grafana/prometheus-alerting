@@ -53,6 +53,11 @@ export function createOpsgenieSettingsFormSchema(validateRequired = true) {
     });
 }
 export function createOpsgenieIntegrationFormSchema() {
-  return createIntegrationFormSchema('opsgenie', createOpsgenieSettingsFormSchema());
+  return createIntegrationFormSchema('opsgenie', createOpsgenieSettingsFormSchema(), [
+    {
+      name: 'api_url',
+      message: t('receivers.form.opsgenie-api-url-invalid', 'API URL must start with http:// or https://'),
+    },
+  ]);
 }
 export type OpsgenieSettingsFormValues = z.infer<ReturnType<typeof createOpsgenieSettingsFormSchema>>;

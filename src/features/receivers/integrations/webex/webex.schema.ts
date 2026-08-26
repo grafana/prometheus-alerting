@@ -32,7 +32,12 @@ export function createWebexSettingsFormSchema(validateForSubmission = true) {
 }
 
 export function createWebexIntegrationFormSchema() {
-  return createIntegrationFormSchema('webex', createWebexSettingsFormSchema());
+  return createIntegrationFormSchema('webex', createWebexSettingsFormSchema(), [
+    {
+      name: 'api_url',
+      message: t('receivers.form.webex-api-url-invalid', 'API URL must start with http:// or https://'),
+    },
+  ]);
 }
 
 export type WebexSettingsFormValues = z.infer<ReturnType<typeof createWebexSettingsFormSchema>>;
