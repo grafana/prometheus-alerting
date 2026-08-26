@@ -1,20 +1,23 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Checkbox, Field, Input, Stack, Text } from '@grafana/ui';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, FieldPath, FieldPathByValue, useFormContext } from 'react-hook-form';
 
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { WebhookSettingsFormValues } from './webhook.schema';
 
 interface WebhookIntegrationFormProps {
   index: number;
 }
 
+type WebhookFormValues = IntegrationFormValues<WebhookSettingsFormValues>;
+
 export function WebhookIntegrationForm({ index }: WebhookIntegrationFormProps) {
   // A receiver is saved as one atomic form containing a heterogeneous integration array. This
   // component owns Webhook fields and schema, while the parent context supplies their root paths.
-  const { register, formState, getFieldState } = useFormContext<ReceiverFormValues>();
+  const { register, formState, getFieldState } = useFormContext<WebhookFormValues>();
   const path = webhookSettingsPath(index);
-  const error = (fieldPath: `${typeof path}.${string}`) => getFieldState(fieldPath, formState).error?.message;
+  const error = (fieldPath: FieldPath<WebhookFormValues>) => getFieldState(fieldPath, formState).error?.message;
 
   return (
     <Stack direction="column" gap={1}>
@@ -182,11 +185,7 @@ function webhookSettingsPath(index: number): `integrations.${number}.settings` {
   return `integrations.${index}.settings`;
 }
 
-type WebhookCheckboxPath =
-  | `integrations.${number}.settings.http_config.proxy_from_environment`
-  | `integrations.${number}.settings.http_config.follow_redirects`
-  | `integrations.${number}.settings.http_config.enable_http2`
-  | `integrations.${number}.settings.http_config.tls_config.insecure_skip_verify`;
+type WebhookCheckboxPath = FieldPathByValue<WebhookFormValues, boolean | undefined>;
 
 function WebhookCheckbox({
   name,
@@ -197,7 +196,7 @@ function WebhookCheckbox({
   label: string;
   defaultChecked?: boolean;
 }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+  const { control } = useFormContext<WebhookFormValues>();
 
   return (
     <Field noMargin label={label}>

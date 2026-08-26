@@ -1,14 +1,17 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Checkbox, Field, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, FieldPath, FieldPathByValue, useFormContext } from 'react-hook-form';
 
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { WebexSettingsFormValues } from './webex.schema';
+
+type WebexFormValues = IntegrationFormValues<WebexSettingsFormValues>;
 
 export function WebexIntegrationForm({ index }: { index: number }) {
-  const { register, formState, getFieldState } = useFormContext<ReceiverFormValues>();
+  const { register, formState, getFieldState } = useFormContext<WebexFormValues>();
   const path = webexSettingsPath(index);
-  const error = (fieldPath: `${typeof path}.${string}`) => getFieldState(fieldPath, formState).error?.message;
+  const error = (fieldPath: FieldPath<WebexFormValues>) => getFieldState(fieldPath, formState).error?.message;
 
   return (
     <Stack direction="column" gap={1}>
@@ -136,11 +139,7 @@ function webexSettingsPath(index: number): `integrations.${number}.settings` {
   return `integrations.${index}.settings`;
 }
 
-type WebexCheckboxPath =
-  | `integrations.${number}.settings.http_config.proxy_from_environment`
-  | `integrations.${number}.settings.http_config.follow_redirects`
-  | `integrations.${number}.settings.http_config.enable_http2`
-  | `integrations.${number}.settings.http_config.tls_config.insecure_skip_verify`;
+type WebexCheckboxPath = FieldPathByValue<WebexFormValues, boolean | undefined>;
 
 function WebexCheckbox({
   name,
@@ -151,7 +150,7 @@ function WebexCheckbox({
   label: string;
   defaultChecked?: boolean;
 }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+  const { control } = useFormContext<WebexFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller

@@ -1,14 +1,20 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, Checkbox, Field, IconButton, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { Controller, useFormContext } from 'react-hook-form';
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
+import { Controller, FieldPathByValue, useFormContext } from 'react-hook-form';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { OpsgenieSettingsFormValues } from './opsgenie.schema';
+
+type OpsgenieFormValues = IntegrationFormValues<OpsgenieSettingsFormValues>;
 interface OpsgenieIntegrationFormProps {
   index: number;
 }
-type OpsgenieFieldPath = `integrations.${number}.settings.${string}`;
+type OpsgenieTextPath = FieldPathByValue<OpsgenieFormValues, string | undefined>;
+type OpsgenieBooleanPath = FieldPathByValue<OpsgenieFormValues, boolean | undefined>;
+type OpsgenieDetailsPath = FieldPathByValue<OpsgenieFormValues, OpsgenieSettingsFormValues['details']>;
+type OpsgenieRespondersPath = FieldPathByValue<OpsgenieFormValues, OpsgenieSettingsFormValues['responders']>;
 export function OpsgenieIntegrationForm({ index }: OpsgenieIntegrationFormProps) {
-  const { register } = useFormContext<ReceiverFormValues>();
+  const { register } = useFormContext<OpsgenieFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
     <Stack direction="column" gap={1}>
@@ -133,12 +139,12 @@ function OpsgenieField({
   label,
   type = 'text',
 }: {
-  register: ReturnType<typeof useFormContext<ReceiverFormValues>>['register'];
-  name: OpsgenieFieldPath;
+  register: ReturnType<typeof useFormContext<OpsgenieFormValues>>['register'];
+  name: OpsgenieTextPath;
   label: string;
   type?: string;
 }) {
-  const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
+  const { formState, getFieldState } = useFormContext<OpsgenieFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
     <Field noMargin label={label} invalid={Boolean(error)} error={error}>
@@ -151,11 +157,11 @@ function OpsgenieCheckbox({
   label,
   defaultChecked = false,
 }: {
-  name: OpsgenieFieldPath;
+  name: OpsgenieBooleanPath;
   label: string;
   defaultChecked?: boolean;
 }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+  const { control } = useFormContext<OpsgenieFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller
@@ -172,8 +178,8 @@ function OpsgenieCheckbox({
     </Field>
   );
 }
-function OpsgenieKeyValueMap({ name, label }: { name: OpsgenieFieldPath; label: string }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function OpsgenieKeyValueMap({ name, label }: { name: OpsgenieDetailsPath; label: string }) {
+  const { control } = useFormContext<OpsgenieFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller
@@ -235,8 +241,8 @@ function OpsgenieKeyValueMap({ name, label }: { name: OpsgenieFieldPath; label: 
     </Field>
   );
 }
-function OpsgenieResponders({ name }: { name: OpsgenieFieldPath }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function OpsgenieResponders({ name }: { name: OpsgenieRespondersPath }) {
+  const { control } = useFormContext<OpsgenieFormValues>();
   return (
     <Field noMargin label={t('receivers.form.opsgenie-responders', 'Responders')}>
       <Controller

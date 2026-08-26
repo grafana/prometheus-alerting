@@ -1,19 +1,28 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, Checkbox, Field, IconButton, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, FieldPathByValue, useFormContext } from 'react-hook-form';
 
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { PagerDutySettingsFormValues } from './pagerduty.schema';
+
+type PagerDutyFormValues = IntegrationFormValues<PagerDutySettingsFormValues>;
 
 interface PagerDutyIntegrationFormProps {
   index: number;
 }
 
 type PagerDutySettingsPath = `integrations.${number}.settings`;
-type PagerDutyFieldPath = `integrations.${number}.settings.${string}`;
+type PagerDutyTextPath = FieldPathByValue<PagerDutyFormValues, string | undefined>;
+type PagerDutyBooleanPath = FieldPathByValue<PagerDutyFormValues, boolean | undefined>;
+type PagerDutyDetailsPath = FieldPathByValue<PagerDutyFormValues, PagerDutySettingsFormValues['details']>;
+type PagerDutyObjectArrayPath = FieldPathByValue<
+  PagerDutyFormValues,
+  PagerDutySettingsFormValues['links'] | PagerDutySettingsFormValues['images']
+>;
 
 export function PagerDutyIntegrationForm({ index }: PagerDutyIntegrationFormProps) {
-  const { register } = useFormContext<ReceiverFormValues>();
+  const { register } = useFormContext<PagerDutyFormValues>();
   const path = `integrations.${index}.settings` satisfies PagerDutySettingsPath;
 
   return (
@@ -181,13 +190,13 @@ function PagerDutyField({
   type = 'text',
   placeholder,
 }: {
-  register: ReturnType<typeof useFormContext<ReceiverFormValues>>['register'];
-  name: PagerDutyFieldPath;
+  register: ReturnType<typeof useFormContext<PagerDutyFormValues>>['register'];
+  name: PagerDutyTextPath;
   label: string;
   type?: string;
   placeholder?: string;
 }) {
-  const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
+  const { formState, getFieldState } = useFormContext<PagerDutyFormValues>();
   const fieldError = getFieldState(name, formState).error?.message;
 
   return (
@@ -202,11 +211,11 @@ function PagerDutyCheckbox({
   label,
   defaultChecked = false,
 }: {
-  name: PagerDutyFieldPath;
+  name: PagerDutyBooleanPath;
   label: string;
   defaultChecked?: boolean;
 }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+  const { control } = useFormContext<PagerDutyFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller
@@ -224,8 +233,8 @@ function PagerDutyCheckbox({
   );
 }
 
-function PagerDutyKeyValueMap({ name, label }: { name: PagerDutyFieldPath; label: string }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function PagerDutyKeyValueMap({ name, label }: { name: PagerDutyDetailsPath; label: string }) {
+  const { control } = useFormContext<PagerDutyFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller
@@ -275,11 +284,11 @@ function PagerDutyObjectArray({
   label,
   fields,
 }: {
-  name: PagerDutyFieldPath;
+  name: PagerDutyObjectArrayPath;
   label: string;
   fields: Array<[string, string]>;
 }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+  const { control } = useFormContext<PagerDutyFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller

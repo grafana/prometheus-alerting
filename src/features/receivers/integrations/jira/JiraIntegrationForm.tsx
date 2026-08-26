@@ -1,11 +1,17 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, Checkbox, Field, IconButton, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { Controller, useFormContext } from 'react-hook-form';
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
-type Path = `integrations.${number}.settings.${string}`;
+import { Controller, FieldPathByValue, useFormContext } from 'react-hook-form';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { JiraSettingsFormValues } from './jira.schema';
+
+type JiraFormValues = IntegrationFormValues<JiraSettingsFormValues>;
+type TextPath = FieldPathByValue<JiraFormValues, string | undefined>;
+type BooleanPath = FieldPathByValue<JiraFormValues, boolean | undefined>;
+type StringArrayPath = FieldPathByValue<JiraFormValues, JiraSettingsFormValues['labels']>;
+type StringMapPath = FieldPathByValue<JiraFormValues, JiraSettingsFormValues['fields']>;
 export function JiraIntegrationForm({ index }: { index: number }) {
-  const { register } = useFormContext<ReceiverFormValues>();
+  const { register } = useFormContext<JiraFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
     <Stack direction="column" gap={1}>
@@ -135,12 +141,12 @@ function InputField({
   label,
   type = 'text',
 }: {
-  register: ReturnType<typeof useFormContext<ReceiverFormValues>>['register'];
-  name: Path;
+  register: ReturnType<typeof useFormContext<JiraFormValues>>['register'];
+  name: TextPath;
   label: string;
   type?: string;
 }) {
-  const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
+  const { formState, getFieldState } = useFormContext<JiraFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
     <Field noMargin label={label} invalid={Boolean(error)} error={error}>
@@ -148,8 +154,16 @@ function InputField({
     </Field>
   );
 }
-function Check({ name, label, defaultChecked = false }: { name: Path; label: string; defaultChecked?: boolean }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function Check({
+  name,
+  label,
+  defaultChecked = false,
+}: {
+  name: BooleanPath;
+  label: string;
+  defaultChecked?: boolean;
+}) {
+  const { control } = useFormContext<JiraFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller
@@ -166,8 +180,8 @@ function Check({ name, label, defaultChecked = false }: { name: Path; label: str
     </Field>
   );
 }
-function StringArray({ name, label }: { name: Path; label: string }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function StringArray({ name, label }: { name: StringArrayPath; label: string }) {
+  const { control } = useFormContext<JiraFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller
@@ -191,8 +205,8 @@ function StringArray({ name, label }: { name: Path; label: string }) {
     </Field>
   );
 }
-function KeyValueMap({ name, label }: { name: Path; label: string }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function KeyValueMap({ name, label }: { name: StringMapPath; label: string }) {
+  const { control } = useFormContext<JiraFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller

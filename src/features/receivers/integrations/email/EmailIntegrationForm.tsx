@@ -1,17 +1,22 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, Checkbox, Field, IconButton, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, FieldPathByValue, useFormContext } from 'react-hook-form';
 
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { EmailSettingsFormValues } from './email.schema';
+
+type EmailFormValues = IntegrationFormValues<EmailSettingsFormValues>;
 
 interface EmailIntegrationFormProps {
   index: number;
 }
-type EmailFieldPath = `integrations.${number}.settings.${string}`;
+type EmailTextPath = FieldPathByValue<EmailFormValues, string | undefined>;
+type EmailBooleanPath = FieldPathByValue<EmailFormValues, boolean | undefined>;
+type EmailHeadersPath = FieldPathByValue<EmailFormValues, EmailSettingsFormValues['headers']>;
 
 export function EmailIntegrationForm({ index }: EmailIntegrationFormProps) {
-  const { register } = useFormContext<ReceiverFormValues>();
+  const { register } = useFormContext<EmailFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
     <Stack direction="column" gap={1}>
@@ -101,12 +106,12 @@ function EmailField({
   label,
   type = 'text',
 }: {
-  register: ReturnType<typeof useFormContext<ReceiverFormValues>>['register'];
-  name: EmailFieldPath;
+  register: ReturnType<typeof useFormContext<EmailFormValues>>['register'];
+  name: EmailTextPath;
   label: string;
   type?: string;
 }) {
-  const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
+  const { formState, getFieldState } = useFormContext<EmailFormValues>();
   const fieldError = getFieldState(name, formState).error?.message;
   return (
     <Field noMargin label={label} invalid={Boolean(fieldError)} error={fieldError}>
@@ -114,8 +119,8 @@ function EmailField({
     </Field>
   );
 }
-function EmailCheckbox({ name, label }: { name: EmailFieldPath; label: string }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function EmailCheckbox({ name, label }: { name: EmailBooleanPath; label: string }) {
+  const { control } = useFormContext<EmailFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller
@@ -132,8 +137,8 @@ function EmailCheckbox({ name, label }: { name: EmailFieldPath; label: string })
     </Field>
   );
 }
-function EmailKeyValueMap({ name, label }: { name: EmailFieldPath; label: string }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function EmailKeyValueMap({ name, label }: { name: EmailHeadersPath; label: string }) {
+  const { control } = useFormContext<EmailFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller

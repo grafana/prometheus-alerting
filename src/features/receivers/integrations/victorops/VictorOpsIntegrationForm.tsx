@@ -1,14 +1,18 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Checkbox, Field, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { Controller, useFormContext } from 'react-hook-form';
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
+import { Controller, FieldPathByValue, useFormContext } from 'react-hook-form';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { VictorOpsSettingsFormValues } from './victorops.schema';
+
+type VictorOpsFormValues = IntegrationFormValues<VictorOpsSettingsFormValues>;
 interface VictorOpsIntegrationFormProps {
   index: number;
 }
-type VictorOpsFieldPath = `integrations.${number}.settings.${string}`;
+type VictorOpsTextPath = FieldPathByValue<VictorOpsFormValues, string | undefined>;
+type VictorOpsBooleanPath = FieldPathByValue<VictorOpsFormValues, boolean | undefined>;
 export function VictorOpsIntegrationForm({ index }: VictorOpsIntegrationFormProps) {
-  const { register } = useFormContext<ReceiverFormValues>();
+  const { register } = useFormContext<VictorOpsFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
     <Stack direction="column" gap={1}>
@@ -134,12 +138,12 @@ function VictorOpsField({
   label,
   type = 'text',
 }: {
-  register: ReturnType<typeof useFormContext<ReceiverFormValues>>['register'];
-  name: VictorOpsFieldPath;
+  register: ReturnType<typeof useFormContext<VictorOpsFormValues>>['register'];
+  name: VictorOpsTextPath;
   label: string;
   type?: string;
 }) {
-  const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
+  const { formState, getFieldState } = useFormContext<VictorOpsFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
     <Field noMargin label={label} invalid={Boolean(error)} error={error}>
@@ -152,11 +156,11 @@ function VictorOpsCheckbox({
   label,
   defaultChecked = false,
 }: {
-  name: VictorOpsFieldPath;
+  name: VictorOpsBooleanPath;
   label: string;
   defaultChecked?: boolean;
 }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+  const { control } = useFormContext<VictorOpsFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller

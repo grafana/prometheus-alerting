@@ -1,17 +1,23 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, Checkbox, Field, IconButton, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, FieldPathByValue, useFormContext } from 'react-hook-form';
 
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { SlackSettingsFormValues } from './slack.schema';
+
+type SlackFormValues = IntegrationFormValues<SlackSettingsFormValues>;
 
 interface SlackIntegrationFormProps {
   index: number;
 }
-type SlackFieldPath = `integrations.${number}.settings.${string}`;
+type SlackTextPath = FieldPathByValue<SlackFormValues, string | undefined>;
+type SlackBooleanPath = FieldPathByValue<SlackFormValues, boolean | undefined>;
+type SlackStringArrayPath = FieldPathByValue<SlackFormValues, SlackSettingsFormValues['mrkdwn_in']>;
+type SlackActionsPath = FieldPathByValue<SlackFormValues, SlackSettingsFormValues['actions']>;
 
 export function SlackIntegrationForm({ index }: SlackIntegrationFormProps) {
-  const { register } = useFormContext<ReceiverFormValues>();
+  const { register } = useFormContext<SlackFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
     <Stack direction="column" gap={1}>
@@ -164,12 +170,12 @@ function SlackField({
   label,
   type = 'text',
 }: {
-  register: ReturnType<typeof useFormContext<ReceiverFormValues>>['register'];
-  name: SlackFieldPath;
+  register: ReturnType<typeof useFormContext<SlackFormValues>>['register'];
+  name: SlackTextPath;
   label: string;
   type?: string;
 }) {
-  const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
+  const { formState, getFieldState } = useFormContext<SlackFormValues>();
   const fieldError = getFieldState(name, formState).error?.message;
   return (
     <Field noMargin label={label} invalid={Boolean(fieldError)} error={fieldError}>
@@ -182,11 +188,11 @@ function SlackCheckbox({
   label,
   defaultChecked = false,
 }: {
-  name: SlackFieldPath;
+  name: SlackBooleanPath;
   label: string;
   defaultChecked?: boolean;
 }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+  const { control } = useFormContext<SlackFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller
@@ -203,8 +209,8 @@ function SlackCheckbox({
     </Field>
   );
 }
-function SlackStringArray({ name, label }: { name: SlackFieldPath; label: string }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function SlackStringArray({ name, label }: { name: SlackStringArrayPath; label: string }) {
+  const { control } = useFormContext<SlackFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller
@@ -228,8 +234,8 @@ function SlackStringArray({ name, label }: { name: SlackFieldPath; label: string
     </Field>
   );
 }
-function SlackActions({ name }: { name: SlackFieldPath }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function SlackActions({ name }: { name: SlackActionsPath }) {
+  const { control } = useFormContext<SlackFormValues>();
   return (
     <Field noMargin label={t('receivers.form.slack-actions', 'Actions')}>
       <Controller

@@ -1,11 +1,15 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Checkbox, Combobox, Field, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { Controller, useFormContext } from 'react-hook-form';
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
-type Path = `integrations.${number}.settings.${string}`;
+import { Controller, FieldPathByValue, useFormContext } from 'react-hook-form';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { WeChatSettingsFormValues } from './wechat.schema';
+
+type WeChatFormValues = IntegrationFormValues<WeChatSettingsFormValues>;
+type TextPath = FieldPathByValue<WeChatFormValues, string | undefined>;
+type BooleanPath = FieldPathByValue<WeChatFormValues, boolean | undefined>;
 export function WeChatIntegrationForm({ index }: { index: number }) {
-  const { register, control } = useFormContext<ReceiverFormValues>();
+  const { register, control } = useFormContext<WeChatFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
     <Stack direction="column" gap={1}>
@@ -137,12 +141,12 @@ function InputField({
   label,
   type = 'text',
 }: {
-  register: ReturnType<typeof useFormContext<ReceiverFormValues>>['register'];
-  name: Path;
+  register: ReturnType<typeof useFormContext<WeChatFormValues>>['register'];
+  name: TextPath;
   label: string;
   type?: string;
 }) {
-  const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
+  const { formState, getFieldState } = useFormContext<WeChatFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
     <Field noMargin label={label} invalid={Boolean(error)} error={error}>
@@ -150,8 +154,16 @@ function InputField({
     </Field>
   );
 }
-function Check({ name, label, defaultChecked = false }: { name: Path; label: string; defaultChecked?: boolean }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function Check({
+  name,
+  label,
+  defaultChecked = false,
+}: {
+  name: BooleanPath;
+  label: string;
+  defaultChecked?: boolean;
+}) {
+  const { control } = useFormContext<WeChatFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller

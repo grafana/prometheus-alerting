@@ -1,17 +1,22 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Button, Checkbox, Field, IconButton, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, FieldPathByValue, useFormContext } from 'react-hook-form';
 
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { SNSSettingsFormValues } from './sns.schema';
+
+type SNSFormValues = IntegrationFormValues<SNSSettingsFormValues>;
 
 interface SNSIntegrationFormProps {
   index: number;
 }
-type SNSFieldPath = `integrations.${number}.settings.${string}`;
+type SNSTextPath = FieldPathByValue<SNSFormValues, string | undefined>;
+type SNSBooleanPath = FieldPathByValue<SNSFormValues, boolean | undefined>;
+type SNSAttributesPath = FieldPathByValue<SNSFormValues, SNSSettingsFormValues['attributes']>;
 
 export function SNSIntegrationForm({ index }: SNSIntegrationFormProps) {
-  const { register } = useFormContext<ReceiverFormValues>();
+  const { register } = useFormContext<SNSFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
     <Stack direction="column" gap={1}>
@@ -165,13 +170,13 @@ function SNSField({
   type = 'text',
   placeholder,
 }: {
-  register: ReturnType<typeof useFormContext<ReceiverFormValues>>['register'];
-  name: SNSFieldPath;
+  register: ReturnType<typeof useFormContext<SNSFormValues>>['register'];
+  name: SNSTextPath;
   label: string;
   type?: string;
   placeholder?: string;
 }) {
-  const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
+  const { formState, getFieldState } = useFormContext<SNSFormValues>();
   const fieldError = getFieldState(name, formState).error?.message;
   return (
     <Field noMargin label={label} invalid={Boolean(fieldError)} error={fieldError}>
@@ -184,11 +189,11 @@ function SNSCheckbox({
   label,
   defaultChecked = false,
 }: {
-  name: SNSFieldPath;
+  name: SNSBooleanPath;
   label: string;
   defaultChecked?: boolean;
 }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+  const { control } = useFormContext<SNSFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller
@@ -205,8 +210,8 @@ function SNSCheckbox({
     </Field>
   );
 }
-function SNSKeyValueMap({ name, label }: { name: SNSFieldPath; label: string }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+function SNSKeyValueMap({ name, label }: { name: SNSAttributesPath; label: string }) {
+  const { control } = useFormContext<SNSFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller

@@ -1,14 +1,18 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Box, Checkbox, Combobox, Field, Input, Stack, Text, TextArea } from '@grafana/ui';
-import { Controller, useFormContext } from 'react-hook-form';
-import type { ReceiverFormValues } from '../../utils/receiverFormSchema';
+import { Controller, FieldPathByValue, useFormContext } from 'react-hook-form';
+import type { IntegrationFormValues } from '../../utils/integrationFormTypes';
+import type { TelegramSettingsFormValues } from './telegram.schema';
+
+type TelegramFormValues = IntegrationFormValues<TelegramSettingsFormValues>;
 interface TelegramIntegrationFormProps {
   index: number;
 }
-type TelegramFieldPath = `integrations.${number}.settings.${string}`;
+type TelegramTextPath = FieldPathByValue<TelegramFormValues, string | undefined>;
+type TelegramBooleanPath = FieldPathByValue<TelegramFormValues, boolean | undefined>;
 export function TelegramIntegrationForm({ index }: TelegramIntegrationFormProps) {
-  const { register, control } = useFormContext<ReceiverFormValues>();
+  const { register, control } = useFormContext<TelegramFormValues>();
   const path = `integrations.${index}.settings` as const;
   return (
     <Stack direction="column" gap={1}>
@@ -144,13 +148,13 @@ function TelegramField({
   type = 'text',
   inputMode,
 }: {
-  register: ReturnType<typeof useFormContext<ReceiverFormValues>>['register'];
-  name: TelegramFieldPath;
+  register: ReturnType<typeof useFormContext<TelegramFormValues>>['register'];
+  name: TelegramTextPath;
   label: string;
   type?: string;
   inputMode?: 'numeric';
 }) {
-  const { formState, getFieldState } = useFormContext<ReceiverFormValues>();
+  const { formState, getFieldState } = useFormContext<TelegramFormValues>();
   const error = getFieldState(name, formState).error?.message;
   return (
     <Field noMargin label={label} invalid={Boolean(error)} error={error}>
@@ -163,11 +167,11 @@ function TelegramCheckbox({
   label,
   defaultChecked = false,
 }: {
-  name: TelegramFieldPath;
+  name: TelegramBooleanPath;
   label: string;
   defaultChecked?: boolean;
 }) {
-  const { control } = useFormContext<ReceiverFormValues>();
+  const { control } = useFormContext<TelegramFormValues>();
   return (
     <Field noMargin label={label}>
       <Controller
