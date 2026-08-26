@@ -14,6 +14,21 @@ export const TransformedAlertmanagerStatusApiResponseSchema = AlertmanagerStatus
 });
 export type TransformedAlertmanagerStatusApiResponse = z.output<typeof TransformedAlertmanagerStatusApiResponseSchema>;
 
+export const ReadOnlyAlertmanagerConfigurationSchema = z.object({
+  template_files: z.record(z.string(), z.string()),
+  alertmanager_config: ParsedAlertmanagerConfigSchema,
+});
+export type ReadOnlyAlertmanagerConfiguration = z.infer<typeof ReadOnlyAlertmanagerConfigurationSchema>;
+
+export function toReadOnlyAlertmanagerConfiguration(
+  status: TransformedAlertmanagerStatusApiResponse
+): ReadOnlyAlertmanagerConfiguration {
+  return {
+    template_files: {},
+    alertmanager_config: status.config.parsed,
+  };
+}
+
 // Schema that transforms AlertmanagerStatus by parsing the YAML config
 export const TransformedAlertmanagerStatusApiResponseTransform =
   AlertmanagerStatusSchema.transform<TransformedAlertmanagerStatusApiResponse>((data) => {

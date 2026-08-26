@@ -110,33 +110,3 @@ export const YamlToParsedUserConfiguration = z.codec(z.string(), ParsedUserConfi
     return stringifyYaml(encodedAlertmanagerConfig);
   },
 });
-
-/**
- * This codec will convert a TransformedAlertmanagerStatusApiResponse (from the vanilla Alertmanager API)
- * to a ParsedUserConfiguration (Mimir format).
- *
- * The TransformedAlertmanagerStatusApiResponse contains config.parsed which is a ParsedAlertmanagerConfig,
- * while ParsedUserConfiguration wraps this in { template_files, alertmanager_config }.
- *
- * Note: When decoding from TransformedAlertmanagerStatusApiResponse, template_files will be empty
- * since vanilla Alertmanager doesn't expose templates through the status endpoint.
- */
-export const TransformedStatusToParsedUserConfiguration = {
-  decode: (statusResponse: {
-    config: { parsed: z.infer<typeof ParsedAlertmanagerConfigSchema> };
-  }): ParsedUserConfiguration => {
-    return {
-      template_files: {},
-      alertmanager_config: statusResponse.config.parsed,
-    };
-  },
-  encode: (
-    userConfiguration: ParsedUserConfiguration
-  ): { config: { parsed: z.infer<typeof ParsedAlertmanagerConfigSchema> } } => {
-    return {
-      config: {
-        parsed: userConfiguration.alertmanager_config,
-      },
-    };
-  },
-};
