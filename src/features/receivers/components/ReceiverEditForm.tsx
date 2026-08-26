@@ -51,6 +51,8 @@ import { VictorOpsIntegrationForm } from '../integrations/victorops/VictorOpsInt
 
 import { TelegramIntegrationForm } from '../integrations/telegram/TelegramIntegrationForm';
 
+import { DiscordIntegrationForm } from '../integrations/discord/DiscordIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -293,6 +295,8 @@ function IntegrationEditor({
           <VictorOpsIntegrationForm index={index} />
         ) : integrationType === 'telegram' ? (
           <TelegramIntegrationForm index={index} />
+        ) : integrationType === 'discord' ? (
+          <DiscordIntegrationForm index={index} />
         ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}
