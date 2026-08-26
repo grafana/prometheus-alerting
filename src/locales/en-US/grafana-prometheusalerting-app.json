@@ -955,7 +955,7 @@
       },
       "empty": "No active alert instances",
       "filter": {
-        "search-placeholder": "Search by label",
+        "search-placeholder": "Search label keys, values, or key=value",
         "state-all": "All",
         "state-all-count_one": "All ({{count}})",
         "state-all-count_other": "All ({{count}})",

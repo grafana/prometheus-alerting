@@ -2,7 +2,7 @@ import React from 'react';
 import { css } from '@emotion/css';
 import { GrafanaTheme2 } from '@grafana/data';
 import { useStyles2, LinkButton, Stack, Text } from '@grafana/ui';
-import { getDataSourceSrv } from '@grafana/runtime';
+import { config } from '@grafana/runtime';
 import { RawQuery } from '@grafana/plugin-ui';
 import { Trans } from '@grafana/i18n';
 import { promqlGrammar, lokiGrammar } from '../../utils/prismGrammars';
@@ -18,7 +18,7 @@ export function QueryTab({ query, dataSourceUid }: Props) {
   const styles = useStyles2(getStyles);
 
   // Get datasource type to determine language
-  const dsSettings = getDataSourceSrv().getInstanceSettings(dataSourceUid);
+  const dsSettings = config.datasources[dataSourceUid];
   const dataSourceType = dsSettings?.type ?? 'prometheus';
 
   const language =
@@ -58,6 +58,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
   wrapper: css({
     display: 'flex',
     flexDirection: 'column',
+    minWidth: 0,
   }),
   header: css({
     display: 'flex',
@@ -80,5 +81,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
     border: `1px solid ${theme.colors.border.medium}`,
     borderTop: 'none',
     borderRadius: `0 0 ${theme.shape.radius.default} ${theme.shape.radius.default}`,
+    overflowWrap: 'anywhere',
+    whiteSpace: 'pre-wrap',
   }),
 });

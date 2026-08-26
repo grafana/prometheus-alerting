@@ -65,10 +65,16 @@ export function useInstancesFilter(alerts: PromAlert[]): UseInstancesFilterResul
 
       // Label search filter
       if (filterState.searchText.trim()) {
-        const searchLower = filterState.searchText.toLowerCase();
-        const matchesLabel = Object.entries(alert.labels).some(
-          ([key, value]) => key.toLowerCase().includes(searchLower) || value.toLowerCase().includes(searchLower)
-        );
+        const searchLower = filterState.searchText.trim().toLowerCase();
+        const matchesLabel = Object.entries(alert.labels).some(([key, value]) => {
+          const keyLower = key.toLowerCase();
+          const valueLower = value.toLowerCase();
+          return (
+            keyLower.includes(searchLower) ||
+            valueLower.includes(searchLower) ||
+            `${keyLower}=${valueLower}`.includes(searchLower)
+          );
+        });
         if (!matchesLabel) {
           return false;
         }
