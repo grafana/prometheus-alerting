@@ -1,7 +1,12 @@
 /**
  * Utilities for transforming between Alertmanager receiver format and form values.
  */
-import { type Receiver } from '@grafana/external-alertmanager/vanilla';
+import { WebhookConfigSchema, type Receiver } from '@grafana/external-alertmanager/vanilla';
+import {
+  createDefaultWebhookSettings,
+  webhookConfigToFormSettings,
+  webhookFormSettingsToConfig,
+} from '../integrations/webhook/webhook.mapper';
 import { cloudNotifierTypes, NotifierDTO } from './notifierTypes';
 import { CLOUD_INTEGRATION_TYPES, CloudIntegrationType, INTEGRATION_TYPE_MAP } from './cloudIntegrationTypes';
 import type { IntegrationFormValues, ReceiverFormValues } from './receiverFormSchema';
@@ -35,6 +40,17 @@ export function receiverToFormValues(receiver: Receiver): ReceiverFormValues {
     if (configs && Array.isArray(configs)) {
       for (const config of configs) {
         const id = generateId();
+
+        if (type === 'webhook') {
+          const typedConfig = WebhookConfigSchema.parse(config);
+          integrations.push({
+            __id: id,
+            type,
+            sendResolved: typedConfig.send_resolved !== false,
+            settings: webhookConfigToFormSettings(typedConfig),
+          });
+          continue;
+        }
 
         const { send_resolved, ...settings } = config;
         integrations.push({
@@ -74,6 +90,15 @@ export function formValuesToReceiver(values: ReceiverFormValues): Receiver {
     if (!receiver[configKey]) {
       // Type assertion needed due to dynamic key
       (receiver as Record<string, unknown>)[configKey] = [];
+    }
+
+    if (integration.type === 'webhook') {
+      const typedConfig = webhookFormSettingsToConfig(integration.settings);
+      (receiver[configKey] as Array<Record<string, unknown>>).push({
+        ...typedConfig,
+        send_resolved: integration.sendResolved,
+      });
+      continue;
     }
 
     const config: Record<string, unknown> = {
@@ -141,6 +166,15 @@ export function createDefaultReceiverFormValues(): ReceiverFormValues {
  * Create a new integration with default values for a given type
  */
 export function createDefaultIntegration(type: CloudIntegrationType): IntegrationFormValues {
+  if (type === 'webhook') {
+    return {
+      __id: generateId(),
+      type,
+      sendResolved: true,
+      settings: createDefaultWebhookSettings(),
+    };
+  }
+
   const notifier = cloudNotifierTypes.find((n) => n.type === type);
   return {
     __id: generateId(),

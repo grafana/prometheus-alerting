@@ -31,6 +31,8 @@ import { NotificationChannelOption, getNotifierTypeOptions } from '../utils/noti
 import { createReceiverFormSchema } from '../utils/receiverFormSchema';
 import { CloudIntegrationType, isCloudIntegrationType } from '../utils/cloudIntegrationTypes';
 
+import { WebhookIntegrationForm } from '../integrations/webhook/WebhookIntegrationForm';
+
 interface ReceiverEditFormProps {
   receiver?: Receiver;
   existingReceivers: Receiver[];
@@ -253,7 +255,9 @@ function IntegrationEditor({
 
       {/* Settings box - only the actual integration settings are boxed */}
       <Box padding={2} borderColor="weak" borderStyle="solid">
-        {notifier ? (
+        {integrationType === 'webhook' ? (
+          <WebhookIntegrationForm index={index} />
+        ) : notifier ? (
           <IntegrationFields notifier={notifier} index={index} control={control} register={register} />
         ) : null}
       </Box>
