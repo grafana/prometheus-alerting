@@ -4,8 +4,29 @@ import {
   filterAndTransformConfigEntries,
   getContactPointDescription,
   getReceiverIntegrations,
+  maskSensitiveConfig,
 } from './receiversUtils';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
+
+describe('maskSensitiveConfig', () => {
+  it('masks raw Mimir secrets recursively and type-specific webhook URLs', () => {
+    expect(
+      maskSensitiveConfig('slack', {
+        api_url: 'https://hooks.slack.test/secret',
+        http_config: {
+          authorization: { credentials: 'bearer-secret' },
+          basic_auth: { username: 'user', password: 'password-secret' },
+        },
+      })
+    ).toEqual({
+      api_url: '*************',
+      http_config: {
+        authorization: { credentials: '*************' },
+        basic_auth: { username: 'user', password: '*************' },
+      },
+    });
+  });
+});
 
 describe('transformEntry', () => {
   it('passes through normal values unchanged', () => {

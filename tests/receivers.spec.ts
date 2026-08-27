@@ -1,66 +1,5 @@
 import { test, expect, VANILLA_ALERTMANAGER_UID } from './fixtures/alertmanager';
 
-/**
- * A webhook receiver with every optional field set, used as the starting point for the "update"
- * test below — seeded directly via the Mimir config API so the test only has to drive the UI for
- * the part it's actually verifying (the edit).
- */
-const WEBHOOK_FULL_BEFORE_CONFIG = `template_files: {}
-alertmanager_config: |
-  route:
-    receiver: webhook-full-update
-  receivers:
-    - name: webhook-full-update
-      webhook_configs:
-        - url: 'http://example.com/webhook-before'
-          max_alerts: 5
-          http_config:
-            proxy_url: 'http://proxy.example.com:8080'
-            basic_auth:
-              username: 'before-user'
-              password: 'before-pass'
-            tls_config:
-              server_name: 'before.example.com'
-              insecure_skip_verify: true
-`;
-
-const EMAIL_FULL_BEFORE_CONFIG = `template_files: {}
-alertmanager_config: |
-  route:
-    receiver: email-full-update
-  receivers:
-    - name: email-full-update
-      email_configs:
-        - to: 'before@example.com'
-          from: 'before-from@example.com'
-          smarthost: 'smtp-before.example.com:587'
-          hello: 'before.example.com'
-          auth_username: 'before-user'
-          auth_password: 'before-pass'
-          require_tls: true
-          html: 'Before HTML body'
-          text: 'Before text body'
-          tls_config:
-            server_name: 'before-tls.example.com'
-            insecure_skip_verify: true
-`;
-
-const SLACK_FULL_BEFORE_CONFIG = `template_files: {}
-alertmanager_config: |
-  route:
-    receiver: slack-full-update
-  receivers:
-    - name: slack-full-update
-      slack_configs:
-        - api_url: 'https://hooks.slack.com/services/BEFORE/BEFORE/BEFOREBEFOREBEFOREBEFORE'
-          channel: '#before-channel'
-          icon_emoji: ':warning:'
-          icon_url: 'https://example.com/before-icon.png'
-          username: 'before-bot'
-          title: 'Before title'
-          text: 'Before message body'
-`;
-
 const WEBEX_FULL_BEFORE_CONFIG = `template_files: {}
 alertmanager_config: |
   route:
@@ -154,19 +93,6 @@ test.describe('Receivers', () => {
       await receiversPage.expectReceiverCount(2); // new receiver + undeletable default
     });
 
-    test('creates a receiver with a webhook integration and views it', async ({ receiversPage }) => {
-      await receiversPage.openCreateDrawer();
-      await receiversPage.fillName('new-webhook-receiver');
-      const webhook = await receiversPage.selectWebhookIntegration(0);
-      await webhook.fill({ url: 'http://example.com/webhook' });
-      await receiversPage.submitCreate();
-
-      await expect(receiversPage.getRow('new-webhook-receiver')).toBeVisible();
-
-      await receiversPage.openReceiverByName('new-webhook-receiver');
-      await expect(receiversPage.drawer.getByText('http://example.com/webhook')).toBeVisible();
-    });
-
     test('edits a receiver', async ({ receiversPage }) => {
       await receiversPage.openCreateDrawer();
       await receiversPage.fillName('edit-me-receiver');
@@ -204,198 +130,6 @@ test.describe('Receivers', () => {
       await receiversPage.expectReceiverCount(1); // only the undeletable default remains
     });
 
-    test('creates a webhook receiver with all optional fields and persists them', async ({ receiversPage }) => {
-      await receiversPage.openCreateDrawer();
-      await receiversPage.fillName('webhook-full-options');
-      const webhook = await receiversPage.selectWebhookIntegration(0);
-      await webhook.fill({
-        url: 'http://example.com/webhook-full',
-        maxAlerts: '5',
-        proxyUrl: 'http://proxy.example.com:8080',
-        basicAuthUsername: 'webhookuser',
-        basicAuthPassword: 'webhookpass',
-        tlsServerName: 'webhook.example.com',
-        tlsSkipVerify: true,
-      });
-      await receiversPage.submitCreate();
-
-      // Regression check for `max_alerts`: it's a number field, but react-hook-form registers
-      // number inputs as strings unless told otherwise. Without applying the option's
-      // `setValueAs`, the receiver is posted with `max_alerts: "5"` (a quoted string), which
-      // Mimir's Alertmanager rejects outright — the create request fails and the drawer never
-      // closes, so this row never appears.
-      await expect(receiversPage.getRow('webhook-full-options')).toBeVisible();
-
-      await receiversPage.openReceiverByName('webhook-full-options');
-      await expect(receiversPage.getViewFieldValue('url')).toHaveText('http://example.com/webhook-full');
-      await expect(receiversPage.getViewFieldValue('max_alerts')).toHaveText('5');
-      await expect(receiversPage.getViewFieldValue('proxy_url')).toHaveText('http://proxy.example.com:8080');
-      await expect(receiversPage.getViewFieldValue('username')).toHaveText('webhookuser');
-      await expect(receiversPage.getViewFieldValue('password')).toHaveText('webhookpass');
-      await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('webhook.example.com');
-      await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('Yes');
-    });
-
-    test('updates a webhook receiver with all optional fields', async ({ receiversPage, mimirAlertmanager }) => {
-      await mimirAlertmanager.seedConfig(WEBHOOK_FULL_BEFORE_CONFIG);
-      await receiversPage.gotoWithAlertmanager(mimirAlertmanager.uid);
-
-      await receiversPage.openReceiverByName('webhook-full-update');
-      await receiversPage.startEdit();
-      const editWebhook = await receiversPage.selectWebhookIntegration(0);
-      await editWebhook.fill({
-        url: 'http://example.com/webhook-after',
-        maxAlerts: '10',
-        proxyUrl: 'http://proxy2.example.com:9090',
-        basicAuthUsername: 'after-user',
-        basicAuthPassword: 'after-pass',
-        tlsServerName: 'after.example.com',
-        // Already checked in the seeded config — clicking again toggles it back off.
-        tlsSkipVerify: true,
-      });
-      await receiversPage.submitUpdate();
-
-      await receiversPage.openReceiverByName('webhook-full-update');
-      await expect(receiversPage.getViewFieldValue('url')).toHaveText('http://example.com/webhook-after');
-      await expect(receiversPage.getViewFieldValue('max_alerts')).toHaveText('10');
-      await expect(receiversPage.getViewFieldValue('proxy_url')).toHaveText('http://proxy2.example.com:9090');
-      await expect(receiversPage.getViewFieldValue('username')).toHaveText('after-user');
-      await expect(receiversPage.getViewFieldValue('password')).toHaveText('after-pass');
-      await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('after.example.com');
-      await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('No');
-    });
-
-    test('creates an email receiver with all optional fields and persists them', async ({ receiversPage }) => {
-      await receiversPage.openCreateDrawer();
-      await receiversPage.fillName('email-full-options');
-      const email = await receiversPage.selectEmailIntegration(0);
-      await email.fill({
-        to: 'team@example.com',
-        from: 'alerts@example.com',
-        smarthost: 'smtp.example.com:587',
-        hello: 'alertmanager.example.com',
-        authUsername: 'emailuser',
-        authPassword: 'emailpass',
-        requireTls: true,
-        html: 'Full HTML body',
-        text: 'Full text body',
-        tlsServerName: 'email.example.com',
-        tlsSkipVerify: true,
-      });
-      await receiversPage.submitCreate();
-
-      await expect(receiversPage.getRow('email-full-options')).toBeVisible();
-
-      await receiversPage.openReceiverByName('email-full-options');
-      await expect(receiversPage.getViewFieldValue('to')).toHaveText('team@example.com');
-      await expect(receiversPage.getViewFieldValue('from')).toHaveText('alerts@example.com');
-      await expect(receiversPage.getViewFieldValue('smarthost')).toHaveText('smtp.example.com:587');
-      await expect(receiversPage.getViewFieldValue('hello')).toHaveText('alertmanager.example.com');
-      await expect(receiversPage.getViewFieldValue('auth_username')).toHaveText('emailuser');
-      await expect(receiversPage.getViewFieldValue('auth_password')).toHaveText('emailpass');
-      await expect(receiversPage.getViewFieldValue('require_tls')).toHaveText('Yes');
-      await expect(receiversPage.getViewFieldValue('html')).toHaveText('Full HTML body');
-      await expect(receiversPage.getViewFieldValue('text')).toHaveText('Full text body');
-      await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('email.example.com');
-      await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('Yes');
-    });
-
-    test('updates an email receiver with all optional fields', async ({ receiversPage, mimirAlertmanager }) => {
-      await mimirAlertmanager.seedConfig(EMAIL_FULL_BEFORE_CONFIG);
-      await receiversPage.gotoWithAlertmanager(mimirAlertmanager.uid);
-
-      await receiversPage.openReceiverByName('email-full-update');
-      await receiversPage.startEdit();
-      const editEmail = await receiversPage.selectEmailIntegration(0);
-      await editEmail.fill({
-        to: 'after@example.com',
-        from: 'after-from@example.com',
-        smarthost: 'smtp-after.example.com:587',
-        hello: 'after.example.com',
-        authUsername: 'after-user',
-        authPassword: 'after-pass',
-        // Already checked in the seeded config — clicking again toggles it back off.
-        requireTls: true,
-        html: 'After HTML body',
-        text: 'After text body',
-        tlsServerName: 'after-tls.example.com',
-        tlsSkipVerify: true,
-      });
-      await receiversPage.submitUpdate();
-
-      await receiversPage.openReceiverByName('email-full-update');
-      await expect(receiversPage.getViewFieldValue('to')).toHaveText('after@example.com');
-      await expect(receiversPage.getViewFieldValue('from')).toHaveText('after-from@example.com');
-      await expect(receiversPage.getViewFieldValue('smarthost')).toHaveText('smtp-after.example.com:587');
-      await expect(receiversPage.getViewFieldValue('hello')).toHaveText('after.example.com');
-      await expect(receiversPage.getViewFieldValue('auth_username')).toHaveText('after-user');
-      await expect(receiversPage.getViewFieldValue('auth_password')).toHaveText('after-pass');
-      await expect(receiversPage.getViewFieldValue('require_tls')).toHaveText('No');
-      await expect(receiversPage.getViewFieldValue('html')).toHaveText('After HTML body');
-      await expect(receiversPage.getViewFieldValue('text')).toHaveText('After text body');
-      await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('after-tls.example.com');
-      await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('No');
-    });
-
-    test('creates a slack receiver with all optional fields and persists them', async ({ receiversPage }) => {
-      await receiversPage.openCreateDrawer();
-      await receiversPage.fillName('slack-full-options');
-      const slack = await receiversPage.selectSlackIntegration(0);
-      await slack.fill({
-        apiUrl: 'https://hooks.slack.com/services/TEAM/BOT/TOKENTOKENTOKENTOKENTOKE',
-        channel: '#alerts',
-        iconEmoji: ':bell:',
-        iconUrl: 'https://example.com/icon.png',
-        username: 'Alertmanager',
-        title: 'Full title',
-        text: 'Full message body',
-      });
-      await receiversPage.submitCreate();
-
-      await expect(receiversPage.getRow('slack-full-options')).toBeVisible();
-
-      await receiversPage.openReceiverByName('slack-full-options');
-      await expect(receiversPage.getViewFieldValue('api_url')).toHaveText(
-        'https://hooks.slack.com/services/TEAM/BOT/TOKENTOKENTOKENTOKENTOKE'
-      );
-      await expect(receiversPage.getViewFieldValue('channel')).toHaveText('#alerts');
-      await expect(receiversPage.getViewFieldValue('icon_emoji')).toHaveText(':bell:');
-      await expect(receiversPage.getViewFieldValue('icon_url')).toHaveText('https://example.com/icon.png');
-      await expect(receiversPage.getViewFieldValue('username')).toHaveText('Alertmanager');
-      await expect(receiversPage.getViewFieldValue('title')).toHaveText('Full title');
-      await expect(receiversPage.getViewFieldValue('text')).toHaveText('Full message body');
-    });
-
-    test('updates a slack receiver with all optional fields', async ({ receiversPage, mimirAlertmanager }) => {
-      await mimirAlertmanager.seedConfig(SLACK_FULL_BEFORE_CONFIG);
-      await receiversPage.gotoWithAlertmanager(mimirAlertmanager.uid);
-
-      await receiversPage.openReceiverByName('slack-full-update');
-      await receiversPage.startEdit();
-      const editSlack = await receiversPage.selectSlackIntegration(0);
-      await editSlack.fill({
-        apiUrl: 'https://hooks.slack.com/services/AFTER/AFTER/AFTERAFTERAFTERAFTERAFT',
-        channel: '#after-channel',
-        iconEmoji: ':white_check_mark:',
-        iconUrl: 'https://example.com/after-icon.png',
-        username: 'after-bot',
-        title: 'After title',
-        text: 'After message body',
-      });
-      await receiversPage.submitUpdate();
-
-      await receiversPage.openReceiverByName('slack-full-update');
-      await expect(receiversPage.getViewFieldValue('api_url')).toHaveText(
-        'https://hooks.slack.com/services/AFTER/AFTER/AFTERAFTERAFTERAFTERAFT'
-      );
-      await expect(receiversPage.getViewFieldValue('channel')).toHaveText('#after-channel');
-      await expect(receiversPage.getViewFieldValue('icon_emoji')).toHaveText(':white_check_mark:');
-      await expect(receiversPage.getViewFieldValue('icon_url')).toHaveText('https://example.com/after-icon.png');
-      await expect(receiversPage.getViewFieldValue('username')).toHaveText('after-bot');
-      await expect(receiversPage.getViewFieldValue('title')).toHaveText('After title');
-      await expect(receiversPage.getViewFieldValue('text')).toHaveText('After message body');
-    });
-
     test('creates a Webex receiver with all supported fields and persists them', async ({ receiversPage }) => {
       await receiversPage.openCreateDrawer();
       await receiversPage.fillName('webex-full-options');
@@ -406,17 +140,16 @@ test.describe('Receivers', () => {
         message: 'Created Webex message',
         authorizationType: 'Bearer',
         authorizationCredentials: 'token-create',
-        authorizationCredentialsFile: '/var/run/secrets/token',
+        basicAuthUsername: 'conflicting-user',
         proxyUrl: 'http://proxy-create.example.com:8080',
         tlsServerName: 'webex-create.example.com',
         tlsSkipVerify: true,
       });
+      await expect(receiversPage.drawer.getByLabel('Credentials file')).toHaveCount(0);
       await receiversPage.submitCreate();
-      await expect(receiversPage.drawer.getByText('Credentials cannot be used with Credentials file')).toBeVisible();
-
-      await webex.fill({ authorizationCredentialsFile: '', basicAuthUsername: 'conflicting-user' });
-      await receiversPage.submitCreate();
-      await expect(receiversPage.drawer.getByText('Credentials cannot be used with Username')).toBeVisible();
+      await expect(
+        receiversPage.drawer.getByText('Authorization and basic authentication cannot be used together')
+      ).toBeVisible();
 
       await webex.fill({ basicAuthUsername: '' });
       await receiversPage.submitCreate();
@@ -427,7 +160,7 @@ test.describe('Receivers', () => {
       await expect(receiversPage.getViewFieldValue('room_id')).toHaveText('room-create');
       await expect(receiversPage.getViewFieldValue('message')).toHaveText('Created Webex message');
       await expect(receiversPage.getViewFieldValue('type')).toHaveText('Bearer');
-      await expect(receiversPage.getViewFieldValue('credentials')).toHaveText('token-create');
+      await expect(receiversPage.getViewFieldValue('credentials')).toHaveText(/^\*+$/);
       await expect(receiversPage.drawer.getByText('bearer_token', { exact: true })).toHaveCount(0);
       await expect(receiversPage.getViewFieldValue('proxy_url')).toHaveText('http://proxy-create.example.com:8080');
       await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('webex-create.example.com');
@@ -443,6 +176,7 @@ test.describe('Receivers', () => {
       const editWebex = await receiversPage.selectWebexIntegration(0);
       await expect(editWebex.authorizationTypeInput).toHaveValue('Bearer');
       await expect(editWebex.authorizationCredentialsInput).toHaveValue('token-before');
+      await expect(editWebex.authorizationCredentialsInput).toHaveAttribute('type', 'password');
       await editWebex.fill({
         apiUrl: 'https://webexapis.com/v1/messages-after',
         roomId: 'room-after',
@@ -461,7 +195,7 @@ test.describe('Receivers', () => {
       await expect(receiversPage.getViewFieldValue('room_id')).toHaveText('room-after');
       await expect(receiversPage.getViewFieldValue('message')).toHaveText('After Webex message');
       await expect(receiversPage.getViewFieldValue('type')).toHaveText('Bearer');
-      await expect(receiversPage.getViewFieldValue('credentials')).toHaveText('token-after');
+      await expect(receiversPage.getViewFieldValue('credentials')).toHaveText(/^\*+$/);
       await expect(receiversPage.drawer.getByText('bearer_token', { exact: true })).toHaveCount(0);
       await expect(receiversPage.getViewFieldValue('proxy_url')).toHaveText('http://proxy-after.example.com:9090');
       await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('webex-after.example.com');

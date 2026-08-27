@@ -23,15 +23,14 @@ import {
   PostSilencesApiResponse,
   PostSilencesApiResponseSchema,
 } from '@grafana/external-alertmanager/vanilla';
-import {
-  ParsedUserConfiguration,
-  TransformedStatusToParsedUserConfiguration,
-} from '@grafana/external-alertmanager/mimir';
-
 import { getDataSourceSrv } from '@grafana/runtime';
 import { AlertManagerDataSourceJsonData } from 'types/datasources';
 import { buildDatasourceProxyPath } from '../utils/proxyPath';
-import { WithDataSourceInformation, TransformedAlertmanagerStatusApiResponseTransform } from './alertmanager.types';
+import {
+  AlertmanagerStatusToReadOnlyConfiguration,
+  ReadOnlyAlertmanagerConfiguration,
+  WithDataSourceInformation,
+} from './alertmanager.types';
 
 /**
  * `staticPath` must be a literal path made up of segments we control (e.g. `/v2/silence`) —
@@ -73,16 +72,12 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       }),
       providesTags: ['Configuration'],
     }),
-    getConfiguration: build.query<ParsedUserConfiguration, WithDataSourceInformation<GetStatusApiArg>>({
+    getConfiguration: build.query<ReadOnlyAlertmanagerConfiguration, WithDataSourceInformation<GetStatusApiArg>>({
       query: ({ dataSourceUID }) => ({
         url: createAlertmanagerPath(dataSourceUID, `/v2/status`),
       }),
-      transformResponse: (response: AlertmanagerStatus): ParsedUserConfiguration => {
-        // First, transform the status response to get the parsed config
-        const transformedStatus = TransformedAlertmanagerStatusApiResponseTransform.parse(response);
-        // Then use the codec to convert to ParsedUserConfiguration (Mimir format)
-        return TransformedStatusToParsedUserConfiguration.decode(transformedStatus);
-      },
+      transformResponse: (response: AlertmanagerStatus): ReadOnlyAlertmanagerConfiguration =>
+        AlertmanagerStatusToReadOnlyConfiguration.parse(response),
       providesTags: ['Configuration'],
     }),
     getSilences: build.query<GetSilencesApiResponse, WithDataSourceInformation<GetSilencesApiArg>>({

@@ -1,36 +1,25 @@
-import {
-  AlertmanagerConfigSchema,
-  AlertmanagerStatusSchema,
-  ParsedAlertmanagerConfigSchema,
-} from '@grafana/external-alertmanager/vanilla';
+import { AlertmanagerStatusSchema, ParsedAlertmanagerConfigSchema } from '@grafana/external-alertmanager/vanilla';
 import { parse as parseYaml } from 'yaml';
 import z from 'zod';
 
-// Schema for validating the transformed response (with parsed config)
-export const TransformedAlertmanagerStatusApiResponseSchema = AlertmanagerStatusSchema.extend({
-  config: AlertmanagerConfigSchema.extend({
-    parsed: ParsedAlertmanagerConfigSchema,
-  }),
+export const ReadOnlyAlertmanagerConfigurationSchema = z.object({
+  template_files: z.record(z.string(), z.string()),
+  alertmanager_config: ParsedAlertmanagerConfigSchema,
 });
-export type TransformedAlertmanagerStatusApiResponse = z.output<typeof TransformedAlertmanagerStatusApiResponseSchema>;
+export type ReadOnlyAlertmanagerConfiguration = z.infer<typeof ReadOnlyAlertmanagerConfigurationSchema>;
 
-// Schema that transforms AlertmanagerStatus by parsing the YAML config
-export const TransformedAlertmanagerStatusApiResponseTransform =
-  AlertmanagerStatusSchema.transform<TransformedAlertmanagerStatusApiResponse>((data) => {
-    // Parse the YAML configuration from `data.config.original`
-    const parsedYamlConfig = parseYaml(data.config.original);
-
-    // Validate the parsed YAML against the expected schema
-    const parsed = ParsedAlertmanagerConfigSchema.parse(parsedYamlConfig);
-
-    return {
-      ...data,
-      config: {
-        ...data.config,
-        parsed,
-      },
-    };
-  });
+/**
+ * Parses the YAML config embedded in an AlertmanagerStatus response and reshapes it into the
+ * same { template_files, alertmanager_config } envelope used for the writable Mimir configuration.
+ *
+ * template_files is always empty here since vanilla Alertmanager doesn't expose templates through /v2/status.
+ */
+export const AlertmanagerStatusToReadOnlyConfiguration = AlertmanagerStatusSchema.transform<
+  z.infer<typeof ReadOnlyAlertmanagerConfigurationSchema>
+>((data) => ({
+  template_files: {},
+  alertmanager_config: ParsedAlertmanagerConfigSchema.parse(parseYaml(data.config.original)),
+}));
 
 // Type to include dataSourceUID and implementation in API arguments
 export type WithDataSourceInformation<T = void> = T extends void
