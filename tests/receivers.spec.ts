@@ -1,21 +1,56 @@
 import { test, expect, VANILLA_ALERTMANAGER_UID } from './fixtures/alertmanager';
 
-const WEBEX_FULL_BEFORE_CONFIG = `template_files: {}
+const IN_USE_RECEIVER_CONFIG = `template_files: {}
 alertmanager_config: |
   route:
-    receiver: webex-full-update
+    receiver: empty-default-receiver
+    routes:
+      - receiver: in-use-receiver
+        matchers:
+          - service="api"
   receivers:
-    - name: webex-full-update
-      webex_configs:
-        - api_url: 'https://webexapis.com/v1/messages-before'
-          room_id: 'room-before'
-          message: 'Before Webex message'
+    - name: empty-default-receiver
+    - name: in-use-receiver
+      webhook_configs:
+        - url: 'https://example.com/in-use'
+`;
+
+const RECEIVER_DETAIL_CONFIG = `template_files: {}
+alertmanager_config: |
+  route:
+    receiver: 'detail receiver & team'
+  receivers:
+    - name: 'detail receiver & team'
+      email_configs:
+        - to: 'detail@example.com'
+          from: 'alerts@example.com'
+          smarthost: 'smtp.example.com:587'
+          hello: 'detail.example.com'
+          headers:
+            X-Environment: 'production'
+          tls_config:
+            server_name: 'smtp.detail.example.com'
+      pagerduty_configs:
+        - routing_key: 'detail-routing-key'
+          details:
+            environment: 'production'
           http_config:
-            bearer_token: 'token-before'
-            proxy_url: 'http://proxy-before.example.com:8080'
-            tls_config:
-              server_name: 'webex-before.example.com'
-              insecure_skip_verify: true
+            proxy_url: 'http://proxy.detail.example.com:8080'
+`;
+
+const TWO_WEBHOOKS_CONFIG = `template_files: {}
+alertmanager_config: |
+  route:
+    receiver: two-webhooks
+  receivers:
+    - name: two-webhooks
+      webhook_configs:
+        - url: 'https://example.com/first'
+          http_config:
+            proxy_url: 'http://first-proxy.example.com:8080'
+        - url: 'https://example.com/second'
+          http_config:
+            proxy_url: 'http://second-proxy.example.com:8080'
 `;
 
 /**
@@ -130,76 +165,56 @@ test.describe('Receivers', () => {
       await receiversPage.expectReceiverCount(1); // only the undeletable default remains
     });
 
-    test('creates a Webex receiver with all supported fields and persists them', async ({ receiversPage }) => {
-      await receiversPage.openCreateDrawer();
-      await receiversPage.fillName('webex-full-options');
-      const webex = await receiversPage.selectWebexIntegration(0);
-      await webex.fill({
-        apiUrl: 'https://webexapis.com/v1/messages',
-        roomId: 'room-create',
-        message: 'Created Webex message',
-        authorizationType: 'Bearer',
-        authorizationCredentials: 'token-create',
-        basicAuthUsername: 'conflicting-user',
-        proxyUrl: 'http://proxy-create.example.com:8080',
-        tlsServerName: 'webex-create.example.com',
-        tlsSkipVerify: true,
-      });
-      await expect(receiversPage.drawer.getByLabel('Credentials file')).toHaveCount(0);
-      await receiversPage.submitCreate();
+    test('blocks deleting a receiver used by a route', async ({ receiversPage, mimirAlertmanager }) => {
+      await mimirAlertmanager.seedConfig(IN_USE_RECEIVER_CONFIG);
+      await receiversPage.gotoWithAlertmanager(mimirAlertmanager.uid);
+      await receiversPage.openReceiverByName('in-use-receiver');
+
+      await expect(receiversPage.deleteButton).toBeDisabled();
+      await receiversPage.deleteButton.hover();
       await expect(
-        receiversPage.drawer.getByText('Authorization and basic authentication cannot be used together')
+        receiversPage.page.getByText('Cannot delete a receiver used by a route', { exact: true })
       ).toBeVisible();
-
-      await webex.fill({ basicAuthUsername: '' });
-      await receiversPage.submitCreate();
-      await expect(receiversPage.getRow('webex-full-options')).toBeVisible();
-
-      await receiversPage.openReceiverByName('webex-full-options');
-      await expect(receiversPage.getViewFieldValue('api_url')).toHaveText('https://webexapis.com/v1/messages');
-      await expect(receiversPage.getViewFieldValue('room_id')).toHaveText('room-create');
-      await expect(receiversPage.getViewFieldValue('message')).toHaveText('Created Webex message');
-      await expect(receiversPage.getViewFieldValue('type')).toHaveText('Bearer');
-      await expect(receiversPage.getViewFieldValue('credentials')).toHaveText(/^\*+$/);
-      await expect(receiversPage.drawer.getByText('bearer_token', { exact: true })).toHaveCount(0);
-      await expect(receiversPage.getViewFieldValue('proxy_url')).toHaveText('http://proxy-create.example.com:8080');
-      await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('webex-create.example.com');
-      await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('Yes');
+      await expect(receiversPage.confirmDeleteModal).toBeHidden();
     });
 
-    test('updates a Webex receiver with all supported fields', async ({ receiversPage, mimirAlertmanager }) => {
-      await mimirAlertmanager.seedConfig(WEBEX_FULL_BEFORE_CONFIG);
+    test('opens a receiver detail URL with special characters and complete integration fields', async ({
+      receiversPage,
+      mimirAlertmanager,
+    }) => {
+      await mimirAlertmanager.seedConfig(RECEIVER_DETAIL_CONFIG);
+      await receiversPage.gotoReceiverDetail(mimirAlertmanager.uid, 'detail receiver & team');
+
+      await expect(receiversPage.detailContainer.getByRole('textbox', { name: /^Name\b/ })).toHaveValue(
+        'detail receiver & team'
+      );
+      await expect(receiversPage.detailContainer.getByText('email', { exact: true })).toBeVisible();
+      await expect(receiversPage.detailContainer.getByText('pagerduty', { exact: true })).toBeVisible();
+      await expect(receiversPage.detailContainer.getByText('detail.example.com', { exact: true })).toBeVisible();
+      await expect(receiversPage.detailContainer.getByText('X-Environment', { exact: true })).toBeVisible();
+      await expect(receiversPage.detailContainer.getByText('smtp.detail.example.com', { exact: true })).toBeVisible();
+      await expect(receiversPage.detailContainer.getByText('environment', { exact: true })).toBeVisible();
+      await expect(
+        receiversPage.detailContainer.getByText('http://proxy.detail.example.com:8080', { exact: true })
+      ).toBeVisible();
+    });
+
+    test('keeps repeated integrations and their HTTP configurations distinguishable', async ({
+      receiversPage,
+      mimirAlertmanager,
+    }) => {
+      await mimirAlertmanager.seedConfig(TWO_WEBHOOKS_CONFIG);
       await receiversPage.gotoWithAlertmanager(mimirAlertmanager.uid);
+      await receiversPage.openReceiverByName('two-webhooks');
 
-      await receiversPage.openReceiverByName('webex-full-update');
-      await receiversPage.startEdit();
-      const editWebex = await receiversPage.selectWebexIntegration(0);
-      await expect(editWebex.authorizationTypeInput).toHaveValue('Bearer');
-      await expect(editWebex.authorizationCredentialsInput).toHaveValue('token-before');
-      await expect(editWebex.authorizationCredentialsInput).toHaveAttribute('type', 'password');
-      await editWebex.fill({
-        apiUrl: 'https://webexapis.com/v1/messages-after',
-        roomId: 'room-after',
-        message: 'After Webex message',
-        authorizationCredentials: 'token-after',
-        proxyUrl: 'http://proxy-after.example.com:9090',
-        tlsServerName: 'webex-after.example.com',
-        // Already checked in the seeded config — clicking again toggles it back off.
-        tlsSkipVerify: true,
-      });
-      await receiversPage.submitUpdate();
-      await expect(receiversPage.drawer).toBeHidden();
-
-      await receiversPage.openReceiverByName('webex-full-update');
-      await expect(receiversPage.getViewFieldValue('api_url')).toHaveText('https://webexapis.com/v1/messages-after');
-      await expect(receiversPage.getViewFieldValue('room_id')).toHaveText('room-after');
-      await expect(receiversPage.getViewFieldValue('message')).toHaveText('After Webex message');
-      await expect(receiversPage.getViewFieldValue('type')).toHaveText('Bearer');
-      await expect(receiversPage.getViewFieldValue('credentials')).toHaveText(/^\*+$/);
-      await expect(receiversPage.drawer.getByText('bearer_token', { exact: true })).toHaveCount(0);
-      await expect(receiversPage.getViewFieldValue('proxy_url')).toHaveText('http://proxy-after.example.com:9090');
-      await expect(receiversPage.getViewFieldValue('server_name')).toHaveText('webex-after.example.com');
-      await expect(receiversPage.getViewFieldValue('insecure_skip_verify')).toHaveText('No');
+      await expect(receiversPage.drawer.getByText('webhook', { exact: true })).toHaveCount(2);
+      await expect(receiversPage.drawer.getByText('HTTP Configuration', { exact: true })).toHaveCount(2);
+      await expect(
+        receiversPage.drawer.getByText('http://first-proxy.example.com:8080', { exact: true })
+      ).toBeVisible();
+      await expect(
+        receiversPage.drawer.getByText('http://second-proxy.example.com:8080', { exact: true })
+      ).toBeVisible();
     });
 
     test('creates a receiver with two integrations', async ({ receiversPage }) => {

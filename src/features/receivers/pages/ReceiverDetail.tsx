@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import React, { useEffect } from 'react';
+import React, { useEffect, useId } from 'react';
 import { useParams } from 'react-router-dom';
 import Skeleton from 'react-loading-skeleton';
 
@@ -19,6 +19,7 @@ function ReceiverDetail() {
   const { name } = useParams<{ name: string }>();
   const [triggerFetch, { receivers = [], isLoading, error }] = useReceivers();
   const styles = useStyles2(getStyles);
+  const receiverNameInputId = useId();
 
   useEffect(() => {
     triggerFetch();
@@ -52,10 +53,11 @@ function ReceiverDetail() {
           <Stack direction="column" gap={2}>
             <Field
               noMargin
+              htmlFor={receiverNameInputId}
               label={t('receivers.detail.name', 'Name')}
               description={t('receivers.detail.name-desc', 'Name of the contact point')}
             >
-              <Input value={receiver.name} disabled width={39} />
+              <Input id={receiverNameInputId} value={receiver.name} disabled width={39} />
             </Field>
 
             <ReceiverIntegrations receiver={receiver} />
