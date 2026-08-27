@@ -2,18 +2,19 @@ import React, { memo, useMemo } from 'react';
 
 import { skipToken } from '@reduxjs/toolkit/query';
 
+import { getMatchingRulerRule, RulePositionHash } from '@grafana/external-rules/matching';
+
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
 import { rulerApi } from '../../../api/rules/ruler.endpoints';
 import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
-
-const { useGetRuleGroupQuery } = rulerApi;
-import { getMatchingRulerRule, RulePositionHash } from '@grafana/external-rules/matching';
 
 import { RuleExporter } from '../export';
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 import { RuleActionsButtons } from './components/RuleActionsButtons';
 import { SkeletonListItem } from './components/ListItem';
 import { useRuleActions } from './hooks/useRuleActions';
+
+const { useGetAllRulesQuery } = rulerApi;
 
 interface DataSourceRuleLoaderProps {
   rule: Rule;
@@ -27,8 +28,7 @@ interface DataSourceRuleLoaderProps {
  * 2. Determining which actions are available based on feature support
  * 3. Rendering the rule list item with appropriate actions
  *
- * This component follows the original Grafana pattern where each rule independently
- * loads what it needs, and RTK Query automatically deduplicates requests.
+ * All instances for a data source share one RTK Query cache entry for its Ruler configuration.
  */
 export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
   rule,
@@ -44,32 +44,24 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
 
   const rulerApiEnabled = dsFeatures?.rulerApiEnabled || false;
 
-  // Fetch ruler rule group if Ruler API is supported
-  // Skip the query if Ruler API is not enabled
-  const { data: rulerRuleGroup, isLoading: isLoadingRulerGroup } = useGetRuleGroupQuery(
-    rulerApiEnabled
-      ? {
-          dataSourceUid: rulesSource.uid,
-          namespace: namespace.name,
-          groupName,
-        }
-      : skipToken
+  const { data: rulerRules, isLoading: isLoadingRulerRules } = useGetAllRulesQuery(
+    rulerApiEnabled ? { dataSourceUid: rulesSource.uid } : skipToken
   );
 
-  // Match the prometheus rule with its corresponding ruler rule
   const rulerRule = useMemo(() => {
-    if (!rulerRuleGroup || !rulerApiEnabled) {
+    if (!rulerRules || !rulerApiEnabled) {
       return undefined;
     }
 
-    return getMatchingRulerRule(rulerRuleGroup.rules, rule, rulePositionHash);
-  }, [rulerRuleGroup, rule, rulerApiEnabled, rulePositionHash]);
+    const rulerRuleGroup = rulerRules[namespace.name]?.find((group) => group.name === groupName);
+    return rulerRuleGroup ? getMatchingRulerRule(rulerRuleGroup.rules, rule, rulePositionHash) : undefined;
+  }, [groupName, namespace.name, rulerApiEnabled, rulerRules, rule, rulePositionHash]);
 
   const { handleDuplicate, handleSilence, handleDelete, handleExport, deleteModal, exportingRule, closeExportDrawer } =
     useRuleActions();
 
   const actions = useMemo(() => {
-    if (featuresLoading || isLoadingRulerGroup) {
+    if (featuresLoading || isLoadingRulerRules) {
       return null; // Show no actions while loading
     }
 
@@ -93,7 +85,7 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
     );
   }, [
     featuresLoading,
-    isLoadingRulerGroup,
+    isLoadingRulerRules,
     rulerRule,
     rule,
     groupIdentifier,
@@ -104,7 +96,7 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
     handleExport,
   ]);
 
-  if (featuresLoading || isLoadingRulerGroup) {
+  if (featuresLoading || isLoadingRulerRules) {
     return <SkeletonListItem />;
   }
 

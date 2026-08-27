@@ -31,6 +31,8 @@ interface GetAllRulesParams {
   dataSourceUid: string;
 }
 
+const RULER_RULE_GROUP_TAG = 'RulerRuleGroup';
+
 function rulerBackend(dataSourceUid: string): RulerBackend {
   return getFlavorOrThrow(dataSourceUid).createRulerBackend(flavorContext(dataSourceUid));
 }
@@ -84,7 +86,15 @@ export const rulerApi = createApi({
     }),
     getAllRules: build.query<RulerRulesConfigDTO, GetAllRulesParams>({
       queryFn: ({ dataSourceUid }) => run(() => rulerBackend(dataSourceUid).getAllRules()),
-      providesTags: ['RulerRuleGroup'],
+      providesTags: (result, _error, { dataSourceUid }) =>
+        result
+          ? Object.entries(result).flatMap(([namespace, groups]) =>
+              groups.map(({ name: groupName }) => ({
+                type: RULER_RULE_GROUP_TAG,
+                id: `${dataSourceUid}/${namespace}/${groupName}`,
+              }))
+            )
+          : [],
       responseSchema: RulerRulesConfigDTOSchema,
     }),
   }),
