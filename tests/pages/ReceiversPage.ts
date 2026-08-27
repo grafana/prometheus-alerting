@@ -2,6 +2,7 @@ import { Locator, expect } from '@playwright/test';
 import { AlertmanagerPage } from './AlertmanagerPage';
 import { DiscordIntegrationForm } from './receivers/DiscordIntegrationForm';
 import { EmailIntegrationForm } from './receivers/EmailIntegrationForm';
+import { JiraIntegrationForm } from './receivers/JiraIntegrationForm';
 import { PagerDutyIntegrationForm } from './receivers/PagerDutyIntegrationForm';
 import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
 import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
@@ -188,6 +189,11 @@ export class ReceiversPage extends AlertmanagerPage {
   async selectWebhookIntegration(index: number): Promise<WebhookIntegrationForm> {
     await this.selectIntegrationType(index, 'Webhook');
     return new WebhookIntegrationForm(this.drawer);
+  }
+
+  async selectJiraIntegration(index: number): Promise<JiraIntegrationForm> {
+    await this.selectIntegrationType(index, 'Jira');
+    return new JiraIntegrationForm(this.drawer);
   }
 
   async selectPagerDutyIntegration(index: number): Promise<PagerDutyIntegrationForm> {
