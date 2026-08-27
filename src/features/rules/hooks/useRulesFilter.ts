@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 
 import { useURLSearchParams } from '../../../hooks/useURLSearchParams';
-import { RulesFilter, applySearchFilterToQuery, parseRulesSearchQuery } from '../search/rulesSearchParser';
+import { RulesFilter, applySearchFilterToQuery, getSearchFilterFromQuery } from '../search/rulesSearchParser';
 
 /**
  * Hook to manage rules filter state from URL query parameters
@@ -11,8 +11,9 @@ export function useRulesFilter() {
   const [queryParams, updateQueryParams] = useURLSearchParams();
   const searchQuery = queryParams.get('search') ?? '';
 
-  const { filter: filterState, filterOrder } = useMemo(() => {
-    return parseRulesSearchQuery(searchQuery);
+  // Parse the search query into a filter object
+  const filterState = useMemo<RulesFilter>(() => {
+    return getSearchFilterFromQuery(searchQuery);
   }, [searchQuery]);
 
   // Check if any filters are active
@@ -31,10 +32,10 @@ export function useRulesFilter() {
   // Update filters (converts filter object to search query and updates URL)
   const updateFilters = useCallback(
     (newFilter: RulesFilter) => {
-      const newSearchQuery = applySearchFilterToQuery(filterOrder, newFilter);
+      const newSearchQuery = applySearchFilterToQuery(searchQuery, newFilter);
       updateQueryParams({ search: newSearchQuery });
     },
-    [filterOrder, updateQueryParams]
+    [searchQuery, updateQueryParams]
   );
 
   // Directly set the search query string

@@ -138,6 +138,19 @@ test.describe('Rules List Filtering - E2E', () => {
 
       await expect.poll(() => rulesListPage.getSearchQueryFromUrl()).toBe('state:firing namespace:staging');
     });
+
+    test('preserves unstructured free-text position when a sidebar value changes', async ({ rulesListPage, page }) => {
+      await page.goto(
+        `/a/${pluginJson.id}/rules?search=${encodeURIComponent('HighErrorRate state:firing namespace:production')}`
+      );
+      await rulesListPage.waitForLoad();
+
+      await rulesListPage.namespaceInput.fill('staging');
+
+      await expect
+        .poll(() => rulesListPage.getSearchQueryFromUrl())
+        .toBe('HighErrorRate state:firing namespace:staging');
+    });
   });
 
   test.describe('URL Persistence', () => {
@@ -169,6 +182,15 @@ test.describe('Rules List Filtering - Integration', () => {
     await rulesListPage.filterByNamespace('e2e-test-namespace');
     const ruleCount = await rulesListPage.getRuleCount();
     expect(ruleCount).toBeGreaterThan(0);
+  });
+
+  test('should use free text as a rule name substring filter', async ({ rulesListPage }) => {
+    await rulesListPage.search('ErrorRate');
+
+    await expect(rulesListPage.ruleNameInput).toHaveValue('ErrorRate');
+    await expect(rulesListPage.getRuleRows('HighErrorRate').first()).toBeVisible();
+    await expect(rulesListPage.getRuleRows('test:request_rate:sum')).toHaveCount(0);
+    expect(await rulesListPage.getSearchQueryFromUrl()).toBe('ErrorRate');
   });
 
   test('should show "no rules found" when filter matches nothing', async ({ rulesListPage }) => {

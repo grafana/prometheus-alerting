@@ -1,33 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import { applySearchFilterToQuery, parseRulesSearchQuery } from './rulesSearchParser';
+import { applySearchFilterToQuery, getSearchFilterFromQuery } from './rulesSearchParser';
 
-describe('parseRulesSearchQuery', () => {
+describe('getSearchFilterFromQuery', () => {
   it('uses free text as a rule name filter', () => {
-    expect(parseRulesSearchQuery('HighErrorRate')).toEqual({
-      filter: { ruleName: 'HighErrorRate' },
-      filterOrder: ['rule'],
-    });
+    expect(getSearchFilterFromQuery('HighErrorRate')).toEqual({ ruleName: 'HighErrorRate' });
   });
 
-  it('combines free text with structured filters in their original order', () => {
-    expect(parseRulesSearchQuery('HighErrorRate state:firing label:team=platform')).toEqual({
-      filter: {
-        ruleName: 'HighErrorRate',
-        ruleState: 'firing',
-        labels: ['team=platform'],
-      },
-      filterOrder: ['rule', 'state', 'label'],
-    });
-  });
-
-  it('retains repeated filters in their original order', () => {
-    expect(parseRulesSearchQuery('label:team=frontend state:firing label:severity=critical')).toEqual({
-      filter: {
-        ruleState: 'firing',
-        labels: ['team=frontend', 'severity=critical'],
-      },
-      filterOrder: ['label', 'state', 'label'],
+  it('combines free text with structured filters', () => {
+    expect(getSearchFilterFromQuery('HighErrorRate state:firing label:team=platform')).toEqual({
+      ruleName: 'HighErrorRate',
+      ruleState: 'firing',
+      labels: ['team=platform'],
     });
   });
 });
@@ -35,7 +19,7 @@ describe('parseRulesSearchQuery', () => {
 describe('applySearchFilterToQuery', () => {
   it('serializes new filters in canonical order', () => {
     expect(
-      applySearchFilterToQuery([], {
+      applySearchFilterToQuery('', {
         dataSourceNames: ['prometheus', 'mimir'],
         namespace: 'production',
         groupName: 'api alerts',
@@ -51,7 +35,7 @@ describe('applySearchFilterToQuery', () => {
 
   it('retains the original filter order when values change', () => {
     expect(
-      applySearchFilterToQuery(['state', 'namespace', 'rule'], {
+      applySearchFilterToQuery('state:firing namespace:production rule:HighErrorRate', {
         namespace: 'staging',
         ruleName: 'HighLatency',
         ruleState: 'pending',
@@ -61,16 +45,26 @@ describe('applySearchFilterToQuery', () => {
 
   it('retains the positions of repeated filters', () => {
     expect(
-      applySearchFilterToQuery(['label', 'datasource', 'label'], {
+      applySearchFilterToQuery('label:team=frontend datasource:prometheus label:severity=critical', {
         dataSourceNames: ['mimir'],
         labels: ['team=platform', 'severity=warning'],
       })
     ).toBe('label:team=platform datasource:mimir label:severity=warning');
   });
 
+  it('retains the position of an unstructured rule name', () => {
+    expect(
+      applySearchFilterToQuery('HighErrorRate state:firing namespace:production', {
+        namespace: 'staging',
+        ruleName: 'HighErrorRate',
+        ruleState: 'firing',
+      })
+    ).toBe('HighErrorRate state:firing namespace:staging');
+  });
+
   it('removes cleared filters', () => {
     expect(
-      applySearchFilterToQuery(['state', 'namespace'], {
+      applySearchFilterToQuery('state:firing namespace:production', {
         ruleState: 'normal',
       })
     ).toBe('state:normal');
@@ -78,7 +72,7 @@ describe('applySearchFilterToQuery', () => {
 
   it('appends new filters after existing filters', () => {
     expect(
-      applySearchFilterToQuery(['state'], {
+      applySearchFilterToQuery('state:firing', {
         groupName: 'api alerts',
         ruleState: 'normal',
       })
