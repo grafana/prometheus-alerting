@@ -821,7 +821,6 @@
       "pushover-max-tls-version": "Maximum TLS version",
       "pushover-message": "Message",
       "pushover-min-tls-version": "Minimum TLS version",
-      "pushover-monospace": "Use monospace formatting",
       "pushover-no-proxy": "No proxy",
       "pushover-priority": "Priority",
       "pushover-priority-invalid": "Priority must be between -2 and 2",

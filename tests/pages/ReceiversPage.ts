@@ -6,6 +6,7 @@ import { JiraIntegrationForm } from './receivers/JiraIntegrationForm';
 import { MSTeamsIntegrationForm } from './receivers/MSTeamsIntegrationForm';
 import { OpsgenieIntegrationForm } from './receivers/OpsgenieIntegrationForm';
 import { PagerDutyIntegrationForm } from './receivers/PagerDutyIntegrationForm';
+import { PushoverIntegrationForm } from './receivers/PushoverIntegrationForm';
 import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
 import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 import { WebexIntegrationForm } from './receivers/WebexIntegrationForm';
@@ -211,6 +212,11 @@ export class ReceiversPage extends AlertmanagerPage {
   async selectPagerDutyIntegration(index: number): Promise<PagerDutyIntegrationForm> {
     await this.selectIntegrationType(index, 'PagerDuty');
     return new PagerDutyIntegrationForm(this.drawer);
+  }
+
+  async selectPushoverIntegration(index: number): Promise<PushoverIntegrationForm> {
+    await this.selectIntegrationType(index, 'Pushover');
+    return new PushoverIntegrationForm(this.drawer);
   }
 
   /**

@@ -41,7 +41,6 @@ export function createPushoverSettingsFormSchema(validateForSubmission = true) {
       expire: z.string().optional(),
       ttl: createDurationSchema(),
       html: z.boolean().optional(),
-      monospace: z.boolean().optional(),
       http_config: createHttpConfigFormSchema().optional(),
     })
     .superRefine((settings, ctx) => {
