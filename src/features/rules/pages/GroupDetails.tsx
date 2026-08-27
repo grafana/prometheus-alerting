@@ -170,7 +170,13 @@ function GroupDetails() {
         { label: t('alerting.group-details.namespace', 'Namespace'), value: namespace },
         { label: t('alerting.group-details.interval', 'Interval'), value: groupInterval },
       ]}
-      actions={<GroupDetailsActions editLink={editPageLink} dataSourceUid={dataSourceUid} />}
+      actions={
+        <GroupDetailsActions
+          editLink={editPageLink}
+          dataSourceUid={dataSourceUid}
+          rulerGroup={rulerGroup ?? undefined}
+        />
+      }
     >
       <Stack direction="column" gap={2}>
         {/* Consistency check warning */}

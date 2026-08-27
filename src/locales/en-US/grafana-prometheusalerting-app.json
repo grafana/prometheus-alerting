@@ -129,6 +129,8 @@
       "delete-confirm": "Delete",
       "delete-title": "Delete rule group",
       "error": "Error loading group",
+      "group-federated": "This group is federated",
+      "group-federated-description": "Federated rule groups read data from several tenants, which this editor cannot express. Edit the group through the Ruler API instead.",
       "interval-description": "How often the rules in this group are evaluated",
       "interval-label": "Evaluation interval",
       "loading": "Loading group...",
