@@ -108,20 +108,21 @@ export function AlertRuleListItem({
     </Stack>
   );
 
-  const description = (
-    <>
-      {summary && (
-        <Text variant="bodySmall" color="secondary">
-          {summary}
-        </Text>
-      )}
-      {error && (
-        <Text variant="bodySmall" color="error">
-          <Trans i18nKey="rules.list-item.error">Error:</Trans> {error}
-        </Text>
-      )}
-    </>
-  );
+  const description =
+    summary || error ? (
+      <Stack direction="column" gap={0}>
+        {summary && (
+          <Text variant="bodySmall" color="secondary">
+            {summary}
+          </Text>
+        )}
+        {error && (
+          <Text variant="bodySmall" color="error">
+            <Trans i18nKey="rules.list-item.error">Error:</Trans> {error}
+          </Text>
+        )}
+      </Stack>
+    ) : undefined;
 
   return (
     <ListItem
@@ -183,9 +184,11 @@ export function RecordingRuleListItem({
   );
 
   const description = error ? (
-    <Text variant="bodySmall" color="error">
-      <Trans i18nKey="rules.list-item.error">Error:</Trans> {error}
-    </Text>
+    <Stack direction="column" gap={0}>
+      <Text variant="bodySmall" color="error">
+        <Trans i18nKey="rules.list-item.error">Error:</Trans> {error}
+      </Text>
+    </Stack>
   ) : undefined;
 
   return (
