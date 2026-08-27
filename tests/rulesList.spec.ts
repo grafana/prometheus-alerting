@@ -129,28 +129,6 @@ test.describe('Rules List Filtering - E2E', () => {
       expect(searchQuery).toContain('group:alerts');
       expect(searchQuery).toContain('rule:Error');
     });
-
-    test('preserves filter order when a sidebar value changes', async ({ rulesListPage, page }) => {
-      await page.goto(`/a/${pluginJson.id}/rules?search=${encodeURIComponent('state:firing namespace:production')}`);
-      await rulesListPage.waitForLoad();
-
-      await rulesListPage.namespaceInput.fill('staging');
-
-      await expect.poll(() => rulesListPage.getSearchQueryFromUrl()).toBe('state:firing namespace:staging');
-    });
-
-    test('preserves unstructured free-text position when a sidebar value changes', async ({ rulesListPage, page }) => {
-      await page.goto(
-        `/a/${pluginJson.id}/rules?search=${encodeURIComponent('HighErrorRate state:firing namespace:production')}`
-      );
-      await rulesListPage.waitForLoad();
-
-      await rulesListPage.namespaceInput.fill('staging');
-
-      await expect
-        .poll(() => rulesListPage.getSearchQueryFromUrl())
-        .toBe('HighErrorRate state:firing namespace:staging');
-    });
   });
 
   test.describe('URL Persistence', () => {

@@ -23,8 +23,6 @@ const FILTER_PATTERNS = {
   label: /label:(?:"([^"]*)"|(\S+))/gi,
 };
 
-type RulesFilterName = keyof typeof FILTER_PATTERNS;
-
 function formatValue(value: string): string {
   return /\s/.test(value) ? `"${value}"` : value;
 }
@@ -103,83 +101,39 @@ export function getSearchFilterFromQuery(query: string): RulesFilter {
   return filter;
 }
 
-function isRulesFilterName(value: string): value is RulesFilterName {
-  return value in FILTER_PATTERNS;
-}
-
-interface QueryLayoutSlot {
-  filterName: RulesFilterName;
-  index: number;
-  isFreeTextRule: boolean;
-}
-
-interface FilterToken {
-  structured: string;
-  freeText?: string;
-}
-
-type FilterTokens = Record<RulesFilterName, FilterToken[]>;
-
-function maskFilterMatch(query: string, index: number, length: number): string {
-  return `${query.slice(0, index)}${' '.repeat(length)}${query.slice(index + length)}`;
-}
-
-function getQueryLayout(query: string): QueryLayoutSlot[] {
-  const layout: QueryLayoutSlot[] = [];
-  let queryWithoutFilters = query;
-
-  for (const [filterName, pattern] of Object.entries(FILTER_PATTERNS)) {
-    if (!isRulesFilterName(filterName)) {
-      continue;
-    }
-
-    for (const match of query.matchAll(new RegExp(pattern))) {
-      layout.push({ filterName, index: match.index, isFreeTextRule: false });
-      queryWithoutFilters = maskFilterMatch(queryWithoutFilters, match.index, match[0].length);
-    }
-  }
-
-  const freeTextIndex = queryWithoutFilters.search(/\S/);
-  const hasRuleFilter = layout.some(({ filterName }) => filterName === 'rule');
-  if (freeTextIndex >= 0 && !hasRuleFilter) {
-    layout.push({ filterName: 'rule', index: freeTextIndex, isFreeTextRule: true });
-  }
-
-  return layout.sort((left, right) => left.index - right.index);
-}
-
-function buildFilterTokens(filter: RulesFilter): FilterTokens {
-  return {
-    datasource: filter.dataSourceNames?.map((value) => ({ structured: `datasource:${formatValue(value)}` })) ?? [],
-    namespace: filter.namespace ? [{ structured: `namespace:${formatValue(filter.namespace)}` }] : [],
-    group: filter.groupName ? [{ structured: `group:${formatValue(filter.groupName)}` }] : [],
-    rule: filter.ruleName ? [{ structured: `rule:${formatValue(filter.ruleName)}`, freeText: filter.ruleName }] : [],
-    state: filter.ruleState ? [{ structured: `state:${filter.ruleState}` }] : [],
-    type: filter.ruleType ? [{ structured: `type:${filter.ruleType}` }] : [],
-    label: filter.labels?.map((value) => ({ structured: `label:${formatValue(value)}` })) ?? [],
-  };
-}
-
-function applyQueryLayout(layout: QueryLayoutSlot[], tokensByFilter: FilterTokens): string {
+/**
+ * Convert a RulesFilter object back to a search query string.
+ */
+export function applySearchFilterToQuery(filter: RulesFilter): string {
   const parts: string[] = [];
 
-  for (const { filterName, isFreeTextRule } of layout) {
-    const token = tokensByFilter[filterName].shift();
-    if (token) {
-      parts.push(isFreeTextRule && token.freeText !== undefined ? token.freeText : token.structured);
-    }
+  filter.dataSourceNames?.forEach((dataSourceName) => {
+    parts.push(`datasource:${formatValue(dataSourceName)}`);
+  });
+
+  if (filter.namespace) {
+    parts.push(`namespace:${formatValue(filter.namespace)}`);
   }
 
-  for (const tokens of Object.values(tokensByFilter)) {
-    parts.push(...tokens.map(({ structured }) => structured));
+  if (filter.groupName) {
+    parts.push(`group:${formatValue(filter.groupName)}`);
   }
+
+  if (filter.ruleName) {
+    parts.push(`rule:${formatValue(filter.ruleName)}`);
+  }
+
+  if (filter.ruleState) {
+    parts.push(`state:${filter.ruleState}`);
+  }
+
+  if (filter.ruleType) {
+    parts.push(`type:${filter.ruleType}`);
+  }
+
+  filter.labels?.forEach((label) => {
+    parts.push(`label:${formatValue(label)}`);
+  });
 
   return parts.join(' ');
-}
-
-/**
- * Convert a RulesFilter object back to a search query string while retaining the order of existing filters.
- */
-export function applySearchFilterToQuery(query: string, filter: RulesFilter): string {
-  return applyQueryLayout(getQueryLayout(query), buildFilterTokens(filter));
 }
