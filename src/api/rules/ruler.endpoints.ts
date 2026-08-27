@@ -31,8 +31,6 @@ interface GetAllRulesParams {
   dataSourceUid: string;
 }
 
-const RULER_RULE_GROUP_TAG = 'RulerRuleGroup';
-
 function rulerBackend(dataSourceUid: string): RulerBackend {
   return getFlavorOrThrow(dataSourceUid).createRulerBackend(flavorContext(dataSourceUid));
 }
@@ -74,6 +72,7 @@ export const rulerApi = createApi({
       queryFn: ({ dataSourceUid, namespace, groupName }) =>
         run(() => rulerBackend(dataSourceUid).deleteRuleGroup(namespace, groupName)),
       invalidatesTags: (_result, _error, { dataSourceUid, namespace, groupName }) => [
+        { type: 'RulerRuleGroup', id: dataSourceUid },
         { type: 'RulerRuleGroup', id: `${dataSourceUid}/${namespace}/${groupName}` },
       ],
     }),
@@ -81,20 +80,13 @@ export const rulerApi = createApi({
       queryFn: ({ dataSourceUid, namespace, payload }) =>
         run(() => rulerBackend(dataSourceUid).upsertRuleGroup(namespace, payload)),
       invalidatesTags: (_result, _error, { dataSourceUid, namespace, payload }) => [
+        { type: 'RulerRuleGroup', id: dataSourceUid },
         { type: 'RulerRuleGroup', id: `${dataSourceUid}/${namespace}/${payload.name}` },
       ],
     }),
     getAllRules: build.query<RulerRulesConfigDTO, GetAllRulesParams>({
       queryFn: ({ dataSourceUid }) => run(() => rulerBackend(dataSourceUid).getAllRules()),
-      providesTags: (result, _error, { dataSourceUid }) =>
-        result
-          ? Object.entries(result).flatMap(([namespace, groups]) =>
-              groups.map(({ name: groupName }) => ({
-                type: RULER_RULE_GROUP_TAG,
-                id: `${dataSourceUid}/${namespace}/${groupName}`,
-              }))
-            )
-          : [],
+      providesTags: (_result, _error, { dataSourceUid }) => [{ type: 'RulerRuleGroup', id: dataSourceUid }],
       responseSchema: RulerRulesConfigDTOSchema,
     }),
   }),
