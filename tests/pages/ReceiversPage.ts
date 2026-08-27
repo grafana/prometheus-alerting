@@ -11,6 +11,7 @@ import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
 import { SNSIntegrationForm } from './receivers/SNSIntegrationForm';
 import { TelegramIntegrationForm } from './receivers/TelegramIntegrationForm';
 import { VictorOpsIntegrationForm } from './receivers/VictorOpsIntegrationForm';
+import { WeChatIntegrationForm } from './receivers/WeChatIntegrationForm';
 import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 import { WebexIntegrationForm } from './receivers/WebexIntegrationForm';
 
@@ -245,6 +246,11 @@ export class ReceiversPage extends AlertmanagerPage {
   async selectSlackIntegration(index: number): Promise<SlackIntegrationForm> {
     await this.selectIntegrationType(index, 'Slack');
     return new SlackIntegrationForm(this.drawer);
+  }
+
+  async selectWeChatIntegration(index: number): Promise<WeChatIntegrationForm> {
+    await this.selectIntegrationType(index, 'WeChat');
+    return new WeChatIntegrationForm(this.page, this.drawer);
   }
 
   async selectWebexIntegration(index: number): Promise<WebexIntegrationForm> {
