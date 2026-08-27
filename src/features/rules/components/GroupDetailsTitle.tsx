@@ -5,11 +5,15 @@ import { LinkButton, Stack, Text } from '@grafana/ui';
 
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
+import { FederatedGroupBadge } from './FederatedGroupBadge';
+
 interface GroupDetailsTitleProps {
   name: string;
+  /** Set when the group reads data from other tenants, which gets it a badge. */
+  sourceTenants?: string[];
 }
 
-export function GroupDetailsTitle({ name }: GroupDetailsTitleProps) {
+export function GroupDetailsTitle({ name, sourceTenants }: GroupDetailsTitleProps) {
   const returnTo = `${PLUGIN_BASE_URL}/${ROUTES.Rules}`;
 
   return (
@@ -23,6 +27,7 @@ export function GroupDetailsTitle({ name }: GroupDetailsTitleProps) {
       <Text element="h1" truncate>
         {name}
       </Text>
+      {sourceTenants && <FederatedGroupBadge sourceTenants={sourceTenants} />}
     </Stack>
   );
 }

@@ -91,6 +91,11 @@
       "select-datasource": "Select a data source",
       "select-datasource-message": "Please select a data source above to load the query editor."
     },
+    "federated-group-badge": {
+      "text": "Federated",
+      "tooltip": "This group reads data from other tenants. Edit it through the Ruler API.",
+      "tooltip-tenants": "This group reads data from {{tenants}}. Edit it through the Ruler API."
+    },
     "filter-view-results": {
       "aria-label-filteredrulelist": "filtered-rule-list"
     },
