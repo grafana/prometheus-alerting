@@ -10,6 +10,7 @@ import { PushoverIntegrationForm } from './receivers/PushoverIntegrationForm';
 import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
 import { SNSIntegrationForm } from './receivers/SNSIntegrationForm';
 import { TelegramIntegrationForm } from './receivers/TelegramIntegrationForm';
+import { VictorOpsIntegrationForm } from './receivers/VictorOpsIntegrationForm';
 import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 import { WebexIntegrationForm } from './receivers/WebexIntegrationForm';
 
@@ -229,6 +230,11 @@ export class ReceiversPage extends AlertmanagerPage {
   async selectTelegramIntegration(index: number): Promise<TelegramIntegrationForm> {
     await this.selectIntegrationType(index, 'Telegram');
     return new TelegramIntegrationForm(this.page, this.drawer);
+  }
+
+  async selectVictorOpsIntegration(index: number): Promise<VictorOpsIntegrationForm> {
+    await this.selectIntegrationType(index, 'VictorOps');
+    return new VictorOpsIntegrationForm(this.drawer);
   }
 
   /**
