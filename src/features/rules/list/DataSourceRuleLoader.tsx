@@ -9,7 +9,6 @@ import { DataSourceRuleGroupIdentifier, Rule } from '../../../types/rules';
 const { useGetRuleGroupQuery } = rulerApi;
 import { getMatchingRulerRule, RulePositionHash } from '@grafana/external-rules/matching';
 
-import { RuleExporter } from '../export';
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 import { RuleActionsButtons } from './components/RuleActionsButtons';
 import { SkeletonListItem } from './components/ListItem';
@@ -65,8 +64,7 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
     return getMatchingRulerRule(rulerRuleGroup.rules, rule, rulePositionHash);
   }, [rulerRuleGroup, rule, rulerApiEnabled, rulePositionHash]);
 
-  const { handleDuplicate, handleSilence, handleDelete, handleExport, deleteModal, exportingRule, closeExportDrawer } =
-    useRuleActions();
+  const { handleDuplicate, handleSilence, handleDelete, deleteModal } = useRuleActions();
 
   const actions = useMemo(() => {
     if (featuresLoading || isLoadingRulerGroup) {
@@ -87,7 +85,6 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
         onDelete={handleDelete}
         onDuplicate={handleDuplicate}
         onSilence={handleSilence}
-        onExport={handleExport}
         compact
       />
     );
@@ -101,7 +98,6 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
     handleDelete,
     handleDuplicate,
     handleSilence,
-    handleExport,
   ]);
 
   if (featuresLoading || isLoadingRulerGroup) {
@@ -119,7 +115,6 @@ export const DataSourceRuleLoader = memo(function DataSourceRuleLoader({
         showLocation={true}
       />
       {deleteModal}
-      {exportingRule && <RuleExporter rule={exportingRule} onClose={closeExportDrawer} />}
     </>
   );
 });
