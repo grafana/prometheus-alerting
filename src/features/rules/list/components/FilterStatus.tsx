@@ -30,7 +30,7 @@ export function FilterStatus({ state, numberOfRules, onCancel }: FilterStatusPro
           )}
           {/* search is in progress */}
           {state === 'searching' && (
-            <Trans i18nKey="alerting.rule-list.filter-view.results-loading">Searching for rules…</Trans>
+            <Trans i18nKey="alerting.rule-list.filter-view.results-loading">Searching for rules...</Trans>
           )}
         </Text>
       </Card.Heading>

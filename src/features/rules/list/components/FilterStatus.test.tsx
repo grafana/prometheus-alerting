@@ -8,7 +8,7 @@ describe('FilterStatus', () => {
   it('does not report a result count while searching', () => {
     render(<FilterStatus state="searching" numberOfRules={0} onCancel={vi.fn()} />);
 
-    expect(screen.getByText('Searching for rules…')).toBeInTheDocument();
+    expect(screen.getByText('Searching for rules...')).toBeInTheDocument();
     expect(screen.queryByText(/found 0 rules/i)).not.toBeInTheDocument();
   });
 
