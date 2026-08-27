@@ -1,5 +1,6 @@
 import { Locator, expect } from '@playwright/test';
 import { AlertmanagerPage } from './AlertmanagerPage';
+import { DiscordIntegrationForm } from './receivers/DiscordIntegrationForm';
 import { EmailIntegrationForm } from './receivers/EmailIntegrationForm';
 import { PagerDutyIntegrationForm } from './receivers/PagerDutyIntegrationForm';
 import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
@@ -160,6 +161,11 @@ export class ReceiversPage extends AlertmanagerPage {
       await combobox.fill(label);
     }
     await option.click();
+  }
+
+  async selectDiscordIntegration(index: number): Promise<DiscordIntegrationForm> {
+    await this.selectIntegrationType(index, 'Discord');
+    return new DiscordIntegrationForm(this.drawer);
   }
 
   /**
