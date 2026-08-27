@@ -34,6 +34,7 @@ export class EmailIntegrationForm {
   readonly textInput: Locator;
   readonly tlsServerNameInput: Locator;
   readonly tlsSkipVerifyCheckbox: Locator;
+  readonly addHeaderButton: Locator;
 
   constructor(scope: Locator) {
     this.toInput = scope.getByLabel('To', { exact: true });
@@ -45,8 +46,15 @@ export class EmailIntegrationForm {
     this.requireTlsCheckbox = scope.getByLabel('Require TLS', { exact: true });
     this.htmlInput = scope.getByLabel('Email HTML body', { exact: true });
     this.textInput = scope.getByLabel('Email text body', { exact: true });
-    this.tlsServerNameInput = scope.getByLabel('Server name', { exact: true });
-    this.tlsSkipVerifyCheckbox = scope.getByLabel('Skip verify', { exact: true });
+    this.tlsServerNameInput = scope.getByLabel('TLS server name', { exact: true });
+    this.tlsSkipVerifyCheckbox = scope.getByLabel('Skip TLS certificate verification', { exact: true });
+    this.addHeaderButton = scope.getByRole('button', { name: 'Add header', exact: true });
+  }
+
+  async addHeader(key: string, value: string) {
+    await this.addHeaderButton.click();
+    await this.addHeaderButton.locator('xpath=preceding::input[@aria-label="Header key"][1]').fill(key);
+    await this.addHeaderButton.locator('xpath=preceding::input[@aria-label="Header value"][1]').fill(value);
   }
 
   /** Fill any subset of the email's top-level and `tls_config` fields. */

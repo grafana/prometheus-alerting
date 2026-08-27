@@ -1,6 +1,7 @@
 import { Locator, expect } from '@playwright/test';
 import { AlertmanagerPage } from './AlertmanagerPage';
 import { EmailIntegrationForm } from './receivers/EmailIntegrationForm';
+import { PagerDutyIntegrationForm } from './receivers/PagerDutyIntegrationForm';
 import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
 import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 import { WebexIntegrationForm } from './receivers/WebexIntegrationForm';
@@ -169,6 +170,11 @@ export class ReceiversPage extends AlertmanagerPage {
   async selectWebhookIntegration(index: number): Promise<WebhookIntegrationForm> {
     await this.selectIntegrationType(index, 'Webhook');
     return new WebhookIntegrationForm(this.drawer);
+  }
+
+  async selectPagerDutyIntegration(index: number): Promise<PagerDutyIntegrationForm> {
+    await this.selectIntegrationType(index, 'PagerDuty');
+    return new PagerDutyIntegrationForm(this.drawer);
   }
 
   /**
