@@ -2,6 +2,7 @@ import { PLUGIN_BASE_URL, ROUTES } from '../constants';
 import { DataSourceRuleIdentifier, stringifyIdentifier } from '@grafana/external-rules/identifiers';
 import { config } from '@grafana/runtime';
 import { urlUtil } from '@grafana/data';
+import { isPrivateLabelKey } from './labels';
 
 /**
  * Navigation utilities for rule-related pages
@@ -112,6 +113,31 @@ export const silences = {
     }
 
     return silences.createPageLink(matchers);
+  },
+
+  /**
+   * Generate a link to create a silence that matches exactly one alert instance.
+   *
+   * Every label the instance carries becomes an equality matcher, so the silence only
+   * suppresses that instance and not its siblings in the same group.
+   */
+  createForAlertInstanceLink(labels: Record<string, string>): string {
+    const matchers: SilenceMatcher[] = Object.entries(labels)
+      .filter(([name]) => !isPrivateLabelKey(name))
+      .map(([name, value]) => ({ name, value, isRegex: false, isEqual: true }));
+
+    return silences.createPageLink(matchers);
+  },
+
+  /**
+   * Generate a link to the silences list, optionally narrowed to specific silence IDs.
+   */
+  listPageLink(silenceIds?: string[]): string {
+    if (!silenceIds || silenceIds.length === 0) {
+      return `${PLUGIN_BASE_URL}/${ROUTES.Silences}`;
+    }
+    const params = new URLSearchParams({ silenceIds: silenceIds.join(',') });
+    return `${PLUGIN_BASE_URL}/${ROUTES.Silences}?${params.toString()}`;
   },
 };
 

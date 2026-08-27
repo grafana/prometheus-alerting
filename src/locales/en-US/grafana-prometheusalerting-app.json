@@ -288,6 +288,7 @@
         "group-required": "Group name is required",
         "group-too-long": "Group name must be less than 255 characters",
         "keep-firing-for-invalid": "Invalid duration format. Use combinations like 30s, 5m, 1h30m",
+        "name-invalid-metric-name": "Recording rule names can only contain letters, numbers, underscores and colons, and can't start with a number",
         "name-required": "Rule name is required",
         "name-too-long": "Rule name must be less than 255 characters",
         "namespace-required": "Namespace is required",
@@ -396,6 +397,7 @@
       "ends-at": "Ends",
       "generator-url": "Generator URL",
       "inhibited-by": "Inhibited by",
+      "manage-silences": "Manage silences",
       "muted-by": "Muted by",
       "receiver": "Receiver",
       "section": {
@@ -405,6 +407,7 @@
         "receivers": "Receivers",
         "timing": "Timing"
       },
+      "silence": "Silence",
       "silenced-by": "Silenced by",
       "starts-at": "Started",
       "title": "Alert details",
@@ -1420,7 +1423,9 @@
       "tooltip-note": "Searches by label name and value only. For example, foo=\"bar\" finds all silences with label foo and value bar — both foo=\"bar\" and foo!=\"bar\".",
       "tooltip-regex": "Regex match:"
     },
+    "filtered-by-ids": "Showing only the silences linked from an alert instance.",
     "no-active-silences-message": "No active silences found.",
+    "no-matching-ids-message": "The linked silences no longer exist.",
     "no-silences-message": "No silences are currently configured in the Alertmanager.",
     "operator": {
       "equals": "Equals",
@@ -1432,6 +1437,7 @@
       "page-title": "Recreate Silence"
     },
     "resource-label": "silences",
+    "show-all": "Show all silences",
     "show-inactive": "Show inactive silences"
   },
   "templates": {

@@ -2,12 +2,15 @@ import React from 'react';
 
 import { t } from '@grafana/i18n';
 import { AlertLabel } from '@grafana/alerting';
-import { Stack, TextLink } from '@grafana/ui';
+import { LinkButton, Stack, TextLink } from '@grafana/ui';
 import type { GettableAlert } from '@grafana/external-alertmanager/vanilla';
 
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { getSilencesAbilities, SilenceAction } from '../../../access-control/abilities.silences';
+import { silences as silencesNav } from '../../../utils/navigation';
 import { AlertStateBadge } from './AlertStateBadge';
 
 interface AlertDrawerProps {
@@ -16,6 +19,12 @@ interface AlertDrawerProps {
 }
 
 export function AlertDrawer({ alert, onClose }: AlertDrawerProps) {
+  const silenceAbilities = getSilencesAbilities();
+  const canViewSilences = isAbilityAllowed(silenceAbilities[SilenceAction.ViewSilences]);
+  const canMutateSilences = isAbilityAllowed(silenceAbilities[SilenceAction.MutateSilences]);
+
+  const isSilenced = alert.status.silencedBy.length > 0;
+
   const labelItems = Object.entries(alert.labels).map(([key, value]) => ({
     label: key,
     value: <AlertLabel value={`${key}=${value}`} colorBy="value" size="sm" />,
@@ -35,8 +44,23 @@ export function AlertDrawer({ alert, onClose }: AlertDrawerProps) {
   const receiverItems = alert.receivers.map((r) => ({ label: t('alerts.drawer.receiver', 'Receiver'), value: r.name }));
 
   const statusItems = [
-    ...(alert.status.silencedBy.length > 0
-      ? [{ label: t('alerts.drawer.silenced-by', 'Silenced by'), value: alert.status.silencedBy.join(', ') }]
+    ...(isSilenced
+      ? [
+          {
+            label: t('alerts.drawer.silenced-by', 'Silenced by'),
+            value: canViewSilences ? (
+              <Stack direction="row" gap={0.5} wrap="wrap">
+                {alert.status.silencedBy.map((silenceId) => (
+                  <TextLink key={silenceId} href={silencesNav.listPageLink([silenceId])}>
+                    {silenceId}
+                  </TextLink>
+                ))}
+              </Stack>
+            ) : (
+              alert.status.silencedBy.join(', ')
+            ),
+          },
+        ]
       : []),
     ...(alert.status.inhibitedBy.length > 0
       ? [{ label: t('alerts.drawer.inhibited-by', 'Inhibited by'), value: alert.status.inhibitedBy.join(', ') }]
@@ -46,8 +70,34 @@ export function AlertDrawer({ alert, onClose }: AlertDrawerProps) {
       : []),
   ];
 
+  // "Silence" prefills every label the instance carries, so the silence lands on exactly this
+  // instance. Once it is silenced, the useful next step is the silence itself rather than
+  // stacking a second one on top.
+  const showManageSilences = isSilenced && canViewSilences;
+  const showSilenceAction = !isSilenced && canMutateSilences;
+
+  const footer = (
+    <Stack direction="row" gap={1}>
+      {showManageSilences && (
+        <LinkButton variant="secondary" icon="bell" href={silencesNav.listPageLink(alert.status.silencedBy)}>
+          {t('alerts.drawer.manage-silences', 'Manage silences')}
+        </LinkButton>
+      )}
+      {showSilenceAction && (
+        <LinkButton variant="secondary" icon="bell-slash" href={silencesNav.createForAlertInstanceLink(alert.labels)}>
+          {t('alerts.drawer.silence', 'Silence')}
+        </LinkButton>
+      )}
+    </Stack>
+  );
+
   return (
-    <DrawerWithFooter title={t('alerts.drawer.title', 'Alert details')} onClose={onClose} size="sm">
+    <DrawerWithFooter
+      title={t('alerts.drawer.title', 'Alert details')}
+      onClose={onClose}
+      size="sm"
+      footer={showManageSilences || showSilenceAction ? footer : undefined}
+    >
       <Stack direction="column" gap={3}>
         <Stack direction="row" alignItems="center">
           <AlertStateBadge alert={alert} />
