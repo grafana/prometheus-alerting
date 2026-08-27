@@ -6,7 +6,6 @@ export interface WebexFormParams {
   message?: string;
   authorizationType?: string;
   authorizationCredentials?: string;
-  authorizationCredentialsFile?: string;
   basicAuthUsername?: string;
   proxyUrl?: string;
   tlsServerName?: string;
@@ -25,7 +24,6 @@ export class WebexIntegrationForm {
   readonly messageInput: Locator;
   readonly authorizationTypeInput: Locator;
   readonly authorizationCredentialsInput: Locator;
-  readonly authorizationCredentialsFileInput: Locator;
   readonly basicAuthUsernameInput: Locator;
   readonly proxyUrlInput: Locator;
   readonly tlsServerNameInput: Locator;
@@ -37,7 +35,6 @@ export class WebexIntegrationForm {
     this.messageInput = scope.getByLabel('Message', { exact: true });
     this.authorizationTypeInput = scope.getByLabel('Authorization type', { exact: true });
     this.authorizationCredentialsInput = scope.getByLabel('Credentials', { exact: true });
-    this.authorizationCredentialsFileInput = scope.getByLabel('Credentials file', { exact: true });
     this.basicAuthUsernameInput = scope.getByLabel('Username', { exact: true });
     this.proxyUrlInput = scope.getByLabel('Proxy URL', { exact: true });
     this.tlsServerNameInput = scope.getByLabel('Server name', { exact: true });
@@ -51,7 +48,6 @@ export class WebexIntegrationForm {
     message,
     authorizationType,
     authorizationCredentials,
-    authorizationCredentialsFile,
     basicAuthUsername,
     proxyUrl,
     tlsServerName,
@@ -71,9 +67,6 @@ export class WebexIntegrationForm {
     }
     if (authorizationCredentials !== undefined) {
       await this.authorizationCredentialsInput.fill(authorizationCredentials);
-    }
-    if (authorizationCredentialsFile !== undefined) {
-      await this.authorizationCredentialsFileInput.fill(authorizationCredentialsFile);
     }
     if (basicAuthUsername !== undefined) {
       await this.basicAuthUsernameInput.fill(basicAuthUsername);

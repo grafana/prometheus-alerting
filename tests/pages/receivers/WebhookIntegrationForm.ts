@@ -3,7 +3,10 @@ import { Locator } from '@playwright/test';
 export interface WebhookFormParams {
   url?: string;
   maxAlerts?: string;
+  authorizationType?: string;
+  authorizationCredentials?: string;
   proxyUrl?: string;
+  proxyFromEnvironment?: boolean;
   basicAuthUsername?: string;
   basicAuthPassword?: string;
   tlsServerName?: string;
@@ -19,7 +22,10 @@ export interface WebhookFormParams {
 export class WebhookIntegrationForm {
   readonly urlInput: Locator;
   readonly maxAlertsInput: Locator;
+  readonly authorizationTypeInput: Locator;
+  readonly authorizationCredentialsInput: Locator;
   readonly proxyUrlInput: Locator;
+  readonly proxyFromEnvironmentCheckbox: Locator;
   readonly basicAuthUsernameInput: Locator;
   readonly basicAuthPasswordInput: Locator;
   readonly tlsServerNameInput: Locator;
@@ -28,7 +34,10 @@ export class WebhookIntegrationForm {
   constructor(scope: Locator) {
     this.urlInput = scope.getByLabel('URL', { exact: true });
     this.maxAlertsInput = scope.getByLabel('Max alerts', { exact: true });
+    this.authorizationTypeInput = scope.getByLabel('Authorization type', { exact: true });
+    this.authorizationCredentialsInput = scope.getByLabel('Authorization credentials', { exact: true });
     this.proxyUrlInput = scope.getByLabel('Proxy URL', { exact: true });
+    this.proxyFromEnvironmentCheckbox = scope.getByLabel('Use proxy from environment', { exact: true });
     this.basicAuthUsernameInput = scope.getByLabel('Username', { exact: true });
     this.basicAuthPasswordInput = scope.getByLabel('Password', { exact: true });
     this.tlsServerNameInput = scope.getByLabel('Server name', { exact: true });
@@ -39,7 +48,10 @@ export class WebhookIntegrationForm {
   async fill({
     url,
     maxAlerts,
+    authorizationType,
+    authorizationCredentials,
     proxyUrl,
+    proxyFromEnvironment,
     basicAuthUsername,
     basicAuthPassword,
     tlsServerName,
@@ -51,8 +63,17 @@ export class WebhookIntegrationForm {
     if (maxAlerts !== undefined) {
       await this.maxAlertsInput.fill(maxAlerts);
     }
+    if (authorizationType !== undefined) {
+      await this.authorizationTypeInput.fill(authorizationType);
+    }
+    if (authorizationCredentials !== undefined) {
+      await this.authorizationCredentialsInput.fill(authorizationCredentials);
+    }
     if (proxyUrl !== undefined) {
       await this.proxyUrlInput.fill(proxyUrl);
+    }
+    if (proxyFromEnvironment !== undefined) {
+      await this.proxyFromEnvironmentCheckbox.setChecked(proxyFromEnvironment, { force: true });
     }
     if (basicAuthUsername !== undefined) {
       await this.basicAuthUsernameInput.fill(basicAuthUsername);

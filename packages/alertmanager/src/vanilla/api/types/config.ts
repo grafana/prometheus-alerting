@@ -8,7 +8,7 @@ import { GlobalConfigSchema, InhibitRuleSchema, ReceiverSchema, RoutesSchema, Ti
  * user's edit to the result, and POST that back — so a key this schema doesn't know about is a key
  * the user loses the next time they save anything.
  */
-export const ParsedAlertmanagerConfigSchema = z.object({
+export const ParsedAlertmanagerConfigSchema = z.looseObject({
   global: GlobalConfigSchema.optional(),
   receivers: z.array(ReceiverSchema).optional(),
   route: RoutesSchema.optional(),

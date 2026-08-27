@@ -70,6 +70,40 @@ receivers:
     });
   });
 
+  it('preserves unknown receiver fields when the complete configuration is read and written back', () => {
+    const configuration = YamlToParsedUserConfiguration.decode(
+      mimirResponse(`
+route:
+  receiver: webhook
+receivers:
+  - name: webhook
+    future_receiver_setting: receiver-value
+    webhook_configs:
+      - url: https://example.com/webhook
+        future_webhook_setting: webhook-value
+        http_config:
+          follow_redirects: true
+          future_http_setting: http-value
+`)
+    );
+
+    const encoded = parseYaml(YamlToParsedUserConfiguration.encode(configuration));
+    expect(parseYaml(encoded.alertmanager_config).receivers[0]).toEqual({
+      name: 'webhook',
+      future_receiver_setting: 'receiver-value',
+      webhook_configs: [
+        {
+          url: 'https://example.com/webhook',
+          future_webhook_setting: 'webhook-value',
+          http_config: {
+            follow_redirects: true,
+            future_http_setting: 'http-value',
+          },
+        },
+      ],
+    });
+  });
+
   it('leaves a configuration without a global block alone', () => {
     const configuration = YamlToParsedUserConfiguration.decode(
       mimirResponse(`

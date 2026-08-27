@@ -8,15 +8,27 @@ import {
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 
 describe('getAllIntegrationTypes', () => {
-  it('returns a non-empty array', () => {
-    expect(getAllIntegrationTypes().length).toBeGreaterThan(0);
-  });
-
-  it('includes known types', () => {
-    const types = getAllIntegrationTypes();
-    expect(types).toContain('email');
-    expect(types).toContain('slack');
-    expect(types).toContain('webhook');
+  it('returns every receiver type supported by Alertmanager 0.32.1', () => {
+    expect(getAllIntegrationTypes()).toEqual([
+      'email',
+      'slack',
+      'pagerduty',
+      'webhook',
+      'opsgenie',
+      'wechat',
+      'pushover',
+      'victorops',
+      'sns',
+      'telegram',
+      'discord',
+      'webex',
+      'msteams',
+      'msteamsv2',
+      'jira',
+      'rocketchat',
+      'incidentio',
+      'mattermost',
+    ]);
   });
 });
 

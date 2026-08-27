@@ -1,6 +1,7 @@
 import { Locator, expect } from '@playwright/test';
 import { AlertmanagerPage } from './AlertmanagerPage';
 import { EmailIntegrationForm } from './receivers/EmailIntegrationForm';
+import { PagerDutyIntegrationForm } from './receivers/PagerDutyIntegrationForm';
 import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
 import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 import { WebexIntegrationForm } from './receivers/WebexIntegrationForm';
@@ -171,6 +172,11 @@ export class ReceiversPage extends AlertmanagerPage {
     return new WebhookIntegrationForm(this.drawer);
   }
 
+  async selectPagerDutyIntegration(index: number): Promise<PagerDutyIntegrationForm> {
+    await this.selectIntegrationType(index, 'PagerDuty');
+    return new PagerDutyIntegrationForm(this.drawer);
+  }
+
   /**
    * Select 'Slack' as the integration type at `index` and return a page object scoped to that
    * integration's top-level fields. `http_config` is deliberately not exposed, see
@@ -181,7 +187,6 @@ export class ReceiversPage extends AlertmanagerPage {
     return new SlackIntegrationForm(this.drawer);
   }
 
-  /** Select 'Cisco Webex Teams' and return its form fields scoped to the receiver drawer. */
   async selectWebexIntegration(index: number): Promise<WebexIntegrationForm> {
     await this.selectIntegrationType(index, 'Cisco Webex Teams');
     return new WebexIntegrationForm(this.drawer);
