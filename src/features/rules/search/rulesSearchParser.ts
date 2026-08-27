@@ -109,63 +109,71 @@ function isRulesFilterName(value: string): value is RulesFilterName {
   return value in FILTER_PATTERNS;
 }
 
-interface OrderedFilter {
+interface QueryLayoutSlot {
   filterName: RulesFilterName;
   index: number;
   isFreeTextRule: boolean;
 }
 
-function getFiltersInQueryOrder(query: string): OrderedFilter[] {
-  const orderedFilters: OrderedFilter[] = [];
+interface FilterToken {
+  structured: string;
+  freeText?: string;
+}
+
+type FilterTokens = Record<RulesFilterName, FilterToken[]>;
+
+function getQueryLayout(query: string): QueryLayoutSlot[] {
+  const layout: QueryLayoutSlot[] = [];
 
   for (const match of query.matchAll(FILTER_ORDER_PATTERN)) {
     const filterName = match[1].toLowerCase();
     if (isRulesFilterName(filterName)) {
-      orderedFilters.push({ filterName, index: match.index, isFreeTextRule: false });
+      layout.push({ filterName, index: match.index, isFreeTextRule: false });
     }
   }
 
   const queryWithoutFilters = query.replace(FILTER_ORDER_PATTERN, (match) => ' '.repeat(match.length));
   const freeTextIndex = queryWithoutFilters.search(/\S/);
-  const hasRuleFilter = orderedFilters.some(({ filterName }) => filterName === 'rule');
+  const hasRuleFilter = layout.some(({ filterName }) => filterName === 'rule');
   if (freeTextIndex >= 0 && !hasRuleFilter) {
-    orderedFilters.push({ filterName: 'rule', index: freeTextIndex, isFreeTextRule: true });
+    layout.push({ filterName: 'rule', index: freeTextIndex, isFreeTextRule: true });
   }
 
-  return orderedFilters.sort((left, right) => left.index - right.index);
+  return layout.sort((left, right) => left.index - right.index);
+}
+
+function buildFilterTokens(filter: RulesFilter): FilterTokens {
+  return {
+    datasource: filter.dataSourceNames?.map((value) => ({ structured: `datasource:${formatValue(value)}` })) ?? [],
+    namespace: filter.namespace ? [{ structured: `namespace:${formatValue(filter.namespace)}` }] : [],
+    group: filter.groupName ? [{ structured: `group:${formatValue(filter.groupName)}` }] : [],
+    rule: filter.ruleName ? [{ structured: `rule:${formatValue(filter.ruleName)}`, freeText: filter.ruleName }] : [],
+    state: filter.ruleState ? [{ structured: `state:${filter.ruleState}` }] : [],
+    type: filter.ruleType ? [{ structured: `type:${filter.ruleType}` }] : [],
+    label: filter.labels?.map((value) => ({ structured: `label:${formatValue(value)}` })) ?? [],
+  };
+}
+
+function applyQueryLayout(layout: QueryLayoutSlot[], tokensByFilter: FilterTokens): string {
+  const parts: string[] = [];
+
+  for (const { filterName, isFreeTextRule } of layout) {
+    const token = tokensByFilter[filterName].shift();
+    if (token) {
+      parts.push(isFreeTextRule && token.freeText !== undefined ? token.freeText : token.structured);
+    }
+  }
+
+  for (const tokens of Object.values(tokensByFilter)) {
+    parts.push(...tokens.map(({ structured }) => structured));
+  }
+
+  return parts.join(' ');
 }
 
 /**
  * Convert a RulesFilter object back to a search query string while retaining the order of existing filters.
  */
 export function applySearchFilterToQuery(query: string, filter: RulesFilter): string {
-  const tokensByFilter = {
-    datasource: filter.dataSourceNames?.map((value) => `datasource:${formatValue(value)}`) ?? [],
-    namespace: filter.namespace ? [`namespace:${formatValue(filter.namespace)}`] : [],
-    group: filter.groupName ? [`group:${formatValue(filter.groupName)}`] : [],
-    rule: filter.ruleName ? [`rule:${formatValue(filter.ruleName)}`] : [],
-    state: filter.ruleState ? [`state:${filter.ruleState}`] : [],
-    type: filter.ruleType ? [`type:${filter.ruleType}`] : [],
-    label: filter.labels?.map((value) => `label:${formatValue(value)}`) ?? [],
-  } satisfies Record<RulesFilterName, string[]>;
-  const parts: string[] = [];
-
-  for (const { filterName, isFreeTextRule } of getFiltersInQueryOrder(query)) {
-    if (isFreeTextRule && filter.ruleName) {
-      tokensByFilter.rule.shift();
-      parts.push(filter.ruleName);
-      continue;
-    }
-
-    const token = tokensByFilter[filterName].shift();
-    if (token) {
-      parts.push(token);
-    }
-  }
-
-  for (const tokens of Object.values(tokensByFilter)) {
-    parts.push(...tokens);
-  }
-
-  return parts.join(' ');
+  return applyQueryLayout(getQueryLayout(query), buildFilterTokens(filter));
 }
