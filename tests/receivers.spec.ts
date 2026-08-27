@@ -185,7 +185,7 @@ test.describe('Receivers', () => {
       await mimirAlertmanager.seedConfig(RECEIVER_DETAIL_CONFIG);
       await receiversPage.gotoReceiverDetail(mimirAlertmanager.uid, 'detail receiver & team');
 
-      await expect(receiversPage.detailContainer.getByRole('textbox', { name: /^Name\b/ })).toHaveValue(
+      await expect(receiversPage.detailContainer.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue(
         'detail receiver & team'
       );
       await expect(receiversPage.detailContainer.getByText('email', { exact: true })).toBeVisible();

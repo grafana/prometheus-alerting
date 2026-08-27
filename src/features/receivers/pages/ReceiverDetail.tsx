@@ -57,7 +57,13 @@ function ReceiverDetail() {
               label={t('receivers.detail.name', 'Name')}
               description={t('receivers.detail.name-desc', 'Name of the contact point')}
             >
-              <Input id={receiverNameInputId} value={receiver.name} disabled width={39} />
+              <Input
+                id={receiverNameInputId}
+                value={receiver.name}
+                disabled
+                width={39}
+                aria-label={t('receivers.detail.name', 'Name')}
+              />
             </Field>
 
             <ReceiverIntegrations receiver={receiver} />
