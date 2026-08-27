@@ -12,8 +12,8 @@ import { SNSIntegrationForm } from './receivers/SNSIntegrationForm';
 import { TelegramIntegrationForm } from './receivers/TelegramIntegrationForm';
 import { VictorOpsIntegrationForm } from './receivers/VictorOpsIntegrationForm';
 import { WeChatIntegrationForm } from './receivers/WeChatIntegrationForm';
-import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 import { WebexIntegrationForm } from './receivers/WebexIntegrationForm';
+import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 
 /**
  * Page object for the Receivers view (`/receivers`).
