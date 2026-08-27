@@ -61,11 +61,58 @@ export function getContactPointDescription(receiver: Receiver): string {
 
 // Vanilla Alertmanager will respond with this value for sensitive fields
 const SECRET_TOKEN = '<secret>';
+// shared placeholder we show for any secret, regardless of which Alertmanager sent the config
 const OUR_SECRET_TOKEN = '*************';
 
+// Field names we treat as secret and hide by value, regardless of what the config actually contains.
+// This matters most for Mimir, which does NOT mask secrets in its API responses (unlike vanilla Alertmanager).
+const SECRET_KEYS = new Set([
+  'api_key',
+  'api_secret',
+  'auth_password',
+  'auth_secret',
+  'bot_token',
+  'client_secret',
+  'credentials',
+  'password',
+  'routing_key',
+  'secret_key',
+  'service_key',
+  'token',
+  'user_key',
+]);
+
+const TYPE_SPECIFIC_SECRET_KEYS: Partial<Record<string, ReadonlySet<string>>> = {
+  discord: new Set(['webhook_url']),
+  msteams: new Set(['webhook_url']),
+  msteamsv2: new Set(['webhook_url']),
+  slack: new Set(['api_url']),
+};
+
+// Masks values for known secret fields, by name — matters most for Mimir, which doesn't redact secrets server-side.
+// Runs on configs from either backend; for vanilla Alertmanager it's a harmless no-op on top of transformEntry below.
+export function maskSensitiveConfig(type: string, config: Record<string, JsonValue>): Record<string, JsonValue> {
+  return Object.fromEntries(Object.entries(config).map(([key, value]) => [key, maskSensitiveValue(type, value, key)]));
+}
+
+function maskSensitiveValue(type: string, value: JsonValue, key?: string): JsonValue {
+  if (key && (SECRET_KEYS.has(key) || TYPE_SPECIFIC_SECRET_KEYS[type]?.has(key))) {
+    return OUR_SECRET_TOKEN;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => maskSensitiveValue(type, item));
+  }
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([childKey, child]) => [childKey, maskSensitiveValue(type, child, childKey)])
+    );
+  }
+  return value;
+}
+
 /**
- * This function will transform a receiver's key-value pair recursively.
- * Currently used for translating encrypted secrets for vanilla Alertmanager.
+ * Vanilla Alertmanager-only: this function will transform a receiver's key-value pair recursively.
+ * Vanilla Alertmanager already masks secrets itself (as SECRET_TOKEN), so we just swap that for our own placeholder.
  */
 export function transformEntry([key, value]: [string, JsonValue]): { label: string; value: JsonValue } {
   const transformedValue = transformValue(value);

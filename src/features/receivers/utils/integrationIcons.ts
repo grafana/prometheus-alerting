@@ -1,51 +1,13 @@
 import type { IconName } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { JsonValue } from 'type-fest';
-
-/**
- * Extract integration type names from Receiver config keys
- * e.g., "email_configs" -> "email"
- */
-type ReceiverConfigKeys = keyof Receiver;
-type ExtractIntegrationName<T extends string> = T extends `${infer Name}_configs` ? Name : never;
-type AllIntegrationTypes = ExtractIntegrationName<ReceiverConfigKeys>;
-
-/**
- * Maps integration types to their corresponding Grafana icon names.
- * Based on common contact point integrations in Alertmanager.
- *
- * TypeScript will error if any integration from Receiver is missing!
- */
-export const INTEGRATION_ICONS: Record<AllIntegrationTypes, IconName> = {
-  email: 'envelope',
-  slack: 'slack',
-  pagerduty: 'pagerduty',
-  webhook: 'link',
-  opsgenie: 'bug',
-  wechat: 'comments-alt',
-  pushover: 'mobile-android',
-  victorops: 'bell',
-  sns: 'amazon',
-  telegram: 'telegram-alt',
-  discord: 'discord',
-  // @ts-expect-error
-  webex: 'video',
-  msteams: 'microsoft',
-  msteamsv2: 'microsoft',
-  jira: 'bug',
-  rocketchat: 'rocket',
-  incidentio: 'fire',
-} as const;
-
-/**
- * Type representing an integration type key (derived from Receiver schema)
- */
-export type IntegrationType = AllIntegrationTypes;
+import { z } from 'zod';
 
 /**
  * Mapping of integration types to their corresponding config property names in a Receiver object.
+ * The explicit list remains stable even though the read-only receiver schema permits future keys.
  */
-const INTEGRATION_CONFIG_KEYS: Record<IntegrationType, keyof Receiver> = {
+const INTEGRATION_CONFIG_KEYS = {
   email: 'email_configs',
   slack: 'slack_configs',
   pagerduty: 'pagerduty_configs',
@@ -63,7 +25,36 @@ const INTEGRATION_CONFIG_KEYS: Record<IntegrationType, keyof Receiver> = {
   jira: 'jira_configs',
   rocketchat: 'rocketchat_configs',
   incidentio: 'incidentio_configs',
-} as const;
+  mattermost: 'mattermost_configs',
+} as const satisfies Record<string, keyof Receiver>;
+
+export type IntegrationType = keyof typeof INTEGRATION_CONFIG_KEYS;
+
+/**
+ * Maps integration types to their corresponding Grafana icon names.
+ */
+export const INTEGRATION_ICONS: Record<IntegrationType, IconName> = {
+  email: 'envelope',
+  slack: 'slack',
+  pagerduty: 'pagerduty',
+  webhook: 'link',
+  opsgenie: 'bug',
+  wechat: 'comments-alt',
+  pushover: 'mobile-android',
+  victorops: 'bell',
+  sns: 'amazon',
+  telegram: 'telegram-alt',
+  discord: 'discord',
+  webex: 'comments-alt',
+  msteams: 'microsoft',
+  msteamsv2: 'microsoft',
+  jira: 'bug',
+  rocketchat: 'rocket',
+  incidentio: 'fire',
+  mattermost: 'comments-alt',
+};
+
+const JsonRecordSchema = z.record(z.string(), z.json());
 
 /**
  * Returns all supported integration types.
@@ -88,7 +79,10 @@ export function extractIntegrationsFromReceiver(
 
     if (configs && Array.isArray(configs)) {
       configs.forEach((config) => {
-        integrations.push({ type, config });
+        const parsedConfig = JsonRecordSchema.safeParse(config);
+        if (parsedConfig.success) {
+          integrations.push({ type, config: parsedConfig.data });
+        }
       });
     }
   }
@@ -105,7 +99,7 @@ export function extractIntegrationsFromReceiver(
 export function getIntegrationCount(receiver: Receiver, type: IntegrationType): number {
   const configKey = INTEGRATION_CONFIG_KEYS[type];
   const configs = receiver[configKey];
-  return configs?.length ?? 0;
+  return Array.isArray(configs) ? configs.length : 0;
 }
 
 /**
