@@ -3,6 +3,7 @@ import { AlertmanagerPage } from './AlertmanagerPage';
 import { DiscordIntegrationForm } from './receivers/DiscordIntegrationForm';
 import { EmailIntegrationForm } from './receivers/EmailIntegrationForm';
 import { JiraIntegrationForm } from './receivers/JiraIntegrationForm';
+import { MSTeamsIntegrationForm } from './receivers/MSTeamsIntegrationForm';
 import { PagerDutyIntegrationForm } from './receivers/PagerDutyIntegrationForm';
 import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
 import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
@@ -194,6 +195,11 @@ export class ReceiversPage extends AlertmanagerPage {
   async selectJiraIntegration(index: number): Promise<JiraIntegrationForm> {
     await this.selectIntegrationType(index, 'Jira');
     return new JiraIntegrationForm(this.drawer);
+  }
+
+  async selectMSTeamsIntegration(index: number): Promise<MSTeamsIntegrationForm> {
+    await this.selectIntegrationType(index, 'Microsoft Teams');
+    return new MSTeamsIntegrationForm(this.drawer);
   }
 
   async selectPagerDutyIntegration(index: number): Promise<PagerDutyIntegrationForm> {
