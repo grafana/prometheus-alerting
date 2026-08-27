@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useAsync } from '@react-hookz/web';
 import { css } from '@emotion/css';
 import { GrafanaTheme2 } from '@grafana/data';
 import { useStyles2, LinkButton, Stack, Text } from '@grafana/ui';
-import { config } from '@grafana/runtime';
+import { getDataSourceInstanceSettings } from '@grafana/runtime/unstable';
 import { RawQuery } from '@grafana/plugin-ui';
 import { Trans } from '@grafana/i18n';
 import { promqlGrammar, lokiGrammar } from '../../utils/prismGrammars';
@@ -17,8 +18,14 @@ interface Props {
 export function QueryTab({ query, dataSourceUid }: Props) {
   const styles = useStyles2(getStyles);
 
-  // Get datasource type to determine language
-  const dsSettings = config.datasources[dataSourceUid];
+  const [{ result: dsSettings }, { execute: loadDataSourceSettings }] = useAsync(() =>
+    getDataSourceInstanceSettings(dataSourceUid)
+  );
+
+  useEffect(() => {
+    loadDataSourceSettings();
+  }, [dataSourceUid, loadDataSourceSettings]);
+
   const dataSourceType = dsSettings?.type ?? 'prometheus';
 
   const language =
