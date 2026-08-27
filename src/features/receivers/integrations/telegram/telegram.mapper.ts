@@ -6,7 +6,6 @@ export function telegramConfigToFormSettings(config: TelegramConfig): TelegramSe
     ...structuredClone(config),
     bot_token: config.bot_token ?? '',
     chat_id: config.chat_id?.toString() ?? '',
-    message_thread_id: config.message_thread_id?.toString(),
   });
 }
 export function telegramFormSettingsToConfig(values: TelegramSettingsFormValues): TelegramConfig {
@@ -14,7 +13,6 @@ export function telegramFormSettingsToConfig(values: TelegramSettingsFormValues)
   return omitEmptyValues({
     ...parsed,
     chat_id: Number(parsed.chat_id),
-    message_thread_id: parsed.message_thread_id ? Number(parsed.message_thread_id) : undefined,
   });
 }
 export function createDefaultTelegramSettings(): TelegramSettingsFormValues {

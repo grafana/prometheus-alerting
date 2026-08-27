@@ -9,6 +9,7 @@ import { PagerDutyIntegrationForm } from './receivers/PagerDutyIntegrationForm';
 import { PushoverIntegrationForm } from './receivers/PushoverIntegrationForm';
 import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
 import { SNSIntegrationForm } from './receivers/SNSIntegrationForm';
+import { TelegramIntegrationForm } from './receivers/TelegramIntegrationForm';
 import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 import { WebexIntegrationForm } from './receivers/WebexIntegrationForm';
 
@@ -223,6 +224,11 @@ export class ReceiversPage extends AlertmanagerPage {
   async selectSNSIntegration(index: number): Promise<SNSIntegrationForm> {
     await this.selectIntegrationType(index, 'Amazon SNS');
     return new SNSIntegrationForm(this.drawer);
+  }
+
+  async selectTelegramIntegration(index: number): Promise<TelegramIntegrationForm> {
+    await this.selectIntegrationType(index, 'Telegram');
+    return new TelegramIntegrationForm(this.page, this.drawer);
   }
 
   /**

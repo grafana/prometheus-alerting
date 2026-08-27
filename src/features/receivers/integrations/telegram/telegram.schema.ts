@@ -31,7 +31,6 @@ export function createTelegramSettingsFormSchema(validateForSubmission = true) {
       (value) => value !== '',
       t('receivers.form.telegram-chat-id-required', 'Chat ID is required')
     ),
-    message_thread_id: integerString.optional(),
     message: z.string().optional(),
     disable_notifications: z.boolean().optional(),
     parse_mode: z.enum(['', 'MarkdownV2', 'Markdown', 'HTML']).optional(),
