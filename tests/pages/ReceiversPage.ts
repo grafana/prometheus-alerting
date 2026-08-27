@@ -8,6 +8,7 @@ import { OpsgenieIntegrationForm } from './receivers/OpsgenieIntegrationForm';
 import { PagerDutyIntegrationForm } from './receivers/PagerDutyIntegrationForm';
 import { PushoverIntegrationForm } from './receivers/PushoverIntegrationForm';
 import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
+import { SNSIntegrationForm } from './receivers/SNSIntegrationForm';
 import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 import { WebexIntegrationForm } from './receivers/WebexIntegrationForm';
 
@@ -217,6 +218,11 @@ export class ReceiversPage extends AlertmanagerPage {
   async selectPushoverIntegration(index: number): Promise<PushoverIntegrationForm> {
     await this.selectIntegrationType(index, 'Pushover');
     return new PushoverIntegrationForm(this.drawer);
+  }
+
+  async selectSNSIntegration(index: number): Promise<SNSIntegrationForm> {
+    await this.selectIntegrationType(index, 'Amazon SNS');
+    return new SNSIntegrationForm(this.drawer);
   }
 
   /**
