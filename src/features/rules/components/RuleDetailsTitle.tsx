@@ -1,5 +1,4 @@
 import React from 'react';
-import { css } from '@emotion/css';
 import { t } from '@grafana/i18n';
 import { Stack, Text } from '@grafana/ui';
 import { StateText } from '@grafana/alerting/unstable';
@@ -41,11 +40,9 @@ export function RuleDetailsTitle({ name, type, state, health, sourceTenants }: R
 
   return (
     <Stack direction="row" gap={1} alignItems="center" minWidth={0}>
-      <div className={nameStyles}>
-        <Text variant="h1" element="h1" truncate>
-          {name}
-        </Text>
-      </div>
+      <Text variant="h1" element="h1" truncate>
+        {name}
+      </Text>
       {type === 'alerting' && (
         <span aria-label={getStateLabel()}>
           <StateText type="alerting" state={normalizedState} health={normalizedHealth} />
@@ -66,11 +63,6 @@ export function RuleDetailsTitle({ name, type, state, health, sourceTenants }: R
     </Stack>
   );
 }
-
-const nameStyles = css({
-  minWidth: 0,
-  overflow: 'hidden',
-});
 
 // Helper functions
 
