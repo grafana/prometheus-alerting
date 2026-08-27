@@ -23,8 +23,6 @@ const FILTER_PATTERNS = {
   label: /label:(?:"([^"]*)"|(\S+))/gi,
 };
 
-const FILTER_ORDER_PATTERN = /(datasource|namespace|group|rule|state|type|label):(?:"[^"]*"|\S+)/gi;
-
 type RulesFilterName = keyof typeof FILTER_PATTERNS;
 
 function formatValue(value: string): string {
@@ -122,17 +120,25 @@ interface FilterToken {
 
 type FilterTokens = Record<RulesFilterName, FilterToken[]>;
 
+function maskFilterMatch(query: string, index: number, length: number): string {
+  return `${query.slice(0, index)}${' '.repeat(length)}${query.slice(index + length)}`;
+}
+
 function getQueryLayout(query: string): QueryLayoutSlot[] {
   const layout: QueryLayoutSlot[] = [];
+  let queryWithoutFilters = query;
 
-  for (const match of query.matchAll(FILTER_ORDER_PATTERN)) {
-    const filterName = match[1].toLowerCase();
-    if (isRulesFilterName(filterName)) {
+  for (const [filterName, pattern] of Object.entries(FILTER_PATTERNS)) {
+    if (!isRulesFilterName(filterName)) {
+      continue;
+    }
+
+    for (const match of query.matchAll(new RegExp(pattern))) {
       layout.push({ filterName, index: match.index, isFreeTextRule: false });
+      queryWithoutFilters = maskFilterMatch(queryWithoutFilters, match.index, match[0].length);
     }
   }
 
-  const queryWithoutFilters = query.replace(FILTER_ORDER_PATTERN, (match) => ' '.repeat(match.length));
   const freeTextIndex = queryWithoutFilters.search(/\S/);
   const hasRuleFilter = layout.some(({ filterName }) => filterName === 'rule');
   if (freeTextIndex >= 0 && !hasRuleFilter) {
