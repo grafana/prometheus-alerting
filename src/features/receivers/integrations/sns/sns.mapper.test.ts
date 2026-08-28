@@ -56,3 +56,19 @@ describe('SNS mapper', () => {
     }
   });
 });
+
+/**
+ * Alertmanager understands more of this integration than the form shows. We deliberately do not
+ * validate a setting nobody can edit, so the least we owe is that opening a receiver and saving it
+ * again gives them back untouched.
+ */
+describe('SNS settings the form does not show', () => {
+  it('hands them back unchanged after a round trip', () => {
+    const config = {
+      topic_arn: 'arn:aws:sns:us-east-1:1:alerts',
+      use_aws_http_client: true,
+    };
+
+    expect(snsFormSettingsToConfig(snsConfigToFormSettings(config as never))).toMatchObject(config);
+  });
+});

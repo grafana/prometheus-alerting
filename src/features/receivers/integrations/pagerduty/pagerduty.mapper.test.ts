@@ -66,3 +66,20 @@ describe('PagerDuty mapper', () => {
     });
   });
 });
+
+/**
+ * Alertmanager understands more of this integration than the form shows. We deliberately do not
+ * validate a setting nobody can edit, so the least we owe is that opening a receiver and saving it
+ * again gives them back untouched.
+ */
+describe('PagerDuty settings the form does not show', () => {
+  it('hands them back unchanged after a round trip', () => {
+    const config = {
+      routing_key_file: '/etc/alerting/routing',
+      service_key_file: '/etc/alerting/service',
+      timeout: '10s',
+    };
+
+    expect(pagerDutyFormSettingsToConfig(pagerDutyConfigToFormSettings(config as never))).toMatchObject(config);
+  });
+});

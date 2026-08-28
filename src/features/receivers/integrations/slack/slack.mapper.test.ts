@@ -73,3 +73,26 @@ describe('Slack mapper', () => {
     }
   });
 });
+
+/**
+ * Alertmanager understands more of this integration than the form shows. We deliberately do not
+ * validate a setting nobody can edit, so the least we owe is that opening a receiver and saving it
+ * again gives them back untouched.
+ */
+describe('Slack settings the form does not show', () => {
+  it('hands them back unchanged after a round trip', () => {
+    const config = {
+      channel: '#alerts',
+      api_url_file: '/etc/alerting/slack',
+      app_token: 'xoxb-token',
+      app_token_file: '/etc/alerting/app-token',
+      app_url: 'https://slack.com/api/chat.postMessage',
+      message_text: 'A message body',
+      fields: [{ title: 'Env', value: 'prod' }],
+      update_message: true,
+      timeout: '10s',
+    };
+
+    expect(slackFormSettingsToConfig(slackConfigToFormSettings(config as never))).toMatchObject(config);
+  });
+});

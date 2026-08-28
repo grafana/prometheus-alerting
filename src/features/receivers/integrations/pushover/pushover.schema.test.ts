@@ -20,3 +20,23 @@ describe('createPushoverSettingsFormSchema, durations', () => {
     expect(messagesFor({ [field]: '5' })).toEqual([invalid]);
   });
 });
+
+describe('createPushoverSettingsFormSchema, message formatting', () => {
+  const messagesFor = (extra: Record<string, unknown>) => {
+    const result = createPushoverSettingsFormSchema().safeParse({ user_key: 'u', token: 't', ...extra });
+    return result.success ? [] : result.error.issues.map((issue) => issue.message);
+  };
+
+  it('accepts either formatting on its own', () => {
+    expect(messagesFor({ html: true })).toEqual([]);
+    expect(messagesFor({ monospace: true })).toEqual([]);
+    expect(messagesFor({ html: false, monospace: true })).toEqual([]);
+  });
+
+  // Pushover picks one or the other, and Alertmanager refuses a config asking for both.
+  it('rejects both at once', () => {
+    expect(messagesFor({ html: true, monospace: true })).toEqual([
+      'HTML and monospace formatting cannot be used together',
+    ]);
+  });
+});

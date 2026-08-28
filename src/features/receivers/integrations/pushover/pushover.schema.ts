@@ -53,6 +53,19 @@ export function createPushoverSettingsFormSchema() {
       });
     }
 
+    // Pushover formats a message as HTML or as monospace, never both, and Alertmanager turns away
+    // a config that asks for the pair.
+    if (settings.html && settings.monospace) {
+      ctx.addIssue({
+        code: 'custom',
+        message: t(
+          'receivers.form.pushover-html-monospace-conflict',
+          'HTML and monospace formatting cannot be used together'
+        ),
+        path: ['monospace'],
+      });
+    }
+
     if (settings.priority && !/^-?[0-2]$/.test(settings.priority) && !settings.priority.includes('{{')) {
       ctx.addIssue({
         code: 'custom',

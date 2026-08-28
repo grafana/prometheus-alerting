@@ -28,3 +28,21 @@ describe('Discord mapper', () => {
     expect(result.success).toBe(false);
   });
 });
+
+/**
+ * Alertmanager understands more of this integration than the form shows. We deliberately do not
+ * validate a setting nobody can edit, so the least we owe is that opening a receiver and saving it
+ * again gives them back untouched.
+ */
+describe('Discord settings the form does not show', () => {
+  it('hands them back unchanged after a round trip', () => {
+    const config = {
+      webhook_url_file: '/etc/alerting/discord',
+      content: 'A message body',
+      username: 'Alertmanager',
+      avatar_url: 'https://example.com/avatar.png',
+    };
+
+    expect(discordFormSettingsToConfig(discordConfigToFormSettings(config as never))).toMatchObject(config);
+  });
+});
