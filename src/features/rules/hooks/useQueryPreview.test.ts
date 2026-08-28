@@ -7,17 +7,13 @@ import { useQueryPreview } from './useQueryPreview';
 
 const mockFetch = vi.fn();
 const mockGetDataSourceInstanceSettings = vi.fn();
+const mockIsFetchError = vi.fn();
+const mockToDataQueryResponse = vi.fn();
 
 vi.mock('@grafana/runtime', () => ({
   getBackendSrv: () => ({ fetch: mockFetch }),
-  isFetchError: (error: unknown) => typeof error === 'object' && error !== null && 'status' in error && 'data' in error,
-  toDataQueryResponse: (response: { data: DataQueryResponse | { results?: { A?: { error?: string } } } }) => {
-    if ('results' in response.data) {
-      const error = response.data.results?.A?.error;
-      return { data: [], errors: error ? [{ message: error }] : undefined };
-    }
-    return response.data;
-  },
+  isFetchError: (...args: unknown[]) => mockIsFetchError(...args),
+  toDataQueryResponse: (...args: unknown[]) => mockToDataQueryResponse(...args),
 }));
 
 vi.mock('@grafana/runtime/unstable', () => ({
@@ -39,10 +35,18 @@ function vectorResponse(
   };
 }
 
+function mockBackendResponse(response: DataQueryResponse) {
+  const rawResponse = { data: { results: {} } };
+  mockFetch.mockReturnValue(of(rawResponse));
+  mockToDataQueryResponse.mockReturnValue(response);
+  return rawResponse;
+}
+
 describe('useQueryPreview', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetDataSourceInstanceSettings.mockResolvedValue({ type: 'prometheus' });
+    mockIsFetchError.mockReturnValue(false);
   });
 
   it('initializes with default state', () => {
@@ -69,13 +73,11 @@ describe('useQueryPreview', () => {
 
   it('executes an instant query through Grafana backend query API', async () => {
     mockGetDataSourceInstanceSettings.mockResolvedValue({ type: 'loki' });
-    mockFetch.mockReturnValue(
-      of({
-        data: vectorResponse([
-          { labels: { job: 'prometheus', instance: 'localhost:9090' }, value: 1 },
-          { labels: { job: 'grafana', instance: 'localhost:3000' }, value: 42 },
-        ]),
-      })
+    const rawResponse = mockBackendResponse(
+      vectorResponse([
+        { labels: { job: 'prometheus', instance: 'localhost:9090' }, value: 1 },
+        { labels: { job: 'grafana', instance: 'localhost:3000' }, value: 42 },
+      ])
     );
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
@@ -104,6 +106,10 @@ describe('useQueryPreview', () => {
         }),
       })
     );
+    expect(mockToDataQueryResponse).toHaveBeenCalledWith(
+      rawResponse,
+      expect.arrayContaining([expect.objectContaining({ refId: 'A' })])
+    );
     expect(result.current.results).toEqual([
       {
         labels: { job: 'prometheus', instance: 'localhost:9090' },
@@ -121,7 +127,7 @@ describe('useQueryPreview', () => {
   });
 
   it('handles empty results', async () => {
-    mockFetch.mockReturnValue(of({ data: { data: [] } }));
+    mockBackendResponse({ data: [] });
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
     await act(() => result.current.runQuery('nonexistent_metric'));
@@ -133,7 +139,7 @@ describe('useQueryPreview', () => {
   });
 
   it('preserves datasource response errors', async () => {
-    mockFetch.mockReturnValue(of({ data: { data: [], errors: [{ message: 'parse error: unexpected token' }] } }));
+    mockBackendResponse({ data: [], errors: [{ message: 'parse error: unexpected token' }] });
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
     await act(() => result.current.runQuery('invalid{'));
@@ -143,7 +149,7 @@ describe('useQueryPreview', () => {
   });
 
   it('preserves transport-level response errors', async () => {
-    mockFetch.mockReturnValue(of({ data: { data: [], error: { message: 'Gateway unavailable' } } }));
+    mockBackendResponse({ data: [], error: { message: 'Gateway unavailable' } });
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
     await act(() => result.current.runQuery('up'));
@@ -151,17 +157,26 @@ describe('useQueryPreview', () => {
     expect(result.current.error).toBe('Gateway unavailable');
   });
 
-  it('preserves datasource errors from failed backend responses', async () => {
-    mockFetch.mockReturnValue(
-      throwError(() => ({
-        status: 400,
-        data: { results: { A: { error: 'parse error: unexpected token' } } },
-      }))
-    );
+  it('converts failed backend responses', async () => {
+    const fetchError = {
+      status: 400,
+      data: { results: { A: { error: 'parse error: unexpected token' } } },
+    };
+    mockFetch.mockReturnValue(throwError(() => fetchError));
+    mockIsFetchError.mockReturnValue(true);
+    mockToDataQueryResponse.mockReturnValue({
+      data: [],
+      errors: [{ message: 'parse error: unexpected token' }],
+    });
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
     await act(() => result.current.runQuery('invalid{'));
 
+    expect(mockIsFetchError).toHaveBeenCalledWith(fetchError);
+    expect(mockToDataQueryResponse).toHaveBeenCalledWith(
+      fetchError,
+      expect.arrayContaining([expect.objectContaining({ refId: 'A' })])
+    );
     expect(result.current.error).toBe('parse error: unexpected token');
   });
 
@@ -185,7 +200,7 @@ describe('useQueryPreview', () => {
   });
 
   it('clears results', async () => {
-    mockFetch.mockReturnValue(of({ data: vectorResponse([{ labels: { job: 'test' }, value: 1 }]) }));
+    mockBackendResponse(vectorResponse([{ labels: { job: 'test' }, value: 1 }]));
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
     await act(() => result.current.runQuery('up'));
 
