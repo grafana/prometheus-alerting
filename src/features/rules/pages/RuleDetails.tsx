@@ -196,6 +196,7 @@ function RuleDetails() {
       rule={rulerRule}
       promRule={promRule}
       groupIdentifier={groupIdentifier}
+      rulerGroup={rulerGroup}
       onDelete={showDeleteModal}
       onDuplicate={handleDuplicate}
       onSilence={handleSilence}
