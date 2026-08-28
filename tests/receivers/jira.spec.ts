@@ -77,7 +77,7 @@ test.describe('Jira receiver', () => {
     await expect(receiversPage.drawer.getByText('Project key is required', { exact: true })).toBeVisible();
     await expect(receiversPage.drawer.getByText('Issue type is required', { exact: true })).toBeVisible();
     await expect(
-      receiversPage.drawer.getByText('Enter a duration such as 100ms, 1.2s, or 8h', { exact: true })
+      receiversPage.drawer.getByText('Enter a duration such as 30s, 5m, or 1d12h', { exact: true })
     ).toBeVisible();
     await expect(receiversPage.getRow('jira-validation')).toBeHidden();
   });

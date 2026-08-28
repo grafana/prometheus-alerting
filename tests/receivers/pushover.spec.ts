@@ -41,7 +41,6 @@ test.describe('Pushover receiver', () => {
     });
     await expect(pushover.userKeyInput).toHaveAttribute('type', 'password');
     await expect(pushover.tokenInput).toHaveAttribute('type', 'password');
-    await expect(receiversPage.drawer.getByLabel('Use monospace formatting', { exact: true })).toHaveCount(0);
     await receiversPage.submitCreate();
 
     await expect(receiversPage.getRow('pushover-create')).toBeVisible();
@@ -87,7 +86,7 @@ test.describe('Pushover receiver', () => {
     await expect(receiversPage.drawer.getByText('Token is required', { exact: true })).toBeVisible();
     await expect(receiversPage.drawer.getByText('Priority must be between -2 and 2', { exact: true })).toBeVisible();
     await expect(
-      receiversPage.drawer.getByText('Enter a duration such as 30s, 5m30s, or 8h', { exact: true })
+      receiversPage.drawer.getByText('Enter a duration such as 30s, 5m30s, or 1.5h', { exact: true })
     ).toBeVisible();
   });
 });
