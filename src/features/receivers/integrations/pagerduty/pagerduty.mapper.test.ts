@@ -5,7 +5,7 @@ import {
   pagerDutyConfigToFormSettings,
   pagerDutyFormSettingsToConfig,
 } from './pagerduty.mapper';
-import { createPagerDutySettingsFormSchema } from './pagerduty.schema';
+import { PagerDutySettingsFormSchema } from './pagerduty.schema';
 
 describe('PagerDuty mapper', () => {
   it('keeps form values aligned with PagerdutyConfig', () => {
@@ -44,7 +44,7 @@ describe('PagerDuty mapper', () => {
       basic_auth: { username: 'user' },
     };
 
-    const result = createPagerDutySettingsFormSchema().safeParse(settings);
+    const result = PagerDutySettingsFormSchema.safeParse(settings);
 
     expect(result.success).toBe(false);
     if (!result.success) {

@@ -103,3 +103,54 @@ describe('oauth2', () => {
     ).toBe(true);
   });
 });
+
+describe('createHttpConfigFormSchema, rules Alertmanager enforces on the HTTP block', () => {
+  describe('no proxy', () => {
+    it('rejects no proxy on its own', () => {
+      expect(messagesFor({ no_proxy: 'localhost' })).toEqual(['No proxy needs a proxy URL as well']);
+      expect(pathsFor({ no_proxy: 'localhost' })).toEqual(['no_proxy']);
+    });
+
+    it('rejects no proxy alongside proxy from environment', () => {
+      expect(messagesFor({ no_proxy: 'localhost', proxy_from_environment: true })).toEqual([
+        'No proxy and proxy from environment cannot be used together',
+      ]);
+    });
+
+    it('accepts no proxy next to a proxy URL', () => {
+      expect(messagesFor({ no_proxy: 'localhost', proxy_url: 'http://proxy' })).toEqual([]);
+    });
+  });
+
+  describe('authorization type', () => {
+    it('rejects an authorization type of basic', () => {
+      expect(messagesFor({ authorization: { type: 'basic', credentials: 'c' } })).toEqual([
+        'Authorization type cannot be "basic". Use basic authentication instead.',
+      ]);
+      expect(pathsFor({ authorization: { type: 'basic', credentials: 'c' } })).toEqual(['authorization.type']);
+    });
+
+    it('rejects it whatever the capitals and spacing', () => {
+      expect(messagesFor({ authorization: { type: ' Basic ', credentials: 'c' } })).toEqual([
+        'Authorization type cannot be "basic". Use basic authentication instead.',
+      ]);
+    });
+
+    it('accepts any other type', () => {
+      expect(messagesFor({ authorization: { type: 'Bearer', credentials: 'c' } })).toEqual([]);
+    });
+  });
+
+  describe('TLS versions', () => {
+    it('rejects a version Alertmanager does not know', () => {
+      expect(messagesFor({ tls_config: { min_version: 'TLS9' } })).toEqual([
+        'TLS version must be TLS10, TLS11, TLS12 or TLS13',
+      ]);
+      expect(pathsFor({ tls_config: { max_version: 'TLS9' } })).toEqual(['tls_config.max_version']);
+    });
+
+    it('accepts the four it does know', () => {
+      expect(messagesFor({ tls_config: { min_version: 'TLS12', max_version: 'TLS13' } })).toEqual([]);
+    });
+  });
+});
