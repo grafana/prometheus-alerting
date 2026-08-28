@@ -1,37 +1,20 @@
 import { useCallback, useState } from 'react';
+import { catchError, lastValueFrom, map, of, throwError } from 'rxjs';
 
-import { getBackendSrv } from '@grafana/runtime';
+import {
+  CoreApp,
+  dateTime,
+  FieldType,
+  toDataFrame,
+  type DataFrame,
+  type DataQueryRequest,
+  type DataQueryResponse,
+} from '@grafana/data';
+import { getBackendSrv, isFetchError, toDataQueryResponse, type BackendDataSourceResponse } from '@grafana/runtime';
+import { getDataSourceInstanceSettings } from '@grafana/runtime/unstable';
+import type { DataQuery } from '@grafana/schema';
 
-import { resolveFlavorOrThrow } from '../../../api/rules/flavors/registry';
-import { buildDatasourceProxyUrl } from '../../../api/utils/proxyPath';
 import { extractErrorMessage } from '../../../utils/errors';
-
-/**
- * Prometheus instant query result types
- */
-export interface PrometheusMetric {
-  [key: string]: string;
-}
-
-export interface PrometheusVectorResult {
-  metric: PrometheusMetric;
-  value: [number, string]; // [timestamp, value]
-}
-
-export interface PrometheusMatrixResult {
-  metric: PrometheusMetric;
-  values: Array<[number, string]>; // array of [timestamp, value]
-}
-
-export interface PrometheusQueryResponse {
-  status: 'success' | 'error';
-  data: {
-    resultType: 'vector' | 'matrix' | 'scalar' | 'string';
-    result: PrometheusVectorResult[] | PrometheusMatrixResult[];
-  };
-  error?: string;
-  errorType?: string;
-}
 
 export interface QueryPreviewResult {
   labels: Record<string, string>;
@@ -44,14 +27,77 @@ export interface QueryPreviewState {
   isLoading: boolean;
   error: string | null;
   resultType: 'vector' | 'matrix' | 'scalar' | 'string' | null;
-  /** Whether a query has been executed (to distinguish "not run yet" from "no data") */
   hasRun: boolean;
 }
 
-/**
- * Hook to execute instant queries against Prometheus/Loki datasources
- * and preview the results.
- */
+interface InstantQuery extends DataQuery {
+  expr: string;
+  instant: true;
+  range: false;
+  queryType: 'instant';
+}
+
+function createInstantQueryRequest(dataSourceUid: string, dataSourceType: string, expression: string) {
+  const now = dateTime();
+
+  return {
+    requestId: `query-preview-${dataSourceUid}`,
+    interval: '1s',
+    intervalMs: 1000,
+    maxDataPoints: 1,
+    range: { from: now, to: now, raw: { from: 'now', to: 'now' } },
+    scopedVars: {},
+    targets: [
+      {
+        refId: 'A',
+        datasource: { uid: dataSourceUid, type: dataSourceType },
+        expr: expression,
+        instant: true,
+        range: false,
+        queryType: 'instant',
+      },
+    ],
+    timezone: 'browser',
+    app: CoreApp.Unknown,
+    startTime: Date.now(),
+  } satisfies DataQueryRequest<InstantQuery>;
+}
+
+function getResponseError(response: DataQueryResponse): unknown {
+  return response.errors?.[0] ?? response.error;
+}
+
+function frameToResults(frame: DataFrame): QueryPreviewResult[] {
+  const valueField = frame.fields.find((field) => field.type !== FieldType.time);
+  if (!valueField) {
+    return [];
+  }
+
+  const timeField = frame.fields.find((field) => field.type === FieldType.time);
+  const labels = valueField.labels ?? {};
+  const results: QueryPreviewResult[] = [];
+
+  for (let index = 0; index < frame.length; index++) {
+    const value = valueField.values[index];
+    if (value === null || value === undefined) {
+      continue;
+    }
+
+    const timestamp = timeField?.values[index];
+    results.push({
+      labels,
+      value: String(value),
+      timestamp: typeof timestamp === 'number' ? timestamp / 1000 : Date.now() / 1000,
+    });
+  }
+
+  return results;
+}
+
+function responseToResults(response: DataQueryResponse): QueryPreviewResult[] {
+  return response.data.flatMap((data) => frameToResults(toDataFrame(data)));
+}
+
 export function useQueryPreview(dataSourceUid: string) {
   const [state, setState] = useState<QueryPreviewState>({
     results: [],
@@ -74,62 +120,60 @@ export function useQueryPreview(dataSourceUid: string) {
         return;
       }
 
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+      setState((previousState) => ({ ...previousState, isLoading: true, error: null }));
 
       try {
-        const now = Math.floor(Date.now() / 1000);
+        const dataSource = await getDataSourceInstanceSettings(dataSourceUid);
+        if (!dataSource) {
+          throw new Error(`Data source with uid "${dataSourceUid}" not found`);
+        }
 
-        const params = new URLSearchParams({
-          query: expression,
-          time: now.toString(),
-        });
-        const queryApiPath = (await resolveFlavorOrThrow(dataSourceUid)).queryPath;
-        const response = await getBackendSrv().post<PrometheusQueryResponse>(
-          buildDatasourceProxyUrl(dataSourceUid, ...queryApiPath.split('/')),
-          params.toString(),
-          {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          }
+        const request = createInstantQueryRequest(dataSourceUid, dataSource.type, expression);
+        const response = await lastValueFrom(
+          getBackendSrv()
+            .fetch<BackendDataSourceResponse>({
+              url: `/api/ds/query?ds_type=${encodeURIComponent(dataSource.type)}&requestId=${encodeURIComponent(request.requestId)}`,
+              method: 'POST',
+              data: {
+                queries: request.targets.map((target) => ({
+                  ...target,
+                  intervalMs: request.intervalMs,
+                  maxDataPoints: request.maxDataPoints,
+                })),
+                from: request.range.from.valueOf().toString(),
+                to: request.range.to.valueOf().toString(),
+              },
+              requestId: request.requestId,
+              showErrorAlert: false,
+              headers: {
+                'X-Plugin-Id': dataSource.type,
+                'X-Datasource-Uid': dataSourceUid,
+              },
+            })
+            .pipe(
+              map((rawResponse) => toDataQueryResponse(rawResponse, request.targets)),
+              catchError((error: unknown) => {
+                if (!isFetchError<BackendDataSourceResponse>(error)) {
+                  return throwError(() => error);
+                }
+
+                return of(toDataQueryResponse(error, request.targets));
+              })
+            )
         );
 
-        if (response.status === 'error') {
-          throw new Error(response.error || 'Query failed');
+        const responseError = getResponseError(response);
+
+        if (responseError) {
+          throw responseError;
         }
 
-        const { resultType, result } = response.data;
-
-        // Convert results to our format
-        const results: QueryPreviewResult[] = [];
-
-        if (resultType === 'vector') {
-          const vectorResults = result as PrometheusVectorResult[];
-          for (const item of vectorResults) {
-            results.push({
-              labels: item.metric,
-              value: item.value[1],
-              timestamp: item.value[0],
-            });
-          }
-        } else if (resultType === 'matrix') {
-          const matrixResults = result as PrometheusMatrixResult[];
-          for (const item of matrixResults) {
-            // For matrix, take the latest value
-            const latestValue = item.values[item.values.length - 1];
-            if (latestValue) {
-              results.push({
-                labels: item.metric,
-                value: latestValue[1],
-                timestamp: latestValue[0],
-              });
-            }
-          }
-        }
-
+        const results = responseToResults(response);
         setState({
           results,
           isLoading: false,
           error: null,
-          resultType,
+          resultType: results.length > 0 ? 'vector' : null,
           hasRun: true,
         });
       } catch (error) {
