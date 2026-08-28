@@ -1,6 +1,6 @@
 import type { WechatConfig } from '@grafana/external-alertmanager/vanilla';
 import { createDefaultWeChatSettings, weChatConfigToFormSettings, weChatFormSettingsToConfig } from './wechat.mapper';
-import { createWeChatSettingsFormSchema } from './wechat.schema';
+import { WeChatSettingsFormSchema } from './wechat.schema';
 describe('WeChat mapper', () => {
   it('round-trips secrets, HTTP, false, and unknown fields', () => {
     const config = {
@@ -15,7 +15,7 @@ describe('WeChat mapper', () => {
     expect(createDefaultWeChatSettings()).toMatchObject({ message_type: 'text' });
   });
   it('rejects proxy conflicts', () => {
-    const result = createWeChatSettingsFormSchema().safeParse({
+    const result = WeChatSettingsFormSchema.safeParse({
       http_config: { proxy_url: 'http://proxy', proxy_from_environment: true },
     });
     expect(result.success).toBe(false);

@@ -1,6 +1,6 @@
 import type { JiraConfig } from '@grafana/external-alertmanager/vanilla';
 import { createDefaultJiraSettings, jiraConfigToFormSettings, jiraFormSettingsToConfig } from './jira.mapper';
-import { createJiraSettingsFormSchema } from './jira.schema';
+import { JiraSettingsFormSchema } from './jira.schema';
 describe('Jira mapper', () => {
   it('round-trips collections, HTTP, and unknown fields', () => {
     const config = {
@@ -15,7 +15,7 @@ describe('Jira mapper', () => {
     expect(jiraFormSettingsToConfig(jiraConfigToFormSettings(config))).toEqual(config);
   });
   it('requires API URL, project, and issue type', () => {
-    const result = createJiraSettingsFormSchema().safeParse(createDefaultJiraSettings());
+    const result = JiraSettingsFormSchema.safeParse(createDefaultJiraSettings());
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues.map((issue) => issue.path)).toEqual(
@@ -31,6 +31,6 @@ describe('Jira mapper', () => {
       issue_type: 'Bug',
       reopen_duration: 'tomorrow',
     };
-    expect(createJiraSettingsFormSchema().safeParse(settings).success).toBe(false);
+    expect(JiraSettingsFormSchema.safeParse(settings).success).toBe(false);
   });
 });

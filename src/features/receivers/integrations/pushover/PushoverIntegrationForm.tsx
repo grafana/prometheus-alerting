@@ -30,6 +30,10 @@ export function PushoverIntegrationForm({ index }: PushoverIntegrationFormProps)
       <TextField name={`${path}.expire`} label={t('receivers.form.pushover-expire', 'Expire')} />
       <TextField name={`${path}.ttl`} label={t('receivers.form.pushover-ttl', 'TTL')} />
       <CheckboxField name={`${path}.html`} label={t('receivers.form.pushover-html', 'Enable HTML')} />
+      <CheckboxField
+        name={`${path}.monospace`}
+        label={t('receivers.form.pushover-monospace', 'Use monospace formatting')}
+      />
       <Box paddingTop={1}>
         <Stack direction="column" gap={1}>
           <Text variant="bodySmall" weight="medium" color="secondary">

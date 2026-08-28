@@ -5,6 +5,23 @@
 
 import { z } from 'zod';
 
+/**
+ * Alertmanager reads YAML with a reader that happily turns a bare number or boolean into a string,
+ * so `timeout: 0`, `priority: 1` and `agent_id: 1` are all valid config even though the Go field is
+ * a string. Plain `z.string()` refuses those, and because we parse the whole configuration in one
+ * go, a single unquoted number anywhere would stop the user opening any of it.
+ *
+ * This accepts what Alertmanager accepts and hands back the string the rest of the app expects.
+ * Values that are already strings come through untouched.
+ */
+const yamlString = () =>
+  z.codec(z.union([z.string(), z.number(), z.boolean()]), z.string(), {
+    decode: (value) => String(value),
+    // Going back out it is already a string, and this schema is also used to write the config, so
+    // the trip has to work in both directions.
+    encode: (value) => value,
+  });
+
 // HTTP Config schemas (reusable across all receiver types)
 // Based on: https://prometheus.io/docs/alerting/0.22/configuration/#http_config
 
@@ -259,7 +276,7 @@ export const WebhookConfigSchema = z
     url: z.string().optional(),
     url_file: z.string().optional(),
     max_alerts: z.number().optional(),
-    timeout: z.string().optional(),
+    timeout: yamlString().optional(),
     http_config: HTTPConfigSchema.optional(),
   })
   .superRefine((data, ctx) => {
@@ -292,7 +309,7 @@ export const OpsGenieConfigSchema = z
     responders: z.array(OpsGenieResponderConfigSchema).optional(),
     tags: z.string().optional(),
     note: z.string().optional(),
-    priority: z.string().optional(),
+    priority: yamlString().optional(),
     entity: z.string().optional(),
     actions: z.string().optional(),
     update_alerts: z.boolean().optional(),
@@ -312,7 +329,7 @@ export const WechatConfigSchema = z.looseObject({
   send_resolved: z.boolean().optional(),
   api_url: z.string().optional(),
   corp_id: z.string().optional(),
-  agent_id: z.string().optional(),
+  agent_id: yamlString().optional(),
   api_secret: z.string().optional(),
   to_user: z.string().optional(),
   to_party: z.string().optional(),
@@ -335,10 +352,10 @@ export const PushoverConfigSchema = z
     url_title: z.string().optional(),
     device: z.string().optional(),
     sound: z.string().optional(),
-    priority: z.string().optional(),
-    retry: z.string().optional(),
-    expire: z.string().optional(),
-    ttl: z.string().optional(),
+    priority: yamlString().optional(),
+    retry: yamlString().optional(),
+    expire: yamlString().optional(),
+    ttl: yamlString().optional(),
     html: z.boolean().optional(),
     monospace: z.boolean().optional(),
     http_config: HTTPConfigSchema.optional(),
@@ -517,12 +534,12 @@ export const JiraConfigSchema = z.looseObject({
   summary: z.string().optional(),
   description: z.string().optional(),
   labels: z.array(z.string()).optional(),
-  priority: z.string().optional(),
+  priority: yamlString().optional(),
   issue_type: z.string().optional(),
   resolve_transition: z.string().optional(),
   reopen_transition: z.string().optional(),
   wont_fix_resolution: z.string().optional(),
-  reopen_duration: z.string().optional(),
+  reopen_duration: yamlString().optional(),
   fields: z.record(z.string(), z.string()).optional(),
   http_config: HTTPConfigSchema.optional(),
 });
@@ -593,7 +610,7 @@ export const IncidentioConfigSchema = z
     alert_source_token: z.string().optional(),
     alert_source_token_file: z.string().optional(),
     max_alerts: z.number().optional(),
-    timeout: z.string().optional(),
+    timeout: yamlString().optional(),
     http_config: HTTPConfigSchema.optional(),
   })
   .superRefine((data, ctx) => {

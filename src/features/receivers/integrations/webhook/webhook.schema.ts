@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
+import { timeoutDurationSchema } from '../shared/duration.schema';
 import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
 
 export function createWebhookSettingsFormSchema() {
@@ -24,7 +25,7 @@ export function createWebhookSettingsFormSchema() {
         });
       }
     }),
-    timeout: z.string().optional(),
+    timeout: timeoutDurationSchema,
     http_config: createHttpConfigFormSchema({ oauth2: true }),
   });
 }

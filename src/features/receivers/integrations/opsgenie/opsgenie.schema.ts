@@ -5,6 +5,9 @@ import { createIntegrationFormSchema } from '../shared/integration.schema';
 import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 import { inlineOrFileFields } from '../shared/inlineOrFile.schema';
 
+/** The kinds of responder Opsgenie accepts. Alertmanager lowercases what you type before checking. */
+const OPSGENIE_RESPONDER_TYPES = ['team', 'teams', 'user', 'escalation', 'schedule'];
+
 const OpsgenieResponderFormSchema = z.looseObject({
   id: z.string().optional(),
   name: z.string().optional(),
@@ -12,11 +15,10 @@ const OpsgenieResponderFormSchema = z.looseObject({
   type: z.string().optional(),
 });
 
-export function createOpsgenieSettingsFormSchema(validateRequired = true) {
+export function createOpsgenieSettingsSchema() {
   return inlineOrFileFields({
     inline: 'api_key',
     file: 'api_key_file',
-    required: validateRequired ? t('receivers.form.opsgenie-api-key-required', 'API key is required') : undefined,
     conflict: t('receivers.form.opsgenie-api-key-conflict', 'API key and API key file cannot be used together'),
   })
     .safeExtend({
@@ -38,19 +40,55 @@ export function createOpsgenieSettingsFormSchema(validateRequired = true) {
       http_config: createHttpConfigFormSchema().optional(),
     })
     .superRefine((settings, ctx) => {
-      if (
-        validateRequired &&
-        settings.priority &&
-        !/^P[1-5]$/.test(settings.priority) &&
-        !settings.priority.includes('{{')
-      ) {
+      // Opsgenie needs to know who to wake up, and it only understands these kinds of responder.
+      // A templated type is passed through untouched, so leave those alone.
+      settings.responders?.forEach((responder) => {
+        const type = responder.type?.trim();
+        if (type && !type.includes('{{') && !OPSGENIE_RESPONDER_TYPES.includes(type.toLowerCase())) {
+          ctx.addIssue({
+            code: 'custom',
+            message: t(
+              'receivers.form.opsgenie-responder-type-invalid',
+              'Responder type must be team, teams, user, escalation, or schedule'
+            ),
+            path: ['responders'],
+          });
+        }
+      });
+    });
+}
+
+export function createOpsgenieSettingsFormSchema() {
+  return createOpsgenieSettingsSchema().superRefine((settings, ctx) => {
+    if (!settings.api_key?.trim() && !settings.api_key_file?.trim()) {
+      ctx.addIssue({
+        code: 'custom',
+        message: t('receivers.form.opsgenie-api-key-required', 'API key is required'),
+        path: ['api_key'],
+      });
+    }
+
+    settings.responders?.forEach((responder) => {
+      if (!responder.id?.trim() && !responder.username?.trim() && !responder.name?.trim()) {
         ctx.addIssue({
           code: 'custom',
-          message: t('receivers.form.opsgenie-priority-invalid', 'Priority must be P1, P2, P3, P4, or P5'),
-          path: ['priority'],
+          message: t(
+            'receivers.form.opsgenie-responder-identifier-required',
+            'Every responder needs an ID, username, or name'
+          ),
+          path: ['responders'],
         });
       }
     });
+
+    if (settings.priority && !/^P[1-5]$/.test(settings.priority) && !settings.priority.includes('{{')) {
+      ctx.addIssue({
+        code: 'custom',
+        message: t('receivers.form.opsgenie-priority-invalid', 'Priority must be P1, P2, P3, P4, or P5'),
+        path: ['priority'],
+      });
+    }
+  });
 }
 export function createOpsgenieIntegrationFormSchema() {
   return createIntegrationFormSchema('opsgenie', createOpsgenieSettingsFormSchema(), [
@@ -60,4 +98,4 @@ export function createOpsgenieIntegrationFormSchema() {
     },
   ]);
 }
-export type OpsgenieSettingsFormValues = z.infer<ReturnType<typeof createOpsgenieSettingsFormSchema>>;
+export type OpsgenieSettingsFormValues = z.infer<ReturnType<typeof createOpsgenieSettingsSchema>>;

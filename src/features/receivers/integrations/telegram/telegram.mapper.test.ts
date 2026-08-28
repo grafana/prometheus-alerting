@@ -17,6 +17,7 @@ describe('Telegram mapper', () => {
     } satisfies TelegramConfig;
     const settings = telegramConfigToFormSettings(config);
     expect(settings.chat_id).toBe('-12345');
+    expect(settings.message_thread_id).toBe('42');
     expect(telegramFormSettingsToConfig(settings)).toEqual(config);
   });
   it('round-trips a bot-token-file-only configuration', () => {

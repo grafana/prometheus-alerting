@@ -17,24 +17,39 @@ const integerString = z.string().superRefine((value, ctx) => {
     });
   }
 });
-export function createTelegramSettingsFormSchema(validateForSubmission = true) {
+
+export function createTelegramSettingsSchema() {
   return inlineOrFileFields({
     inline: 'bot_token',
     file: 'bot_token_file',
-    required: validateForSubmission
-      ? t('receivers.form.telegram-bot-token-required', 'Bot token is required')
-      : undefined,
     conflict: t('receivers.form.telegram-token-conflict', 'Bot token and bot token file cannot be used together'),
   }).safeExtend({
     api_url: z.string().optional(),
-    chat_id: integerString.refine(
-      (value) => value !== '',
-      t('receivers.form.telegram-chat-id-required', 'Chat ID is required')
-    ),
+    chat_id: integerString
+      .refine((value) => value !== '', t('receivers.form.telegram-chat-id-required', 'Chat ID is required'))
+      // Alertmanager reads a chat ID of zero as "nobody filled this in" and turns the config away,
+      // so catch it here rather than letting the save fail.
+      .refine(
+        (value) => value === '' || Number(value) !== 0,
+        t('receivers.form.telegram-chat-id-zero', 'Chat ID cannot be 0')
+      ),
+    message_thread_id: integerString.optional(),
     message: z.string().optional(),
     disable_notifications: z.boolean().optional(),
     parse_mode: z.enum(['', 'MarkdownV2', 'Markdown', 'HTML']).optional(),
     http_config: createHttpConfigFormSchema().optional(),
+  });
+}
+
+export function createTelegramSettingsFormSchema() {
+  return createTelegramSettingsSchema().superRefine((settings, ctx) => {
+    if (!settings.bot_token?.trim() && !settings.bot_token_file?.trim()) {
+      ctx.addIssue({
+        code: 'custom',
+        message: t('receivers.form.telegram-bot-token-required', 'Bot token is required'),
+        path: ['bot_token'],
+      });
+    }
   });
 }
 export function createTelegramIntegrationFormSchema() {
@@ -45,4 +60,4 @@ export function createTelegramIntegrationFormSchema() {
     },
   ]);
 }
-export type TelegramSettingsFormValues = z.infer<ReturnType<typeof createTelegramSettingsFormSchema>>;
+export type TelegramSettingsFormValues = z.infer<ReturnType<typeof createTelegramSettingsSchema>>;
