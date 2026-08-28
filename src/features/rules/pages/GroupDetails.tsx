@@ -164,13 +164,19 @@ function GroupDetails() {
   return (
     <PluginPage
       pageNav={pageNav}
-      renderTitle={(title) => <GroupDetailsTitle name={title} />}
+      renderTitle={(title) => <GroupDetailsTitle name={title} sourceTenants={rulerGroup?.source_tenants} />}
       subTitle={t('alerting.group-details.subtitle', 'View alert and recording rules in this evaluation group')}
       info={[
         { label: t('alerting.group-details.namespace', 'Namespace'), value: namespace },
         { label: t('alerting.group-details.interval', 'Interval'), value: groupInterval },
       ]}
-      actions={<GroupDetailsActions editLink={editPageLink} dataSourceUid={dataSourceUid} />}
+      actions={
+        <GroupDetailsActions
+          editLink={editPageLink}
+          dataSourceUid={dataSourceUid}
+          rulerGroup={rulerGroup ?? undefined}
+        />
+      }
     >
       <Stack direction="column" gap={2}>
         {/* Consistency check warning */}
