@@ -1,7 +1,7 @@
 import type { WebexConfig } from '@grafana/external-alertmanager/vanilla';
 
 import { omitEmptyValues } from '../../utils/omitEmptyValues';
-import { createWebexSettingsFormSchema, WebexSettingsFormValues } from './webex.schema';
+import { createWebexSettingsSchema, WebexSettingsFormValues } from './webex.schema';
 
 export function webexConfigToFormSettings(config: WebexConfig): WebexSettingsFormValues {
   const settings = structuredClone(config);
@@ -24,11 +24,11 @@ export function webexConfigToFormSettings(config: WebexConfig): WebexSettingsFor
   settings.room_id ??= '';
   settings.http_config = normalizedHttpConfig;
 
-  return createWebexSettingsFormSchema(false).parse(settings);
+  return createWebexSettingsSchema().parse(settings);
 }
 
 export function webexFormSettingsToConfig(values: WebexSettingsFormValues): WebexConfig {
-  return omitEmptyValues(createWebexSettingsFormSchema(false).parse(values));
+  return omitEmptyValues(createWebexSettingsSchema().parse(values));
 }
 
 export function createDefaultWebexSettings(): WebexSettingsFormValues {

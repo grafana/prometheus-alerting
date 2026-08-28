@@ -1,6 +1,6 @@
 import type { WechatConfig } from '@grafana/external-alertmanager/vanilla';
 import { createDefaultWeChatSettings, weChatConfigToFormSettings, weChatFormSettingsToConfig } from './wechat.mapper';
-import { createWeChatSettingsFormSchema } from './wechat.schema';
+import { WeChatSettingsFormSchema } from './wechat.schema';
 describe('WeChat mapper', () => {
   it('round-trips secrets, HTTP, false, and unknown fields', () => {
     const config = {
@@ -15,9 +15,25 @@ describe('WeChat mapper', () => {
     expect(createDefaultWeChatSettings()).toMatchObject({ message_type: 'text' });
   });
   it('rejects proxy conflicts', () => {
-    const result = createWeChatSettingsFormSchema().safeParse({
+    const result = WeChatSettingsFormSchema.safeParse({
       http_config: { proxy_url: 'http://proxy', proxy_from_environment: true },
     });
     expect(result.success).toBe(false);
+  });
+});
+
+/**
+ * Alertmanager understands more of this integration than the form shows. We deliberately do not
+ * validate a setting nobody can edit, so the least we owe is that opening a receiver and saving it
+ * again gives them back untouched.
+ */
+describe('WeChat settings the form does not show', () => {
+  it('hands them back unchanged after a round trip', () => {
+    const config = {
+      corp_id: 'corp',
+      api_secret_file: '/etc/alerting/wechat',
+    };
+
+    expect(weChatFormSettingsToConfig(weChatConfigToFormSettings(config as never))).toMatchObject(config);
   });
 });

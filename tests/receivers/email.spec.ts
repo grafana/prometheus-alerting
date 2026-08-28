@@ -13,6 +13,7 @@ alertmanager_config: |
           hello: 'before.example.com'
           auth_username: 'before-user'
           auth_password: 'before-pass'
+          auth_secret: 'before-secret'
           require_tls: true
           html: 'Before HTML body'
           text: 'Before text body'
@@ -39,6 +40,7 @@ test.describe('Email receiver', () => {
       hello: 'alertmanager.example.com',
       authUsername: 'emailuser',
       authPassword: 'emailpass',
+      authSecret: 'emailsecret',
       requireTls: true,
       html: 'Full HTML body',
       text: 'Full text body',
@@ -49,6 +51,7 @@ test.describe('Email receiver', () => {
 
     // #1943 and #1944: passwords are masked and Mimir-only forms do not expose invalid TLS files.
     await expect(email.authPasswordInput).toHaveAttribute('type', 'password');
+    await expect(email.authSecretInput).toHaveAttribute('type', 'password');
     await expect(receiversPage.drawer.getByLabel(/^(CA|Cert|Key) file$/)).toHaveCount(0);
     await receiversPage.submitCreate();
 
@@ -61,6 +64,7 @@ test.describe('Email receiver', () => {
     await expect(receiversPage.getViewFieldValue('auth_username')).toHaveText('emailuser');
     await expect(receiversPage.getViewFieldValue('auth_password')).toHaveText(/^\*+$/);
     await expect(receiversPage.getViewFieldValue('auth_password')).not.toHaveText('emailpass');
+    await expect(receiversPage.getViewFieldValue('auth_secret')).toHaveText(/^\*+$/);
     await expect(receiversPage.getViewFieldValue('require_tls')).toHaveText('Yes');
     await expect(receiversPage.getViewFieldValue('html')).toHaveText('Full HTML body');
     await expect(receiversPage.getViewFieldValue('text')).toHaveText('Full text body');
@@ -77,13 +81,16 @@ test.describe('Email receiver', () => {
     await receiversPage.openReceiverByName('email-full-update');
     await receiversPage.startEdit();
     const email = await receiversPage.selectEmailIntegration(0);
+    await expect(email.authPasswordInput).toHaveValue('before-pass');
+    await expect(email.authPasswordInput).toHaveAttribute('type', 'password');
+    await expect(email.authSecretInput).toHaveValue('before-secret');
+    await expect(email.authSecretInput).toHaveAttribute('type', 'password');
     await email.fill({
       to: 'after@example.com',
       from: 'after-from@example.com',
       smarthost: 'smtp-after.example.com:587',
       hello: 'after.example.com',
       authUsername: 'after-user',
-      authPassword: 'after-pass',
       requireTls: true,
       html: 'After HTML body',
       text: 'After text body',
@@ -98,6 +105,7 @@ test.describe('Email receiver', () => {
     await expect(receiversPage.getViewFieldValue('smarthost')).toHaveText('smtp-after.example.com:587');
     await expect(receiversPage.getViewFieldValue('auth_username')).toHaveText('after-user');
     await expect(receiversPage.getViewFieldValue('auth_password')).toHaveText(/^\*+$/);
+    await expect(receiversPage.getViewFieldValue('auth_secret')).toHaveText(/^\*+$/);
     await expect(receiversPage.getViewFieldValue('require_tls')).toHaveText('No');
     await expect(receiversPage.drawer.getByText('X-Existing', { exact: true })).toBeVisible();
     await expect(receiversPage.drawer.getByText('preserve-me', { exact: true })).toBeVisible();
