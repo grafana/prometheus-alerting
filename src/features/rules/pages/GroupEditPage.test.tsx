@@ -22,16 +22,18 @@ const DATA_SOURCE_UID = 'test-mimir-uid';
 const NAMESPACE = 'test-namespace';
 const GROUP_NAME = 'test-group';
 
-/** A federated Mimir group: most of these settings have no field in the edit form. */
-const federatedGroup: RulerRuleGroupDTO = {
+/** A Mimir group whose settings mostly have no field in the edit form. */
+const tunedGroup: RulerRuleGroupDTO = {
   name: GROUP_NAME,
   interval: '1m',
   limit: 10,
   query_offset: '2m',
-  source_tenants: ['tenant-a', 'tenant-b'],
   align_evaluation_time_on_interval: true,
   rules: [{ alert: 'HighErrorRate', expr: 'up == 0', for: '5m' }],
 };
+
+/** `source_tenants` is what makes a group federated, and federated groups are not editable here. */
+const federatedGroup: RulerRuleGroupDTO = { ...tunedGroup, source_tenants: ['tenant-a', 'tenant-b'] };
 
 const mimirDataSource = DataSourceInstanceSettingsFactory.build({
   uid: DATA_SOURCE_UID,
@@ -96,7 +98,7 @@ function renderGroupEditPage() {
 
 describe('GroupEditPage', () => {
   beforeEach(async () => {
-    setMockNamespaces({ [NAMESPACE]: [federatedGroup] });
+    setMockNamespaces({ [NAMESPACE]: [tunedGroup] });
     setCurrentUserPermissions(AlertingPermission.RulesRead, AlertingPermission.RulesWrite);
     await loadDataSource();
   });
@@ -115,6 +117,16 @@ describe('GroupEditPage', () => {
     // The payload used to be rebuilt from name, interval and rules alone, so a group edit
     // de-federated the group and dropped its limit and query offset
     await waitFor(() => expect(upserts).toHaveLength(1));
-    expect(upserts[0]).toEqual({ ...federatedGroup, interval: '5m' });
+    expect(upserts[0]).toEqual({ ...tunedGroup, interval: '5m' });
+  });
+
+  it('offers no form for a federated group', async () => {
+    setMockNamespaces({ [NAMESPACE]: [federatedGroup] });
+
+    renderGroupEditPage();
+
+    // Its source_tenants decide which tenants the rules read, and this form cannot express that
+    expect(await screen.findByRole('status', { name: 'This group is federated' })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /Evaluation interval/i })).not.toBeInTheDocument();
   });
 });
