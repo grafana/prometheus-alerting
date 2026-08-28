@@ -124,3 +124,12 @@ export function labelsMatchMatchers(labels: Record<string, string>, matchers: Ma
     }
   });
 }
+
+/**
+ * Labels wrapped in double underscores are internal bookkeeping added by Grafana or the
+ * Alertmanager (for example `__alert_rule_uid__`). They're not useful to match a silence on,
+ * so we leave them out when we build matchers from an alert's labels.
+ */
+export function isPrivateLabelKey(labelKey: string): boolean {
+  return labelKey.startsWith('__') && labelKey.endsWith('__');
+}
