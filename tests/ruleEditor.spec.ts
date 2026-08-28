@@ -352,7 +352,11 @@ rules:
 
       await ruleEditorPage.fillExpression('up == 1');
       await ruleEditorPage.clickSave();
-      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
+      // The edit page already sits on a /rules/cri… URL, so waiting for that pattern alone
+      // returns immediately and the read below races the save. Wait for the editor to go.
+      await page.waitForURL((url) => /\/rules\/cri/.test(url.pathname) && !url.pathname.endsWith('/edit'), {
+        timeout: 5000,
+      });
 
       const group = await getMimirRuleGroup(mimirRuler.tenantId, mimirRuler.namespace, groupName);
       expect(group?.rules).toHaveLength(1);
@@ -388,7 +392,11 @@ rules:
       // Prometheus takes compound durations, and the field passes one straight through
       await ruleEditorPage.setKeepFiringFor('1h30m');
       await ruleEditorPage.clickSave();
-      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
+      // The edit page already sits on a /rules/cri… URL, so waiting for that pattern alone
+      // returns immediately and the read below races the save. Wait for the editor to go.
+      await page.waitForURL((url) => /\/rules\/cri/.test(url.pathname) && !url.pathname.endsWith('/edit'), {
+        timeout: 5000,
+      });
 
       const group = await getMimirRuleGroup(mimirRuler.tenantId, mimirRuler.namespace, groupName);
       expect(group?.rules[0]).toMatchObject({ ...rule, keep_firing_for: '1h30m' });
@@ -422,7 +430,11 @@ rules:
 
       await ruleEditorPage.setKeepFiringFor('');
       await ruleEditorPage.clickSave();
-      await page.waitForURL(/\/rules\/cri/, { timeout: 5000 });
+      // The edit page already sits on a /rules/cri… URL, so waiting for that pattern alone
+      // returns immediately and the read below races the save. Wait for the editor to go.
+      await page.waitForURL((url) => /\/rules\/cri/.test(url.pathname) && !url.pathname.endsWith('/edit'), {
+        timeout: 5000,
+      });
 
       const group = await getMimirRuleGroup(mimirRuler.tenantId, mimirRuler.namespace, groupName);
       expect(group?.rules[0]).not.toHaveProperty('keep_firing_for');
