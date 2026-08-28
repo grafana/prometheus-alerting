@@ -1,7 +1,7 @@
 import type { SNSConfig } from '@grafana/external-alertmanager/vanilla';
 
 import { createDefaultSNSSettings, snsConfigToFormSettings, snsFormSettingsToConfig } from './sns.mapper';
-import { createSNSSettingsFormSchema } from './sns.schema';
+import { SNSSettingsFormSchema } from './sns.schema';
 
 describe('SNS mapper', () => {
   it('round-trips API-shaped fields and unknown values', () => {
@@ -18,7 +18,7 @@ describe('SNS mapper', () => {
   });
 
   it('requires a destination', () => {
-    const result = createSNSSettingsFormSchema().safeParse(createDefaultSNSSettings());
+    const result = SNSSettingsFormSchema.safeParse(createDefaultSNSSettings());
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues).toEqual(expect.arrayContaining([expect.objectContaining({ path: ['topic_arn'] })]));
@@ -30,7 +30,7 @@ describe('SNS mapper', () => {
     settings.topic_arn = 'arn:aws:sns:us-east-1:123456789012:alerts';
     settings.sigv4 = { access_key: 'access' };
 
-    const result = createSNSSettingsFormSchema().safeParse(settings);
+    const result = SNSSettingsFormSchema.safeParse(settings);
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues).toEqual(
@@ -47,12 +47,28 @@ describe('SNS mapper', () => {
       basic_auth: { username: 'user' },
     };
 
-    const result = createSNSSettingsFormSchema().safeParse(settings);
+    const result = SNSSettingsFormSchema.safeParse(settings);
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues).toEqual(
         expect.arrayContaining([expect.objectContaining({ path: ['http_config', 'authorization', 'credentials'] })])
       );
     }
+  });
+});
+
+/**
+ * Alertmanager understands more of this integration than the form shows. We deliberately do not
+ * validate a setting nobody can edit, so the least we owe is that opening a receiver and saving it
+ * again gives them back untouched.
+ */
+describe('SNS settings the form does not show', () => {
+  it('hands them back unchanged after a round trip', () => {
+    const config = {
+      topic_arn: 'arn:aws:sns:us-east-1:1:alerts',
+      use_aws_http_client: true,
+    };
+
+    expect(snsFormSettingsToConfig(snsConfigToFormSettings(config as never))).toMatchObject(config);
   });
 });

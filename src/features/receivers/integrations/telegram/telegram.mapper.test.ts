@@ -46,3 +46,20 @@ describe('Telegram mapper', () => {
     expect(createTelegramSettingsFormSchema().safeParse(settings).success).toBe(false);
   });
 });
+
+/**
+ * Alertmanager understands more of this integration than the form shows. We deliberately do not
+ * validate a setting nobody can edit, so the least we owe is that opening a receiver and saving it
+ * again gives them back untouched.
+ */
+describe('Telegram settings the form does not show', () => {
+  it('hands them back unchanged after a round trip', () => {
+    const config = {
+      bot_token_file: '/etc/alerting/telegram',
+      chat_id: 12345,
+      message_thread_id: 42,
+    };
+
+    expect(telegramFormSettingsToConfig(telegramConfigToFormSettings(config as never))).toMatchObject(config);
+  });
+});

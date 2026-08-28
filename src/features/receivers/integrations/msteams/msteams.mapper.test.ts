@@ -24,3 +24,18 @@ describe('Microsoft Teams mapper', () => {
     }
   });
 });
+
+/**
+ * Alertmanager understands more of this integration than the form shows. We deliberately do not
+ * validate a setting nobody can edit, so the least we owe is that opening a receiver and saving it
+ * again gives them back untouched.
+ */
+describe('MSTeams settings the form does not show', () => {
+  it('hands them back unchanged after a round trip', () => {
+    const config = {
+      webhook_url_file: '/etc/alerting/msteams',
+    };
+
+    expect(msTeamsFormSettingsToConfig(msTeamsConfigToFormSettings(config as never))).toMatchObject(config);
+  });
+});

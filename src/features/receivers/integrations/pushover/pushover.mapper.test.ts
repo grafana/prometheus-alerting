@@ -40,3 +40,19 @@ describe('Pushover mapper', () => {
     expect(createPushoverSettingsFormSchema().safeParse(settings).success).toBe(false);
   });
 });
+
+/**
+ * Alertmanager understands more of this integration than the form shows. We deliberately do not
+ * validate a setting nobody can edit, so the least we owe is that opening a receiver and saving it
+ * again gives them back untouched.
+ */
+describe('Pushover settings the form does not show', () => {
+  it('hands them back unchanged after a round trip', () => {
+    const config = {
+      user_key_file: '/etc/alerting/user',
+      token_file: '/etc/alerting/token',
+    };
+
+    expect(pushoverFormSettingsToConfig(pushoverConfigToFormSettings(config as never))).toMatchObject(config);
+  });
+});

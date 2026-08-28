@@ -6,13 +6,13 @@ import { createHttpConfigFormSchema } from '../shared/httpConfig.schema';
 
 // Webex can't post anything without credentials, so it adds a "must be filled in" check on top of
 // the HTTP settings every integration shares.
-function createWebexHttpConfigFormSchema(validateForSubmission: boolean) {
+function createWebexHttpConfigFormSchema() {
   return createHttpConfigFormSchema().superRefine((httpConfig, ctx) => {
     const authorizationIsConfigured = Boolean(
       httpConfig.authorization?.credentials || httpConfig.authorization?.credentials_file
     );
 
-    if (validateForSubmission && !authorizationIsConfigured) {
+    if (!authorizationIsConfigured) {
       ctx.addIssue({
         code: 'custom',
         message: t('receivers.form.webex-authorization-required', 'Webex authorization credentials are required'),
@@ -22,12 +22,18 @@ function createWebexHttpConfigFormSchema(validateForSubmission: boolean) {
   });
 }
 
-export function createWebexSettingsFormSchema(validateForSubmission = true) {
+export function createWebexSettingsSchema() {
   return z.looseObject({
     api_url: z.string().optional(),
     room_id: z.string().trim().min(1, t('receivers.form.webex-room-id-required', 'Room ID is required')),
     message: z.string().optional(),
-    http_config: createWebexHttpConfigFormSchema(validateForSubmission),
+    http_config: createHttpConfigFormSchema(),
+  });
+}
+
+export function createWebexSettingsFormSchema() {
+  return createWebexSettingsSchema().safeExtend({
+    http_config: createWebexHttpConfigFormSchema(),
   });
 }
 
@@ -40,4 +46,4 @@ export function createWebexIntegrationFormSchema() {
   ]);
 }
 
-export type WebexSettingsFormValues = z.infer<ReturnType<typeof createWebexSettingsFormSchema>>;
+export type WebexSettingsFormValues = z.infer<ReturnType<typeof createWebexSettingsSchema>>;
