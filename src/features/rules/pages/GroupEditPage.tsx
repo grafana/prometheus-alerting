@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom';
 
 import { AppEvents, GrafanaTheme2 } from '@grafana/data';
 import { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
+import { isFederatedRulerGroup } from '@grafana/external-rules/utils';
 import { Trans, t } from '@grafana/i18n';
 import { getAppEvents, locationService, PluginPage } from '@grafana/runtime';
 import {
@@ -131,6 +132,22 @@ function GroupEditPage() {
             'The group "{{groupName}}" in namespace "{{namespace}}" could not be found.',
             { groupName, namespace }
           )}
+        </Alert>
+      </PluginPage>
+    );
+  }
+
+  // A federated group's source_tenants decide which tenants its rules read, and this form has no
+  // field for them, so saving through it would quietly turn the group single-tenant. The group
+  // details page hides its Edit button, but this page has its own URL.
+  if (isFederatedRulerGroup(rulerGroup)) {
+    return (
+      <PluginPage pageNav={pageNav}>
+        <Alert severity="info" title={t('alerting.group-edit.group-federated', 'This group is federated')}>
+          <Trans i18nKey="alerting.group-edit.group-federated-description">
+            Federated rule groups read data from several tenants, which this editor cannot express. Edit the group
+            through the Ruler API instead.
+          </Trans>
         </Alert>
       </PluginPage>
     );

@@ -25,4 +25,25 @@ describe('GroupDetailsTitle', () => {
     expect(backButton).toBeInTheDocument();
     expect(backButton).toHaveAttribute('href', expect.stringContaining('/rules'));
   });
+
+  it('marks a group that reads other tenants as federated', () => {
+    render(
+      <TestMemoryRouter>
+        <GroupDetailsTitle name="my-group" sourceTenants={['tenant-a', 'tenant-b']} />
+      </TestMemoryRouter>
+    );
+
+    // Without this the group's missing Edit button just looks like something went wrong
+    expect(screen.getByText('Federated')).toBeInTheDocument();
+  });
+
+  it('leaves an ordinary group unmarked', () => {
+    render(
+      <TestMemoryRouter>
+        <GroupDetailsTitle name="my-group" />
+      </TestMemoryRouter>
+    );
+
+    expect(screen.queryByText('Federated')).not.toBeInTheDocument();
+  });
 });

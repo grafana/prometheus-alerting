@@ -1,4 +1,4 @@
-import type { PromRuleDTO, RulerRuleDTO } from '../vanilla/api';
+import type { PromRuleDTO, RulerRuleDTO, RulerRuleGroupDTO } from '../vanilla/api';
 
 /**
  * Type guard to check if a rule is an alerting rule
@@ -51,4 +51,18 @@ const METRIC_NAME_PATTERN = /^[a-zA-Z_:][a-zA-Z0-9_:]*$/;
 
 export function isValidMetricName(name: string): boolean {
   return METRIC_NAME_PATTERN.test(name);
+}
+
+/**
+ * Whether this group reads data from other tenants.
+ *
+ * `source_tenants` is what makes a Mimir group federated: its rules evaluate against those
+ * tenants' data instead of only this one's. The group edit form has no field for it, and a group
+ * written back without it quietly becomes single-tenant, so a federated group is read-only here.
+ *
+ * An empty list counts too -- the Ruler stores the field either way, and dropping it on a write
+ * would still be a change we didn't ask for.
+ */
+export function isFederatedRulerGroup(group: Pick<RulerRuleGroupDTO, 'source_tenants'>): boolean {
+  return Array.isArray(group.source_tenants);
 }
