@@ -79,12 +79,17 @@ export function useQueryPreview(dataSourceUid: string) {
       try {
         const now = Math.floor(Date.now() / 1000);
 
-        // Execute instant query via datasource proxy
-        // GET is accepted by both Prometheus and Loki datasource proxies.
+        const params = new URLSearchParams({
+          query: expression,
+          time: now.toString(),
+        });
         const queryApiPath = (await resolveFlavorOrThrow(dataSourceUid)).queryPath;
-        const response = await getBackendSrv().get<PrometheusQueryResponse>(
+        const response = await getBackendSrv().post<PrometheusQueryResponse>(
           buildDatasourceProxyUrl(dataSourceUid, ...queryApiPath.split('/')),
-          { query: expression, time: now }
+          params.toString(),
+          {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          }
         );
 
         if (response.status === 'error') {
