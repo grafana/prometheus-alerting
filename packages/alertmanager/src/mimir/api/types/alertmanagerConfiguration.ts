@@ -106,7 +106,12 @@ export const YamlToParsedUserConfiguration = z.codec(z.string(), ParsedUserConfi
     return decodedConfig;
   },
   encode: (userConfiguration) => {
-    const encodedAlertmanagerConfig = UserConfigurationSchemaCodec.encode(userConfiguration);
+    // Cast needed: zod v4 infers a different (wider) type for this already-decoded value here
+    // than it does for the same value at its own declaration site, because of how it types
+    // optional codec fields (e.g. yamlString()) nested inside objects. Safe at runtime — same value.
+    const encodedAlertmanagerConfig = UserConfigurationSchemaCodec.encode(
+      userConfiguration as unknown as Parameters<typeof UserConfigurationSchemaCodec.encode>[0]
+    );
     return stringifyYaml(encodedAlertmanagerConfig);
   },
 });
