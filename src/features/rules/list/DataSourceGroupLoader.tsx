@@ -137,6 +137,7 @@ export function DataSourceGroupLoader({
               rule={rulerRule}
               promRule={rule}
               groupIdentifier={groupIdentifier}
+              rulerGroup={rulerRuleGroup}
               onDelete={handleDelete}
               onDuplicate={handleDuplicate}
               onSilence={handleSilence}
