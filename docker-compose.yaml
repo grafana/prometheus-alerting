@@ -86,7 +86,7 @@ services:
       - monitoring
 
   mimir:
-    image: grafana/mimir:3.0.6@sha256:4508fd612969dfcf4b50276856fd05d5a971b15e494ad53da911b44781446f2b
+    image: grafana/mimir:3.2.0@sha256:736f7459913d262444e70813565e3ca24b64dce24343da20af554ae6ee5268e8
     container_name: mimir-test
     ports:
       - '9009:9009'

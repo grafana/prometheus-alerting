@@ -180,6 +180,7 @@ function RuleDetails() {
       type={promRule.type}
       state={promRule.type === 'alerting' ? promRule.state : undefined}
       health={promRule.health}
+      sourceTenants={rulerGroup?.source_tenants}
     />
   );
 

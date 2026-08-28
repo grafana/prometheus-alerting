@@ -3,14 +3,18 @@ import { t } from '@grafana/i18n';
 import { Stack, Text } from '@grafana/ui';
 import { StateText } from '@grafana/alerting/unstable';
 
+import { FederatedGroupBadge } from './FederatedGroupBadge';
+
 interface RuleDetailsTitleProps {
   name: string;
   type: 'alerting' | 'recording';
   state?: string;
   health?: string;
+  /** Set when the rule's group reads data from other tenants, which gets it a badge. */
+  sourceTenants?: string[];
 }
 
-export function RuleDetailsTitle({ name, type, state, health }: RuleDetailsTitleProps) {
+export function RuleDetailsTitle({ name, type, state, health, sourceTenants }: RuleDetailsTitleProps) {
   const normalizedState = normalizeState(state);
   const normalizedHealth = normalizeHealth(health);
 
@@ -55,6 +59,7 @@ export function RuleDetailsTitle({ name, type, state, health }: RuleDetailsTitle
           <StateText type="recording" health={normalizedHealth} />
         </span>
       )}
+      {sourceTenants && <FederatedGroupBadge sourceTenants={sourceTenants} />}
     </Stack>
   );
 }
