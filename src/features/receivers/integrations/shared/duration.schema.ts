@@ -12,7 +12,8 @@ import { z } from 'zod';
  */
 
 /**
- * How Go itself reads a duration. Pushover's retry, expire and ttl use this.
+ * How Go itself reads a duration. Pushover's retry, expire and ttl use this, and so does the
+ * webhook timeout, which Alertmanager switched to this reader in 0.33.
  *
  * A run of number-and-unit pairs, with the units ns, us, ms, s, m and h. Numbers can have a
  * decimal point, so "1.5h" and "100ms" both work. There is no unit for days or anything longer.
@@ -33,7 +34,7 @@ export const goDurationSchema = z
   .optional();
 
 /**
- * How Prometheus reads a duration. Jira's reopen duration and the webhook timeout use this.
+ * How Prometheus reads a duration. Jira's reopen duration uses this.
  *
  * Whole numbers only, with the units ms, s, m, h, d, w and y, and the units have to appear
  * largest first. So "1d12h" works, "12h1d" doesn't, and neither does "1.5h".
@@ -49,28 +50,6 @@ export const prometheusDurationSchema = z
     ctx.addIssue({
       code: 'custom',
       message: t('receivers.form.prometheus-duration-invalid', 'Enter a duration such as 30s, 5m, or 1d12h'),
-    });
-  })
-  .optional();
-
-/**
- * The webhook timeout is the one field where the two readers disagree between backends: older
- * Alertmanager reads it the Prometheus way, and 0.33 onwards reads it the Go way. We can't tell
- * which one we're talking to, so this takes only what both of them accept: whole numbers, with the
- * units ms, s, m and h, largest first. That rules out "1d", which newer Alertmanager refuses, and
- * "1.5h", which older Alertmanager refuses.
- */
-const TIMEOUT_DURATION = /^(?:\d+h)?(?:\d+m)?(?:\d+s)?(?:\d+ms)?$/;
-
-export const timeoutDurationSchema = z
-  .string()
-  .superRefine((value, ctx) => {
-    if (value === '' || value === '0' || TIMEOUT_DURATION.test(value)) {
-      return;
-    }
-    ctx.addIssue({
-      code: 'custom',
-      message: t('receivers.form.timeout-duration-invalid', 'Enter a duration such as 30s, 5m, or 2h'),
     });
   })
   .optional();

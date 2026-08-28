@@ -986,7 +986,6 @@
       "telegram-tls-server-name": "TLS server name",
       "telegram-tls-skip-verify": "Skip TLS certificate verification",
       "telegram-token-conflict": "Bot token and bot token file cannot be used together",
-      "timeout-duration-invalid": "Enter a duration such as 30s, 5m, or 2h",
       "tls-version-invalid": "TLS version must be TLS10, TLS11, TLS12 or TLS13",
       "unsupported-body": "Its configuration has a shape this form does not understand, so editing it here could drop settings. Edit it in the Alertmanager configuration instead.",
       "unsupported-title": "This receiver cannot be edited here",

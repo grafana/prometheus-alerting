@@ -12,16 +12,16 @@ function messagesFor(timeout: string) {
   return result.success ? [] : result.error.issues.map((issue) => issue.message);
 }
 
-const invalid = 'Enter a duration such as 30s, 5m, or 2h';
+const invalid = 'Enter a duration such as 30s, 5m30s, or 1.5h';
 
 describe('createWebhookSettingsFormSchema, timeout', () => {
-  it.each(['30s', '5m', '5m30s', '100ms', '2h', ''])('accepts %s', (value) => {
+  // Alertmanager reads this the way Go does, so fractions and milliseconds are fine.
+  it.each(['30s', '5m', '5m30s', '100ms', '1.5h', '1.2s', '0', ''])('accepts %s', (value) => {
     expect(messagesFor(value)).toEqual([]);
   });
 
-  // Alertmanager changed how it reads this field in 0.33, so the form takes only the shapes that
-  // work either way: "1d" is refused by the newer reader, "1.2s" by the older one.
-  it.each(['1d', '1.2s', 'abc', '10'])('rejects %s', (value) => {
+  // Go has no unit for days, and a bare number has no unit at all.
+  it.each(['1d', '1w', 'abc', '10'])('rejects %s', (value) => {
     expect(messagesFor(value)).toEqual([invalid]);
   });
 });
