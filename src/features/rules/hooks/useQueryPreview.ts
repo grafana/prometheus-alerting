@@ -68,7 +68,7 @@ function getQueryResponseError(response: DataQueryResponse): unknown {
 }
 
 function dataFrameToPreviewResults(frame: DataFrame): QueryPreviewResult[] {
-  const valueField = frame.fields.find((field) => field.type !== FieldType.time);
+  const valueField = frame.fields.find((field) => field.type === FieldType.number);
   if (!valueField) {
     return [];
   }

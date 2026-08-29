@@ -28,6 +28,7 @@ function createDataFrameQueryResponse(
       toDataFrame({
         fields: [
           { name: 'Time', type: FieldType.time, values: [timestamp] },
+          { name: 'Metric', type: FieldType.string, values: ['ignored'] },
           { name: 'Value', type: FieldType.number, labels, values: [value] },
         ],
       })
