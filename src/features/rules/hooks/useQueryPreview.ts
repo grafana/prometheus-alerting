@@ -30,7 +30,7 @@ export interface QueryPreviewState {
   hasRun: boolean;
 }
 
-interface InstantQuery extends DataQuery {
+interface InstantExpressionQuery extends DataQuery {
   expr: string;
   instant: true;
   range: false;
@@ -60,14 +60,14 @@ function createInstantQueryRequest(dataSourceUid: string, dataSourceType: string
     timezone: 'browser',
     app: CoreApp.Unknown,
     startTime: Date.now(),
-  } satisfies DataQueryRequest<InstantQuery>;
+  } satisfies DataQueryRequest<InstantExpressionQuery>;
 }
 
-function getResponseError(response: DataQueryResponse): unknown {
+function getQueryResponseError(response: DataQueryResponse): unknown {
   return response.errors?.[0] ?? response.error;
 }
 
-function frameToResults(frame: DataFrame): QueryPreviewResult[] {
+function dataFrameToPreviewResults(frame: DataFrame): QueryPreviewResult[] {
   const valueField = frame.fields.find((field) => field.type !== FieldType.time);
   if (!valueField) {
     return [];
@@ -94,8 +94,8 @@ function frameToResults(frame: DataFrame): QueryPreviewResult[] {
   return results;
 }
 
-function responseToResults(response: DataQueryResponse): QueryPreviewResult[] {
-  return response.data.flatMap((data) => frameToResults(toDataFrame(data)));
+function queryResponseToPreviewResults(response: DataQueryResponse): QueryPreviewResult[] {
+  return response.data.flatMap((data) => dataFrameToPreviewResults(toDataFrame(data)));
 }
 
 export function useQueryPreview(dataSourceUid: string) {
@@ -162,13 +162,13 @@ export function useQueryPreview(dataSourceUid: string) {
             )
         );
 
-        const responseError = getResponseError(response);
+        const responseError = getQueryResponseError(response);
 
         if (responseError) {
           throw responseError;
         }
 
-        const results = responseToResults(response);
+        const results = queryResponseToPreviewResults(response);
         setState({
           results,
           isLoading: false,
