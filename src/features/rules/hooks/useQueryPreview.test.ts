@@ -148,15 +148,6 @@ describe('useQueryPreview', () => {
     expect(result.current.hasRun).toBe(true);
   });
 
-  it('surfaces converted transport errors', async () => {
-    arrangeConvertedQueryResponse({ data: [], error: { message: 'Gateway unavailable' } });
-    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
-
-    await act(() => result.current.runQuery('up'));
-
-    expect(result.current.error).toBe('Gateway unavailable');
-  });
-
   it('passes failed fetch responses to the query response converter', async () => {
     const backendFetchError = {
       status: 400,

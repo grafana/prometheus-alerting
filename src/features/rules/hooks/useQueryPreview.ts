@@ -64,7 +64,7 @@ function createInstantQueryRequest(dataSourceUid: string, dataSourceType: string
 }
 
 function getQueryResponseError(response: DataQueryResponse): unknown {
-  return response.errors?.[0] ?? response.error;
+  return response.errors?.[0];
 }
 
 function dataFrameToPreviewResults(frame: DataFrame): QueryPreviewResult[] {
