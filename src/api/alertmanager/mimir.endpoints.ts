@@ -1,3 +1,4 @@
+import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
   ParsedUserConfiguration,
   ParsedUserConfigurationSchema,
@@ -37,7 +38,10 @@ export const mimirAlertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       },
       providesTags: ['Configuration'],
       // Validate the final output from queryFn against the schema
-      responseSchema: ParsedUserConfigurationSchema,
+      // Cast needed: zod v4 vendors its own Standard Schema types rather than depending on
+      // @standard-schema/spec, causing a module identity mismatch with RTK Query. Safe at runtime.
+      // See: https://github.com/colinhacks/zod/issues/4938
+      responseSchema: ParsedUserConfigurationSchema as unknown as StandardSchemaV1<ParsedUserConfiguration>,
     }),
     updateUserConfiguration: build.mutation<UpdateAlertmanagerConfigApiResponse, UpdateAlertmanagerConfigApiArg>({
       query: ({ dataSourceUID, configuration }) => {

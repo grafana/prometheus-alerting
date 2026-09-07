@@ -2,12 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { groupBy, isEmpty } from 'lodash';
 
-import { Icon, Stack, Text } from '@grafana/ui';
+import { t } from '@grafana/i18n';
+import { Button, Icon, Stack, Text } from '@grafana/ui';
 
 import { DataSourceRuleGroupIdentifier, DataSourceRulesSourceIdentifier, RuleGroup } from '../../../types/rules';
 import { getApiGroupPageSize, FRONTED_GROUPED_PAGE_SIZE } from '../../../utils/paginationLimits';
 import { groups } from '../../../utils/navigation';
 
+import { NamespaceYamlDrawer } from '../namespace-yaml';
 import { DataSourceGroupLoader } from './DataSourceGroupLoader';
 import { DataSourceSection, DataSourceSectionProps } from './components/DataSourceSection';
 import { GroupIntervalIndicator } from './components/GroupIntervalMetadata';
@@ -66,6 +68,7 @@ function PaginatedGroupsLoader({
 
   const { uid, name } = rulesSourceIdentifier;
   const prometheusGroupsGenerator = usePrometheusGroupsGenerator();
+  const [viewingYamlNamespace, setViewingYamlNamespace] = useState<string | null>(null);
 
   // If there are no filters we can match one frontend page to one API page.
   // However, if there are filters, we need to fetch more groups from the API to populate one frontend page
@@ -118,6 +121,21 @@ function PaginatedGroupsLoader({
                 </Text>
               </Stack>
             }
+            actions={
+              rulerApiEnabled ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon="file-alt"
+                  aria-label={t('alerting.namespace-yaml.view-aria-label', 'View YAML for namespace {{namespace}}', {
+                    namespace,
+                  })}
+                  onClick={() => setViewingYamlNamespace(namespace)}
+                >
+                  {t('alerting.namespace-yaml.view', 'View YAML')}
+                </Button>
+              ) : null
+            }
           >
             {groups.map((group) => (
               <RuleGroupListItem
@@ -139,6 +157,13 @@ function PaginatedGroupsLoader({
         )}
         {hasNoRules && <NoRulesFound />}
       </Stack>
+      {viewingYamlNamespace && (
+        <NamespaceYamlDrawer
+          dataSourceUid={uid}
+          namespace={viewingYamlNamespace}
+          onClose={() => setViewingYamlNamespace(null)}
+        />
+      )}
     </DataSourceSection>
   );
 }

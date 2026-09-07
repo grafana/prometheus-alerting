@@ -1,6 +1,8 @@
 import { t } from '@grafana/i18n';
 import { z } from 'zod';
 
+import { tlsVersionSchema } from './tlsConfig.schema';
+
 type HttpConfigOptions = {
   /**
    * Whether this integration's form offers OAuth2. When it does, OAuth2 joins authorization and
@@ -51,8 +53,8 @@ export function createHttpConfigFormSchema({ oauth2 = false }: HttpConfigOptions
         .looseObject({
           server_name: z.string().optional(),
           insecure_skip_verify: z.boolean().optional(),
-          min_version: z.string().optional(),
-          max_version: z.string().optional(),
+          min_version: tlsVersionSchema,
+          max_version: tlsVersionSchema,
         })
         .optional(),
     })
@@ -78,6 +80,38 @@ export function createHttpConfigFormSchema({ oauth2 = false }: HttpConfigOptions
             'Proxy URL and proxy from environment cannot be used together'
           ),
           path: ['proxy_url'],
+        });
+      }
+
+      // "No proxy" lists the hosts to skip, so it only means anything next to a proxy URL.
+      // Alertmanager rejects it both on its own and alongside the proxy taken from the environment.
+      if (httpConfig.no_proxy && httpConfig.proxy_from_environment) {
+        ctx.addIssue({
+          code: 'custom',
+          message: t(
+            'receivers.form.http-config-no-proxy-environment-conflict',
+            'No proxy and proxy from environment cannot be used together'
+          ),
+          path: ['no_proxy'],
+        });
+      } else if (httpConfig.no_proxy && !httpConfig.proxy_url) {
+        ctx.addIssue({
+          code: 'custom',
+          message: t('receivers.form.http-config-no-proxy-needs-proxy-url', 'No proxy needs a proxy URL as well'),
+          path: ['no_proxy'],
+        });
+      }
+
+      // Alertmanager keeps basic authentication in its own block, so it refuses to also see it
+      // spelled out as an authorization type.
+      if (httpConfig.authorization?.type?.trim().toLowerCase() === 'basic') {
+        ctx.addIssue({
+          code: 'custom',
+          message: t(
+            'receivers.form.http-config-authorization-type-basic',
+            'Authorization type cannot be "basic". Use basic authentication instead.'
+          ),
+          path: ['authorization', 'type'],
         });
       }
 

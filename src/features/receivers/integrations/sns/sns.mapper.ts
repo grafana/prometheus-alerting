@@ -1,14 +1,14 @@
 import type { SNSConfig } from '@grafana/external-alertmanager/vanilla';
 
 import { omitEmptyValues } from '../../utils/omitEmptyValues';
-import { createSNSSettingsFormSchema, SNSSettingsFormValues } from './sns.schema';
+import { SNSSettingsSchema, SNSSettingsFormValues } from './sns.schema';
 
 export function snsConfigToFormSettings(config: SNSConfig): SNSSettingsFormValues {
-  return createSNSSettingsFormSchema().parse(structuredClone(config));
+  return SNSSettingsSchema.parse(structuredClone(config));
 }
 
 export function snsFormSettingsToConfig(values: SNSSettingsFormValues): SNSConfig {
-  return omitEmptyValues(createSNSSettingsFormSchema().parse(values));
+  return omitEmptyValues(SNSSettingsSchema.parse(values));
 }
 
 export function createDefaultSNSSettings(): SNSSettingsFormValues {

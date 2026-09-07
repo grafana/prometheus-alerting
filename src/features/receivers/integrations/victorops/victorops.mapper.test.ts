@@ -36,3 +36,20 @@ describe('VictorOps mapper', () => {
     }
   });
 });
+
+/**
+ * Alertmanager understands more of this integration than the form shows. We deliberately do not
+ * validate a setting nobody can edit, so the least we owe is that opening a receiver and saving it
+ * again gives them back untouched.
+ */
+describe('VictorOps settings the form does not show', () => {
+  it('hands them back unchanged after a round trip', () => {
+    const config = {
+      api_key_file: '/etc/alerting/victorops',
+      routing_key: 'oncall',
+      custom_fields: { runbook: 'https://example.com/runbook' },
+    };
+
+    expect(victorOpsFormSettingsToConfig(victorOpsConfigToFormSettings(config as never))).toMatchObject(config);
+  });
+});

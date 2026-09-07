@@ -1,4 +1,5 @@
 import { rangeUtil } from '@grafana/data';
+import { t } from '@grafana/i18n';
 
 export enum TimeOptions {
   seconds = 's',
@@ -32,6 +33,15 @@ export const timeOptions = Object.entries(TimeOptions).map(([key, value]) => ({
   label: key[0].toUpperCase() + key.slice(1),
   value: value,
 }));
+
+/**
+ * One message for every field across the app that takes a duration, whichever reader ends up
+ * parsing it. Keeping it in one place means we're not maintaining several near-identical strings
+ * that drift apart over time.
+ */
+export function invalidDurationMessage(): string {
+  return t('common.duration-invalid', 'Enter a duration such as 30s, 5m, or 1h');
+}
 
 export function isValidPrometheusDuration(duration: string): boolean {
   try {
