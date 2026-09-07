@@ -1,10 +1,5 @@
-import { StandardSchemaV1 } from '@standard-schema/spec';
 import { z } from 'zod';
-import {
-  ParsedUserConfiguration,
-  ParsedUserConfigurationSchema,
-  YamlToParsedUserConfiguration,
-} from '@grafana/external-alertmanager/mimir';
+import { ParsedUserConfiguration, YamlToParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 import { baseAlertmanagerApi } from './alertmanager.endpoints';
 import { WithDataSourceInformation } from './alertmanager.types';
 import {
@@ -37,12 +32,10 @@ export const mimirAlertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         // Parse and validate the YAML response
         return parseUserConfigurationResponse(response.data);
       },
+      // No responseSchema: parseUserConfigurationResponse already decodes through
+      // YamlToParsedUserConfiguration, whose output schema is ParsedUserConfigurationSchema, and it
+      // reports a failure as a PARSING_ERROR with the raw response attached.
       providesTags: ['Configuration'],
-      // Validate the final output from queryFn against the schema
-      // Cast needed: zod v4 vendors its own Standard Schema types rather than depending on
-      // @standard-schema/spec, causing a module identity mismatch with RTK Query. Safe at runtime.
-      // See: https://github.com/colinhacks/zod/issues/4938
-      responseSchema: ParsedUserConfigurationSchema as unknown as StandardSchemaV1<ParsedUserConfiguration>,
     }),
     updateUserConfiguration: build.mutation<UpdateAlertmanagerConfigApiResponse, UpdateAlertmanagerConfigApiArg>({
       query: ({ dataSourceUID, configuration }) => {
@@ -75,7 +68,7 @@ export const mimirAlertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         return { data: String(response.data) };
       },
       providesTags: ['Configuration'],
-      responseSchema: z.string() as unknown as StandardSchemaV1<string>,
+      responseSchema: z.string(),
     }),
     /** Posts a configuration document verbatim. Mimir validates the configuration it contains. */
     updateUserConfigurationDocument: build.mutation<UpdateAlertmanagerConfigApiResponse, UpdateConfigDocumentApiArg>({
