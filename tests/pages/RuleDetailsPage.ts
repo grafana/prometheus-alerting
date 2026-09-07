@@ -11,7 +11,8 @@ export class RuleDetailsPage {
   readonly stateBadge: Locator; // Note: matches both state and health badges
   readonly loadingPlaceholder: Locator;
   readonly errorAlert: Locator;
-  readonly notFoundAlert: Locator;
+  readonly notFoundMessage: Locator;
+  readonly backToRulesLink: Locator;
 
   // Action buttons
   readonly editButton: Locator;
@@ -38,7 +39,10 @@ export class RuleDetailsPage {
     // Loading and error states
     this.loadingPlaceholder = pageContent.getByText(/loading rule details/i);
     this.errorAlert = pageContent.getByRole('alert').filter({ hasText: /error loading rule/i });
-    this.notFoundAlert = pageContent.getByRole('alert').filter({ hasText: /rule not found/i });
+    // The not-found state is an EmptyState, so match its message rather than the page title –
+    // the title says "Rule not found" too.
+    this.notFoundMessage = pageContent.getByText(/the requested rule could not be found/i);
+    this.backToRulesLink = pageContent.getByRole('link', { name: /back to rules/i });
 
     // Action buttons
     this.editButton = pageContent.getByRole('link', { name: /edit/i });
@@ -80,6 +84,15 @@ export class RuleDetailsPage {
     } else {
       await expect(this.pageTitle).toBeVisible();
     }
+  }
+
+  /**
+   * Navigate to a rule details URL that isn't built from a real identifier – for URLs that have
+   * been truncated or hand-edited.
+   */
+  async gotoRawIdentifier(ruleIdentifier: string): Promise<void> {
+    const baseUrl = this.page.url().match(/^https?:\/\/[^/]+/)?.[0] || 'http://localhost:3000';
+    await this.page.goto(`${baseUrl}/a/grafana-prometheusalerting-app/rules/${ruleIdentifier}`);
   }
 
   /**
@@ -290,7 +303,7 @@ export class RuleDetailsPage {
    * Check if page shows not found state
    */
   async isNotFound(): Promise<boolean> {
-    return await this.notFoundAlert.isVisible();
+    return await this.notFoundMessage.isVisible();
   }
 
   /**

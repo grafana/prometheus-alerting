@@ -1256,6 +1256,7 @@
       "ruler-unavailable": "⚠ Ruler API Unavailable (Read-only)"
     },
     "error": {
+      "back-to-rules": "Back to rules",
       "evaluation": "Something went wrong when evaluating this alert rule",
       "loading": "Error loading rule",
       "not-found": "Rule not found",
