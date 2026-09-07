@@ -48,9 +48,17 @@ export function stringifyIdentifier(identifier: DataSourceRuleIdentifier): strin
  * Parse a stringified rule identifier back into an object
  * @param value - The stringified identifier (e.g., "pri$uid$namespace$group$rule$hash" or "cri$...")
  * @param decodeFromUri - Whether to decode URI components first
+ *
+ * Returns `null` for anything we can't make sense of, so callers can show a "not found" page
+ * instead of having to catch an error. Identifiers usually come out of the URL bar, where they
+ * can be truncated, hand-edited, or carry a broken percent-escape like `%E0%A4%A`.
  */
 export function parseIdentifier(value: string, decodeFromUri = false): DataSourceRuleIdentifier | null {
-  const source = decodeFromUri ? decodeURIComponent(value) : value;
+  const source = decodeFromUri ? safeDecodeUriComponent(value) : value;
+  if (source === null) {
+    return null;
+  }
+
   const parts = source.split('$');
 
   // Expected format: prefix$uid$namespace$groupName$ruleName$hash
@@ -84,4 +92,16 @@ export function parseIdentifier(value: string, decodeFromUri = false): DataSourc
 
   // Unknown prefix
   return null;
+}
+
+/**
+ * `decodeURIComponent` throws on a broken percent-escape (for example a bare `%`). Return
+ * `null` in that case so a bad URL reads the same as an unparseable identifier.
+ */
+function safeDecodeUriComponent(value: string): string | null {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
 }
