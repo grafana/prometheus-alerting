@@ -19,9 +19,11 @@ import {
   useStyles2,
 } from '@grafana/ui';
 
+import { useTimeIntervals } from '../../timeIntervals/hooks/useTimeIntervals';
 import { FormAmRoute, MatcherOperator, commonGroupByOptions, emptyArrayFieldMatcher } from '../types';
 import { amRouteToFormAmRoute, isValidPromDuration } from '../utils/routeTransform';
 import { ReceiverSelector } from './ReceiverSelector';
+import { RouteTimingSummary } from './RouteTimingSummary';
 
 const matcherOperatorOptions: Array<ComboboxOption<MatcherOperator>> = [
   { label: '=', value: MatcherOperator.equal },
@@ -34,14 +36,17 @@ export interface RouteEditFormProps {
   route: RouteWithID;
   onSubmit: (values: Partial<FormAmRoute>) => void;
   onCancel: () => void;
+  isRoot?: boolean;
   isSubmitting?: boolean;
 }
 
-export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false }: RouteEditFormProps) {
+export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSubmitting = false }: RouteEditFormProps) {
   const styles = useStyles2(getStyles);
   const [groupByOptions, setGroupByOptions] = useState<Array<ComboboxOption<string>>>(
     (route.group_by ?? []).map((g) => ({ label: g, value: g }))
   );
+  const { timeIntervals } = useTimeIntervals();
+  const timeIntervalOptions = timeIntervals.map(({ name }) => ({ label: name, value: name }));
 
   const formAmRoute = amRouteToFormAmRoute(route);
 
@@ -61,9 +66,18 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
 
   const overrideGrouping = useWatch({ control, name: 'overrideGrouping' });
   const overrideTimings = useWatch({ control, name: 'overrideTimings' });
+  const muteTimeIntervals = useWatch({ control, name: 'muteTimeIntervals' }) ?? [];
+  const activeTimeIntervals = useWatch({ control, name: 'activeTimeIntervals' }) ?? [];
 
   const handleFormSubmit = (values: FormAmRoute) => {
-    onSubmit(values);
+    const submittedValues: Partial<FormAmRoute> = { ...values };
+
+    if (isRoot) {
+      delete submittedValues.muteTimeIntervals;
+      delete submittedValues.activeTimeIntervals;
+    }
+
+    onSubmit(submittedValues);
   };
 
   return (
@@ -288,26 +302,61 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
           </>
         )}
 
-        {/* Mute Timings */}
-        <Field
-          label={t('routes.edit.mute-timings', 'Mute timings')}
-          description={t('routes.edit.mute-timings-description', 'Mute notifications during specific time intervals')}
-        >
-          <Controller
-            render={({ field: { onChange, onBlur, value } }) => (
-              <MultiCombobox
-                value={value ?? []}
-                createCustomValue
-                onChange={(selected) => onChange(selected.map((v) => v.value))}
-                onBlur={onBlur}
-                options={[]}
-                placeholder={t('routes.edit.mute-timings-placeholder', 'Select or type mute timing names')}
+        {!isRoot && (
+          <>
+            {/* Mute Timings */}
+            <Field
+              label={t('routes.edit.mute-timings', 'Mute timings')}
+              description={t(
+                'routes.edit.mute-timings-description',
+                'Notifications are not sent while any selected interval matches.'
+              )}
+            >
+              <Controller
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <MultiCombobox
+                    value={value ?? []}
+                    onChange={(selected) => onChange(selected.map((v) => v.value))}
+                    onBlur={onBlur}
+                    options={timeIntervalOptions}
+                    placeholder={t('routes.edit.mute-timings-placeholder', 'Select mute timings')}
+                  />
+                )}
+                control={control}
+                name="muteTimeIntervals"
               />
-            )}
-            control={control}
-            name="muteTimeIntervals"
-          />
-        </Field>
+            </Field>
+
+            {/* Active Timings */}
+            <Field
+              label={t('routes.edit.active-timings', 'Active timings')}
+              description={t(
+                'routes.edit.active-timings-description',
+                'Notifications are sent only while at least one selected interval matches.'
+              )}
+            >
+              <Controller
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <MultiCombobox
+                    value={value ?? []}
+                    onChange={(selected) => onChange(selected.map((v) => v.value))}
+                    onBlur={onBlur}
+                    options={timeIntervalOptions}
+                    placeholder={t('routes.edit.active-timings-placeholder', 'Select active timings')}
+                  />
+                )}
+                control={control}
+                name="activeTimeIntervals"
+              />
+            </Field>
+
+            <RouteTimingSummary
+              muteTimeIntervalNames={muteTimeIntervals}
+              activeTimeIntervalNames={activeTimeIntervals}
+              timeIntervals={timeIntervals}
+            />
+          </>
+        )}
 
         <Stack direction="row" gap={2}>
           <Button type="submit" disabled={isSubmitting} icon={isSubmitting ? 'spinner' : undefined}>

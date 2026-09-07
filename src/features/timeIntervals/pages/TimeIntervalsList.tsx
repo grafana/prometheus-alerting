@@ -15,6 +15,7 @@ import { TimeIntervalDrawer } from '../components/TimeIntervalDrawer';
 import { isAbilityAllowed } from '../../../access-control/abilities';
 import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 import { AlertmanagerError } from '../../../components/AlertmanagerError';
+import { formatTimeIntervalSchedule } from '../utils/timeIntervals';
 
 function TimeIntervalsPage() {
   const { timeIntervals, isLoading, error, isSuccess } = useTimeIntervals();
@@ -25,52 +26,6 @@ function TimeIntervalsPage() {
   const clickableCellStyles = css({
     cursor: 'pointer',
   });
-
-  const formatTimeRange = (times?: Array<{ start_time: string; end_time: string }>) => {
-    if (!times || times.length === 0) {
-      return t('time-intervals.all-day', 'All day');
-    }
-    return times.map((t) => `${t.start_time} - ${t.end_time}`).join(', ');
-  };
-
-  const formatList = (items?: string[]) => {
-    if (!items || items.length === 0) {
-      return t('time-intervals.all', 'All');
-    }
-    return items.join(', ');
-  };
-
-  const formatTimeIntervalDetails = (interval: TimeInterval) => {
-    if (!interval.time_intervals || interval.time_intervals.length === 0) {
-      return t('time-intervals.no-intervals-defined', 'No time intervals defined');
-    }
-
-    return interval.time_intervals
-      .map((ti, index) => {
-        const parts: string[] = [];
-
-        parts.push(`${t('time-intervals.times-label', 'Times')}: ${formatTimeRange(ti.times)}`);
-
-        if (ti.weekdays && ti.weekdays.length > 0) {
-          parts.push(`${t('time-intervals.weekdays-label', 'Weekdays')}: ${formatList(ti.weekdays)}`);
-        }
-        if (ti.days_of_month && ti.days_of_month.length > 0) {
-          parts.push(`${t('time-intervals.days-of-month-label', 'Days of Month')}: ${formatList(ti.days_of_month)}`);
-        }
-        if (ti.months && ti.months.length > 0) {
-          parts.push(`${t('time-intervals.months-label', 'Months')}: ${formatList(ti.months)}`);
-        }
-        if (ti.years && ti.years.length > 0) {
-          parts.push(`${t('time-intervals.years-label', 'Years')}: ${formatList(ti.years)}`);
-        }
-        if (ti.location) {
-          parts.push(`${t('time-intervals.location-label', 'Location')}: ${ti.location}`);
-        }
-
-        return parts.join(' | ');
-      })
-      .join('\n');
-  };
 
   const columns = [
     {
@@ -87,7 +42,7 @@ function TimeIntervalsPage() {
       header: t('time-intervals.column.details', 'Details'),
       cell: ({ row: { original } }: { row: { original: TimeInterval } }) => (
         <div className={clickableCellStyles} onClick={() => setSelectedTimeInterval(original)}>
-          <div style={{ whiteSpace: 'pre-line' }}>{formatTimeIntervalDetails(original)}</div>
+          <div style={{ whiteSpace: 'pre-line' }}>{formatTimeIntervalSchedule(original).join('\n')}</div>
         </div>
       ),
     },
