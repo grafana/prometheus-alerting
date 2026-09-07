@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { parse as parseYaml } from 'yaml';
 
 import { Trans, t } from '@grafana/i18n';
@@ -8,6 +8,7 @@ import { Alert, Button, Checkbox, CodeEditor, ConfirmModal, Stack } from '@grafa
 import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 import { useAppNotifications } from '../../../hooks/useAppNotifications';
 import { useUpdateAlertmanagerConfigYaml } from '../hooks/useAlertmanagerConfigYaml';
+import { useConfigurationDraft } from '../hooks/useConfigurationDraft';
 
 interface StoredConfigEditorProps {
   /** The configuration Mimir has stored, as YAML. */
@@ -20,33 +21,12 @@ export function StoredConfigEditor({ configuration, onSaved }: StoredConfigEdito
   const { updateConfiguration, isUpdating } = useUpdateAlertmanagerConfigYaml();
   const { success: notifySuccess, error: notifyError } = useAppNotifications();
 
-  const [value, setValue] = useState(configuration);
-  // The configuration the editor was last seeded from, so we can tell an edit of our own apart from
-  // a change that arrived from the server.
-  const [seeded, setSeeded] = useState(configuration);
-  // Monaco keeps its own copy of the text, so it only picks up a new `value` when it remounts.
-  // Bumping this key is how discarding, and a refetch, actually reset the editor.
-  const [editorKey, setEditorKey] = useState(0);
+  const { value, setValue, editorKey, hasChanges, discard } = useConfigurationDraft(configuration);
   const [isConfirmingSave, setIsConfirmingSave] = useState(false);
   // The editor stays read-only until the warning above is acknowledged.
   const [isUnlocked, setIsUnlocked] = useState(false);
 
-  const reset = useCallback((next: string) => {
-    setValue(next);
-    setEditorKey((key) => key + 1);
-  }, []);
-
-  // The queries refetch when the browser tab regains focus, so the stored configuration can change
-  // underneath the editor. Follow it, unless there are unsaved edits, which we must not throw away.
-  if (configuration !== seeded) {
-    setSeeded(configuration);
-    if (value === seeded) {
-      reset(configuration);
-    }
-  }
-
   const syntaxError = useMemo(() => getYamlSyntaxError(value), [value]);
-  const hasChanges = value !== configuration;
 
   const handleSave = async () => {
     setIsConfirmingSave(false);
@@ -110,7 +90,7 @@ export function StoredConfigEditor({ configuration, onSaved }: StoredConfigEdito
         />
 
         <Stack direction="row" gap={1} justifyContent="flex-end">
-          <Button variant="secondary" disabled={!hasChanges || isUpdating} onClick={() => reset(configuration)}>
+          <Button variant="secondary" disabled={!hasChanges || isUpdating} onClick={discard}>
             <Trans i18nKey="app-config.configuration.discard">Discard changes</Trans>
           </Button>
           <Button
