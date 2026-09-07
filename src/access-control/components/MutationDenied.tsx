@@ -22,7 +22,8 @@ export function MutationDenied({ ability, resource }: MutationDeniedProps) {
     case 'INSUFFICIENT_PERMISSIONS':
       return <PermissionDenied />;
     case 'NOT_SUPPORTED':
-    case 'ERROR':
       return <MutationUnavailable resource={resource} />;
+    case 'ERROR':
+      return <MutationUnavailable resource={resource} error={ability.error} />;
   }
 }
