@@ -46,3 +46,22 @@ describe('Email mapper', () => {
     }
   });
 });
+
+/**
+ * Alertmanager understands more of this integration than the form shows. We deliberately do not
+ * validate a setting nobody can edit, so the least we owe is that opening a receiver and saving it
+ * again gives them back untouched.
+ */
+describe('Email settings the form does not show', () => {
+  it('hands them back unchanged after a round trip', () => {
+    const config = {
+      to: 'alerts@example.com',
+      auth_password_file: '/etc/alerting/password',
+      auth_secret_file: '/etc/alerting/secret',
+      force_implicit_tls: true,
+      threading: { enabled: true, thread_by_date: 'daily' },
+    };
+
+    expect(emailFormSettingsToConfig(emailConfigToFormSettings(config as never))).toMatchObject(config);
+  });
+});

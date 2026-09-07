@@ -1,10 +1,19 @@
 import { Locator, expect } from '@playwright/test';
 import { AlertmanagerPage } from './AlertmanagerPage';
+import { DiscordIntegrationForm } from './receivers/DiscordIntegrationForm';
 import { EmailIntegrationForm } from './receivers/EmailIntegrationForm';
+import { JiraIntegrationForm } from './receivers/JiraIntegrationForm';
+import { MSTeamsIntegrationForm } from './receivers/MSTeamsIntegrationForm';
+import { OpsgenieIntegrationForm } from './receivers/OpsgenieIntegrationForm';
 import { PagerDutyIntegrationForm } from './receivers/PagerDutyIntegrationForm';
+import { PushoverIntegrationForm } from './receivers/PushoverIntegrationForm';
 import { SlackIntegrationForm } from './receivers/SlackIntegrationForm';
-import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
+import { SNSIntegrationForm } from './receivers/SNSIntegrationForm';
+import { TelegramIntegrationForm } from './receivers/TelegramIntegrationForm';
+import { VictorOpsIntegrationForm } from './receivers/VictorOpsIntegrationForm';
+import { WeChatIntegrationForm } from './receivers/WeChatIntegrationForm';
 import { WebexIntegrationForm } from './receivers/WebexIntegrationForm';
+import { WebhookIntegrationForm } from './receivers/WebhookIntegrationForm';
 
 /**
  * Page object for the Receivers view (`/receivers`).
@@ -22,6 +31,7 @@ export class ReceiversPage extends AlertmanagerPage {
   readonly table: Locator;
   readonly rows: Locator;
   readonly emptyStateMessage: Locator;
+  readonly detailContainer: Locator;
 
   // View/edit/add drawer
   readonly drawer: Locator;
@@ -52,6 +62,7 @@ export class ReceiversPage extends AlertmanagerPage {
     this.table = this.container.getByRole('table');
     this.rows = this.table.locator('tbody tr');
     this.emptyStateMessage = page.getByText(/no receivers are configured/i);
+    this.detailContainer = page.getByTestId('data-testid prom-receiver-detail');
 
     // All three drawer modes' titles use capitalized "Receiver" ("New Receiver", "Editing
     // Receiver", "Receiver <name>"), while the delete confirmation modal below is titled
@@ -87,6 +98,12 @@ export class ReceiversPage extends AlertmanagerPage {
     await AlertmanagerPage.seedAlertmanager(this.page, uid);
     await this.goto();
     await this.waitForLoad();
+  }
+
+  async gotoReceiverDetail(uid: string, name: string) {
+    await AlertmanagerPage.seedAlertmanager(this.page, uid);
+    await this.page.goto(`/a/${this.pluginId}/receivers/${encodeURIComponent(name)}`);
+    await expect(this.detailContainer).toBeVisible({ timeout: 10000 });
   }
 
   /** Web-first assertion on the number of receiver rows; retries until the table settles. */
@@ -147,7 +164,16 @@ export class ReceiversPage extends AlertmanagerPage {
   async selectIntegrationType(index: number, label: string) {
     const combobox = this.drawer.getByRole('combobox', { name: 'Integration type' }).nth(index);
     await combobox.click();
-    await this.page.getByRole('option', { name: label, exact: true }).click();
+    const option = this.page.getByRole('option', { name: label, exact: true });
+    if (!(await option.isVisible())) {
+      await combobox.fill(label);
+    }
+    await option.click();
+  }
+
+  async selectDiscordIntegration(index: number): Promise<DiscordIntegrationForm> {
+    await this.selectIntegrationType(index, 'Discord');
+    return new DiscordIntegrationForm(this.drawer);
   }
 
   /**
@@ -172,9 +198,44 @@ export class ReceiversPage extends AlertmanagerPage {
     return new WebhookIntegrationForm(this.drawer);
   }
 
+  async selectJiraIntegration(index: number): Promise<JiraIntegrationForm> {
+    await this.selectIntegrationType(index, 'Jira');
+    return new JiraIntegrationForm(this.drawer);
+  }
+
+  async selectMSTeamsIntegration(index: number): Promise<MSTeamsIntegrationForm> {
+    await this.selectIntegrationType(index, 'Microsoft Teams');
+    return new MSTeamsIntegrationForm(this.drawer);
+  }
+
+  async selectOpsgenieIntegration(index: number): Promise<OpsgenieIntegrationForm> {
+    await this.selectIntegrationType(index, 'OpsGenie');
+    return new OpsgenieIntegrationForm(this.drawer);
+  }
+
   async selectPagerDutyIntegration(index: number): Promise<PagerDutyIntegrationForm> {
     await this.selectIntegrationType(index, 'PagerDuty');
     return new PagerDutyIntegrationForm(this.drawer);
+  }
+
+  async selectPushoverIntegration(index: number): Promise<PushoverIntegrationForm> {
+    await this.selectIntegrationType(index, 'Pushover');
+    return new PushoverIntegrationForm(this.drawer);
+  }
+
+  async selectSNSIntegration(index: number): Promise<SNSIntegrationForm> {
+    await this.selectIntegrationType(index, 'Amazon SNS');
+    return new SNSIntegrationForm(this.drawer);
+  }
+
+  async selectTelegramIntegration(index: number): Promise<TelegramIntegrationForm> {
+    await this.selectIntegrationType(index, 'Telegram');
+    return new TelegramIntegrationForm(this.page, this.drawer);
+  }
+
+  async selectVictorOpsIntegration(index: number): Promise<VictorOpsIntegrationForm> {
+    await this.selectIntegrationType(index, 'VictorOps');
+    return new VictorOpsIntegrationForm(this.drawer);
   }
 
   /**
@@ -185,6 +246,11 @@ export class ReceiversPage extends AlertmanagerPage {
   async selectSlackIntegration(index: number): Promise<SlackIntegrationForm> {
     await this.selectIntegrationType(index, 'Slack');
     return new SlackIntegrationForm(this.drawer);
+  }
+
+  async selectWeChatIntegration(index: number): Promise<WeChatIntegrationForm> {
+    await this.selectIntegrationType(index, 'WeChat');
+    return new WeChatIntegrationForm(this.page, this.drawer);
   }
 
   async selectWebexIntegration(index: number): Promise<WebexIntegrationForm> {

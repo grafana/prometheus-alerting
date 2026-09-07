@@ -57,6 +57,19 @@ export const initialAlertmanagerConfiguration: PostableParsedUserConfiguration =
 } as const;
 
 /**
+ * Turns a parsed configuration back into the shape Mimir wants, where the whole alertmanager_config
+ * is one YAML string. Both codecs below share this, so both get handed exactly the same value: the
+ * type is the "input" side of ParsedUserConfigurationSchema, because zod has already run the nested
+ * codecs (like yamlString()) by the time an encode function is called.
+ */
+function encodeUserConfiguration(userConfiguration: z.input<typeof ParsedUserConfigurationSchema>): UserConfiguration {
+  return {
+    ...userConfiguration,
+    alertmanager_config: stringifyYaml(userConfiguration.alertmanager_config),
+  };
+}
+
+/**
  * This codec will translate the Mimir configuration (after having YAML parsed) to a completely parsed user configuration.
  * We have to decode YAML twice because the Mimir API responds with a YAML payload and the entire alertmanager_config is _also_ encoded as YAML inside the entire YAML response.
  */
@@ -82,10 +95,7 @@ const UserConfigurationSchemaCodec = z.codec(UserConfigurationSchema, ParsedUser
       alertmanager_config: parsed.data,
     };
   },
-  encode: (userConfiguration) => ({
-    ...userConfiguration,
-    alertmanager_config: stringifyYaml(userConfiguration.alertmanager_config),
-  }),
+  encode: encodeUserConfiguration,
 });
 
 /**
@@ -105,8 +115,5 @@ export const YamlToParsedUserConfiguration = z.codec(z.string(), ParsedUserConfi
     const decodedConfig = UserConfigurationSchemaCodec.decode(userConfiguration);
     return decodedConfig;
   },
-  encode: (userConfiguration) => {
-    const encodedAlertmanagerConfig = UserConfigurationSchemaCodec.encode(userConfiguration);
-    return stringifyYaml(encodedAlertmanagerConfig);
-  },
+  encode: (userConfiguration) => stringifyYaml(encodeUserConfiguration(userConfiguration)),
 });

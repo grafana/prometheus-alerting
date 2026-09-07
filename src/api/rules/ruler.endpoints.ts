@@ -2,6 +2,7 @@ import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { RulerRuleGroupDTO, GetRulerRuleGroupApiResponseSchema } from '@grafana/external-rules/vanilla';
 import { RulerRulesConfigDTOSchema, type RulerBackend, type RulerRulesConfigDTO } from '@grafana/external-rules/ruler';
+import { z } from 'zod';
 
 import { toRtkQueryError } from '../../utils/errors';
 
@@ -25,6 +26,11 @@ interface UpsertRuleGroupParams {
   dataSourceUid: string;
   namespace: string;
   payload: RulerRuleGroupDTO;
+}
+
+interface GetRuleNamespaceYamlParams {
+  dataSourceUid: string;
+  namespace: string;
 }
 
 interface GetAllRulesParams {
@@ -68,11 +74,19 @@ export const rulerApi = createApi({
       ],
       responseSchema: GetRulerRuleGroupApiResponseSchema,
     }),
+    getRuleNamespaceYaml: build.query<string, GetRuleNamespaceYamlParams>({
+      queryFn: ({ dataSourceUid, namespace }) => run(() => rulerBackend(dataSourceUid).getRuleNamespaceYaml(namespace)),
+      providesTags: (_result, _error, { dataSourceUid, namespace }) => [
+        { type: 'RulerRuleGroup', id: `${dataSourceUid}/${namespace}` },
+      ],
+      responseSchema: z.string(),
+    }),
     deleteRuleGroup: build.mutation<void, DeleteRuleGroupParams>({
       queryFn: ({ dataSourceUid, namespace, groupName }) =>
         run(() => rulerBackend(dataSourceUid).deleteRuleGroup(namespace, groupName)),
       invalidatesTags: (_result, _error, { dataSourceUid, namespace, groupName }) => [
         { type: 'RulerRuleGroup', id: `${dataSourceUid}/${namespace}/${groupName}` },
+        { type: 'RulerRuleGroup', id: `${dataSourceUid}/${namespace}` },
       ],
     }),
     upsertRuleGroup: build.mutation<void, UpsertRuleGroupParams>({
@@ -80,6 +94,7 @@ export const rulerApi = createApi({
         run(() => rulerBackend(dataSourceUid).upsertRuleGroup(namespace, payload)),
       invalidatesTags: (_result, _error, { dataSourceUid, namespace, payload }) => [
         { type: 'RulerRuleGroup', id: `${dataSourceUid}/${namespace}/${payload.name}` },
+        { type: 'RulerRuleGroup', id: `${dataSourceUid}/${namespace}` },
       ],
     }),
     getAllRules: build.query<RulerRulesConfigDTO, GetAllRulesParams>({

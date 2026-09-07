@@ -22,6 +22,7 @@ import {
 import { useTimeIntervals } from '../../timeIntervals/hooks/useTimeIntervals';
 import { FormAmRoute, MatcherOperator, commonGroupByOptions, emptyArrayFieldMatcher } from '../types';
 import { amRouteToFormAmRoute, isValidPromDuration } from '../utils/routeTransform';
+import { invalidDurationMessage } from '../../../utils/time.utils';
 import { ReceiverSelector } from './ReceiverSelector';
 import { RouteTimingSummary } from './RouteTimingSummary';
 
@@ -257,8 +258,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
             >
               <Input
                 {...register('groupWaitValue', {
-                  validate: (v) =>
-                    !v || isValidPromDuration(v) || t('routes.edit.invalid-duration', 'Invalid duration format'),
+                  validate: (v) => !v || isValidPromDuration(v) || invalidDurationMessage(),
                 })}
                 placeholder={t('routes.edit.group-wait-placeholder', '30s')}
               />
@@ -275,8 +275,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
             >
               <Input
                 {...register('groupIntervalValue', {
-                  validate: (v) =>
-                    !v || isValidPromDuration(v) || t('routes.edit.invalid-duration', 'Invalid duration format'),
+                  validate: (v) => !v || isValidPromDuration(v) || invalidDurationMessage(),
                 })}
                 placeholder={t('routes.edit.group-interval-placeholder', '5m')}
               />
@@ -293,8 +292,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
             >
               <Input
                 {...register('repeatIntervalValue', {
-                  validate: (v) =>
-                    !v || isValidPromDuration(v) || t('routes.edit.invalid-duration', 'Invalid duration format'),
+                  validate: (v) => !v || isValidPromDuration(v) || invalidDurationMessage(),
                 })}
                 placeholder={t('routes.edit.repeat-interval-placeholder', '4h')}
               />

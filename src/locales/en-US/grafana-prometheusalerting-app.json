@@ -42,6 +42,7 @@
     },
     "common": {
       "cancel": "Cancel",
+      "close": "Close",
       "save": "Save"
     },
     "continue-matching-indicator": {
@@ -73,14 +74,6 @@
       "invalid-format": "Invalid duration format. Use formats like 1m, 30s, 1h.",
       "placeholder": "e.g. 1m, 30s, 5m"
     },
-    "export": {
-      "copy-code": "Copy code",
-      "download": "Download",
-      "download-failed": "Download failed",
-      "rule-title": "Export rule",
-      "subtitle": "Select the format and download the file or copy the contents to clipboard",
-      "title": "Export"
-    },
     "expression-editor": {
       "could-not-load-editor": "Could not load query editor: {{errorMessage}}",
       "label-expression": "Expression",
@@ -90,6 +83,11 @@
       },
       "select-datasource": "Select a data source",
       "select-datasource-message": "Please select a data source above to load the query editor."
+    },
+    "federated-group-badge": {
+      "text": "Federated",
+      "tooltip": "This group reads data from other tenants. Edit it through the Ruler API.",
+      "tooltip-tenants": "This group reads data from {{tenants}}. Edit it through the Ruler API."
     },
     "filter-view-results": {
       "aria-label-filteredrulelist": "filtered-rule-list"
@@ -129,6 +127,8 @@
       "delete-confirm": "Delete",
       "delete-title": "Delete rule group",
       "error": "Error loading group",
+      "group-federated": "This group is federated",
+      "group-federated-description": "Federated rule groups read data from several tenants, which this editor cannot express. Edit the group through the Ruler API instead.",
       "interval-description": "How often the rules in this group are evaluated",
       "interval-label": "Evaluation interval",
       "loading": "Loading group...",
@@ -173,6 +173,15 @@
     "more-button": {
       "aria-label": "More",
       "button-text": "More"
+    },
+    "namespace-yaml": {
+      "copy": "Copy to clipboard",
+      "error": "Failed to load YAML for namespace {{namespace}}",
+      "loading": "Loading namespace YAML...",
+      "subtitle": "Namespace: {{namespace}}",
+      "title": "View namespace YAML",
+      "view": "View YAML",
+      "view-aria-label": "View YAML for namespace {{namespace}}"
     },
     "query-preview": {
       "error-title": "Query failed",
@@ -238,7 +247,6 @@
       "delete": "Delete",
       "duplicate": "Duplicate",
       "edit": "Edit",
-      "export": "Export",
       "silence": "Silence notifications"
     },
     "rule-definition": {
@@ -288,6 +296,7 @@
         "group-required": "Group name is required",
         "group-too-long": "Group name must be less than 255 characters",
         "keep-firing-for-invalid": "Invalid duration format. Use combinations like 30s, 5m, 1h30m",
+        "name-invalid-metric-name": "Recording rule names can only contain letters, numbers, underscores and colons, and can't start with a number",
         "name-required": "Rule name is required",
         "name-too-long": "Rule name must be less than 255 characters",
         "namespace-required": "Namespace is required",
@@ -396,6 +405,7 @@
       "ends-at": "Ends",
       "generator-url": "Generator URL",
       "inhibited-by": "Inhibited by",
+      "manage-silences": "Manage silences",
       "muted-by": "Muted by",
       "receiver": "Receiver",
       "section": {
@@ -405,6 +415,7 @@
         "receivers": "Receivers",
         "timing": "Timing"
       },
+      "silence": "Silence",
       "silenced-by": "Silenced by",
       "starts-at": "Started",
       "title": "Alert details",
@@ -481,6 +492,7 @@
   "common": {
     "all": "All",
     "cancel": "Cancel",
+    "duration-invalid": "Enter a duration such as 30s, 5m, or 1h",
     "permission-denied": {
       "description": "You do not have the required permissions to access this page.",
       "title": "Permission denied"
@@ -643,6 +655,7 @@
       "email-auth-secret": "Secret",
       "email-auth-username": "Username",
       "email-from": "From",
+      "email-header-duplicate": "Two headers have the same name. Header names ignore capitals.",
       "email-header-key": "Header key",
       "email-header-value": "Header value",
       "email-headers": "Headers",
@@ -655,14 +668,19 @@
       "email-require-tls": "Require TLS",
       "email-settings": "Email settings",
       "email-smarthost": "SMTP host",
+      "email-smarthost-invalid": "Enter the mail server as host and port, like smtp.example.com:587",
       "email-text": "Email text body",
       "email-tls-config": "TLS configuration",
       "email-tls-server-name": "TLS server name",
       "email-tls-skip-verify": "Skip TLS certificate verification",
       "email-to": "To",
       "email-to-required": "Recipient is required",
+      "go-duration-invalid": "Enter a duration such as 30s, 5m30s, or 1.5h",
       "http-config-authentication-conflict": "Authorization and basic authentication cannot be used together",
       "http-config-authorization-credentials-required": "Authorization credentials are required",
+      "http-config-authorization-type-basic": "Authorization type cannot be \"basic\". Use basic authentication instead.",
+      "http-config-no-proxy-environment-conflict": "No proxy and proxy from environment cannot be used together",
+      "http-config-no-proxy-needs-proxy-url": "No proxy needs a proxy URL as well",
       "http-config-oauth2-conflict": "Only one of authorization, basic authentication, or OAuth2 can be used",
       "http-config-proxy-conflict": "Proxy URL and proxy from environment cannot be used together",
       "integration-type": "Integration type",
@@ -676,7 +694,6 @@
       "jira-basic-auth-password": "Basic authentication password",
       "jira-basic-auth-username": "Basic authentication username",
       "jira-description": "Description",
-      "jira-duration-invalid": "Enter a duration such as 100ms, 1.2s, or 8h",
       "jira-enable-http2": "Enable HTTP/2",
       "jira-field-key": "Field key",
       "jira-field-value": "Field value",
@@ -757,8 +774,10 @@
       "opsgenie-proxy-from-environment": "Proxy from environment",
       "opsgenie-proxy-url": "Proxy URL",
       "opsgenie-responder-id": "Responder ID",
+      "opsgenie-responder-identifier-required": "Every responder needs an ID, username, or name",
       "opsgenie-responder-name": "Responder name",
       "opsgenie-responder-type": "Responder type",
+      "opsgenie-responder-type-invalid": "Responder type must be team, teams, user, escalation, or schedule",
       "opsgenie-responder-username": "Responder username",
       "opsgenie-responders": "Responders",
       "opsgenie-settings": "Opsgenie settings",
@@ -789,6 +808,7 @@
       "pagerduty-image-source": "Source",
       "pagerduty-image-url": "URL",
       "pagerduty-images": "Images",
+      "pagerduty-key-required": "Routing key or service key is required",
       "pagerduty-link-text": "Text",
       "pagerduty-link-url": "URL",
       "pagerduty-links": "Links",
@@ -807,16 +827,17 @@
       "pagerduty-tls-skip-verify": "Skip TLS certificate verification",
       "pagerduty-url": "URL",
       "pagerduty-url-invalid": "URL must start with http:// or https://",
+      "prometheus-duration-invalid": "Enter a duration such as 30s, 5m, or 1d12h",
       "pushover-authorization-credentials": "Authorization credentials",
       "pushover-authorization-type": "Authorization type",
       "pushover-basic-auth-password": "Basic authentication password",
       "pushover-basic-auth-username": "Basic authentication username",
       "pushover-device": "Device",
-      "pushover-duration-invalid": "Enter a duration such as 30s, 5m30s, or 8h",
       "pushover-enable-http2": "Enable HTTP/2",
       "pushover-expire": "Expire",
       "pushover-follow-redirects": "Follow redirects",
       "pushover-html": "Enable HTML",
+      "pushover-html-monospace-conflict": "HTML and monospace formatting cannot be used together",
       "pushover-http-config": "HTTP configuration",
       "pushover-max-tls-version": "Maximum TLS version",
       "pushover-message": "Message",
@@ -856,10 +877,14 @@
       "send-resolved": "Send resolved",
       "send-resolved-description": "Send notifications when alerts are resolved",
       "slack-action-confirm": "Confirmation",
+      "slack-action-confirm-text-required": "Every confirmation needs text",
       "slack-action-name": "Action name",
       "slack-action-style": "Action style",
+      "slack-action-target-required": "Every action needs either a URL or a name",
       "slack-action-text": "Action text",
+      "slack-action-text-required": "Every action needs text",
       "slack-action-type": "Action type",
+      "slack-action-type-required": "Every action needs a type",
       "slack-action-url": "Action URL",
       "slack-action-value": "Action value",
       "slack-actions": "Actions",
@@ -914,6 +939,7 @@
       "sns-authorization-type": "Authorization type",
       "sns-basic-auth-password": "Basic authentication password",
       "sns-basic-auth-username": "Basic authentication username",
+      "sns-destination-conflict": "Only one of topic ARN, phone number, or target ARN can be set",
       "sns-destination-required": "Topic ARN, phone number, or target ARN is required",
       "sns-enable-http2": "Enable HTTP/2",
       "sns-follow-redirects": "Follow redirects",
@@ -948,6 +974,7 @@
       "telegram-bot-token-required": "Bot token is required",
       "telegram-chat-id": "Chat ID",
       "telegram-chat-id-required": "Chat ID is required",
+      "telegram-chat-id-zero": "Chat ID cannot be 0",
       "telegram-disable-notifications": "Disable notifications",
       "telegram-enable-http2": "Enable HTTP/2",
       "telegram-follow-redirects": "Follow redirects",
@@ -969,6 +996,7 @@
       "telegram-tls-server-name": "TLS server name",
       "telegram-tls-skip-verify": "Skip TLS certificate verification",
       "telegram-token-conflict": "Bot token and bot token file cannot be used together",
+      "tls-version-invalid": "TLS version must be TLS10, TLS11, TLS12 or TLS13",
       "unsupported-body": "Its configuration has a shape this form does not understand, so editing it here could drop settings. Edit it in the Alertmanager configuration instead.",
       "unsupported-title": "This receiver cannot be edited here",
       "update": "Update receiver",
@@ -1070,6 +1098,7 @@
       "wechat-max-tls-version": "Maximum TLS version",
       "wechat-message": "Message",
       "wechat-message-type": "Message type",
+      "wechat-message-type-invalid": "Message type must be text or markdown",
       "wechat-min-tls-version": "Minimum TLS version",
       "wechat-no-proxy": "No proxy",
       "wechat-proxy-from-environment": "Proxy from environment",
@@ -1175,7 +1204,6 @@
       "group-wait": "Group wait",
       "group-wait-description": "How long to wait before sending the first notification for a group",
       "group-wait-placeholder": "30s",
-      "invalid-duration": "Invalid duration format",
       "label": "Label",
       "label-placeholder": "label",
       "matching-labels": "Matching labels",
@@ -1238,6 +1266,7 @@
       "ruler-unavailable": "⚠ Ruler API Unavailable (Read-only)"
     },
     "error": {
+      "back-to-rules": "Back to rules",
       "evaluation": "Something went wrong when evaluating this alert rule",
       "loading": "Error loading rule",
       "not-found": "Rule not found",
@@ -1430,7 +1459,9 @@
       "tooltip-note": "Searches by label name and value only. For example, foo=\"bar\" finds all silences with label foo and value bar — both foo=\"bar\" and foo!=\"bar\".",
       "tooltip-regex": "Regex match:"
     },
+    "filtered-by-ids": "Showing only the silences linked from an alert instance.",
     "no-active-silences-message": "No active silences found.",
+    "no-matching-ids-message": "The linked silences no longer exist.",
     "no-silences-message": "No silences are currently configured in the Alertmanager.",
     "operator": {
       "equals": "Equals",
@@ -1442,6 +1473,7 @@
       "page-title": "Recreate Silence"
     },
     "resource-label": "silences",
+    "show-all": "Show all silences",
     "show-inactive": "Show inactive silences"
   },
   "templates": {
