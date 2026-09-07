@@ -61,3 +61,19 @@ export async function deleteMimirAlertmanagerConfig(tenantId: string): Promise<v
     throw new Error(`Failed to delete Mimir Alertmanager config for ${tenantId}: HTTP ${response.status}`);
   }
 }
+
+/**
+ * Fetch a test tenant's Alertmanager configuration document as Mimir stores it, so a test can
+ * assert on the exact bytes the plugin wrote.
+ */
+export async function getMimirAlertmanagerConfig(tenantId: string): Promise<string> {
+  const response = await fetch(MIMIR_ALERTMANAGER_CONFIG_URL, {
+    headers: getMimirOrgHeader(tenantId),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Mimir Alertmanager config for ${tenantId}: HTTP ${response.status}`);
+  }
+
+  return response.text();
+}

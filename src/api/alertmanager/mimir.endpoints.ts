@@ -1,4 +1,5 @@
 import { StandardSchemaV1 } from '@standard-schema/spec';
+import { z } from 'zod';
 import {
   ParsedUserConfiguration,
   ParsedUserConfigurationSchema,
@@ -57,8 +58,46 @@ export const mimirAlertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       },
       invalidatesTags: ['Configuration'],
     }),
+    /**
+     * The stored configuration document, exactly as Mimir returns it – no parsing, no reformatting.
+     * The YAML configuration editor reads this so people see the comments, key order and quoting
+     * they wrote, and so a configuration our schemas don't recognise can still be opened and fixed.
+     */
+    getUserConfigurationDocument: build.query<string, WithDataSourceInformation>({
+      queryFn: async ({ dataSourceUID }, api, _extraOptions, baseQuery) => {
+        validateMimirDataSource(dataSourceUID);
+
+        const response = await fetchMimirUserConfigurationWithRetry(dataSourceUID, api, baseQuery);
+        if (response.error) {
+          return { error: response.error };
+        }
+
+        return { data: String(response.data) };
+      },
+      providesTags: ['Configuration'],
+      responseSchema: z.string() as unknown as StandardSchemaV1<string>,
+    }),
+    /** Posts a configuration document verbatim. Mimir validates the configuration it contains. */
+    updateUserConfigurationDocument: build.mutation<UpdateAlertmanagerConfigApiResponse, UpdateConfigDocumentApiArg>({
+      query: ({ dataSourceUID, document }) => {
+        validateMimirDataSource(dataSourceUID);
+        return {
+          method: 'POST',
+          url: `/${dataSourceUID}/api/v1/alerts`,
+          headers: {
+            'Content-Type': 'application/yaml',
+          },
+          body: document,
+        };
+      },
+      invalidatesTags: ['Configuration'],
+    }),
   }),
 });
+
+export interface UpdateConfigDocumentApiArg extends WithDataSourceInformation {
+  document: string;
+}
 
 export interface UpdateAlertmanagerConfigApiArg extends WithDataSourceInformation {
   configuration: ParsedUserConfiguration;

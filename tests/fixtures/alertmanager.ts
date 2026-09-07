@@ -7,6 +7,7 @@ import {
   postMimirAlertmanagerConfig,
 } from '../api/alertmanagerConfig';
 import { createMimirAlertmanagerDataSource, deleteGrafanaDataSource } from '../api/grafana';
+import { AppConfigPage } from '../pages/AppConfigPage';
 import { InhibitRulesPage } from '../pages/InhibitRulesPage';
 import { ReceiversPage } from '../pages/ReceiversPage';
 import { RoutesListPage } from '../pages/RoutesListPage';
@@ -28,6 +29,7 @@ type MimirAlertmanagerFixture = {
 };
 
 type AlertmanagerTestFixture = {
+  appConfigPage: AppConfigPage;
   inhibitRulesPage: InhibitRulesPage;
   receiversPage: ReceiversPage;
   routesListPage: RoutesListPage;
@@ -39,6 +41,10 @@ type AlertmanagerTestFixture = {
 };
 
 export const test = base.extend<AlertmanagerTestFixture>({
+  appConfigPage: async ({ page }, use) => {
+    const appConfigPage = new AppConfigPage(page, pluginJson.id);
+    await use(appConfigPage);
+  },
   inhibitRulesPage: async ({ page }, use) => {
     const inhibitRulesPage = new InhibitRulesPage(page, pluginJson.id);
     await use(inhibitRulesPage);

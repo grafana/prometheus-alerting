@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppPluginMeta, PluginConfigPageProps } from '@grafana/data';
-import { CodeEditor, FieldSet, LoadingPlaceholder, Alert } from '@grafana/ui';
+import { FieldSet, LoadingPlaceholder, Alert } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { testIds } from '../testIds';
 import { KeyValueList } from '../KeyValueList';
@@ -10,6 +10,7 @@ import { StoreProvider } from '../StoreProvider/StoreProvider';
 import { sharedStore } from '../../store/store';
 import { AlertmanagerPicker } from '../AlertmanagerPicker/AlertmanagerPicker';
 import { ClusterStatus } from './ClusterStatus';
+import { AlertmanagerConfiguration } from '../../features/alertmanagerConfig';
 import type { PeerStatus } from '@grafana/external-alertmanager/vanilla';
 
 type AppPluginSettings = {};
@@ -95,19 +96,36 @@ const AppConfigStatusContent = () => {
       <FieldSet label={t('app-config.version-information.title', 'Version Information')}>
         <KeyValueList items={versionItems} />
       </FieldSet>
-      <FieldSet label={t('app-config.api-settings.title', 'Configuration file')}>
-        <CodeEditor value={status.config.original} language={'yaml'} height={600} readOnly />
-      </FieldSet>
     </>
+  );
+};
+
+/**
+ * The Alertmanager configuration, kept outside the status fieldsets on purpose. The status endpoint
+ * can be unavailable while the stored configuration is perfectly readable, and that is exactly when
+ * somebody needs to get at the configuration to fix it.
+ */
+const AppConfigConfiguration = () => {
+  const alertmanager = useAlertmanagerSafe();
+
+  if (!alertmanager) {
+    return null;
+  }
+
+  return (
+    <FieldSet label={t('app-config.api-settings.title', 'Configuration')}>
+      <AlertmanagerConfiguration />
+    </FieldSet>
   );
 };
 
 const AppConfigContent = ({ plugin }: AppConfigProps) => {
   return (
-    <div data-testid={testIds.appConfig}>
+    <div data-testid={testIds.appConfig.container}>
       <FieldSet label={t('app-config.alertmanager-selection.title', 'Alertmanager')}>
         <AlertmanagerPicker alwaysShow />
       </FieldSet>
+      <AppConfigConfiguration />
       <AppConfigStatusContent />
     </div>
   );
