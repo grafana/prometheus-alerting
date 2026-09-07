@@ -52,22 +52,11 @@ export function writeAlertmanagerConfigYaml(document: string, alertmanagerConfig
   if (!isMap(parsed.contents)) {
     return stringifyYaml({
       template_files: {},
-      [ALERTMANAGER_CONFIG_KEY]: blockLiteral(alertmanagerConfig),
+      [ALERTMANAGER_CONFIG_KEY]: alertmanagerConfig,
     });
   }
 
-  parsed.set(ALERTMANAGER_CONFIG_KEY, blockLiteral(alertmanagerConfig));
+  parsed.set(ALERTMANAGER_CONFIG_KEY, alertmanagerConfig);
 
   return String(parsed);
-}
-
-/**
- * Forces the config to be written as a `|` block rather than a quoted string with `\n` escapes.
- * Both are valid YAML, but only one of them is readable by a person looking at the stored document.
- */
-function blockLiteral(value: string): Scalar<string> {
-  const scalar = new Scalar(value);
-  scalar.type = Scalar.BLOCK_LITERAL;
-
-  return scalar;
 }
