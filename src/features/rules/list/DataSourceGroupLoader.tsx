@@ -17,7 +17,6 @@ import { createRulePositionHash, getMatchingRulerRule } from '@grafana/external-
 import type { RulesSourceApplication } from '@grafana/external-rules/ruler';
 import type { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vanilla';
 
-import { RuleExporter } from '../export';
 import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 import { RuleActionsButtons } from './components/RuleActionsButtons';
@@ -47,8 +46,7 @@ export function DataSourceGroupLoader({
   const { namespace, groupName } = groupIdentifier;
   const namespaceName = namespace.name;
 
-  const { handleDuplicate, handleSilence, handleDelete, handleExport, deleteModal, exportingRule, closeExportDrawer } =
-    useRuleActions();
+  const { handleDuplicate, handleSilence, handleDelete, deleteModal } = useRuleActions();
 
   // Fetch Prometheus rules
   const {
@@ -141,7 +139,6 @@ export function DataSourceGroupLoader({
               onDelete={handleDelete}
               onDuplicate={handleDuplicate}
               onSilence={handleSilence}
-              onExport={handleExport}
               compact
             />
           );
@@ -159,7 +156,6 @@ export function DataSourceGroupLoader({
           );
         })}
         {deleteModal}
-        {exportingRule && <RuleExporter rule={exportingRule} onClose={closeExportDrawer} />}
       </>
     );
   }

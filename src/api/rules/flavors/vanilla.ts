@@ -85,6 +85,10 @@ export function createVanillaRulerBackend(transport: RulerTransport, rulerPath: 
       return parseYaml<RulerRuleGroupDTO | null>(response, null);
     },
 
+    async getRuleNamespaceYaml(namespace) {
+      return transport<string>({ segments: [...base, namespace], responseType: 'text' });
+    },
+
     async getAllRules() {
       const response = await transport<string>({ segments: base, responseType: 'text' });
 

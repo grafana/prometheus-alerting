@@ -37,6 +37,10 @@ function fakeRulerTransport(basePath: string) {
       return yaml.dump(store) as T;
     }
 
+    if (method === 'GET' && groupName === undefined) {
+      return yaml.dump({ [namespace]: store[namespace] ?? [] }) as T;
+    }
+
     if (method === 'GET') {
       const group = store[namespace]?.find((candidate) => candidate.name === groupName);
       if (!group) {
@@ -98,6 +102,23 @@ describe('vanilla ruler paths', () => {
     });
   });
 
+  it('reads a namespace as raw YAML without reformatting it', async () => {
+    const rawYaml = ['namespace:', '  - name: group', '    custom_field: preserved', ''].join('\n');
+    const requests: RulerRequest[] = [];
+    const backend = createVanillaRulerBackend(async <T>(request: RulerRequest) => {
+      requests.push(request);
+      return rawYaml as T;
+    }, 'config/v1/rules');
+
+    await expect(backend.getRuleNamespaceYaml('my namespace')).resolves.toBe(rawYaml);
+    expect(requests).toEqual([
+      {
+        segments: ['config', 'v1', 'rules', 'my namespace'],
+        responseType: 'text',
+      },
+    ]);
+  });
+
   it('sends the rule group as YAML', async () => {
     const { transport, requests } = fakeRulerTransport('config/v1/rules');
     const backend = createVanillaRulerBackend(transport, 'config/v1/rules');
@@ -114,6 +135,7 @@ describe('vanilla ruler paths', () => {
 
     expect(await backend.getAllRules()).toEqual({});
     expect(await backend.getRuleGroup('ns', 'group')).toBeNull();
+    expect(await backend.getRuleNamespaceYaml('ns')).toBe('   ');
   });
 });
 

@@ -81,6 +81,17 @@ export function describeRulerBackend(name: string, createBackend: () => RulerBac
       expect(await backend.getAllRules()).not.toHaveProperty(['ns', 0]);
     });
 
+    it('returns the raw YAML for one namespace', async () => {
+      const backend = await createBackend();
+      await backend.upsertRuleGroup('ns', group('group-a', 'AlertOne'));
+
+      const rawYaml = await backend.getRuleNamespaceYaml('ns');
+
+      expect(rawYaml).toContain('ns:');
+      expect(rawYaml).toContain('group-a');
+      expect(rawYaml).toContain('AlertOne');
+    });
+
     it('returns every namespace and group from getAllRules', async () => {
       const backend = await createBackend();
       await backend.upsertRuleGroup('ns-one', group('group-a', 'AlertOne'));

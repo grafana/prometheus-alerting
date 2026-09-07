@@ -42,6 +42,7 @@
     },
     "common": {
       "cancel": "Cancel",
+      "close": "Close",
       "save": "Save"
     },
     "continue-matching-indicator": {
@@ -72,14 +73,6 @@
       "exceeds-pending": "Interval ({{interval}}) exceeds the pending period ({{for}}) of some rules. This may cause alerts to fire immediately.",
       "invalid-format": "Invalid duration format. Use formats like 1m, 30s, 1h.",
       "placeholder": "e.g. 1m, 30s, 5m"
-    },
-    "export": {
-      "copy-code": "Copy code",
-      "download": "Download",
-      "download-failed": "Download failed",
-      "rule-title": "Export rule",
-      "subtitle": "Select the format and download the file or copy the contents to clipboard",
-      "title": "Export"
     },
     "expression-editor": {
       "could-not-load-editor": "Could not load query editor: {{errorMessage}}",
@@ -181,6 +174,15 @@
       "aria-label": "More",
       "button-text": "More"
     },
+    "namespace-yaml": {
+      "copy": "Copy to clipboard",
+      "error": "Failed to load YAML for namespace {{namespace}}",
+      "loading": "Loading namespace YAML...",
+      "subtitle": "Namespace: {{namespace}}",
+      "title": "View namespace YAML",
+      "view": "View YAML",
+      "view-aria-label": "View YAML for namespace {{namespace}}"
+    },
     "query-preview": {
       "error-title": "Query failed",
       "loading": "Running query...",
@@ -245,7 +247,6 @@
       "delete": "Delete",
       "duplicate": "Duplicate",
       "edit": "Edit",
-      "export": "Export",
       "silence": "Silence notifications"
     },
     "rule-definition": {

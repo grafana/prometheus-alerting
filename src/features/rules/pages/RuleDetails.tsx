@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { parseIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
-import type { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
+import type { PromRuleDTO } from '@grafana/external-rules/vanilla';
 import { Alert, LoadingPlaceholder, Spinner, Stack, Text } from '@grafana/ui';
 import { locationService, PluginPage } from '@grafana/runtime';
 import { Trans, t } from '@grafana/i18n';
@@ -15,7 +15,6 @@ import { RuleDetailsSubtitle } from '../components/RuleDetailsSubtitle';
 import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { RuleActionsButtons } from '../list/components/RuleActionsButtons';
 import { useDeleteRuleModal } from '../list/components/DeleteRuleModal';
-import { RuleExporter } from '../export';
 import {
   rules as rulesNav,
   groups as groupsNav,
@@ -61,7 +60,6 @@ function RuleDetails() {
   }, []);
 
   const [deleteModal, showDeleteModal] = useDeleteRuleModal(handleDeleted);
-  const [exportingRule, setExportingRule] = useState<RulerRuleDTO | null>(null);
 
   const handleDuplicate = useCallback((identifier: DataSourceRuleIdentifier) => {
     const cloneUrl = rulesNav.clonePageLink(identifier);
@@ -71,14 +69,6 @@ function RuleDetails() {
   const handleSilence = useCallback((_identifier: DataSourceRuleIdentifier, ruleName: string) => {
     const silenceUrl = silencesNav.createForRuleLink(ruleName);
     window.location.href = silenceUrl;
-  }, []);
-
-  const handleExport = useCallback((rule: RulerRuleDTO) => {
-    setExportingRule(rule);
-  }, []);
-
-  const closeExportDrawer = useCallback(() => {
-    setExportingRule(null);
   }, []);
 
   const pageNav = useMemo(() => {
@@ -200,7 +190,6 @@ function RuleDetails() {
       onDelete={showDeleteModal}
       onDuplicate={handleDuplicate}
       onSilence={handleSilence}
-      onExport={handleExport}
     />
   );
 
@@ -216,7 +205,6 @@ function RuleDetails() {
         />
       </PluginPage>
       {deleteModal}
-      {exportingRule && <RuleExporter rule={exportingRule} onClose={closeExportDrawer} />}
     </>
   );
 }

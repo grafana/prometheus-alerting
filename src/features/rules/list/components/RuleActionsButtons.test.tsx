@@ -142,6 +142,7 @@ describe('RuleActionsButtons', () => {
 
     expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Export' })).not.toBeInTheDocument();
     expect(screen.getByRole('menu').children).toHaveLength(5);
   });
 });
