@@ -35,7 +35,8 @@
 #      runs the copy on main.
 #
 # Design borrowed from grafana/plugin-actions' renovate-approve.yml and the
-# write-up at grafana/grafana-catalog-team/docs/renovate-automerge.
+# write-up at grafana/grafana-catalog-team/docs/renovate-automerge. The Anthropic
+# key comes from Vault the way loki and gcx do it — see the note on that step.
 #
 # Claude never holds a token that can write. It reads the diff, which is
 # untrusted input, and hands back a rating plus a list of file/line/reason
@@ -70,7 +71,7 @@ jobs:
       github.event.pull_request.user.login != 'renovate[bot]' &&
       github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
-    # Read-only on purpose. id-token is for the Anthropic token exchange.
+    # Read-only on purpose. id-token is what authenticates the job to Vault.
     permissions:
       contents: read
       pull-requests: read
@@ -141,18 +142,31 @@ jobs:
             echo "$delimiter"
           } >> "$GITHUB_OUTPUT"
 
+      # Vault rather than workload identity federation, because this runs on a
+      # pull_request event. A WIF exchange proves who is asking with the OIDC
+      # token GitHub issues the job, and for a pull_request that token says
+      # `pull_request`, never a branch. The org's federation rule pins main — it
+      # is what lets the renovate gate mint an approving token safely — so a
+      # PR-triggered run cannot satisfy it. Every Claude workflow in the org
+      # splits the same way: schedule and workflow_dispatch use WIF, and the
+      # pull_request ones (loki, gcx) use Vault.
+      - name: Get the Anthropic key
+        id: secrets
+        if: steps.gate.outputs.ready == 'true'
+        uses: grafana/shared-workflows/actions/get-vault-secrets@a53fc80bc30b0a16a262520465db899fa3af08b7 # get-vault-secrets/v1.3.2
+        with:
+          # Keep it on the step output rather than exporting it into the
+          # environment of every later step, claude-code-action included.
+          export_env: false
+          repo_secrets: |
+            ANTHROPIC_API_KEY=anthropic:api-key
+
       - name: Ask Claude
         id: claude
         if: steps.gate.outputs.ready == 'true'
         uses: anthropics/claude-code-action@ef8bb1e43bf303cff727a1dd0b8837029fe982a2 # v1.0.215
         with:
-          # Workload identity federation: the workflow's GitHub OIDC token is
-          # swapped for a short-lived Anthropic token, so there's no API key to
-          # store. The three identifiers aren't secret and live in repo Actions
-          # variables. Never set ANTHROPIC_API_KEY here, it silently wins over WIF.
-          anthropic_federation_rule_id: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
-          anthropic_organization_id: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
-          anthropic_service_account_id: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          anthropic_api_key: ${{ fromJSON(steps.secrets.outputs.secrets).ANTHROPIC_API_KEY }}
           # The read-only workflow token. Claude reads untrusted input, so it
           # must never hold something that can write.
           github_token: ${{ secrets.GITHUB_TOKEN }}
