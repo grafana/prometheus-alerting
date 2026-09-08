@@ -6,7 +6,7 @@
 // call can pull a change touching sensitive paths down into the tiers we might
 // one day auto-approve.
 
-import { ghJson, setOutput, env, isMain } from './lib.mjs';
+import { ghPaginate, setOutput, env, isMain } from './lib.mjs';
 
 // Past these, a change stops being something a reviewer can eyeball, whatever
 // it touches.
@@ -73,7 +73,14 @@ function floorFor(files) {
 }
 
 export function computeFloor({ repo, pr }) {
-  const files = ghJson(['pr', 'view', String(pr), '--repo', repo, '--json', 'files', '--jq', '.files']);
+  // The REST endpoint, paginated, rather than `gh pr view --json files`: that
+  // one stops at 100 files, and a denied path sitting past the cap would go
+  // unseen — scoring a wide PR medium when it should be high.
+  const files = ghPaginate(`repos/${repo}/pulls/${pr}/files`).map((file) => ({
+    path: file.filename,
+    additions: file.additions,
+    deletions: file.deletions,
+  }));
   return floorFor(files);
 }
 
