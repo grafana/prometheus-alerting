@@ -126,9 +126,15 @@ function provenance({ repo, headSha, model, effort, took }) {
   // Linked to the commit, so a stale rating can be told apart from a current
   // one without hunting for the SHA in the timeline.
   const parts = [`commit [\`${headSha.slice(0, 7)}\`](https://github.com/${repo}/commit/${headSha})`];
-  if (model) parts.push(`model \`${model}\``);
-  if (effort) parts.push(`effort \`${effort}\``);
-  if (took) parts.push(`took ${took}`);
+  if (model) {
+    parts.push(`model \`${model}\``);
+  }
+  if (effort) {
+    parts.push(`effort \`${effort}\``);
+  }
+  if (took) {
+    parts.push(`took ${took}`);
+  }
   return parts.join(' \u00b7 ');
 }
 
@@ -181,7 +187,9 @@ function applyLabel({ repo, pr, tier }) {
     ghJson(['pr', 'view', String(pr), '--repo', repo, '--json', 'labels']).labels.map((l) => l.name)
   );
   for (const other of TIERS) {
-    if (other === tier || !current.has(`impact:${other}`)) continue;
+    if (other === tier || !current.has(`impact:${other}`)) {
+      continue;
+    }
     try {
       gh(['pr', 'edit', String(pr), '--repo', repo, '--remove-label', `impact:${other}`]);
     } catch {
