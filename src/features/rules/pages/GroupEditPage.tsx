@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import React, { useMemo, useState } from 'react';
-import { SubmitHandler, useForm, useWatch } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 
 import { AppEvents, GrafanaTheme2 } from '@grafana/data';
@@ -30,7 +30,7 @@ import { groups } from '../../../utils/navigation';
 import { AlertingAction, isAbilityAllowed, useScopedAbilities } from '../../../access-control/abilities';
 
 import { DraggableRulesTable, SwapOperation, applySwaps } from '../components/DraggableRulesTable';
-import { EvaluationIntervalInput } from '../components/EvaluationIntervalInput';
+import { EvaluationIntervalInput, validateInterval } from '../components/EvaluationIntervalInput';
 import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { useWaitForGroupConsistency } from '../hooks/useGroupConsistencyCheck';
 import { useInvalidatePromRules } from '../hooks/useInvalidatePromRules';
@@ -195,7 +195,6 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
   const {
     register,
     handleSubmit,
-    setValue,
     control,
     formState: { errors, dirtyFields, isSubmitting },
   } = useForm<GroupEditFormData>({
@@ -370,9 +369,13 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
           className={styles.field}
           htmlFor="interval"
         >
-          <EvaluationIntervalInput
-            value={currentInterval}
-            onChange={(value) => setValue('interval', value, { shouldValidate: true, shouldDirty: true })}
+          <Controller
+            name="interval"
+            control={control}
+            rules={{ validate: (value) => validateInterval(value, rulerGroup.rules) }}
+            render={({ field: { value, onChange, onBlur } }) => (
+              <EvaluationIntervalInput value={value} onChange={onChange} onBlur={onBlur} />
+            )}
           />
         </Field>
 

@@ -120,6 +120,24 @@ describe('GroupEditPage', () => {
     expect(upserts[0]).toEqual({ ...tunedGroup, interval: '5m' });
   });
 
+  it('shows an inline error and blocks saving an invalid evaluation interval', async () => {
+    const upserts = captureRulerWrites();
+    const user = userEvent.setup();
+
+    renderGroupEditPage();
+
+    const intervalInput = await screen.findByRole('textbox', { name: /Evaluation interval/i });
+    await user.clear(intervalInput);
+    await user.type(intervalInput, 'bogus99');
+    await user.tab(); // blur the field
+
+    expect(await screen.findByText('Invalid duration format. Use formats like 1m, 30s, 1h.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Save/i }));
+
+    expect(upserts).toHaveLength(0);
+  });
+
   it('offers no form for a federated group', async () => {
     setMockNamespaces({ [NAMESPACE]: [federatedGroup] });
 
