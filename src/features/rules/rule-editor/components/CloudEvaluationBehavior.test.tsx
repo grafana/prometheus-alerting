@@ -52,13 +52,13 @@ describe('CloudEvaluationBehavior', () => {
     expect(screen.queryByLabelText(/Keep firing for/)).not.toBeInTheDocument();
   });
 
-  it('offers a pending period field on alerting rules', () => {
+  it('shows the pending period field for alerting rules', () => {
     const step = renderStep();
 
     expect(step.pendingPeriod()).toBeInTheDocument();
   });
 
-  it('leaves it off recording rules, which have no `for`', () => {
+  it('hides the pending period field for recording rules, which have no `for` duration', () => {
     renderStep(RuleFormType.cloudRecording);
 
     expect(screen.queryByText(/Pending period/)).not.toBeInTheDocument();
