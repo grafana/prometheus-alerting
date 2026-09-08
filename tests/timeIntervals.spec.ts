@@ -39,8 +39,9 @@ test.describe('Time intervals', () => {
     await timeIntervalsPage.gotoWithAlertmanager(mimirAlertmanager.uid);
     await timeIntervalsPage.openByName('business-hours');
 
-    await expect(timeIntervalsPage.drawer.getByText('09:00 - 12:00, 13:00 - 17:00')).toBeVisible();
-    await expect(timeIntervalsPage.drawer.getByText('10:00 - 14:00')).toBeVisible();
+    await expect(timeIntervalsPage.drawer.getByText('09:00–12:00')).toBeVisible();
+    await expect(timeIntervalsPage.drawer.getByText('13:00–17:00')).toBeVisible();
+    await expect(timeIntervalsPage.drawer.getByText('10:00–14:00')).toBeVisible();
 
     await timeIntervalsPage.editButton.click();
 
@@ -60,8 +61,9 @@ test.describe('Time intervals', () => {
 
     // The whole interval used to collapse to the single range the form could show
     await timeIntervalsPage.openByName('business-hours');
-    await expect(timeIntervalsPage.drawer.getByText('08:00 - 12:00, 13:00 - 17:00')).toBeVisible();
-    await expect(timeIntervalsPage.drawer.getByText('10:00 - 14:00')).toBeVisible();
+    await expect(timeIntervalsPage.drawer.getByText('08:00–12:00')).toBeVisible();
+    await expect(timeIntervalsPage.drawer.getByText('13:00–17:00')).toBeVisible();
+    await expect(timeIntervalsPage.drawer.getByText('10:00–14:00')).toBeVisible();
   });
 
   test('a time range can be added to an existing interval', async ({ timeIntervalsPage, mimirAlertmanager }) => {
@@ -72,6 +74,8 @@ test.describe('Time intervals', () => {
     await timeIntervalsPage.addTimeRange('18:00', '20:00');
 
     await timeIntervalsPage.openByName('business-hours');
-    await expect(timeIntervalsPage.drawer.getByText('09:00 - 12:00, 13:00 - 17:00, 18:00 - 20:00')).toBeVisible();
+    await expect(timeIntervalsPage.drawer.getByText('09:00–12:00')).toBeVisible();
+    await expect(timeIntervalsPage.drawer.getByText('13:00–17:00')).toBeVisible();
+    await expect(timeIntervalsPage.drawer.getByText('18:00–20:00')).toBeVisible();
   });
 });

@@ -1,6 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { computeInheritedTree } from '@grafana/alerting';
-import { attachRouteIds } from './utils';
+import { attachRouteIds, isRootRoute } from './utils';
+
+describe('isRootRoute', () => {
+  it('identifies only the route with the root tree id as root', () => {
+    const root = attachRouteIds({ receiver: 'default', routes: [{ receiver: 'child' }] });
+
+    expect(isRootRoute(root, root)).toBe(true);
+    expect(isRootRoute(root.routes![0], root)).toBe(false);
+    expect(isRootRoute(root, undefined)).toBe(false);
+  });
+});
 
 describe('attachRouteIds', () => {
   it('assigns content-hash ids to the root and its children', () => {

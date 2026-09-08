@@ -13,11 +13,18 @@ interface RouteEditDrawerProps {
   /** The route to edit, or null to add a new route */
   route: RouteWithID | null;
   onClose: () => void;
+  isRoot?: boolean;
   referenceRouteId?: string;
   insertPosition?: InsertPosition;
 }
 
-export function RouteEditDrawer({ route, onClose, referenceRouteId, insertPosition = 'child' }: RouteEditDrawerProps) {
+export function RouteEditDrawer({
+  route,
+  onClose,
+  isRoot = false,
+  referenceRouteId,
+  insertPosition = 'child',
+}: RouteEditDrawerProps) {
   const { updateRoute, isUpdating } = useUpdateRoute();
   const { addRoute, isAdding } = useAddRoute();
 
@@ -75,6 +82,7 @@ export function RouteEditDrawer({ route, onClose, referenceRouteId, insertPositi
           route={routeForForm}
           onSubmit={handleSave}
           onCancel={onClose}
+          isRoot={isRoot}
           isSubmitting={isUpdating || isAdding}
         />
       )}
