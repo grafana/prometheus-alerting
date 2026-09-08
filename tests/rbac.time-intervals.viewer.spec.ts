@@ -22,10 +22,10 @@ test.describe('Time intervals RBAC - viewer', () => {
     await mimirAlertmanager.seedConfig(READABLE_TIME_INTERVAL_CONFIG);
     await timeIntervalsPage.gotoWithAlertmanager(mimirAlertmanager.uid);
 
-    await expect(timeIntervalsPage.getRow('rbac-viewer-interval')).toBeVisible();
+    await expect(timeIntervalsPage.getIntervalHeading('rbac-viewer-interval')).toBeVisible();
     await expect(timeIntervalsPage.createLink).toHaveCount(0);
     await timeIntervalsPage.openByName('rbac-viewer-interval');
-    await expect(timeIntervalsPage.drawer.getByText('09:00 - 17:00')).toBeVisible();
+    await expect(timeIntervalsPage.drawer.getByText('09:00–17:00')).toBeVisible();
     await expect(timeIntervalsPage.editButton).toHaveCount(0);
     await expect(timeIntervalsPage.removeButton).toHaveCount(0);
 
