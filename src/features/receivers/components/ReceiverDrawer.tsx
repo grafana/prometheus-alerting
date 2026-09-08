@@ -3,7 +3,7 @@ import { t, Trans } from '@grafana/i18n';
 import { Alert, Stack, Text, Button, IconButton, Icon, ConfirmModal } from '@grafana/ui';
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
-import { KeyValueList } from '../../../components/KeyValueList';
+import { KeyValueList } from '../../../components/KeyValueList/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
 import { extractIntegrationsFromReceiver, getIntegrationIcon } from '../utils/integrationIcons';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';

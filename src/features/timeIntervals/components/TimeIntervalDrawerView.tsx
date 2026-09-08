@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { t } from '@grafana/i18n';
 import { Alert, Stack, Button, ConfirmModal } from '@grafana/ui';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
-import { KeyValueList } from '../../../components/KeyValueList';
+import { KeyValueList } from '../../../components/KeyValueList/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
 import { useDeleteTimeInterval } from '../hooks/useTimeIntervals';
 import { isAbilityAllowed } from '../../../access-control/abilities';

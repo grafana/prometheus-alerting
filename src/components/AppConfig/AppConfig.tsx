@@ -3,7 +3,7 @@ import { AppPluginMeta, PluginConfigPageProps } from '@grafana/data';
 import { FieldSet, LoadingPlaceholder, Alert } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { testIds } from '../testIds';
-import { KeyValueList } from '../KeyValueList';
+import { KeyValueList } from '../KeyValueList/KeyValueList';
 import { alertmanagerApi } from '../../api/alertmanager/alertmanager.endpoints';
 import { useAlertmanagerSafe } from '../../hooks/useAlertmanager';
 import { StoreProvider } from '../StoreProvider/StoreProvider';

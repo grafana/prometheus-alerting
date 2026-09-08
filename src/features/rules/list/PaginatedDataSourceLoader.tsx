@@ -9,7 +9,7 @@ import { DataSourceRuleGroupIdentifier, DataSourceRulesSourceIdentifier, RuleGro
 import { getApiGroupPageSize, FRONTED_GROUPED_PAGE_SIZE } from '../../../utils/paginationLimits';
 import { groups } from '../../../utils/navigation';
 
-import { NamespaceYamlDrawer } from '../namespace-yaml';
+import { NamespaceYamlDrawer } from '../namespace-yaml/components/NamespaceYamlDrawer';
 import { DataSourceGroupLoader } from './DataSourceGroupLoader';
 import { DataSourceSection, DataSourceSectionProps } from './components/DataSourceSection';
 import { GroupIntervalIndicator } from './components/GroupIntervalMetadata';
