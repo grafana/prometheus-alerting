@@ -11,9 +11,9 @@
 #
 # Those are mise file tasks, so `mise run pr-impact <number>` rates a real PR
 # locally and prints what it would post, which is how to iterate on the prompt.
-# The steps below invoke the scripts by path rather than through `mise run`,
-# which keeps the runner from having to trust the config; mise is here only to
-# pin the same Node the repo uses locally.
+# The steps below invoke the scripts by path rather than through `mise run`.
+# They import nothing but Node builtins, so the runner's own Node is enough and
+# there is no toolchain step to install, cache, or have go down on us.
 #
 # Today this only labels and comments — it gates nothing. The intent is that a
 # later change lets the bot approve PRs at the safe end of the scale, so authors
@@ -55,7 +55,7 @@ concurrency:
 
 env:
   CLAUDE_MODEL: claude-sonnet-5
-  CLAUDE_EFFORT: low
+  CLAUDE_EFFORT: medium
 
 jobs:
   judge:
@@ -90,14 +90,6 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.base.ref }}
-
-      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
-        with:
-          install: true
-          cache: false
-          cache_save: false
-        env:
-          MISE_ENV: ci # Skip loading mise.local.toml (dev-only tools)
 
       - name: Work out the floor
         id: floor
@@ -176,14 +168,6 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.base.ref }}
-
-      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
-        with:
-          install: true
-          cache: false
-          cache_save: false
-        env:
-          MISE_ENV: ci
 
       - run: .mise/tasks/pr-impact/post.mjs
         env:
