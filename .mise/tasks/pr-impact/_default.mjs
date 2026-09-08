@@ -41,12 +41,15 @@ console.error(`    floor: ${floor}${reason ? ` (${reason})` : ''}`);
 
 console.error('==> Asking Claude');
 const model = process.env.CLAUDE_MODEL ?? 'claude-sonnet-5';
+// Defaulted to match the workflow, and passed to the CLI below rather than only
+// reported: the footer is there to be trusted.
+const effort = process.env.CLAUDE_EFFORT ?? 'medium';
 const startedAt = Date.now();
 let message;
 try {
   message = execFileSync(
     'claude',
-    ['-p', buildPrompt({ repo, pr }), '--model', model, '--allowedTools', ALLOWED_TOOLS],
+    ['-p', buildPrompt({ repo, pr }), '--model', model, '--effort', effort, '--allowedTools', ALLOWED_TOOLS],
     { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], maxBuffer: 32 * 1024 * 1024 }
   );
 } catch (error) {
@@ -77,7 +80,7 @@ post({
   floorReason: reason,
   spots,
   model,
-  effort: process.env.CLAUDE_EFFORT ?? '',
+  effort,
   took: humanDuration(Date.now() - startedAt),
   dryRun: !process.env.POST,
 });
