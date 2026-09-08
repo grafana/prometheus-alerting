@@ -148,6 +148,16 @@ describe('filters', () => {
         const rule = createAlertingRule('TestAlert');
         expect(ruleFilter(rule, { labels: [] })).toBe(true);
       });
+
+      it('should exclude the rule when the label filter is unparseable, rather than showing everything', () => {
+        const rule = createAlertingRule('TestAlert', 'firing', { severity: 'critical' });
+        expect(ruleFilter(rule, { labels: ['=====!!!bogus'] })).toBe(false);
+      });
+
+      it('should exclude the rule when any label filter token is unparseable, even alongside a matching one', () => {
+        const rule = createAlertingRule('TestAlert', 'firing', { severity: 'critical' });
+        expect(ruleFilter(rule, { labels: ['severity=critical', '=====!!!bogus'] })).toBe(false);
+      });
     });
 
     describe('combined filters', () => {

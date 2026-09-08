@@ -1,5 +1,5 @@
 import { AlertGroupFactory, AlertStatusFactory, GettableAlertFactory } from '../mocks/alerts.fakes';
-import { countAlertsByState, deduplicateGroups } from './alerts.utils';
+import { alertMatchesFilters, countAlertsByState, deduplicateGroups, parseMatchers } from './alerts.utils';
 
 describe('countAlertsByState', () => {
   it('returns all zeros for an empty list', () => {
@@ -90,5 +90,69 @@ describe('deduplicateGroups', () => {
     expect(result).toHaveLength(1);
     expect(result[0].group).toBe(group1);
     expect(result[0].receivers).toEqual(['slack', 'pagerduty', 'email']);
+  });
+});
+
+describe('parseMatchers', () => {
+  it('returns no matchers and no error for empty input', () => {
+    expect(parseMatchers('')).toEqual({ matchers: [] });
+    expect(parseMatchers('   ')).toEqual({ matchers: [] });
+  });
+
+  it('parses a single loose matcher', () => {
+    expect(parseMatchers('team=frontend')).toEqual({
+      matchers: [{ name: 'team', operator: '=', value: 'frontend' }],
+    });
+  });
+
+  it('parses PromQL-style matchers, braced or bare', () => {
+    expect(parseMatchers('{severity="critical", team=~"platform.*"}')).toEqual({
+      matchers: [
+        { name: 'severity', operator: '=', value: 'critical' },
+        { name: 'team', operator: '=~', value: 'platform.*' },
+      ],
+    });
+  });
+
+  it('returns an error for unparseable input instead of silently dropping it', () => {
+    const result = parseMatchers('=====!!!bogus');
+    expect(result.matchers).toEqual([]);
+    expect(result.error).toBeTruthy();
+  });
+});
+
+describe('alertMatchesFilters', () => {
+  const allowedStates = new Set<'active' | 'unprocessed' | 'suppressed'>(['active']);
+
+  it('matches when there is no label filter', () => {
+    const alert = GettableAlertFactory.build({ status: AlertStatusFactory.build({ state: 'active' }) });
+    expect(alertMatchesFilters(alert, allowedStates, { matchers: [] })).toBe(true);
+  });
+
+  it('excludes alerts not in an allowed state', () => {
+    const alert = GettableAlertFactory.build({ status: AlertStatusFactory.build({ state: 'unprocessed' }) });
+    expect(alertMatchesFilters(alert, allowedStates, { matchers: [] })).toBe(false);
+  });
+
+  it('matches only alerts satisfying the label matchers', () => {
+    const matching = GettableAlertFactory.build({
+      labels: { team: 'frontend' },
+      status: AlertStatusFactory.build({ state: 'active' }),
+    });
+    const nonMatching = GettableAlertFactory.build({
+      labels: { team: 'backend' },
+      status: AlertStatusFactory.build({ state: 'active' }),
+    });
+    const labelFilter = { matchers: [{ name: 'team', operator: '=' as const, value: 'frontend' }] };
+
+    expect(alertMatchesFilters(matching, allowedStates, labelFilter)).toBe(true);
+    expect(alertMatchesFilters(nonMatching, allowedStates, labelFilter)).toBe(false);
+  });
+
+  it('excludes every alert when the label filter is invalid, rather than showing everything', () => {
+    const alert = GettableAlertFactory.build({ status: AlertStatusFactory.build({ state: 'active' }) });
+    expect(alertMatchesFilters(alert, allowedStates, { matchers: [], error: 'Invalid label matcher syntax' })).toBe(
+      false
+    );
   });
 });

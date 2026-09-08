@@ -8,6 +8,7 @@ export interface AlertsFiltersState {
   showUnprocessed: boolean;
   showSuppressed: boolean;
   labelInput: string;
+  labelInputError?: string;
 }
 
 export interface AlertsFiltersActions {
@@ -31,6 +32,8 @@ export function useAlertsFilters(): UseAlertsFiltersResult {
   const [showSuppressed, setShowSuppressed] = useState(false);
   const [labelInput, setLabelInput] = useState('');
 
+  const labelFilter = useMemo(() => parseMatchers(labelInput), [labelInput]);
+
   const applyFilters = useMemo(
     () => (groups: AlertGroup[]) => {
       const allowedStates = new Set<AlertStatus['state']>([
@@ -39,21 +42,19 @@ export function useAlertsFilters(): UseAlertsFiltersResult {
         ...(showSuppressed ? ['suppressed' as const] : []),
       ]);
 
-      const matchers = parseMatchers(labelInput);
-
       return groups
         .filter((group) => receivers.length === 0 || receivers.includes(group.receiver.name))
         .map((group) => ({
           ...group,
-          alerts: group.alerts.filter((alert) => alertMatchesFilters(alert, allowedStates, matchers)),
+          alerts: group.alerts.filter((alert) => alertMatchesFilters(alert, allowedStates, labelFilter)),
         }))
         .filter((group) => group.alerts.length > 0);
     },
-    [receivers, showActive, showUnprocessed, showSuppressed, labelInput]
+    [receivers, showActive, showUnprocessed, showSuppressed, labelFilter]
   );
 
   return {
-    filters: { receivers, showActive, showUnprocessed, showSuppressed, labelInput },
+    filters: { receivers, showActive, showUnprocessed, showSuppressed, labelInput, labelInputError: labelFilter.error },
     actions: { setReceivers, setShowActive, setShowUnprocessed, setShowSuppressed, setLabelInput },
     applyFilters,
   };

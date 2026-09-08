@@ -5,6 +5,7 @@ import {
   parsePromQLStyleMatcherLooseSafe,
   type Matcher as AmMatcher,
 } from '@grafana/external-alertmanager/vanilla';
+import { t } from '@grafana/i18n';
 import { labelsMatchMatchers, looseParseMatcher, Matcher } from '../../../utils/labels';
 import { groupBy, mapValues, values } from 'lodash';
 
@@ -41,35 +42,48 @@ export function countAlertsByState(alerts: GettableAlert[]): AlertGroupCounts {
   return counts;
 }
 
+export interface ParsedLabelFilter {
+  matchers: Matcher[];
+  error?: string;
+}
+
 export function alertMatchesFilters(
   alert: GettableAlert,
   allowedStates: Set<AlertStatus['state']>,
-  matchers: Matcher[]
+  labelFilter: ParsedLabelFilter
 ): boolean {
   if (!allowedStates.has(alert.status.state)) {
     return false;
   }
-  if (matchers.length > 0) {
-    return labelsMatchMatchers(alert.labels, matchers);
+  // An unparseable filter must narrow the result set to nothing, never widen it to everything.
+  if (labelFilter.error) {
+    return false;
+  }
+  if (labelFilter.matchers.length > 0) {
+    return labelsMatchMatchers(alert.labels, labelFilter.matchers);
   }
   return true;
 }
 
-export function parseMatchers(input: string): Matcher[] {
+export function parseMatchers(input: string): ParsedLabelFilter {
   const trimmed = input.trim();
   if (!trimmed) {
-    return [];
+    return { matchers: [] };
   }
 
   // Try PromQL-style first (handles both `{foo="bar"}` and `foo="bar",env=~"prod.*"`)
   const amMatchers = parsePromQLStyleMatcherLooseSafe(trimmed);
   if (amMatchers.length > 0) {
-    return amMatchers.map(toMatcher);
+    return { matchers: amMatchers.map(toMatcher) };
   }
 
   // Fall back to single loose matcher (e.g. `foo=bar`)
   const single = looseParseMatcher(trimmed);
-  return single ? [single] : [];
+  if (single) {
+    return { matchers: [single] };
+  }
+
+  return { matchers: [], error: t('alerts.filters.label-input-invalid', 'Invalid label matcher syntax') };
 }
 
 function toMatcher(m: AmMatcher): Matcher {
