@@ -23,6 +23,10 @@ url = "https://github.com/pnpm/pnpm/releases/download/v11.4.0/pnpm-linux-x64.tar
 provenance = "github-attestations"
 ```
 
+### Pinned mise binary
+
+CI pins the mise version (and its `sha256`) in `.github/actions/setup-node/action.yml` and `.github/workflows/bundle-size.yml`. Left unpinned, `mise-action` asks `mise.jdx.dev/VERSION` for the latest release and downloads it unverified — so the binary that installs and checks every other tool would itself be whatever shipped minutes ago. Renovate cannot compute the binary hash, so bumping the version and the hash is a manual pair.
+
 ### Paranoid mode
 
 `paranoid = true` in `mise.toml` re-verifies checksums on every tool use, not just on first download. CI steps explicitly disable the action cache (`cache: false`) so binaries are always re-fetched and re-verified rather than restored from a cache that would skip this check.
@@ -207,4 +211,3 @@ The `sign` script in `package.json` is pinned to an exact version of `@grafana/s
 - `mise.local.toml` is git-ignored (per-developer tool overrides that should not affect other environments).
 - Playwright authentication state (`/playwright/.auth/`) is git-ignored to prevent session tokens from being committed.
 - The only repository secret used in CI is `GRAFANA_ACCESS_POLICY_TOKEN` for plugin signing. This step is conditional and is skipped entirely when the secret is not set.
-
