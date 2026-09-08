@@ -1,6 +1,7 @@
 import { css } from '@emotion/css';
 import React, { useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { produce } from 'immer';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
@@ -71,12 +72,12 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
   const activeTimeIntervals = useWatch({ control, name: 'activeTimeIntervals' }) ?? [];
 
   const handleFormSubmit = (values: FormAmRoute) => {
-    const submittedValues: Partial<FormAmRoute> = { ...values };
-
-    if (isRoot) {
-      delete submittedValues.muteTimeIntervals;
-      delete submittedValues.activeTimeIntervals;
-    }
+    const submittedValues = produce<Partial<FormAmRoute>>(values, (draft) => {
+      if (isRoot) {
+        delete draft.muteTimeIntervals;
+        delete draft.activeTimeIntervals;
+      }
+    });
 
     onSubmit(submittedValues);
   };
