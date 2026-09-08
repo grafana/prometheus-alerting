@@ -29,7 +29,14 @@ export function useAlertmanagerConfigYaml() {
   };
 }
 
-/** Replaces the stored Alertmanager configuration with the given YAML. */
+/**
+ * Replaces the stored Alertmanager configuration with the given YAML.
+ *
+ * Deliberately not useProduceNewAlertmanagerConfiguration: that one reads and writes through the
+ * zod schemas, which drops comments, reorders keys and requotes values on every save, and refuses
+ * to load a configuration it does not recognise — which is the one somebody opens this editor to
+ * fix. So this posts the document as typed instead.
+ */
 export function useUpdateAlertmanagerConfigYaml() {
   const { uid: dataSourceUID } = useAlertmanager();
   const mutationAbility = useAlertmanagerConfigMutationAbility();
