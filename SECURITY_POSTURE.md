@@ -27,17 +27,17 @@ provenance = "github-attestations"
 
 CI pins the mise version (and its `sha256`) in `.github/actions/setup-node/action.yml` and `.github/workflows/bundle-size.yml`. Left unpinned, `mise-action` asks `mise.jdx.dev/VERSION` for the latest release and downloads it unverified — so the binary that installs and checks every other tool would itself be whatever shipped minutes ago. Renovate cannot compute the binary hash, so bumping the version and the hash is a manual pair.
 
-### Paranoid mode
+### No cached binaries in CI
 
-`paranoid = true` in `mise.toml` re-verifies checksums on every tool use, not just on first download. CI steps explicitly disable the action cache (`cache: false`) so binaries are always re-fetched and re-verified rather than restored from a cache that would skip this check.
+CI steps explicitly disable the mise action's cache (`cache: false` and `cache_save: false`), so tools are always downloaded fresh and checked against the committed `mise.lock` rather than restored from a cache that would skip the checksum step.
 
 ### Minimum release age
 
-`minimum_release_age = "7d"` prevents installing a tool version released fewer than 7 days ago. This guards against fast-follow supply chain attacks where a malicious release is published immediately after a legitimate one.
+`minimum_release_age = "3d"` prevents installing a tool version released fewer than 3 days ago. This guards against fast-follow supply chain attacks where a malicious release is published immediately after a legitimate one.
 
 ### No silent installs
 
-`not_found_auto_install = false` and `yes = false` prevent mise from silently installing unexpected tools or accepting prompts without explicit user interaction.
+`not_found_auto_install = false` stops mise from installing a tool just because a command was not found, so a missing tool is always an explicit decision rather than a silent download. (mise already defaults to not auto-accepting prompts, so nothing extra is needed for that.)
 
 ### Profile separation
 
@@ -79,7 +79,7 @@ corepack uses this hash to verify the exact pnpm binary before it runs, preventi
 
 ### Minimum release age
 
-`minimumReleaseAge: 10080` (7 days, in minutes) in `pnpm-workspace.yaml` mirrors the mise and Renovate policy. Scoped packages from trusted internal sources can be exempted from this gate.
+`minimumReleaseAge: 4320` (3 days, in minutes) in `pnpm-workspace.yaml` mirrors the mise and Renovate policy. Scoped packages from trusted internal sources can be exempted from this gate.
 
 ### Transitive dependency overrides
 
@@ -97,7 +97,7 @@ Renovate configuration lives in `.github/renovate.json5` and extends Grafana's s
 
 ### Minimum release age
 
-`minimumReleaseAge: '7 days'` — Renovate will not open a PR for a package version younger than 7 days. This matches the pnpm and mise policies and provides consistent protection across the stack.
+`minimumReleaseAge: '3 days'` — Renovate will not open a PR for a package version younger than 3 days. This matches the pnpm and mise policies and provides consistent protection across the stack. The value is also repeated in an npm `packageRule`, because the Grafana base preset pulls in `security:minimumReleaseAgeNpm` and a `packageRule` always beats the top-level setting.
 
 ### Strict internal checks
 
@@ -110,7 +110,7 @@ Renovate configuration lives in `.github/renovate.json5` and extends Grafana's s
 
 ### Vulnerability alerts
 
-`vulnerabilityAlerts.minimumReleaseAge: null` — security fixes bypass the 7-day gate entirely and receive their own PRs labelled `security` so they can be fast-tracked for review and merge.
+`vulnerabilityAlerts.minimumReleaseAge: null` — security fixes bypass the 3-day gate entirely and receive their own PRs labelled `security` so they can be fast-tracked for review and merge.
 
 ### No automerge
 
