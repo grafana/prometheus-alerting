@@ -20,28 +20,24 @@ describe('useConfigurationDraft', () => {
     expect(result.current.hasChanges).toBe(true);
   });
 
-  it('goes back to the stored configuration on discard, and rebuilds the editor', () => {
+  it('goes back to the stored configuration on discard', () => {
     const { result } = renderHook(() => useConfigurationDraft('route:\n'));
-    const keyBefore = result.current.editorKey;
 
     act(() => result.current.setValue('route: edited\n'));
     act(() => result.current.discard());
 
     expect(result.current.value).toBe('route:\n');
     expect(result.current.hasChanges).toBe(false);
-    expect(result.current.editorKey).not.toBe(keyBefore);
   });
 
   it('follows a new configuration from the server while there are no edits', () => {
     const { result, rerender } = renderHook(({ configuration }) => useConfigurationDraft(configuration), {
       initialProps: { configuration: 'route:\n' },
     });
-    const keyBefore = result.current.editorKey;
 
     rerender({ configuration: 'route: from-server\n' });
 
     expect(result.current.value).toBe('route: from-server\n');
-    expect(result.current.editorKey).not.toBe(keyBefore);
   });
 
   it('keeps unsaved edits when a new configuration arrives from the server', () => {

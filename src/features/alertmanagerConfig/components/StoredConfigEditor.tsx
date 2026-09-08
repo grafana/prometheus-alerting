@@ -21,7 +21,7 @@ export function StoredConfigEditor({ configuration, onSaved }: StoredConfigEdito
   const { updateConfiguration, isUpdating } = useUpdateAlertmanagerConfigYaml();
   const { success: notifySuccess, error: notifyError } = useAppNotifications();
 
-  const { value, setValue, editorKey, hasChanges, discard } = useConfigurationDraft(configuration);
+  const { value, setValue, hasChanges, discard } = useConfigurationDraft(configuration);
   const [isConfirmingSave, setIsConfirmingSave] = useState(false);
   // The editor stays read-only until the warning above is acknowledged.
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -57,7 +57,6 @@ export function StoredConfigEditor({ configuration, onSaved }: StoredConfigEdito
       </Alert>
 
       <CodeEditor
-        key={editorKey}
         width="100%"
         height={600}
         language="yaml"

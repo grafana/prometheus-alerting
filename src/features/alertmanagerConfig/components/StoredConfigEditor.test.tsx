@@ -48,7 +48,7 @@ vi.mock('@grafana/ui', async (importOriginal) => {
       return (
         <textarea
           aria-label="YAML editor"
-          defaultValue={value}
+          value={value}
           readOnly={readOnly}
           onChange={(event) => mountedOnChange.current(event.target.value)}
         />
