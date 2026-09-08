@@ -2,7 +2,7 @@ import { Action } from '@reduxjs/toolkit';
 import reduceReducers from 'reduce-reducers';
 import { defaultsDeep } from 'lodash';
 
-import { assertAlertmanagerConfigMutationAllowed } from '../access-control/assertMutationAllowed';
+import { assertAlertmanagerConfigMutationAllowed } from '../access-control/assertAlertmanagerConfigMutationAllowed';
 import { timeIntervalsReducer } from '../reducers/alertmanager/timeIntervals';
 import { routesReducer } from '../reducers/alertmanager/routes';
 import { notificationTemplatesReducer } from '../reducers/alertmanager/templates';

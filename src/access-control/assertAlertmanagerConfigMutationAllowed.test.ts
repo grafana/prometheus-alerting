@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { AlertingPermission } from './abilities';
-import { assertAlertmanagerConfigMutationAllowed } from './assertMutationAllowed';
+import { assertAlertmanagerConfigMutationAllowed } from './assertAlertmanagerConfigMutationAllowed';
 import { PermissionDeniedError, UnsupportedOperationError } from './errors';
 
 describe('assertAlertmanagerConfigMutationAllowed', () => {

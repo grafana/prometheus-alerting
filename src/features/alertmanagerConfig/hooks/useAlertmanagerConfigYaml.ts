@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { readAlertmanagerConfigYaml, writeAlertmanagerConfigYaml } from '@grafana/external-alertmanager/mimir';
 
 import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints';
-import { assertAlertmanagerConfigMutationAllowed } from '../../../access-control/assertMutationAllowed';
+import { assertAlertmanagerConfigMutationAllowed } from '../../../access-control/assertAlertmanagerConfigMutationAllowed';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 
