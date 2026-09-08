@@ -24,21 +24,13 @@ const timeIntervals: TimeInterval[] = [
 
 describe('RouteTimingSummary', () => {
   it('does not render when no timings are selected', () => {
-    render(
-      <RouteTimingSummary muteTimeIntervalNames={[]} activeTimeIntervalNames={[]} timeIntervals={timeIntervals} />
-    );
+    render(<RouteTimingSummary muteTimeIntervals={[]} activeTimeIntervals={[]} />);
 
     expect(screen.queryByRole('heading', { name: 'Timing behavior' })).not.toBeInTheDocument();
   });
 
   it('summarizes active schedules', () => {
-    render(
-      <RouteTimingSummary
-        muteTimeIntervalNames={[]}
-        activeTimeIntervalNames={['business-hours']}
-        timeIntervals={timeIntervals}
-      />
-    );
+    render(<RouteTimingSummary muteTimeIntervals={[]} activeTimeIntervals={timeIntervals.slice(0, 1)} />);
 
     expect(
       screen.getByText('Notifications are sent only when at least one active timing matches.')
@@ -52,11 +44,7 @@ describe('RouteTimingSummary', () => {
 
   it('explains that active and mute timing conditions both apply', () => {
     render(
-      <RouteTimingSummary
-        muteTimeIntervalNames={['holidays']}
-        activeTimeIntervalNames={['business-hours']}
-        timeIntervals={timeIntervals}
-      />
+      <RouteTimingSummary muteTimeIntervals={timeIntervals.slice(1)} activeTimeIntervals={timeIntervals.slice(0, 1)} />
     );
 
     expect(

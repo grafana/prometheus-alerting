@@ -60,6 +60,8 @@ export interface FormattedTimeIntervalSchedule {
 /**
  * Formats schedules for structured display. Known weekday names and ranges are
  * localized, while other Alertmanager constraint values remain unchanged.
+ * For example, weekdays `monday:friday` and time `09:00`–`17:00` become
+ * `{ weekdays: 'Monday–Friday', timeRanges: ['09:00–17:00'] }`.
  */
 export function formatTimeIntervalSchedules(interval: TimeInterval): FormattedTimeIntervalSchedule[] {
   return (interval.time_intervals ?? []).map((schedule) => ({

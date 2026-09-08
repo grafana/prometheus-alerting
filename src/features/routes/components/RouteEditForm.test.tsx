@@ -35,6 +35,23 @@ const config: ParsedUserConfiguration = {
   },
 };
 
+const ui = {
+  muteTimingsCombo: {
+    get: () => screen.getByRole('combobox', { name: /^Mute timings/ }),
+    query: () => screen.queryByRole('combobox', { name: /^Mute timings/ }),
+  },
+  activeTimingsCombo: {
+    get: () => screen.getByRole('combobox', { name: /^Active timings/ }),
+    query: () => screen.queryByRole('combobox', { name: /^Active timings/ }),
+  },
+  timingBehaviorHeading: {
+    query: () => screen.queryByRole('heading', { name: 'Timing behavior' }),
+  },
+  saveButton: {
+    get: () => screen.getByRole('button', { name: 'Save' }),
+  },
+};
+
 function renderForm(route: RouteWithID, onSubmit = vi.fn(), isRoot = false) {
   render(<RouteEditForm route={route} onSubmit={onSubmit} onCancel={vi.fn()} isRoot={isRoot} />, {
     wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
@@ -63,11 +80,11 @@ describe('RouteEditForm timing fields', () => {
       true
     );
 
-    expect(screen.queryByRole('combobox', { name: /^Mute timings/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: /^Active timings/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Timing behavior' })).not.toBeInTheDocument();
+    expect(ui.muteTimingsCombo.query()).not.toBeInTheDocument();
+    expect(ui.activeTimingsCombo.query()).not.toBeInTheDocument();
+    expect(ui.timingBehaviorHeading.query()).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(ui.saveButton.get());
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
 
@@ -82,11 +99,11 @@ describe('RouteEditForm timing fields', () => {
 
     await screen.findByText('09:00–17:00');
 
-    const muteTimings = screen.getByRole('combobox', { name: /^Mute timings/ });
+    const muteTimings = ui.muteTimingsCombo.get();
     await user.click(muteTimings);
     await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
 
-    const activeTimings = screen.getByRole('combobox', { name: /^Active timings/ });
+    const activeTimings = ui.activeTimingsCombo.get();
     await user.click(activeTimings);
     await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
 
@@ -120,11 +137,11 @@ describe('RouteEditForm timing fields', () => {
 
     await screen.findByText('09:00–17:00');
 
-    const muteTimings = screen.getByRole('combobox', { name: /^Mute timings/ });
+    const muteTimings = ui.muteTimingsCombo.get();
     await user.click(muteTimings);
     await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
 
-    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(ui.saveButton.get());
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith(
@@ -146,11 +163,11 @@ describe('RouteEditForm timing fields', () => {
 
     await screen.findByText('09:00–17:00');
 
-    const muteTimings = screen.getByRole('combobox', { name: /^Mute timings/ });
+    const muteTimings = ui.muteTimingsCombo.get();
     await user.click(muteTimings);
     await user.type(muteTimings, 'missing-interval');
     await user.keyboard('{Enter}');
-    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(ui.saveButton.get());
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith(

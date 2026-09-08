@@ -9,26 +9,11 @@ import { Badge, Box, Grid, Stack, Text, useStyles2 } from '@grafana/ui';
 import { TimeIntervalScheduleDetails } from '../../timeIntervals/components/TimeIntervalScheduleDetails';
 
 interface RouteTimingSummaryProps {
-  muteTimeIntervalNames: string[];
-  activeTimeIntervalNames: string[];
-  timeIntervals: TimeInterval[];
+  muteTimeIntervals: TimeInterval[];
+  activeTimeIntervals: TimeInterval[];
 }
 
-export function RouteTimingSummary({
-  muteTimeIntervalNames,
-  activeTimeIntervalNames,
-  timeIntervals,
-}: RouteTimingSummaryProps) {
-  const intervalsByName = new Map(timeIntervals.map((interval) => [interval.name, interval]));
-  const activeTimeIntervals = activeTimeIntervalNames.flatMap((name) => {
-    const interval = intervalsByName.get(name);
-    return interval ? [interval] : [];
-  });
-  const muteTimeIntervals = muteTimeIntervalNames.flatMap((name) => {
-    const interval = intervalsByName.get(name);
-    return interval ? [interval] : [];
-  });
-
+export function RouteTimingSummary({ muteTimeIntervals, activeTimeIntervals }: RouteTimingSummaryProps) {
   if (activeTimeIntervals.length === 0 && muteTimeIntervals.length === 0) {
     return null;
   }

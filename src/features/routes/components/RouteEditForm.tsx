@@ -68,8 +68,11 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
 
   const overrideGrouping = useWatch({ control, name: 'overrideGrouping' });
   const overrideTimings = useWatch({ control, name: 'overrideTimings' });
-  const muteTimeIntervals = useWatch({ control, name: 'muteTimeIntervals' }) ?? [];
-  const activeTimeIntervals = useWatch({ control, name: 'activeTimeIntervals' }) ?? [];
+  const muteTimeIntervalNames = useWatch({ control, name: 'muteTimeIntervals' }) ?? [];
+  const activeTimeIntervalNames = useWatch({ control, name: 'activeTimeIntervals' }) ?? [];
+  const intervalsByName = new Map(timeIntervals.map((interval) => [interval.name, interval]));
+  const muteTimeIntervals = muteTimeIntervalNames.flatMap((name) => intervalsByName.get(name) ?? []);
+  const activeTimeIntervals = activeTimeIntervalNames.flatMap((name) => intervalsByName.get(name) ?? []);
 
   const handleFormSubmit = (values: FormAmRoute) => {
     const submittedValues = produce<Partial<FormAmRoute>>(values, (draft) => {
@@ -349,11 +352,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
               />
             </Field>
 
-            <RouteTimingSummary
-              muteTimeIntervalNames={muteTimeIntervals}
-              activeTimeIntervalNames={activeTimeIntervals}
-              timeIntervals={timeIntervals}
-            />
+            <RouteTimingSummary muteTimeIntervals={muteTimeIntervals} activeTimeIntervals={activeTimeIntervals} />
           </>
         )}
 
