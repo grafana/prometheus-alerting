@@ -1,14 +1,17 @@
 import { css } from '@emotion/css';
-import React, { useMemo, useState } from 'react';
-import { parse as parseYaml } from 'yaml';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Trans, t } from '@grafana/i18n';
-import { Alert, Button, Checkbox, CodeEditor, ConfirmModal, Stack } from '@grafana/ui';
+import { Alert, Button, Checkbox, CodeEditor, ConfirmModal, Stack, type Monaco, type MonacoEditor } from '@grafana/ui';
 
 import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 import { useAppNotifications } from '../../../hooks/useAppNotifications';
 import { useUpdateAlertmanagerConfigYaml } from '../hooks/useAlertmanagerConfigYaml';
 import { useConfigurationDraft } from '../hooks/useConfigurationDraft';
+import { getYamlProblems } from '../yamlProblems';
+
+/** Keeps our marks apart from anything else that might mark up the same model. */
+const MARKER_OWNER = 'alertmanager-config-yaml';
 
 interface StoredConfigEditorProps {
   /** The configuration Mimir has stored, as YAML. */
@@ -26,7 +29,45 @@ export function StoredConfigEditor({ configuration, onSaved }: StoredConfigEdito
   // The editor stays read-only until the warning above is acknowledged.
   const [isUnlocked, setIsUnlocked] = useState(false);
 
-  const syntaxError = useMemo(() => getYamlSyntaxError(value), [value]);
+  const problems = useMemo(() => getYamlProblems(value), [value]);
+
+  const monacoRef = useRef<Monaco | undefined>(undefined);
+  const editorRef = useRef<MonacoEditor | undefined>(undefined);
+  const [isEditorReady, setIsEditorReady] = useState(false);
+
+  // @grafana/ui reads this once when the editor mounts, so it must not change between renders.
+  const handleEditorDidMount = useCallback((editor: MonacoEditor, monaco: Monaco) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+    setIsEditorReady(true);
+  }, []);
+
+  // Mark the problems on the lines they are on, so somebody fixing one can see where it is.
+  useEffect(() => {
+    const monaco = monacoRef.current;
+    const model = editorRef.current?.getModel();
+
+    if (!monaco || !model) {
+      return;
+    }
+
+    monaco.editor.setModelMarkers(
+      model,
+      MARKER_OWNER,
+      problems.map((problem) => ({
+        severity: monaco.MarkerSeverity.Error,
+        message: problem.message,
+        startLineNumber: problem.startLineNumber,
+        startColumn: problem.startColumn,
+        endLineNumber: problem.endLineNumber,
+        endColumn: problem.endColumn,
+      }))
+    );
+
+    // @grafana/ui asks Monaco to keep the model after this component goes away, so marks left
+    // behind would turn up in the next editor that opens the same one.
+    return () => monaco.editor.setModelMarkers(model, MARKER_OWNER, []);
+  }, [problems, isEditorReady]);
 
   const handleSave = async () => {
     setIsConfirmingSave(false);
@@ -70,13 +111,8 @@ export function StoredConfigEditor({ configuration, onSaved }: StoredConfigEdito
         readOnly={!isUnlocked}
         onChange={setValue}
         onSave={setValue}
+        onEditorDidMount={handleEditorDidMount}
       />
-
-      {syntaxError && (
-        <Alert severity="error" title={t('app-config.configuration.invalid-yaml', 'This is not valid YAML')}>
-          {syntaxError}
-        </Alert>
-      )}
 
       <Stack direction="row" gap={2} justifyContent="space-between" alignItems="center">
         <Checkbox
@@ -94,7 +130,7 @@ export function StoredConfigEditor({ configuration, onSaved }: StoredConfigEdito
           </Button>
           <Button
             variant="primary"
-            disabled={!isUnlocked || !hasChanges || Boolean(syntaxError) || isUpdating}
+            disabled={!isUnlocked || !hasChanges || problems.length > 0 || isUpdating}
             onClick={() => setIsConfirmingSave(true)}
           >
             {isUpdating ? (
@@ -122,16 +158,6 @@ export function StoredConfigEditor({ configuration, onSaved }: StoredConfigEdito
       />
     </Stack>
   );
-}
-
-/** Returns the YAML parse error for a value, or undefined when it parses. */
-function getYamlSyntaxError(value: string): string | undefined {
-  try {
-    parseYaml(value);
-    return undefined;
-  } catch (err) {
-    return err instanceof Error ? err.message : String(err);
-  }
 }
 
 const codeEditorStyles = css({

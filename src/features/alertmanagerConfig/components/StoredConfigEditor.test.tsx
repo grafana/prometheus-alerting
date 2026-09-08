@@ -137,12 +137,13 @@ describe('StoredConfigEditor', () => {
     expect(screen.getByRole('button', { name: 'Discard changes' })).toBeEnabled();
   });
 
+  // Where the problem is gets marked in the editor itself, which is Monaco's doing and so out of
+  // reach here. What this can check is that a configuration that does not parse cannot be saved.
   it('cannot save YAML that does not parse', async () => {
     render(<StoredConfigEditor configuration={configuration} onSaved={vi.fn()} />);
 
     await typeConfiguration('route: "unclosed');
 
-    expect(await screen.findByText('This is not valid YAML')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save configuration' })).toBeDisabled();
   });
 

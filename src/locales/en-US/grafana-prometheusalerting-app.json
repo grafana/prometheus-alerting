@@ -462,7 +462,6 @@
         "title": "Replace the Alertmanager configuration"
       },
       "discard": "Discard changes",
-      "invalid-yaml": "This is not valid YAML",
       "load-error": "Failed to load the Alertmanager configuration",
       "loading": "Loading configuration...",
       "resolved-error": "Failed to load the running configuration",
