@@ -114,7 +114,7 @@ receivers:
 
     await appConfigPage.fillConfiguration('route: "unclosed\n');
 
-    await expect(appConfigPage.invalidYamlMessage).toBeVisible();
+    await expect.poll(() => appConfigPage.getYamlProblems()).toEqual(['2: Missing closing "quote']);
     await expect(appConfigPage.saveButton).toBeDisabled();
   });
 

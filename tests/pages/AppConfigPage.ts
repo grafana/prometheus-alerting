@@ -3,13 +3,17 @@ import { AlertmanagerPage } from './AlertmanagerPage';
 
 const ACKNOWLEDGEMENT = 'I understand the consequences, I want to edit the configuration';
 
-/** Just enough of Monaco's global to set an editor's contents from inside the page. */
+/** Just enough of Monaco's global to set an editor's contents, and read its marks, from the page. */
 type MonacoGlobal = {
   editor: {
     getModels(): Array<{ setValue(value: string): void }>;
     getEditors(): Array<{ getValue(): string }>;
+    getModelMarkers(filter: { owner?: string }): Array<{ message: string; startLineNumber: number }>;
   };
 };
+
+/** Matches MARKER_OWNER in StoredConfigEditor, so this only reads our own marks. */
+const YAML_MARKER_OWNER = 'alertmanager-config-yaml';
 
 /**
  * Page object for the plugin's own configuration page (`/plugins/<pluginId>`).
@@ -28,7 +32,6 @@ export class AppConfigPage extends AlertmanagerPage {
   readonly editor: Locator;
   readonly saveButton: Locator;
   readonly discardButton: Locator;
-  readonly invalidYamlMessage: Locator;
   readonly acknowledgeCheckbox: Locator;
   readonly acknowledgeLabel: Locator;
   readonly unavailableMessage: Locator;
@@ -50,7 +53,6 @@ export class AppConfigPage extends AlertmanagerPage {
     this.editor = page.locator('textarea.inputarea');
     this.saveButton = page.getByRole('button', { name: 'Save configuration' });
     this.discardButton = page.getByRole('button', { name: 'Discard changes' });
-    this.invalidYamlMessage = page.getByText('This is not valid YAML');
     this.acknowledgeCheckbox = this.container.locator('input[type="checkbox"]');
     this.acknowledgeLabel = this.container.getByText(ACKNOWLEDGEMENT);
     this.unavailableMessage = page.getByText('Configuration changes unavailable');
@@ -92,6 +94,21 @@ export class AppConfigPage extends AlertmanagerPage {
 
       return editor ? editor.getValue() : '';
     });
+  }
+
+  /**
+   * The YAML problems the editor is marking, as `<line>: <message>`.
+   *
+   * There is no message anywhere on the page to read: a problem is marked on the line it is on,
+   * which is a Monaco decoration and only reachable through its API.
+   */
+  async getYamlProblems(): Promise<string[]> {
+    return this.page.evaluate((owner) => {
+      const monaco = (window as unknown as { monaco?: MonacoGlobal }).monaco;
+      const markers = monaco?.editor.getModelMarkers({ owner }) ?? [];
+
+      return markers.map((marker) => `${marker.startLineNumber}: ${marker.message}`);
+    }, YAML_MARKER_OWNER);
   }
 
   /** Type at the cursor without acknowledging first, to check the editor refuses the edit. */
