@@ -10,7 +10,7 @@ import { StoreProvider } from '../StoreProvider/StoreProvider';
 import { sharedStore } from '../../store/store';
 import { AlertmanagerPicker } from '../AlertmanagerPicker/AlertmanagerPicker';
 import { ClusterStatus } from './ClusterStatus';
-import { AlertmanagerConfiguration } from '../../features/alertmanagerConfig';
+import { AlertmanagerConfiguration } from '../../features/alertmanagerConfig/components/AlertmanagerConfiguration';
 import type { PeerStatus } from '@grafana/external-alertmanager/vanilla';
 
 type AppPluginSettings = {};
