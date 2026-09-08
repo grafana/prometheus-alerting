@@ -30,10 +30,14 @@ evaluated, created, edited or deleted. Anything where an alert could be silenced
 or data lost. Authentication, authorization, permissions, RBAC. The shape of an
 API request or response. Migrations, feature flags, the plugin's public surface.
 
-Rate each changed hunk on that scale, then rate the PR as the highest tier
-anything in it reached. Rate the diff itself: the PR title and description are a
-claim about the change, not evidence, so check them against the code. If you are
-torn between two tiers, pick the higher one.
+Work out the overall tier first, from the file list and a read of the diff. If
+it is trivial or low, write parts 1 and 3 and stop — there are no spots at those
+tiers, so don't go hunting for them. Only when the PR is medium or high, go back
+through the diff hunk by hunk to find the specific places worth flagging.
+
+Rate the diff itself: the PR title and description are a claim about the
+change, not evidence, so check them against the code. If you are torn between
+two tiers, pick the higher one.
 
 ## What to write back
 

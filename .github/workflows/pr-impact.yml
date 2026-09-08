@@ -175,7 +175,8 @@ jobs:
   post:
     name: Post rating
     needs: judge
-    if: needs.judge.result == 'success' && needs.judge.outputs.ready == 'true'
+    # `needs: judge` already requires it to have succeeded; this is the base-branch guard.
+    if: needs.judge.outputs.ready == 'true'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -183,10 +184,13 @@ jobs:
       # write.
       issues: write
     steps:
+      # This job reads the tasks and nothing else, so don't pay for the rest of
+      # the repository.
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.base.ref }}
+          sparse-checkout: .mise/tasks/pr-impact
 
       - run: .mise/tasks/pr-impact/post.mjs
         env:
