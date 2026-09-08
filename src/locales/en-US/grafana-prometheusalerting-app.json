@@ -1225,7 +1225,6 @@
       "timing-summary-active-and-muted": "Both conditions apply: notifications are sent only when at least one active timing matches and no mute timing matches.",
       "timing-summary-active-only": "Notifications are sent only when at least one active timing matches.",
       "timing-summary-active-title": "Active",
-      "timing-summary-alternative-label": "OR",
       "timing-summary-muted-only": "Notifications are not sent when any mute timing matches.",
       "timing-summary-muted-title": "Muted",
       "timing-summary-title": "Timing behavior",
@@ -1528,10 +1527,6 @@
   "time-intervals": {
     "all": "All",
     "all-day": "All day",
-    "column": {
-      "details": "Details",
-      "name": "Name"
-    },
     "confirm-remove": {
       "body": "Are you sure you want to remove the time interval \"{{name}}\"? This action cannot be undone.",
       "cancel": "Cancel",
@@ -1605,16 +1600,29 @@
       "years-label": "Years",
       "years-placeholder": "2024, 2025"
     },
-    "interval-number": "Interval {{number}}",
     "location-label": "Location",
     "months-label": "Months",
     "no-intervals": "No time intervals",
     "no-intervals-defined": "No time intervals defined",
     "no-intervals-desc": "This time interval has no time ranges configured.",
+    "no-search-results": "No time intervals match your search.",
     "no-time-intervals-message": "No time intervals are configured in the Alertmanager.",
     "page-subtitle": "Define time windows for muting or activating notifications",
     "resource-label": "time intervals",
+    "search-label": "Search time intervals by name",
+    "search-placeholder": "Search time intervals",
     "times-label": "Times",
+    "timezone-label": "Timezone",
+    "view-button": "View",
+    "weekday": {
+      "friday": "Friday",
+      "monday": "Monday",
+      "saturday": "Saturday",
+      "sunday": "Sunday",
+      "thursday": "Thursday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday"
+    },
     "weekdays-label": "Weekdays",
     "years-label": "Years"
   }

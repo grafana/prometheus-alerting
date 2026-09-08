@@ -15,37 +15,61 @@ export function mergeTimeIntervals(
   return [...timeIntervals, ...legacyOnlyIntervals];
 }
 
-function formatTimeRange(times?: Array<{ start_time: string; end_time: string }>): string {
-  if (!times || times.length === 0) {
-    return t('time-intervals.all-day', 'All day');
+function getWeekdayLabel(weekday: string): string | undefined {
+  switch (weekday) {
+    case 'monday':
+      return t('time-intervals.weekday.monday', 'Monday');
+    case 'tuesday':
+      return t('time-intervals.weekday.tuesday', 'Tuesday');
+    case 'wednesday':
+      return t('time-intervals.weekday.wednesday', 'Wednesday');
+    case 'thursday':
+      return t('time-intervals.weekday.thursday', 'Thursday');
+    case 'friday':
+      return t('time-intervals.weekday.friday', 'Friday');
+    case 'saturday':
+      return t('time-intervals.weekday.saturday', 'Saturday');
+    case 'sunday':
+      return t('time-intervals.weekday.sunday', 'Sunday');
+    default:
+      return undefined;
   }
-
-  return times.map(({ start_time, end_time }) => `${start_time} - ${end_time}`).join(', ');
 }
 
-function formatConstraint(label: string, values?: string[]): string | undefined {
-  return values?.length ? `${label}: ${values.join(', ')}` : undefined;
+function formatWeekday(weekday: string): string {
+  const [rangeStart, rangeEnd, ...remainingParts] = weekday.split(':');
+  const startLabel = getWeekdayLabel(rangeStart);
+  const endLabel = getWeekdayLabel(rangeEnd);
+
+  if (remainingParts.length === 0 && startLabel && endLabel) {
+    return `${startLabel}–${endLabel}`;
+  }
+
+  return getWeekdayLabel(weekday) ?? weekday;
+}
+
+export interface FormattedTimeIntervalSchedule {
+  weekdays?: string;
+  timeRanges: string[];
+  daysOfMonth?: string;
+  months?: string;
+  years?: string;
+  location?: string;
 }
 
 /**
- * Formats each alternative in a named time interval. Alertmanager treats multiple
- * entries as OR alternatives and the constraints within one entry as AND conditions.
+ * Formats schedules for structured display. Known weekday names and ranges are
+ * localized, while other Alertmanager constraint values remain unchanged.
  */
-export function formatTimeIntervalSchedule(interval: TimeInterval): string[] {
-  if (!interval.time_intervals || interval.time_intervals.length === 0) {
-    return [t('time-intervals.no-intervals-defined', 'No time intervals defined')];
-  }
-
-  return interval.time_intervals.map((schedule) => {
-    const constraints = [
-      `${t('time-intervals.times-label', 'Times')}: ${formatTimeRange(schedule.times)}`,
-      formatConstraint(t('time-intervals.weekdays-label', 'Weekdays'), schedule.weekdays),
-      formatConstraint(t('time-intervals.days-of-month-label', 'Days of Month'), schedule.days_of_month),
-      formatConstraint(t('time-intervals.months-label', 'Months'), schedule.months),
-      formatConstraint(t('time-intervals.years-label', 'Years'), schedule.years),
-      schedule.location ? `${t('time-intervals.location-label', 'Location')}: ${schedule.location}` : undefined,
-    ].filter((constraint): constraint is string => constraint !== undefined);
-
-    return constraints.join(' | ');
-  });
+export function formatTimeIntervalSchedules(interval: TimeInterval): FormattedTimeIntervalSchedule[] {
+  return (interval.time_intervals ?? []).map((schedule) => ({
+    weekdays: schedule.weekdays?.length ? schedule.weekdays.map(formatWeekday).join(', ') : undefined,
+    timeRanges: schedule.times?.length
+      ? schedule.times.map(({ start_time, end_time }) => `${start_time}–${end_time}`)
+      : [t('time-intervals.all-day', 'All day')],
+    daysOfMonth: schedule.days_of_month?.length ? schedule.days_of_month.join(', ') : undefined,
+    months: schedule.months?.length ? schedule.months.join(', ') : undefined,
+    years: schedule.years?.length ? schedule.years.join(', ') : undefined,
+    location: schedule.location || undefined,
+  }));
 }

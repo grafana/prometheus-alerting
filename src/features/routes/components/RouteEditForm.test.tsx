@@ -80,7 +80,7 @@ describe('RouteEditForm timing fields', () => {
     const user = userEvent.setup();
     renderForm({ id: 'route-1', receiver: 'default', active_time_intervals: ['business-hours'] });
 
-    await screen.findByText('Times: 09:00 - 17:00 | Weekdays: monday:friday');
+    await screen.findByText('09:00–17:00');
 
     const muteTimings = screen.getByRole('combobox', { name: /^Mute timings/ });
     await user.click(muteTimings);
@@ -90,7 +90,7 @@ describe('RouteEditForm timing fields', () => {
     await user.click(activeTimings);
     await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
 
-    expect(screen.getAllByText('Times: All day | Months: december')).toHaveLength(2);
+    expect(screen.getAllByText('december')).toHaveLength(2);
   });
 
   it('shows existing active and mute selections with their effective behavior', async () => {
@@ -106,8 +106,8 @@ describe('RouteEditForm timing fields', () => {
         'Both conditions apply: notifications are sent only when at least one active timing matches and no mute timing matches.'
       )
     ).toBeInTheDocument();
-    expect(screen.getByText('Times: 09:00 - 17:00 | Weekdays: monday:friday')).toBeInTheDocument();
-    expect(screen.getByText('Times: All day | Months: december')).toBeInTheDocument();
+    expect(screen.getByText('09:00–17:00')).toBeInTheDocument();
+    expect(screen.getByText('december')).toBeInTheDocument();
   });
 
   it('submits selected active and mute timing names', async () => {
@@ -118,7 +118,7 @@ describe('RouteEditForm timing fields', () => {
       active_time_intervals: ['business-hours'],
     });
 
-    await screen.findByText('Times: 09:00 - 17:00 | Weekdays: monday:friday');
+    await screen.findByText('09:00–17:00');
 
     const muteTimings = screen.getByRole('combobox', { name: /^Mute timings/ });
     await user.click(muteTimings);
@@ -144,7 +144,7 @@ describe('RouteEditForm timing fields', () => {
       active_time_intervals: ['business-hours'],
     });
 
-    await screen.findByText('Times: 09:00 - 17:00 | Weekdays: monday:friday');
+    await screen.findByText('09:00–17:00');
 
     const muteTimings = screen.getByRole('combobox', { name: /^Mute timings/ });
     await user.click(muteTimings);

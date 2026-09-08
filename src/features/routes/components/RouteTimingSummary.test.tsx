@@ -45,9 +45,9 @@ describe('RouteTimingSummary', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Active' })).toBeInTheDocument();
     expect(screen.getByText('business-hours')).toBeInTheDocument();
-    expect(
-      screen.getByText('Times: 09:00 - 17:00 | Weekdays: monday:friday | Location: Europe/Berlin')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Monday–Friday')).toBeInTheDocument();
+    expect(screen.getByText('09:00–17:00')).toBeInTheDocument();
+    expect(screen.getByText('Timezone: Europe/Berlin')).toBeInTheDocument();
   });
 
   it('explains that active and mute timing conditions both apply', () => {
@@ -65,8 +65,11 @@ describe('RouteTimingSummary', () => {
       )
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Muted' })).toBeInTheDocument();
-    expect(screen.getByText('Times: All day | Days of Month: 24:26 | Months: december')).toBeInTheDocument();
-    expect(screen.getByText('OR')).toBeInTheDocument();
-    expect(screen.getByText('Times: All day | Weekdays: sunday')).toBeInTheDocument();
+    expect(screen.getByText('Days of Month:')).toBeInTheDocument();
+    expect(screen.getByText('24:26')).toBeInTheDocument();
+    expect(screen.getByText('Months:')).toBeInTheDocument();
+    expect(screen.getByText('december')).toBeInTheDocument();
+    expect(screen.queryByText('OR')).not.toBeInTheDocument();
+    expect(screen.getByText('Sunday')).toBeInTheDocument();
   });
 });

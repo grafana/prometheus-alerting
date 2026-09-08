@@ -1,6 +1,6 @@
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 
-import { formatTimeIntervalSchedule, mergeTimeIntervals } from './timeIntervals';
+import { formatTimeIntervalSchedules, mergeTimeIntervals } from './timeIntervals';
 
 function buildTimeInterval(name: string, weekdays: string[] = []): TimeInterval {
   return {
@@ -25,37 +25,69 @@ describe('mergeTimeIntervals', () => {
   });
 });
 
-describe('formatTimeIntervalSchedule', () => {
-  it('formats an interval without a configured schedule', () => {
-    expect(formatTimeIntervalSchedule(buildTimeInterval('empty'))).toEqual(['No time intervals defined']);
+describe('formatTimeIntervalSchedules', () => {
+  it('returns no schedules for an interval without definitions', () => {
+    expect(formatTimeIntervalSchedules(buildTimeInterval('empty'))).toEqual([]);
   });
 
-  it('formats time, weekday, and location constraints together', () => {
+  it('formats known weekday ranges with full names and keeps multiple time ranges separate', () => {
     const interval: TimeInterval = {
       name: 'business-hours',
       time_intervals: [
         {
-          times: [{ start_time: '09:00', end_time: '17:00' }],
+          times: [
+            { start_time: '09:00', end_time: '12:00' },
+            { start_time: '13:00', end_time: '17:00' },
+          ],
           weekdays: ['monday:friday'],
           location: 'Europe/Berlin',
         },
       ],
     };
 
-    expect(formatTimeIntervalSchedule(interval)).toEqual([
-      'Times: 09:00 - 17:00 | Weekdays: monday:friday | Location: Europe/Berlin',
+    expect(formatTimeIntervalSchedules(interval)).toEqual([
+      {
+        weekdays: 'Monday–Friday',
+        timeRanges: ['09:00–12:00', '13:00–17:00'],
+        daysOfMonth: undefined,
+        months: undefined,
+        years: undefined,
+        location: 'Europe/Berlin',
+      },
     ]);
   });
 
-  it('returns multiple schedule alternatives separately', () => {
+  it('uses all day only for absent times and preserves complex constraint values', () => {
     const interval: TimeInterval = {
-      name: 'office-hours',
-      time_intervals: [{ weekdays: ['monday:friday'] }, { months: ['december'], days_of_month: ['24:26'] }],
+      name: 'special-days',
+      time_intervals: [
+        {
+          weekdays: ['custom-day:other-day'],
+          days_of_month: ['-3:-1'],
+          months: ['march:may'],
+          years: ['2025:2027'],
+        },
+        { times: [{ start_time: '00:00', end_time: '23:59' }] },
+      ],
     };
 
-    expect(formatTimeIntervalSchedule(interval)).toEqual([
-      'Times: All day | Weekdays: monday:friday',
-      'Times: All day | Days of Month: 24:26 | Months: december',
+    expect(formatTimeIntervalSchedules(interval)).toEqual([
+      {
+        weekdays: 'custom-day:other-day',
+        timeRanges: ['All day'],
+        daysOfMonth: '-3:-1',
+        months: 'march:may',
+        years: '2025:2027',
+        location: undefined,
+      },
+      {
+        weekdays: undefined,
+        timeRanges: ['00:00–23:59'],
+        daysOfMonth: undefined,
+        months: undefined,
+        years: undefined,
+        location: undefined,
+      },
     ]);
   });
 });
