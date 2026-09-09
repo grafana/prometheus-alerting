@@ -11,9 +11,9 @@ test.describe('Time intervals RBAC - editor', () => {
     await timeIntervalsPage.openByName(intervalName);
     await timeIntervalsPage.updateStartTime('10:00');
     await timeIntervalsPage.openByName(intervalName);
-    await expect(timeIntervalsPage.drawer.getByText('10:00 - 17:00')).toBeVisible();
+    await expect(timeIntervalsPage.drawer.getByText('10:00–17:00')).toBeVisible();
     await timeIntervalsPage.remove();
 
-    await expect(timeIntervalsPage.getRow(intervalName)).toHaveCount(0);
+    await expect(timeIntervalsPage.getIntervalHeading(intervalName)).toHaveCount(0);
   });
 });
