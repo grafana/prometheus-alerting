@@ -79,7 +79,18 @@ function getPendingPeriod(rule: RulerRuleDTO): string | null {
 }
 
 /**
- * Calculate the number of evaluations before an alert starts firing
+ * Calculate the number of evaluations from a matching expression to a firing alert.
+ *
+ * Prometheus starts the pending period on the first matching evaluation, then promotes
+ * the alert on the first later evaluation where the elapsed time is at least `for`.
+ * The examples below assume the expression remains true for every evaluation.
+ *
+ *   for        interval    evaluation 1        evaluation 2       evaluations
+ *   ---------  ----------  ------------------  -----------------  -----------
+ *   omitted    1s          firing              firing             1
+ *   0s         1s          firing              firing             1
+ *   800ms      1s          pending (t=0)       firing (t=1s)      2
+ *   1s         1s          pending (t=0)       firing (t=1s)      2
  */
 function getEvaluationsToStartAlerting(pendingPeriod: string, groupInterval: string): number {
   const pendingMs = safeParsePrometheusDuration(pendingPeriod);
