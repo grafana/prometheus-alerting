@@ -18,13 +18,31 @@ import { parseMessage, humanDuration } from './parse.mjs';
 import { post } from './post.mjs';
 import { ghJson } from './lib.mjs';
 
-const ALLOWED_TOOLS = 'Bash(gh pr view:*),Bash(gh pr diff:*),Read,Grep,Glob';
+const ALLOWED_TOOLS = 'Read,Grep,Glob';
 const PROMPT_PATH = fileURLToPath(new URL('../../../.github/prompts/pr-impact.md', import.meta.url));
+// Matches the cap in the workflow. Keep the two in step, or a local run stops
+// predicting what CI will do.
+const DIFF_LIMIT = 120000;
 
 // Same two lines the workflow prepends. Keep them in step, or a local run stops
 // predicting what CI will do.
 function buildPrompt({ repo, pr }) {
-  return `Repository: ${repo}\nPR number: ${pr}\n\n${readFileSync(PROMPT_PATH, 'utf8')}`;
+  const diff = execFileSync('gh', ['pr', 'diff', String(pr), '--repo', repo], {
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  const cut = diff.length > DIFF_LIMIT;
+
+  return [
+    readFileSync(PROMPT_PATH, 'utf8'),
+    `Repository: ${repo}`,
+    `PR number: ${pr}`,
+    '',
+    cut ? 'The diff follows.\nIt was too long to include whole, so it stops part way through.' : 'The diff follows.',
+    '',
+    diff.slice(0, DIFF_LIMIT),
+    '',
+  ].join('\n');
 }
 
 const pr = process.argv[2] ?? process.env.PR_NUMBER;

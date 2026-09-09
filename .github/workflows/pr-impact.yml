@@ -71,6 +71,8 @@ jobs:
       github.event.pull_request.user.login != 'renovate[bot]' &&
       github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
+    # Without this the default is six hours.
+    timeout-minutes: 15
     # Read-only on purpose. id-token is what authenticates the job to Vault.
     permissions:
       contents: read
@@ -124,21 +126,43 @@ jobs:
         id: prompt
         if: steps.gate.outputs.ready == 'true'
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
+          # The diff goes in here rather than being fetched by Claude. Left to
+          # find the PR itself, it spends turns re-running `gh pr diff` through
+          # sed and grep hunting for line numbers — one run did that thirteen
+          # times. Handing it over costs the same tokens and removes the hunt.
+          #
+          # Big diffs get cut. Two of the last sixty PRs would be trimmed, and
+          # both touch paths the floor already holds at high, so nothing is lost
+          # that would change a rating.
+          #
+          # Static text first, variable text last: the prompt file is the same
+          # on every run and can be cached, which it cannot be if the PR number
+          # sits in front of it.
+          #
           # Random delimiter, matching what the tasks do when they write step
-          # outputs. The prompt file comes from the base branch so nothing here
-          # is attacker-controlled, but a fixed delimiter is not a habit worth
-          # keeping in a repo where the same pattern also carries model output.
+          # outputs — this one carries a diff, which anyone opening a PR writes.
           delimiter="EOF_$(openssl rand -hex 16)"
+          diff="$RUNNER_TEMP/pr.diff"
+          gh pr diff "$PR_NUMBER" > "$diff"
           {
             echo "text<<$delimiter"
+            cat .github/prompts/pr-impact.md
+            echo
             echo "Repository: $GH_REPO"
             echo "PR number: $PR_NUMBER"
             echo
-            cat .github/prompts/pr-impact.md
+            echo "The diff follows."
+            if [ "$(wc -c < "$diff")" -gt 120000 ]; then
+              echo "It was too long to include whole, so it stops part way through."
+            fi
+            echo
+            head -c 120000 "$diff"
+            echo
             echo "$delimiter"
           } >> "$GITHUB_OUTPUT"
 
@@ -175,7 +199,7 @@ jobs:
             --model "${{ env.CLAUDE_MODEL }}"
             --effort "${{ env.CLAUDE_EFFORT }}"
             --max-turns 30
-            --allowedTools "Bash(gh pr view:*),Bash(gh pr diff:*),Read,Grep,Glob"
+            --allowedTools "Read,Grep,Glob"
 
       - name: Read the rating
         id: parse

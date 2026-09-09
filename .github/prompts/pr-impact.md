@@ -1,9 +1,10 @@
 Rate how much impact a pull request has, and mark the exact places a reviewer
 should read first.
 
-Read it with `gh pr view` and `gh pr diff`, and read this repository's own code
-where the change lands so you can tell what it affects. This is a Grafana app
-plugin for managing Prometheus alert rules and Alertmanager configuration.
+The diff is at the end of this message. Read the repository's own code where the
+change lands, with Read, Grep and Glob, when you need to see what it affects.
+You have no shell. This is a Grafana app plugin for managing Prometheus alert
+rules and Alertmanager configuration.
 
 ## The scale
 
