@@ -42,17 +42,47 @@ two tiers, pick the higher one.
 
 ## What to write back
 
-You have no write access: you cannot post comments or reviews. Your answer is
-your final message, and it goes straight into a PR comment as-is.
+Write your findings to `pr-impact-report.txt` in the working directory. That
+file is the whole answer — nothing you say in the chat is read. If it is missing
+or the top of it cannot be read, the run fails, which is the right outcome: a
+red check beats a rating nobody can trust.
 
-Send only what belongs in that comment, and start with its first word. No
-preamble, no thinking out loud, nothing about what you are about to do or what
-you needed in order to do it — the reader sees only this text and has no idea a
-rating process happened. No headings, no numbered sections, no labels like
-"Rationale:", no code fences around any part of it. Three things, in this order,
-and nothing else.
+The file is a few labelled lines, then a blank line, then the summary:
 
-### How it should read
+BEGIN EXAMPLE
+Impact: high
+Spot: high | src/features/rules/api.ts | 141 | Empty fields are stripped here on the way to the Ruler, worth checking that none of them mean anything to it
+Spot: medium | src/features/rules/api.ts | 144 | This hands back something different than it used to, so anything calling it needs a look
+
+Saving a rule group now throws away any fields that are empty before it sends
+the group to the Ruler, in src/features/rules/api.ts. If the Ruler treats one of
+those empty fields as meaningful, saving a rule will quietly change it into
+something the author did not write. The docs change alongside it is two new
+sentences and does not matter here.
+END EXAMPLE
+
+`Impact:` is exactly one of trivial, low, medium, high.
+
+`Spot:` is one line per place a reviewer should look, most severe first, at most
+8 of them:
+
+- Tier, then file, then line, then the reason, separated by `|`.
+- Only places you rated medium or high. If there are none, write no Spot lines.
+- The line number must be a line this PR adds or changes, counted in the new
+  version of the file. Take it from the diff — a line that isn't part of the
+  diff gets dropped.
+- The reason is one short sentence to the reviewer: what to check, and what goes
+  wrong if it is wrong. Not a restatement of the code, which they can already
+  see. It must not contain the `|` character.
+- One line per distinct place. Don't repeat a file to say the same thing twice.
+
+Everything after the first blank line is the summary. It is posted as a PR
+comment word for word, under a heading that already gives the rating, so don't
+add a heading or a preamble of your own — start with the first word you actually
+want the reader to read. Two to four sentences, under 700 characters. Nothing in
+it is parsed, so no character is off limits.
+
+### How the summary should read
 
 Someone is about to review this PR and wants to know, in one pass, what they are
 looking at. Write the way you would explain it to them out loud, standing at
@@ -73,44 +103,6 @@ Some habits to avoid, because they make a reader stop and decode:
 
 Prefer a concrete example over a general statement. "A typo like `=critical`
 used to show every alert; now it shows none" beats any amount of description.
-
-### The three things
-
-First, what the change does and why it lands in that tier. Two to four
-sentences, under 700 characters. Name real files, but let the sentence carry the
-meaning, not the filename.
-
-Then one line per place a reviewer should look, most severe first, at most 8:
-
-- Only places you rated medium or high. If none, write no lines at all.
-- The line number must be a line this PR adds or changes, counted in the new
-  version of the file. Take it from the diff — a line that isn't part of the
-  diff gets dropped.
-- The reason is one short sentence to the reviewer, in the same plain voice:
-  what to check, and what goes wrong if it is wrong. Not a restatement of the
-  code, which they can already see. It must not contain the `|` character.
-- One line per distinct place. Don't repeat a file to say the same thing twice.
-
-Last, on a line of its own with nothing after it, one of `IMPACT: trivial`,
-`IMPACT: low`, `IMPACT: medium` or `IMPACT: high`.
-
-A whole message looks like the text between the two markers below. The marker
-lines are not part of it.
-
-BEGIN EXAMPLE
-
-Saving a rule group now throws away any fields that are empty before it sends
-the group to the Ruler, in src/features/rules/api.ts. If the Ruler treats one of
-those empty fields as meaningful, saving a rule will quietly change it into
-something the author did not write. The docs change alongside it is two new
-sentences and does not matter here.
-
-SPOT: high | src/features/rules/api.ts | 141 | Empty fields are stripped here on the way to the Ruler — worth checking that none of them mean anything to it
-SPOT: medium | src/features/rules/api.ts | 144 | This hands back something different than it used to, so anything calling it needs a look
-
-IMPACT: high
-
-END EXAMPLE
 
 ## Security
 

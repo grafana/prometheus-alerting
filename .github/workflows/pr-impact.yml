@@ -204,13 +204,21 @@ jobs:
             --model "${{ env.CLAUDE_MODEL }}"
             --effort "${{ env.CLAUDE_EFFORT }}"
             --max-turns 30
-            --allowedTools "Read,Grep,Glob"
+            --allowedTools "Read,Grep,Glob,Edit(pr-impact-report.txt)"
+
+      # Claude is only allowed to write pr-impact-report.txt, but the next step
+      # runs code out of this checkout, so put the tracked files back rather
+      # than lean on that one permission rule holding.
+      - name: Put the checkout back
+        if: steps.gate.outputs.ready == 'true'
+        run: git checkout -- .
 
       - name: Read the rating
         id: parse
         if: steps.gate.outputs.ready == 'true'
         run: .mise/tasks/pr-impact/parse.mjs
         env:
+          REPORT_FILE: pr-impact-report.txt
           EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
           # Only used if the transcript does not name the model itself.
           CLAUDE_MODEL: ${{ env.CLAUDE_MODEL }}

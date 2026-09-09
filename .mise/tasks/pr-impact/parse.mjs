@@ -1,76 +1,67 @@
 #!/usr/bin/env node
-//MISE description="Turn Claude's final message into a rating, a rationale and a list of spots"
+//MISE description="Turn the report Claude wrote into a rating, a summary and a list of spots"
 
-// Pulls three things out of Claude's last message: the rating, the prose to post
-// as a comment, and the file/line/reason triples to turn into inline review
-// comments.
+// Reads the report Claude wrote and pulls three things out of it: the rating,
+// the summary to post as a comment, and the file/line/reason triples to turn
+// into inline review comments.
 //
-// A missing or unreadable rating fails, rather than quietly picking a tier — the
-// action exits 0 whenever Claude finishes, even if it decided nothing. The SPOT
-// lines are best effort by comparison: a malformed one is dropped.
-//
-// Takes either EXECUTION_FILE (the JSON transcript claude-code-action leaves
-// behind) or MESSAGE (the final message as plain text), so the same parsing runs
-// in CI and when iterating locally.
+// A missing or unreadable rating fails, rather than quietly picking a tier —
+// the action exits 0 whenever Claude finishes, even if it decided nothing.
+// The Spot lines are best effort by comparison: a malformed one is dropped.
 
 import { readFileSync } from 'node:fs';
 import { setOutput, env, isMain } from './lib.mjs';
 
-const RATING = /^IMPACT: (trivial|low|medium|high)\s*$/;
-const SPOT = 'SPOT: ';
+const TIERS = new Set(['trivial', 'low', 'medium', 'high']);
 const MAX_SPOTS = 8;
 
-// Claude is asked for three parts and sometimes labels them, or wraps the spot
-// lines in a code fence. Once the SPOT lines are pulled out, that leaves headings
-// and an empty fence sitting in what should be plain prose, so take them out too.
-const PART_LABEL = /^(?:#{1,6}\s*)?(?:\*\*)?\d+\.\s*\w+\s*(?:\*\*)?:?$/;
-const FENCE = /^```\w*$/;
+/**
+ * Claude writes its findings to a file rather than saying them: a few labelled
+ * lines, a blank line, then the summary.
+ *
+ * The blank line is what makes this reliable. Everything below it is the
+ * summary and is never looked at, so it can hold headings, code fences, the
+ * word "Impact:", anything — none of it can be mistaken for a finding. Reading
+ * the findings out of Claude's chat message, which is what this used to do,
+ * meant prose and data shared one channel and kept colliding.
+ */
+export function parseReport(text) {
+  const lines = text.split('\n').map((line) => line.replace(/\r$/, ''));
+  const blank = lines.findIndex((line) => line.trim() === '');
+  const labelled = blank === -1 ? lines : lines.slice(0, blank);
 
-function prose(lines) {
-  const kept = lines.filter((line) => !/^(IMPACT|SPOT): /.test(line) && !PART_LABEL.test(line.trim()));
+  const body =
+    blank === -1
+      ? ''
+      : lines
+          .slice(blank + 1)
+          .join('\n')
+          .trim()
+          .slice(0, 4000);
 
-  // Drop fences that now have nothing between them.
-  const out = [];
-  for (let i = 0; i < kept.length; i++) {
-    if (FENCE.test(kept[i].trim())) {
-      let j = i + 1;
-      while (j < kept.length && kept[j].trim() === '') {
-        j++;
-      }
-      if (j < kept.length && FENCE.test(kept[j].trim())) {
-        i = j;
-        continue;
-      }
-    }
-    out.push(kept[i]);
-  }
+  const impact = labelled
+    .map((line) => /^impact:\s*(\w+)\s*$/i.exec(line))
+    .filter(Boolean)
+    .map((match) => match[1].toLowerCase())
+    .filter((tier) => TIERS.has(tier));
+  const rating = impact.at(-1) ?? null;
 
-  return out
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-    .slice(0, 4000);
-}
-
-export function parseMessage(message) {
-  const lines = message.split('\n').map((line) => line.replace(/\r$/, ''));
-
-  const rated = lines.filter((line) => RATING.test(line));
-  const rating = rated.length > 0 ? RATING.exec(rated.at(-1))[1] : null;
-
-  const body = prose(lines);
-
-  const spots = lines
-    .filter((line) => line.startsWith(SPOT))
+  const spots = labelled
+    .filter((line) => /^spot:/i.test(line))
     .slice(0, MAX_SPOTS)
     .map((line) =>
       line
-        .slice(SPOT.length)
+        .replace(/^spot:\s*/i, '')
         .split('|')
         .map((part) => part.trim())
     )
     .filter((parts) => parts.length >= 4)
-    .map(([tier, path, line, ...why]) => ({ tier, path, line: Number(line), why: why.join(' ') }))
+    .map(([tier, path, line, ...why]) => ({
+      tier: tier.toLowerCase(),
+      path,
+      line: Number(line),
+      why: why.join(' '),
+    }))
     .filter(
       (spot) =>
         Number.isInteger(spot.line) &&
@@ -116,15 +107,15 @@ function modelUsed(result) {
 }
 
 if (isMain(import.meta.url)) {
-  const result = process.env.MESSAGE ? undefined : lastResult(env('EXECUTION_FILE'));
-  const message = process.env.MESSAGE || (result?.result ?? '');
-  const { rating, body, spots } = parseMessage(message);
+  const { rating, body, spots } = parseReport(readFileSync(env('REPORT_FILE'), 'utf8'));
 
   if (!rating) {
-    console.error("No rating in Claude's output:");
-    console.error(message);
+    console.error(`No Impact line at the top of ${env('REPORT_FILE')}.`);
     process.exit(1);
   }
+
+  // Timings and the model still come from the action's own transcript.
+  const result = process.env.EXECUTION_FILE ? lastResult(process.env.EXECUTION_FILE) : undefined;
 
   console.error(`Claude rated this ${rating}, with ${spots.length} spot(s) to check`);
   setOutput({

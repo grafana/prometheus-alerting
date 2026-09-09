@@ -11,14 +11,16 @@
 // the same code CI runs.
 
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { computeFloor } from './floor.mjs';
-import { parseMessage, humanDuration } from './parse.mjs';
+import { parseReport, humanDuration } from './parse.mjs';
 import { post } from './post.mjs';
 import { ghJson } from './lib.mjs';
 
-const ALLOWED_TOOLS = 'Read,Grep,Glob';
+const ALLOWED_TOOLS = 'Read,Grep,Glob,Edit(pr-impact-report.txt)';
+// Claude writes its findings here rather than saying them. Same name CI uses.
+const REPORT = 'pr-impact-report.txt';
 const PROMPT_PATH = fileURLToPath(new URL('../../../.github/prompts/pr-impact.md', import.meta.url));
 // Matches the cap in the workflow. Keep the two in step, or a local run stops
 // predicting what CI will do.
@@ -61,6 +63,7 @@ const { floor, reason } = computeFloor({ repo, pr });
 console.error(`    floor: ${floor}${reason ? ` (${reason})` : ''}`);
 
 console.error('==> Asking Claude');
+rmSync(REPORT, { force: true });
 const model = process.env.CLAUDE_MODEL ?? 'claude-sonnet-5';
 // Defaulted to match the workflow, and passed to the CLI below rather than only
 // reported: the footer is there to be trusted.
@@ -82,10 +85,20 @@ try {
 }
 
 console.error('==> Reading the rating');
-const { rating, body, spots } = parseMessage(message);
-if (!rating) {
-  console.error("No rating in Claude's output:");
+let report;
+try {
+  report = readFileSync(REPORT, 'utf8');
+} catch {
+  console.error(`Claude did not write ${REPORT}. What it said instead:`);
   console.error(message);
+  process.exit(1);
+}
+rmSync(REPORT, { force: true });
+
+const { rating, body, spots } = parseReport(report);
+if (!rating) {
+  console.error(`No Impact line at the top of ${REPORT}. It held:`);
+  console.error(report);
   process.exit(1);
 }
 console.error(`    ${rating}, with ${spots.length} spot(s) to check`);
