@@ -10,6 +10,8 @@ minimumReleaseAgeExclude:
   - js-yaml@4.3.1
   # Renovate security update: vitest@4.1.11
   - vitest@4.1.11
+  # Renovate security update: react-router-dom@6.30.6
+  - react-router-dom@6.30.6
 
 overrides:
   # i18next 25.x prints a console ad for its paid Locize product on every init (which
