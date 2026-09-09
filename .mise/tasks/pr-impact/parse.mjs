@@ -34,7 +34,9 @@ function prose(lines) {
   for (let i = 0; i < kept.length; i++) {
     if (FENCE.test(kept[i].trim())) {
       let j = i + 1;
-      while (j < kept.length && kept[j].trim() === '') j++;
+      while (j < kept.length && kept[j].trim() === '') {
+        j++;
+      }
       if (j < kept.length && FENCE.test(kept[j].trim())) {
         i = j;
         continue;
