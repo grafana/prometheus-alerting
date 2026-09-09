@@ -1,11 +1,6 @@
-import {
-  AlertGroup,
-  AlertStatus,
-  GettableAlert,
-  parsePromQLStyleMatcherLooseSafe,
-  type Matcher as AmMatcher,
-} from '@grafana/external-alertmanager/vanilla';
-import { labelsMatchMatchers, looseParseMatcher, Matcher } from '../../../utils/labels';
+import { AlertGroup, AlertStatus, GettableAlert } from '@grafana/external-alertmanager/vanilla';
+import { labelsMatchMatchers, MatcherParseResult } from '../../../utils/labels';
+export { parseMatchers } from '../../../utils/labels';
 import { groupBy, mapValues, values } from 'lodash';
 
 export type AlertGroupCounts = Record<AlertStatus['state'], number> & {
@@ -44,40 +39,19 @@ export function countAlertsByState(alerts: GettableAlert[]): AlertGroupCounts {
 export function alertMatchesFilters(
   alert: GettableAlert,
   allowedStates: Set<AlertStatus['state']>,
-  matchers: Matcher[]
+  matcherParseResult: MatcherParseResult
 ): boolean {
   if (!allowedStates.has(alert.status.state)) {
     return false;
   }
-  if (matchers.length > 0) {
-    return labelsMatchMatchers(alert.labels, matchers);
+  // An unparseable filter must narrow the result set to nothing, never widen it to everything.
+  if (matcherParseResult.error) {
+    return false;
+  }
+  if (matcherParseResult.matchers.length > 0) {
+    return labelsMatchMatchers(alert.labels, matcherParseResult.matchers);
   }
   return true;
-}
-
-export function parseMatchers(input: string): Matcher[] {
-  const trimmed = input.trim();
-  if (!trimmed) {
-    return [];
-  }
-
-  // Try PromQL-style first (handles both `{foo="bar"}` and `foo="bar",env=~"prod.*"`)
-  const amMatchers = parsePromQLStyleMatcherLooseSafe(trimmed);
-  if (amMatchers.length > 0) {
-    return amMatchers.map(toMatcher);
-  }
-
-  // Fall back to single loose matcher (e.g. `foo=bar`)
-  const single = looseParseMatcher(trimmed);
-  return single ? [single] : [];
-}
-
-function toMatcher(m: AmMatcher): Matcher {
-  return {
-    name: m.name,
-    value: m.value,
-    operator: m.isRegex ? (m.isEqual ? '=~' : '!~') : m.isEqual ? '=' : '!=',
-  };
 }
 
 export type GroupedAlerts = { group: AlertGroup; receivers: string[] };
