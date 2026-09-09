@@ -1,6 +1,7 @@
-#!/usr/bin/env node
-//MISE description="Work out the lowest impact rating a PR is allowed, from its file list alone"
-
+// A step of the pr-impact workflow, run by .github/workflows/pr-impact.yml.
+// Not executable, so mise offers only the one task — `mise run pr-impact
+// <number>` — rather than each step separately.
+//
 // A cheap, deterministic check that runs before Claude sees anything. It sets a
 // floor under the rating that Claude can raise but never lower, so no judgement
 // call can pull a change touching sensitive paths down into the tiers we might

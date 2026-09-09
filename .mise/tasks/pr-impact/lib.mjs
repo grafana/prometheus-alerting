@@ -1,7 +1,8 @@
-// Shared helpers for the pr-impact tasks.
+// Shared helpers for the pr-impact workflow.
 //
-// Deliberately not executable: mise turns every executable file under
-// .mise/tasks into a task, and this is a library, not something to run.
+// Not executable, like every file here except _default.mjs: mise turns any
+// executable file under .mise/tasks into a task, and the only thing worth
+// offering is the whole run, not the steps it is made of.
 
 import { appendFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
@@ -33,8 +34,9 @@ export function ghPaginate(path) {
 }
 
 /**
- * Actions passes values between steps through a file. Without one — running a
- * task by hand — print them instead, so every task is usable on its own.
+ * Actions passes values between steps through a file. These tasks only ever run
+ * as workflow steps, so if that file is missing something is wrong: stop, rather
+ * than print the values somewhere nothing is reading and look like it worked.
  *
  * The delimiter is random per value and never a fixed string. Some of what we
  * write here is Claude's own words, and Claude has read the diff, which anyone
@@ -56,11 +58,13 @@ export function setOutput(values) {
       })
       .join('\n') + '\n';
 
-  if (process.env.GITHUB_OUTPUT) {
-    appendFileSync(process.env.GITHUB_OUTPUT, text);
-  } else {
-    process.stdout.write(text);
+  if (!process.env.GITHUB_OUTPUT) {
+    console.error(
+      'GITHUB_OUTPUT is not set. This file is a CI step; to rate a PR locally, run: mise run pr-impact <number>'
+    );
+    process.exit(2);
   }
+  appendFileSync(process.env.GITHUB_OUTPUT, text);
 }
 
 export function env(name, fallback) {

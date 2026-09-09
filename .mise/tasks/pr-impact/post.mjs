@@ -1,6 +1,7 @@
-#!/usr/bin/env node
-//MISE description="Apply the impact label, upsert the summary comment and leave inline review comments"
-
+// A step of the pr-impact workflow, run by .github/workflows/pr-impact.yml.
+// Not executable, so mise offers only the one task — `mise run pr-impact
+// <number>` — rather than each step separately.
+//
 // The only part that writes, and it writes deterministically. Claude produced
 // the rating and the spots without ever holding a token that can write;
 // everything here is plain code working from that output.
