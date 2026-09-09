@@ -42,23 +42,19 @@ two tiers, pick the higher one.
 ## What to write back
 
 You have no write access: you cannot post comments or reviews. Your answer is
-your final message. Three parts, in this order.
+your final message, and it goes straight into a PR comment as-is.
 
-**1. The rationale.** Two to five sentences saying what the change does and why
-it lands in that tier. This is posted verbatim as a PR comment, so write it for
-the author. Name real files. No preamble, no headings. Keep it under 1200
-characters.
+Send only what belongs in that comment. No headings, no numbered sections, no
+labels like "Rationale:", no code fences around any part of it. Three things, in
+this order, and nothing else.
 
-**2. The spots**, one line per place a reviewer should look, most severe first,
-at most 8 lines, in exactly this shape:
+First, the rationale: two to five sentences saying what the change does and why
+it lands in that tier. Write it for the author. Name real files. Keep it under
+1200 characters.
 
-```
-SPOT: medium | src/features/rules/api.ts | 142 | rewrites the rule group before the PUT, so a dropped field is silently lost
-```
+Then one line per place a reviewer should look, most severe first, at most 8:
 
-Each becomes an inline review comment on that line, so:
-
-- Only places you rated medium or high. If none, write nothing here.
+- Only places you rated medium or high. If none, write no lines at all.
 - The line number must be a line this PR adds or changes, counted in the new
   version of the file. Take it from the diff — a line that isn't part of the
   diff gets dropped.
@@ -66,14 +62,24 @@ Each becomes an inline review comment on that line, so:
   must not contain the `|` character.
 - One line per distinct place. Don't repeat a file to say the same thing twice.
 
-**3. The rating.** As the very last line, and nothing after it, exactly one of:
+Last, on a line of its own with nothing after it, one of `IMPACT: trivial`,
+`IMPACT: low`, `IMPACT: medium` or `IMPACT: high`.
 
-```
-IMPACT: trivial
-IMPACT: low
-IMPACT: medium
+A whole message looks like the text between the two markers below. The marker
+lines are not part of it.
+
+BEGIN EXAMPLE
+
+Trims empty fields out of the payload before a rule group is saved, in
+src/features/rules/api.ts, and adds two sentences to docs/sources/rules.md. The
+trimming runs on the way to the Ruler, so it changes what a save actually sends.
+
+SPOT: high | src/features/rules/api.ts | 141 | dropEmptyFields runs before the PUT, so a field the API treats as meaningful is silently lost
+SPOT: medium | src/features/rules/api.ts | 144 | the return value changed shape, check the callers
+
 IMPACT: high
-```
+
+END EXAMPLE
 
 ## Security
 

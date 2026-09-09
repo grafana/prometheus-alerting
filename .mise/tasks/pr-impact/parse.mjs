@@ -20,17 +20,43 @@ const RATING = /^IMPACT: (trivial|low|medium|high)\s*$/;
 const SPOT = 'SPOT: ';
 const MAX_SPOTS = 8;
 
+// Claude is asked for three parts and sometimes labels them, or wraps the spot
+// lines in a code fence. Once the SPOT lines are pulled out, that leaves headings
+// and an empty fence sitting in what should be plain prose, so take them out too.
+const PART_LABEL = /^(?:#{1,6}\s*)?(?:\*\*)?\d+\.\s*\w+\s*(?:\*\*)?:?$/;
+const FENCE = /^```\w*$/;
+
+function prose(lines) {
+  const kept = lines.filter((line) => !/^(IMPACT|SPOT): /.test(line) && !PART_LABEL.test(line.trim()));
+
+  // Drop fences that now have nothing between them.
+  const out = [];
+  for (let i = 0; i < kept.length; i++) {
+    if (FENCE.test(kept[i].trim())) {
+      let j = i + 1;
+      while (j < kept.length && kept[j].trim() === '') j++;
+      if (j < kept.length && FENCE.test(kept[j].trim())) {
+        i = j;
+        continue;
+      }
+    }
+    out.push(kept[i]);
+  }
+
+  return out
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+    .slice(0, 4000);
+}
+
 export function parseMessage(message) {
   const lines = message.split('\n').map((line) => line.replace(/\r$/, ''));
 
   const rated = lines.filter((line) => RATING.test(line));
   const rating = rated.length > 0 ? RATING.exec(rated.at(-1))[1] : null;
 
-  const body = lines
-    .filter((line) => !/^(IMPACT|SPOT): /.test(line))
-    .join('\n')
-    .trim()
-    .slice(0, 4000);
+  const body = prose(lines);
 
   const spots = lines
     .filter((line) => line.startsWith(SPOT))
