@@ -183,7 +183,7 @@ const DraggableListItem = ({ provided, rule, groupInterval, isClone = false }: D
     <ListItem
       dragHandle={<Icon name="draggabledots" />}
       ruleName={ruleName}
-      pendingPeriod={pendingPeriod}
+      pendingPeriod={pendingPeriod || t('alerting.draggable-rules-table.no-pending-period', 'None')}
       evalsToStartAlerting={
         isRecording ? (
           <Badge text={t('alerting.draggable-rules-table.recording', 'Recording')} color="purple" />

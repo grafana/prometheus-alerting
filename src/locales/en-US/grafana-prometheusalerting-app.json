@@ -65,6 +65,7 @@
     },
     "draggable-rules-table": {
       "evals-to-start-alerting": "Evaluations to start alerting",
+      "no-pending-period": "None",
       "pending-period": "Pending period",
       "recording": "Recording",
       "rule-name": "Rule name"
