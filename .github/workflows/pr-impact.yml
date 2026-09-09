@@ -118,11 +118,12 @@ jobs:
       # pull_request ones (loki, gcx) use Vault.
       - name: Get the Anthropic key
         id: secrets
-        uses: grafana/shared-workflows/actions/get-vault-secrets@a53fc80bc30b0a16a262520465db899fa3af08b7 # get-vault-secrets/v1.3.2
+        uses: grafana/shared-workflows/actions/get-vault-secrets@2e3743a1f8abfd3e921e53a7726ec0744c11bb01 # get-vault-secrets/v2.0.1
         with:
-          # Keep it on the step output rather than exporting it into the
-          # environment of every later step, claude-code-action included.
-          export_env: false
+          # Reads ci/repo/grafana/prometheus-alerting/anthropic in Vault, field
+          # api-key. It stays on this step's output rather than being exported
+          # into the environment of every later step, which is what v2 does by
+          # default.
           repo_secrets: |
             ANTHROPIC_API_KEY=anthropic:api-key
 
