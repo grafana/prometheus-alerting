@@ -8,6 +8,8 @@ minimumReleaseAgeExclude:
   - '@grafana/*'
   # Renovate security update: js-yaml@4.3.1
   - js-yaml@4.3.1
+  # Renovate security update: vitest@4.1.11
+  - vitest@4.1.11
 
 overrides:
   # i18next 25.x prints a console ad for its paid Locize product on every init (which
