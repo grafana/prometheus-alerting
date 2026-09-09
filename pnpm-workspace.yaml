@@ -6,8 +6,8 @@ verifyDepsBeforeRun: install
 minimumReleaseAge: 4320 # 3 days, in minutes
 minimumReleaseAgeExclude:
   - '@grafana/*'
-  # Renovate security update: js-yaml@4.3.1
-  - js-yaml@4.3.1
+  # Renovate security update: js-yaml@4.3.1 || 4.3.2
+  - js-yaml@4.3.1 || 4.3.2
   # Renovate security update: vitest@4.1.11
   - vitest@4.1.11
 
