@@ -26,12 +26,15 @@ const DIFF_LIMIT = 120000;
 
 // Same two lines the workflow prepends. Keep them in step, or a local run stops
 // predicting what CI will do.
+let diffWasCut = false;
+
 function buildPrompt({ repo, pr }) {
   const diff = execFileSync('gh', ['pr', 'diff', String(pr), '--repo', repo], {
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
   });
   const cut = diff.length > DIFF_LIMIT;
+  diffWasCut = cut;
 
   return [
     readFileSync(PROMPT_PATH, 'utf8'),
@@ -100,6 +103,7 @@ post({
   model,
   effort,
   took: humanDuration(Date.now() - startedAt),
+  truncated: diffWasCut,
   dryRun: !process.env.POST,
 });
 

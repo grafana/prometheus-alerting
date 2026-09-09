@@ -87,6 +87,7 @@ jobs:
       ready: ${{ steps.gate.outputs.ready }}
       model: ${{ steps.parse.outputs.model }}
       took: ${{ steps.parse.outputs.took }}
+      truncated: ${{ steps.prompt.outputs.truncated }}
     steps:
       # The base branch, not the PR head: Claude reads the repository's own code
       # to judge what the change touches, and gets the diff through `gh pr diff`.
@@ -147,6 +148,7 @@ jobs:
           # Random delimiter, matching what the tasks do when they write step
           # outputs — this one carries a diff, which anyone opening a PR writes.
           delimiter="EOF_$(openssl rand -hex 16)"
+          truncated=false
           diff="$RUNNER_TEMP/pr.diff"
           gh pr diff "$PR_NUMBER" > "$diff"
           {
@@ -159,12 +161,15 @@ jobs:
             echo "The diff follows."
             if [ "$(wc -c < "$diff")" -gt 120000 ]; then
               echo "It was too long to include whole, so it stops part way through."
+              truncated=true
             fi
             echo
             head -c 120000 "$diff"
             echo
             echo "$delimiter"
           } >> "$GITHUB_OUTPUT"
+          # The post job holds a PR rated on half a diff to medium at best.
+          echo "truncated=$truncated" >> "$GITHUB_OUTPUT"
 
       # Vault rather than workload identity federation, because this runs on a
       # pull_request event. A WIF exchange proves who is asking with the OIDC
@@ -244,3 +249,4 @@ jobs:
           MODEL: ${{ needs.judge.outputs.model }}
           EFFORT: ${{ env.CLAUDE_EFFORT }}
           TOOK: ${{ needs.judge.outputs.took }}
+          TRUNCATED: ${{ needs.judge.outputs.truncated }}

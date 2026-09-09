@@ -234,13 +234,22 @@ export function post({
   model,
   effort,
   took,
+  truncated,
   dryRun,
 }) {
-  const { tier, overridden } = resolveTier(claudeTier, floor);
+  // A diff too long to include whole was rated on part of itself, and the part
+  // left out is exactly where an unnoticed problem would be. Whatever the paths
+  // said, that rating does not get to sit in the tiers we would fast-track.
+  const [effectiveFloor, effectiveReason] =
+    truncated && rank(floor) < rank('medium')
+      ? ['medium', 'was too long to include whole, so it was rated on part of the diff']
+      : [floor, floorReason];
+
+  const { tier, overridden } = resolveTier(claudeTier, effectiveFloor);
   console.error(`Rating: ${tier}`);
 
   const explanation = overridden
-    ? `${claudeBody}\n\nClaude rated this ${STYLE[claudeTier]?.emoji ?? ''} **${claudeTier}**, raised to ${STYLE[tier].emoji} **${tier}** because the PR ${floorReason}.`
+    ? `${claudeBody}\n\nClaude rated this ${STYLE[claudeTier]?.emoji ?? ''} **${claudeTier}**, raised to ${STYLE[tier].emoji} **${tier}** because the PR ${effectiveReason}.`
     : claudeBody;
   const files = ghPaginate(`repos/${repo}/pulls/${pr}/files`);
   // Don't repeat the same point on the same line across pushes.
@@ -304,6 +313,7 @@ if (isMain(import.meta.url)) {
     model: env('MODEL', ''),
     effort: env('EFFORT', ''),
     took: env('TOOK', ''),
+    truncated: env('TRUNCATED', '') === 'true',
     dryRun: Boolean(process.env.DRY_RUN),
   });
 }
