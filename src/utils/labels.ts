@@ -15,10 +15,7 @@ export interface Matcher {
   value: string;
 }
 
-export interface MatcherParseResult {
-  matchers: Matcher[];
-  error?: Error;
-}
+export type MatcherParseResult = { matchers: Matcher[]; error?: never } | { matchers: []; error: Error };
 
 export function parseMatchers(input: string): MatcherParseResult {
   const trimmed = input.trim();
