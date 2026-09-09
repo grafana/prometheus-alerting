@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { type AlertGroup, type AlertStatus } from '@grafana/external-alertmanager/vanilla';
-import { alertMatchesFilters, parseMatchers } from '../utils/alerts.utils';
+import { t } from '@grafana/i18n';
+import { parseMatchers } from '../../../utils/labels';
+import { alertMatchesFilters } from '../utils/alerts.utils';
 
 export interface AlertsFiltersState {
   receivers: string[];
@@ -54,7 +56,16 @@ export function useAlertsFilters(): UseAlertsFiltersResult {
   );
 
   return {
-    filters: { receivers, showActive, showUnprocessed, showSuppressed, labelInput, labelInputError: labelFilter.error },
+    filters: {
+      receivers,
+      showActive,
+      showUnprocessed,
+      showSuppressed,
+      labelInput,
+      labelInputError: labelFilter.error
+        ? t('alerts.filters.label-input-invalid', 'Invalid label matcher syntax')
+        : undefined,
+    },
     actions: { setReceivers, setShowActive, setShowUnprocessed, setShowSuppressed, setLabelInput },
     applyFilters,
   };

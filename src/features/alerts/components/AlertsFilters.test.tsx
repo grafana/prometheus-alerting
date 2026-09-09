@@ -6,7 +6,7 @@ import { AlertGroupFactory } from '../mocks/alerts.fakes';
 import { useAlertsFilters } from '../hooks/useAlertsFilters';
 import { AlertsFilters } from './AlertsFilters';
 
-function TestHarness() {
+function StatefulAlertsFilters() {
   const { filters, actions } = useAlertsFilters();
   return <AlertsFilters filters={filters} actions={actions} alertGroups={[AlertGroupFactory.build()]} />;
 }
@@ -14,7 +14,7 @@ function TestHarness() {
 describe('AlertsFilters', () => {
   it('shows no error for well-formed label input', async () => {
     const user = userEvent.setup();
-    render(<TestHarness />);
+    render(<StatefulAlertsFilters />);
 
     await user.type(screen.getByPlaceholderText(/filter by labels/i), 'team=frontend');
 
@@ -23,9 +23,9 @@ describe('AlertsFilters', () => {
 
   it('shows an inline error for an unparseable label matcher instead of failing silently', async () => {
     const user = userEvent.setup();
-    render(<TestHarness />);
+    render(<StatefulAlertsFilters />);
 
-    await user.type(screen.getByPlaceholderText(/filter by labels/i), '=====!!!bogus');
+    await user.type(screen.getByPlaceholderText(/filter by labels/i), 'severity=~(critical');
 
     expect(screen.getByText(/invalid label matcher syntax/i)).toBeInTheDocument();
   });

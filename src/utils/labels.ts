@@ -3,12 +3,60 @@
  * Supports label matchers like: team=frontend, severity!=low, region=~us-.*, cluster!~test.*
  */
 
-import { MatcherOperator } from '@grafana/external-alertmanager/vanilla';
+import {
+  MatcherOperator,
+  parsePromQLStyleMatcherLoose,
+  type Matcher as AlertmanagerMatcher,
+} from '@grafana/external-alertmanager/vanilla';
 
 export interface Matcher {
   name: string;
   operator: MatcherOperator;
   value: string;
+}
+
+export interface MatcherParseResult {
+  matchers: Matcher[];
+  error?: Error;
+}
+
+export function parseMatchers(input: string): MatcherParseResult {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return { matchers: [] };
+  }
+
+  try {
+    const matchers = parsePromQLStyleMatcherLoose(trimmed).map(toMatcher);
+    const hasInvalidRegex = matchers.some(
+      (matcher) => (matcher.operator === '=~' || matcher.operator === '!~') && !isValidRegex(matcher.value)
+    );
+    return matchers.length > 0 && !hasInvalidRegex ? { matchers } : invalidMatcherParseResult();
+  } catch {
+    const singleMatcher = trimmed.includes(',') ? undefined : looseParseMatcher(trimmed);
+    return singleMatcher ? { matchers: [singleMatcher] } : invalidMatcherParseResult();
+  }
+}
+
+function invalidMatcherParseResult(): MatcherParseResult {
+  return { matchers: [], error: new Error('Invalid matcher syntax') };
+}
+
+function toMatcher(matcher: AlertmanagerMatcher): Matcher {
+  return {
+    name: matcher.name,
+    value: matcher.value,
+    operator: matcher.isRegex ? (matcher.isEqual ? '=~' : '!~') : matcher.isEqual ? '=' : '!=',
+  };
+}
+
+function isValidRegex(value: string): boolean {
+  try {
+    new RegExp(value);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -29,11 +77,12 @@ export function looseParseMatcher(matcherQuery: string): Matcher | undefined {
     // Order matters: check longer operators first (!=, =~, !~) before single char (=)
     const regexMatch = matcherQuery.match(/^([a-zA-Z_][a-zA-Z0-9_]*)(=~|!~)(.+)$/);
     if (regexMatch) {
-      return {
+      const matcher: Matcher = {
         name: regexMatch[1],
         operator: regexMatch[2] as '=~' | '!~',
         value: regexMatch[3],
       };
+      return isValidRegex(matcher.value) ? matcher : undefined;
     }
 
     const notEqualMatch = matcherQuery.match(/^([a-zA-Z_][a-zA-Z0-9_]*)!=(.+)$/);
@@ -101,8 +150,7 @@ export function labelsMatchMatchers(labels: Record<string, string>, matchers: Ma
         try {
           const regex = new RegExp(matcher.value);
           return regex.test(labelValue);
-        } catch (error) {
-          // Invalid regex, treat as no match
+        } catch {
           return false;
         }
 
@@ -114,9 +162,8 @@ export function labelsMatchMatchers(labels: Record<string, string>, matchers: Ma
         try {
           const regex = new RegExp(matcher.value);
           return !regex.test(labelValue);
-        } catch (error) {
-          // Invalid regex, treat as no match (negated = match)
-          return true;
+        } catch {
+          return false;
         }
 
       default:

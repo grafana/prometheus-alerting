@@ -1,12 +1,6 @@
-import {
-  AlertGroup,
-  AlertStatus,
-  GettableAlert,
-  parsePromQLStyleMatcherLooseSafe,
-  type Matcher as AmMatcher,
-} from '@grafana/external-alertmanager/vanilla';
-import { t } from '@grafana/i18n';
-import { labelsMatchMatchers, looseParseMatcher, Matcher } from '../../../utils/labels';
+import { AlertGroup, AlertStatus, GettableAlert } from '@grafana/external-alertmanager/vanilla';
+import { labelsMatchMatchers, MatcherParseResult } from '../../../utils/labels';
+export { parseMatchers } from '../../../utils/labels';
 import { groupBy, mapValues, values } from 'lodash';
 
 export type AlertGroupCounts = Record<AlertStatus['state'], number> & {
@@ -42,56 +36,22 @@ export function countAlertsByState(alerts: GettableAlert[]): AlertGroupCounts {
   return counts;
 }
 
-export interface ParsedLabelFilter {
-  matchers: Matcher[];
-  error?: string;
-}
-
 export function alertMatchesFilters(
   alert: GettableAlert,
   allowedStates: Set<AlertStatus['state']>,
-  labelFilter: ParsedLabelFilter
+  matcherParseResult: MatcherParseResult
 ): boolean {
   if (!allowedStates.has(alert.status.state)) {
     return false;
   }
   // An unparseable filter must narrow the result set to nothing, never widen it to everything.
-  if (labelFilter.error) {
+  if (matcherParseResult.error) {
     return false;
   }
-  if (labelFilter.matchers.length > 0) {
-    return labelsMatchMatchers(alert.labels, labelFilter.matchers);
+  if (matcherParseResult.matchers.length > 0) {
+    return labelsMatchMatchers(alert.labels, matcherParseResult.matchers);
   }
   return true;
-}
-
-export function parseMatchers(input: string): ParsedLabelFilter {
-  const trimmed = input.trim();
-  if (!trimmed) {
-    return { matchers: [] };
-  }
-
-  // Try PromQL-style first (handles both `{foo="bar"}` and `foo="bar",env=~"prod.*"`)
-  const amMatchers = parsePromQLStyleMatcherLooseSafe(trimmed);
-  if (amMatchers.length > 0) {
-    return { matchers: amMatchers.map(toMatcher) };
-  }
-
-  // Fall back to single loose matcher (e.g. `foo=bar`)
-  const single = looseParseMatcher(trimmed);
-  if (single) {
-    return { matchers: [single] };
-  }
-
-  return { matchers: [], error: t('alerts.filters.label-input-invalid', 'Invalid label matcher syntax') };
-}
-
-function toMatcher(m: AmMatcher): Matcher {
-  return {
-    name: m.name,
-    value: m.value,
-    operator: m.isRegex ? (m.isEqual ? '=~' : '!~') : m.isEqual ? '=' : '!=',
-  };
 }
 
 export type GroupedAlerts = { group: AlertGroup; receivers: string[] };

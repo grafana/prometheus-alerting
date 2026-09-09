@@ -115,9 +115,24 @@ describe('parseMatchers', () => {
   });
 
   it('returns an error for unparseable input instead of silently dropping it', () => {
-    const result = parseMatchers('=====!!!bogus');
+    const result = parseMatchers('=critical');
     expect(result.matchers).toEqual([]);
-    expect(result.error).toBeTruthy();
+    expect(result.error).toEqual(new Error('Invalid matcher syntax'));
+  });
+
+  it.each(['team=frontend,severity', 'team!~frontend, environment'])(
+    'rejects malformed multi-matcher input instead of parsing it as one loose matcher: %s',
+    (input) => {
+      const result = parseMatchers(input);
+      expect(result.matchers).toEqual([]);
+      expect(result.error).toEqual(new Error('Invalid matcher syntax'));
+    }
+  );
+
+  it.each(['team=~[', 'team!~['])('rejects an invalid regular expression: %s', (input) => {
+    const result = parseMatchers(input);
+    expect(result.matchers).toEqual([]);
+    expect(result.error).toEqual(new Error('Invalid matcher syntax'));
   });
 });
 
@@ -151,8 +166,18 @@ describe('alertMatchesFilters', () => {
 
   it('excludes every alert when the label filter is invalid, rather than showing everything', () => {
     const alert = GettableAlertFactory.build({ status: AlertStatusFactory.build({ state: 'active' }) });
-    expect(alertMatchesFilters(alert, allowedStates, { matchers: [], error: 'Invalid label matcher syntax' })).toBe(
-      false
-    );
+    expect(
+      alertMatchesFilters(alert, allowedStates, { matchers: [], error: new Error('Invalid matcher syntax') })
+    ).toBe(false);
+  });
+
+  it('defensively excludes alerts for an invalid negative regular expression', () => {
+    const alert = GettableAlertFactory.build({
+      labels: { team: 'frontend' },
+      status: AlertStatusFactory.build({ state: 'active' }),
+    });
+    const labelFilter = { matchers: [{ name: 'team', operator: '!~' as const, value: '[' }] };
+
+    expect(alertMatchesFilters(alert, allowedStates, labelFilter)).toBe(false);
   });
 });

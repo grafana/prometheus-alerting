@@ -151,12 +151,17 @@ describe('filters', () => {
 
       it('should exclude the rule when the label filter is unparseable, rather than showing everything', () => {
         const rule = createAlertingRule('TestAlert', 'firing', { severity: 'critical' });
-        expect(ruleFilter(rule, { labels: ['=====!!!bogus'] })).toBe(false);
+        expect(ruleFilter(rule, { labels: ['=critical'] })).toBe(false);
       });
 
       it('should exclude the rule when any label filter token is unparseable, even alongside a matching one', () => {
         const rule = createAlertingRule('TestAlert', 'firing', { severity: 'critical' });
-        expect(ruleFilter(rule, { labels: ['severity=critical', '=====!!!bogus'] })).toBe(false);
+        expect(ruleFilter(rule, { labels: ['severity=critical', '=warning'] })).toBe(false);
+      });
+
+      it.each(['team=~[', 'team!~['])('should exclude the rule when a regex label filter is invalid: %s', (filter) => {
+        const rule = createAlertingRule('TestAlert', 'firing', { team: 'frontend' });
+        expect(ruleFilter(rule, { labels: [filter] })).toBe(false);
       });
     });
 
