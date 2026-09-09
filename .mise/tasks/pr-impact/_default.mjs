@@ -14,13 +14,17 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { computeFloor } from './floor.mjs';
-import { parseReport, humanDuration } from './parse.mjs';
+import { readTier, readSpots, humanDuration } from './parse.mjs';
 import { post } from './post.mjs';
 import { ghJson } from './lib.mjs';
 
-const ALLOWED_TOOLS = 'Read,Grep,Glob,Edit(pr-impact-report.txt)';
-// Claude writes its findings here rather than saying them. Same name CI uses.
-const REPORT = 'pr-impact-report.txt';
+// Claude writes its findings to these rather than saying them. Same names CI uses.
+const FILES = {
+  tier: 'pr-impact-tier.txt',
+  spots: 'pr-impact-spots.tsv',
+  summary: 'pr-impact-summary.md',
+};
+const ALLOWED_TOOLS = ['Read', 'Grep', 'Glob', ...Object.values(FILES).map((f) => `Edit(${f})`)].join(',');
 const PROMPT_PATH = fileURLToPath(new URL('../../../.github/prompts/pr-impact.md', import.meta.url));
 // Matches the cap in the workflow. Keep the two in step, or a local run stops
 // predicting what CI will do.
@@ -63,7 +67,9 @@ const { floor, reason } = computeFloor({ repo, pr });
 console.error(`    floor: ${floor}${reason ? ` (${reason})` : ''}`);
 
 console.error('==> Asking Claude');
-rmSync(REPORT, { force: true });
+for (const f of Object.values(FILES)) {
+  rmSync(f, { force: true });
+}
 const model = process.env.CLAUDE_MODEL ?? 'claude-sonnet-5';
 // Defaulted to match the workflow, and passed to the CLI below rather than only
 // reported: the footer is there to be trusted.
@@ -85,22 +91,26 @@ try {
 }
 
 console.error('==> Reading the rating');
-let report;
+let files;
 try {
-  report = readFileSync(REPORT, 'utf8');
-} catch {
-  console.error(`Claude did not write ${REPORT}. What it said instead:`);
+  files = Object.fromEntries(Object.entries(FILES).map(([name, path]) => [name, readFileSync(path, 'utf8')]));
+} catch (error) {
+  console.error(`Claude did not write ${error.path ?? 'one of the report files'}. What it said instead:`);
   console.error(message);
   process.exit(1);
+} finally {
+  for (const f of Object.values(FILES)) {
+    rmSync(f, { force: true });
+  }
 }
-rmSync(REPORT, { force: true });
 
-const { rating, body, spots } = parseReport(report);
+const rating = readTier(files.tier);
 if (!rating) {
-  console.error(`No Impact line at the top of ${REPORT}. It held:`);
-  console.error(report);
+  console.error(`${FILES.tier} held "${files.tier.trim()}", which is not a tier.`);
   process.exit(1);
 }
+const spots = readSpots(files.spots);
+const body = files.summary.trim();
 console.error(`    ${rating}, with ${spots.length} spot(s) to check`);
 
 console.error('==> Posting');

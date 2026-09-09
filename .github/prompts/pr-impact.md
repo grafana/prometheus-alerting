@@ -42,45 +42,39 @@ two tiers, pick the higher one.
 
 ## What to write back
 
-Write your findings to `pr-impact-report.txt` in the working directory. That
-file is the whole answer — nothing you say in the chat is read. If it is missing
-or the top of it cannot be read, the run fails, which is the right outcome: a
-red check beats a rating nobody can trust.
+Write three files in the working directory. They are the whole answer — nothing
+you say in the chat is read. Each one holds exactly one thing, so none of them
+needs quoting, escaping or a format beyond what is described here.
 
-The file is a few labelled lines, then a blank line, then the summary:
+**`pr-impact-tier.txt`** — one word, nothing else: `trivial`, `low`, `medium` or
+`high`.
 
-BEGIN EXAMPLE
-Impact: high
-Spot: high | src/features/rules/api.ts | 141 | Empty fields are stripped here on the way to the Ruler, worth checking that none of them mean anything to it
-Spot: medium | src/features/rules/api.ts | 144 | This hands back something different than it used to, so anything calling it needs a look
+**`pr-impact-spots.tsv`** — one line per place a reviewer should look, most
+severe first, at most 8. Four columns separated by real tab characters, no
+header line, no quoting:
 
-Saving a rule group now throws away any fields that are empty before it sends
-the group to the Ruler, in src/features/rules/api.ts. If the Ruler treats one of
-those empty fields as meaningful, saving a rule will quietly change it into
-something the author did not write. The docs change alongside it is two new
-sentences and does not matter here.
-END EXAMPLE
+```
+tier<TAB>file<TAB>line<TAB>reason
+```
 
-`Impact:` is exactly one of trivial, low, medium, high.
-
-`Spot:` is one line per place a reviewer should look, most severe first, at most
-8 of them:
-
-- Tier, then file, then line, then the reason, separated by `|`.
-- Only places you rated medium or high. If there are none, write no Spot lines.
+- Only places you rated medium or high. If there are none, write an empty file.
 - The line number must be a line this PR adds or changes, counted in the new
   version of the file. Take it from the diff — a line that isn't part of the
   diff gets dropped.
 - The reason is one short sentence to the reviewer: what to check, and what goes
   wrong if it is wrong. Not a restatement of the code, which they can already
-  see. It must not contain the `|` character.
+  see. It is the last column, so commas, quotes and `|` are all fine in it. The
+  only character it cannot contain is a tab.
 - One line per distinct place. Don't repeat a file to say the same thing twice.
 
-Everything after the first blank line is the summary. It is posted as a PR
-comment word for word, under a heading that already gives the rating, so don't
-add a heading or a preamble of your own — start with the first word you actually
-want the reader to read. Two to four sentences, under 700 characters. Nothing in
-it is parsed, so no character is off limits.
+**`pr-impact-summary.md`** — the summary, posted as a PR comment word for word.
+Nothing in this file is parsed, so no character is off limits. It appears under
+a heading that already gives the rating, so don't add a heading or a preamble of
+your own — start with the first word you actually want the reader to read. Two
+to four sentences, under 700 characters.
+
+If any of the three is missing the run fails, which is the right outcome: a red
+check beats a rating nobody can trust.
 
 ### How the summary should read
 
@@ -103,6 +97,24 @@ Some habits to avoid, because they make a reader stop and decode:
 
 Prefer a concrete example over a general statement. "A typo like `=critical`
 used to show every alert; now it shows none" beats any amount of description.
+
+An example of the three files together, for a PR that trims empty fields before
+saving a rule group:
+
+BEGIN EXAMPLE
+pr-impact-tier.txt:
+high
+
+pr-impact-spots.tsv:
+high src/features/rules/api.ts 141 Empty fields are stripped here on the way to the Ruler, worth checking that none of them mean anything to it
+medium src/features/rules/api.ts 144 This hands back something different than it used to, so anything calling it needs a look
+
+pr-impact-summary.md:
+Saving a rule group now throws away any fields that are empty before it sends
+the group to the Ruler, in src/features/rules/api.ts. If the Ruler treats one of
+those empty fields as meaningful, saving a rule will quietly change it into
+something the author did not write.
+END EXAMPLE
 
 ## Security
 
