@@ -2,21 +2,29 @@ import React from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
+import { setDataSourceSrv } from '@grafana/runtime';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { parse as parseYaml } from 'yaml';
 
+import { AlertingPermission } from '../../../access-control/abilities';
+import { mockMimirAlertmanagerDs } from '../../../test/fixtures/datasources';
+import {
+  getMimirAlertmanagerRawConfig,
+  setMimirAlertmanagerRawConfig,
+} from '../../../test/handlers/mimir-alertmanager';
+import {
+  createMockDataSourceSrv,
+  setCurrentUserPermissions,
+  setMockGrafanaDataSources,
+} from '../../../test/mocks/grafana-runtime';
+import { server } from '../../../test/server';
+import { createTestWrapper } from '../../../test/utils/test-wrapper';
 import { StoredConfigEditor } from './StoredConfigEditor';
 
 const mocks = vi.hoisted(() => ({
-  updateConfiguration: vi.fn(),
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
-}));
-
-vi.mock('../hooks/useAlertmanagerConfigYaml', () => ({
-  useUpdateAlertmanagerConfigYaml: () => ({
-    updateConfiguration: mocks.updateConfiguration,
-    isUpdating: false,
-  }),
 }));
 
 vi.mock('../../../hooks/useAppNotifications', () => ({
@@ -57,9 +65,35 @@ vi.mock('@grafana/ui', async (importOriginal) => {
   };
 });
 
-const configuration = 'route:\n  receiver: default\n';
+/** What Mimir has stored: the configuration below plus a template file that must survive a save. */
+const storedDocument = `template_files:
+    default.tmpl: |
+        {{ define "alert.title" }}[{{ .Status }}]{{ end }}
+alertmanager_config: |
+    route:
+      receiver: default
+    receivers:
+      - name: default
+`;
+
+const configuration = 'route:\n  receiver: default\nreceivers:\n  - name: default\n';
+
+/** A replacement Mimir accepts, so a save reaches the handler rather than failing validation. */
+const replacement = 'route:\n  receiver: other\nreceivers:\n  - name: other\n';
 
 const ACKNOWLEDGEMENT = 'I understand the consequences, I want to edit the configuration';
+
+/** Renders the editor over the real write hook, which talks to the Mimir MSW handlers. */
+function renderEditor(onSaved = vi.fn()) {
+  return render(<StoredConfigEditor configuration={configuration} onSaved={onSaved} />, {
+    wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
+  });
+}
+
+/** The `alertmanager_config` of the document the last POST stored, if there was one. */
+function writtenConfiguration() {
+  return parseYaml(getMimirAlertmanagerRawConfig() ?? '').alertmanager_config;
+}
 
 /** Acknowledge the warning, which is what makes the editor writable. */
 async function unlock() {
@@ -82,23 +116,26 @@ async function typeConfiguration(text: string) {
 describe('StoredConfigEditor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.updateConfiguration.mockResolvedValue({ success: true });
+    setMockGrafanaDataSources();
+    setDataSourceSrv(createMockDataSourceSrv());
+    setCurrentUserPermissions(AlertingPermission.NotificationsWrite);
+    setMimirAlertmanagerRawConfig(storedDocument);
   });
 
   it('shows the stored configuration', () => {
-    render(<StoredConfigEditor configuration={configuration} onSaved={vi.fn()} />);
+    renderEditor();
 
     expect(screen.getByRole('textbox', { name: 'YAML editor' })).toHaveValue(configuration);
   });
 
   it('warns before anything is typed', () => {
-    render(<StoredConfigEditor configuration={configuration} onSaved={vi.fn()} />);
+    renderEditor();
 
     expect(screen.getByTestId('data-testid Alert warning')).toBeInTheDocument();
   });
 
   it('keeps the editor read-only until the warning is acknowledged', async () => {
-    render(<StoredConfigEditor configuration={configuration} onSaved={vi.fn()} />);
+    renderEditor();
 
     expect(screen.getByRole('textbox', { name: 'YAML editor' })).toHaveAttribute('readonly');
 
@@ -108,29 +145,29 @@ describe('StoredConfigEditor', () => {
   });
 
   it('locks the editor again when the acknowledgement is withdrawn, keeping the text', async () => {
-    render(<StoredConfigEditor configuration={configuration} onSaved={vi.fn()} />);
+    renderEditor();
 
-    const user = await typeConfiguration('route:\n  receiver: other');
+    const user = await typeConfiguration(replacement);
     await user.click(screen.getByRole('checkbox', { name: ACKNOWLEDGEMENT }));
 
     const editor = screen.getByRole('textbox', { name: 'YAML editor' });
     expect(editor).toHaveAttribute('readonly');
     // Re-locking must not throw away what was typed, only stop it being saved.
-    expect(editor).toHaveValue('route:\n  receiver: other');
+    expect(editor).toHaveValue(replacement);
     expect(screen.getByRole('button', { name: 'Save configuration' })).toBeDisabled();
   });
 
   it('cannot save without changes', () => {
-    render(<StoredConfigEditor configuration={configuration} onSaved={vi.fn()} />);
+    renderEditor();
 
     expect(screen.getByRole('button', { name: 'Save configuration' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Discard changes' })).toBeDisabled();
   });
 
   it('enables saving as soon as the text changes, without waiting for focus to leave the editor', async () => {
-    render(<StoredConfigEditor configuration={configuration} onSaved={vi.fn()} />);
+    renderEditor();
 
-    await typeConfiguration('route:\n  receiver: other');
+    await typeConfiguration(replacement);
 
     // No blur, no tab away. A disabled button swallows the first click, so it has to be live.
     expect(screen.getByRole('button', { name: 'Save configuration' })).toBeEnabled();
@@ -140,7 +177,7 @@ describe('StoredConfigEditor', () => {
   // Where the problem is gets marked in the editor itself, which is Monaco's doing and so out of
   // reach here. What this can check is that a configuration that does not parse cannot be saved.
   it('cannot save YAML that does not parse', async () => {
-    render(<StoredConfigEditor configuration={configuration} onSaved={vi.fn()} />);
+    renderEditor();
 
     await typeConfiguration('route: "unclosed');
 
@@ -149,51 +186,59 @@ describe('StoredConfigEditor', () => {
 
   it('only writes once the replacement is confirmed', async () => {
     const onSaved = vi.fn();
-    render(<StoredConfigEditor configuration={configuration} onSaved={onSaved} />);
+    renderEditor(onSaved);
 
-    const user = await typeConfiguration('route:\n  receiver: other');
+    const user = await typeConfiguration(replacement);
     await user.click(screen.getByRole('button', { name: 'Save configuration' }));
 
     // The confirmation is up, and nothing has been written yet.
     expect(await screen.findByText('Replace the Alertmanager configuration')).toBeInTheDocument();
-    expect(mocks.updateConfiguration).not.toHaveBeenCalled();
+    expect(writtenConfiguration()).toBe(configuration);
 
     await user.click(screen.getByRole('button', { name: 'Replace configuration' }));
 
-    await waitFor(() => expect(mocks.updateConfiguration).toHaveBeenCalledWith('route:\n  receiver: other'));
+    await waitFor(() => expect(writtenConfiguration()).toBe(replacement));
+    // The template file the editor never showed is still in the document it saved.
+    expect(parseYaml(getMimirAlertmanagerRawConfig() ?? '').template_files).toEqual({
+      'default.tmpl': '{{ define "alert.title" }}[{{ .Status }}]{{ end }}\n',
+    });
     expect(onSaved).toHaveBeenCalled();
     expect(mocks.notifySuccess).toHaveBeenCalledWith('Alertmanager configuration updated');
   });
 
   it('writes nothing when the confirmation is dismissed', async () => {
-    render(<StoredConfigEditor configuration={configuration} onSaved={vi.fn()} />);
+    renderEditor();
 
-    const user = await typeConfiguration('route:\n  receiver: other');
+    const user = await typeConfiguration(replacement);
     await user.click(screen.getByRole('button', { name: 'Save configuration' }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    expect(mocks.updateConfiguration).not.toHaveBeenCalled();
+    expect(getMimirAlertmanagerRawConfig()).toBe(storedDocument);
   });
 
   it('puts the stored configuration back when changes are discarded', async () => {
-    render(<StoredConfigEditor configuration={configuration} onSaved={vi.fn()} />);
+    renderEditor();
 
-    const user = await typeConfiguration('route:\n  receiver: other');
+    const user = await typeConfiguration(replacement);
     await user.click(screen.getByRole('button', { name: 'Discard changes' }));
 
     expect(screen.getByRole('textbox', { name: 'YAML editor' })).toHaveValue(configuration);
   });
 
   it('reports a failed write', async () => {
-    mocks.updateConfiguration.mockRejectedValue(new Error('Mimir said no'));
-    render(<StoredConfigEditor configuration={configuration} onSaved={vi.fn()} />);
+    server.use(
+      http.post('/api/datasources/proxy/uid/:uid/api/v1/alerts', () =>
+        HttpResponse.json({ message: 'Mimir said no' }, { status: 400 })
+      )
+    );
+    renderEditor();
 
-    const user = await typeConfiguration('route:\n  receiver: other');
+    const user = await typeConfiguration(replacement);
     await user.click(screen.getByRole('button', { name: 'Save configuration' }));
     await user.click(screen.getByRole('button', { name: 'Replace configuration' }));
 
-    await waitFor(() =>
-      expect(mocks.notifyError).toHaveBeenCalledWith('Failed to update the Alertmanager configuration', 'Mimir said no')
-    );
+    await waitFor(() => expect(mocks.notifyError).toHaveBeenCalled());
+    expect(mocks.notifyError.mock.calls[0][0]).toBe('Failed to update the Alertmanager configuration');
+    expect(getMimirAlertmanagerRawConfig()).toBe(storedDocument);
   });
 });
