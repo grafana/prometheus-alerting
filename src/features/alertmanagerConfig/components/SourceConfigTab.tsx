@@ -53,8 +53,11 @@ function StoredConfiguration({ mutationAbility }: { mutationAbility: Ability }) 
     );
   }
 
+  // Type narrowing rather than a state anybody should reach: the query always runs with arguments,
+  // so it reports isLoading or an error until it has a document, and an empty one is read back as a
+  // starter configuration. Keep showing the loading text rather than a blank tab if it ever does.
   if (configuration === undefined) {
-    return null;
+    return <LoadingPlaceholder text={t('app-config.configuration.loading', 'Loading configuration...')} />;
   }
 
   if (!mutationAbility.granted) {
