@@ -2,55 +2,64 @@
 // Not executable, so mise offers only the one task — `mise run pr-impact
 // <number>` — rather than each step separately.
 //
-// Claude writes three files, each holding one thing, so reading them is a trim,
-// a split on tabs, and a file read. This step checks the rating is one of the
-// four words and writes down the model and duration, which live in the action's
-// transcript rather than in Claude's files. The posting job reads the rest.
+// Splits Claude's final message into the summary to post and the findings to
+// act on, and hands them to the posting job.
 //
-// It used to pull all three out of Claude's chat message, where prose and data
-// shared one channel and kept colliding — once when it wrapped the findings in
-// a code fence and left the headings behind in the comment, once when it opened
-// with "I have what I need to write the review comment now". Both were fixed by
-// asking more firmly. Neither was fixed by construction. Now the summary is a
-// file of its own that nothing looks inside, so there is nothing left to collide.
+// The split is positional, not by content. Only the unbroken run of labelled
+// lines at the very end counts as findings; everything above it is the summary
+// and is never looked at. That is what keeps the two from colliding — the
+// summary can hold headings, code fences, even the word "Impact", and none of
+// it can be mistaken for a finding.
 
-import { readFileSync, writeFileSync } from 'node:fs';
-import { env, isMain } from './lib.mjs';
+import { readFileSync } from 'node:fs';
+import { setOutput, env, isMain, TIERS } from './lib.mjs';
 
-const TIERS = new Set(['trivial', 'low', 'medium', 'high']);
+const LABELLED = /^(impact|spot):/i;
+const IMPACT = /^impact:\s*(\w+)\s*$/i;
 const MAX_SPOTS = 8;
 
-const read = (path) => readFileSync(path, 'utf8');
+// tier, file, line, reason. Everything a spot has to be true for is in the
+// pattern: one of the two tiers we act on, a file name, a line number that is
+// not zero, and a reason that is not empty. A line that is not all four of
+// those does not match and is left out, so there is nothing else to check.
+// The reason is last and takes the rest of the line. Case and stray spaces are
+// tolerated, because losing a spot to either would be silent.
+const SPOT = /^spot:\s*(medium|high)\s*\|\s*([^|]+?)\s*\|\s*([1-9][0-9]*)\s*\|\s*(.+?)\s*$/i;
 
-/** One word. */
-export function readTier(text) {
-  const tier = text.trim().toLowerCase();
-  return TIERS.has(tier) ? tier : null;
-}
+export function readFindings(message) {
+  const lines = message.split('\n').map((line) => line.replace(/\r$/, ''));
 
-/** Four tab-separated columns per line. A line that isn't that shape is dropped. */
-export function readSpots(text) {
-  return text
-    .split('\n')
-    .filter((line) => line.trim() !== '')
+  // Walk back from the end for as long as the lines are labelled or blank.
+  let start = lines.length;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (line === '') {
+      continue;
+    }
+    if (!LABELLED.test(line)) {
+      break;
+    }
+    start = i;
+  }
+
+  const labelled = lines.slice(start).map((line) => line.trim());
+  const impact = labelled
+    .map((line) => IMPACT.exec(line))
+    .filter(Boolean)
+    .map(([, tier]) => tier.toLowerCase())
+    .filter((tier) => TIERS.includes(tier));
+
+  const spots = labelled
+    .map((line) => SPOT.exec(line))
+    .filter(Boolean)
     .slice(0, MAX_SPOTS)
-    .map((line) => line.split('\t'))
-    .filter((columns) => columns.length >= 4)
-    .map(([tier, path, line, ...reason]) => ({
-      tier: tier.trim().toLowerCase(),
-      path: path.trim(),
-      line: Number(line.trim()),
-      // Rejoin in case a reason contained a tab anyway.
-      why: reason.join(' ').trim(),
-    }))
-    .filter(
-      (spot) =>
-        Number.isInteger(spot.line) &&
-        spot.line > 0 &&
-        (spot.tier === 'medium' || spot.tier === 'high') &&
-        spot.path !== '' &&
-        spot.why !== ''
-    );
+    .map(([, tier, path, line, why]) => ({ tier: tier.toLowerCase(), path, line: Number(line), why }));
+
+  return {
+    tier: impact.at(-1) ?? null,
+    spots,
+    summary: lines.slice(0, start).join('\n').trim().slice(0, 4000),
+  };
 }
 
 /** How long the run took, for a reader rather than a parser: 48s, 2m 05s. */
@@ -70,7 +79,7 @@ export function humanDuration(ms) {
 }
 
 function lastResult(executionFile) {
-  const transcript = JSON.parse(read(executionFile));
+  const transcript = JSON.parse(readFileSync(executionFile, 'utf8'));
   return transcript.filter((entry) => entry.type === 'result').at(-1);
 }
 
@@ -86,17 +95,22 @@ function modelUsed(result) {
 }
 
 if (isMain(import.meta.url)) {
-  // Only checks that Claude wrote something usable, and records the two facts
-  // that live in the transcript rather than in its files. Everything else is
-  // read straight from the files by the job that posts.
-  const tier = readTier(readFileSync(env('TIER_FILE'), 'utf8'));
+  const result = lastResult(env('EXECUTION_FILE'));
+  const { tier, spots, summary } = readFindings(result?.result ?? '');
+
   if (!tier) {
-    console.error(`${env('TIER_FILE')} does not hold one of trivial, low, medium, high.`);
+    console.error('No IMPACT line at the end of what Claude said. It said:');
+    console.error(result?.result ?? '(nothing)');
     process.exit(1);
   }
 
-  const result = lastResult(env('EXECUTION_FILE'));
-  writeFileSync(env('META_FILE'), `${modelUsed(result)}\t${humanDuration(result?.duration_ms)}\n`);
+  console.error(`Claude rated this ${tier}, with ${spots.length} spot(s) to check`);
 
-  console.error(`Claude rated this ${tier}`);
+  setOutput({
+    tier,
+    spots: JSON.stringify(spots),
+    model: modelUsed(result),
+    took: humanDuration(result?.duration_ms),
+    summary,
+  });
 }

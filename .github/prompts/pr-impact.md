@@ -42,39 +42,38 @@ two tiers, pick the higher one.
 
 ## What to write back
 
-Write three files in the working directory. They are the whole answer — nothing
-you say in the chat is read. Each one holds exactly one thing, so none of them
-needs quoting, escaping or a format beyond what is described here.
+Your final message is the whole answer. You have no write access and nothing to
+save: say it, and it gets read.
 
-**`pr-impact-tier.txt`** — one word, nothing else: `trivial`, `low`, `medium` or
-`high`.
+It has two parts. The summary first, then the findings, and nothing after them.
 
-**`pr-impact-spots.tsv`** — one line per place a reviewer should look, most
-severe first, at most 8. Four columns separated by real tab characters, no
-header line, no quoting:
+The **summary** is posted as a PR comment word for word. It appears under a
+heading that already gives the rating, so don't add a heading or a preamble of
+your own — start with the first word you actually want the reader to read. Two
+to four sentences, under 700 characters.
+
+The **findings** are the last thing in the message: a `SPOT:` line for each
+place a reviewer should look, then a single `IMPACT:` line. Nothing may follow
+them.
 
 ```
-tier<TAB>file<TAB>line<TAB>reason
+SPOT: <tier> | <file> | <line> | <reason>
+IMPACT: <tier>
 ```
 
-- Only places you rated medium or high. If there are none, write an empty file.
+- `IMPACT:` is exactly one of trivial, low, medium, high.
+- `SPOT:` lines come most severe first, at most 8, and only for places you rated
+  medium or high. If there are none, write no SPOT lines.
 - The line number must be a line this PR adds or changes, counted in the new
   version of the file. Take it from the diff — a line that isn't part of the
   diff gets dropped.
 - The reason is one short sentence to the reviewer: what to check, and what goes
   wrong if it is wrong. Not a restatement of the code, which they can already
-  see. It is the last column, so commas, quotes and `|` are all fine in it. The
-  only character it cannot contain is a tab.
+  see. It is the last field, so it can hold anything except a `|`.
 - One line per distinct place. Don't repeat a file to say the same thing twice.
 
-**`pr-impact-summary.md`** — the summary, posted as a PR comment word for word.
-Nothing in this file is parsed, so no character is off limits. It appears under
-a heading that already gives the rating, so don't add a heading or a preamble of
-your own — start with the first word you actually want the reader to read. Two
-to four sentences, under 700 characters.
-
-If any of the three is missing the run fails, which is the right outcome: a red
-check beats a rating nobody can trust.
+Only the run of labelled lines at the very end is read as findings, so the
+summary above them can say anything, including the word Impact.
 
 ### How the summary should read
 
@@ -98,22 +97,21 @@ Some habits to avoid, because they make a reader stop and decode:
 Prefer a concrete example over a general statement. "A typo like `=critical`
 used to show every alert; now it shows none" beats any amount of description.
 
-An example of the three files together, for a PR that trims empty fields before
-saving a rule group:
+A whole message looks like the text between the two markers. The marker lines
+are not part of it.
 
 BEGIN EXAMPLE
-pr-impact-tier.txt:
-high
 
-pr-impact-spots.tsv:
-high src/features/rules/api.ts 141 Empty fields are stripped here on the way to the Ruler, worth checking that none of them mean anything to it
-medium src/features/rules/api.ts 144 This hands back something different than it used to, so anything calling it needs a look
-
-pr-impact-summary.md:
 Saving a rule group now throws away any fields that are empty before it sends
 the group to the Ruler, in src/features/rules/api.ts. If the Ruler treats one of
 those empty fields as meaningful, saving a rule will quietly change it into
-something the author did not write.
+something the author did not write. The docs change alongside it is two new
+sentences and does not matter here.
+
+SPOT: high | src/features/rules/api.ts | 141 | Empty fields are stripped here on the way to the Ruler, worth checking that none of them mean anything to it
+SPOT: medium | src/features/rules/api.ts | 144 | This hands back something different than it used to, so anything calling it needs a look
+IMPACT: high
+
 END EXAMPLE
 
 ## Security

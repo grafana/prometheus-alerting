@@ -8,10 +8,8 @@
 //
 // Set DRY_RUN=1 to print what would be posted instead of posting it.
 
-import { readFileSync } from 'node:fs';
 import { gh, ghJson, ghPaginate, env, isMain, rank, TIERS } from './lib.mjs';
 import { computeFloor } from './floor.mjs';
-import { readTier, readSpots } from './parse.mjs';
 
 const SUMMARY_MARKER = '<!-- pr-impact -->';
 const SPOT_MARKER = '<!-- pr-impact-spot -->';
@@ -307,26 +305,20 @@ export function post({
 if (isMain(import.meta.url)) {
   const repo = env('GH_REPO');
   const pr = env('PR_NUMBER');
-  const dir = env('FINDINGS_DIR');
-  const read = (name) => readFileSync(`${dir}/${name}`, 'utf8');
-
-  // Model and duration are the only two the judge had to write down; the rest
-  // are Claude's own files, read here exactly as they were written.
-  const [model = '', took = ''] = read('meta.tsv').trim().split('\t');
 
   post({
     repo,
     pr,
     headSha: env('HEAD_SHA'),
-    claudeTier: readTier(read('tier.txt')),
-    claudeBody: read('summary.md').trim().slice(0, 4000),
-    spots: readSpots(read('spots.tsv')),
+    claudeTier: env('TIER'),
+    claudeBody: env('SUMMARY', '').trim().slice(0, 4000),
+    spots: JSON.parse(env('SPOTS', '[]')),
     // Worked out again here rather than carried over from the judge. It is one
     // API call and it keeps the handoff to what only the judge could know.
     ...computeFloor({ repo, pr }),
-    truncated: read('truncated.txt').trim() === 'true',
-    model,
-    took,
+    truncated: env('TRUNCATED', '').trim() === 'true',
+    model: env('MODEL', ''),
+    took: env('TOOK', ''),
     effort: env('EFFORT', ''),
     dryRun: Boolean(process.env.DRY_RUN),
   });

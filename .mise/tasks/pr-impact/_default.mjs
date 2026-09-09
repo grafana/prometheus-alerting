@@ -11,49 +11,14 @@
 // the same code CI runs.
 
 import { execFileSync } from 'node:child_process';
-import { readFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { computeFloor } from './floor.mjs';
-import { readTier, readSpots, humanDuration } from './parse.mjs';
+import { readFindings, humanDuration } from './parse.mjs';
+import { buildPrompt } from './prompt.mjs';
 import { post } from './post.mjs';
 import { ghJson } from './lib.mjs';
 
-// Claude writes its findings to these rather than saying them. Same names CI uses.
-const FILES = {
-  tier: 'pr-impact-tier.txt',
-  spots: 'pr-impact-spots.tsv',
-  summary: 'pr-impact-summary.md',
-};
-const ALLOWED_TOOLS = ['Read', 'Grep', 'Glob', ...Object.values(FILES).map((f) => `Edit(${f})`)].join(',');
-const PROMPT_PATH = fileURLToPath(new URL('../../../.github/prompts/pr-impact.md', import.meta.url));
-// Matches the cap in the workflow. Keep the two in step, or a local run stops
-// predicting what CI will do.
-const DIFF_LIMIT = 120000;
-
-// Same two lines the workflow prepends. Keep them in step, or a local run stops
-// predicting what CI will do.
-let diffWasCut = false;
-
-function buildPrompt({ repo, pr }) {
-  const diff = execFileSync('gh', ['pr', 'diff', String(pr), '--repo', repo], {
-    encoding: 'utf8',
-    maxBuffer: 64 * 1024 * 1024,
-  });
-  const cut = diff.length > DIFF_LIMIT;
-  diffWasCut = cut;
-
-  return [
-    readFileSync(PROMPT_PATH, 'utf8'),
-    `Repository: ${repo}`,
-    `PR number: ${pr}`,
-    '',
-    cut ? 'The diff follows.\nIt was too long to include whole, so it stops part way through.' : 'The diff follows.',
-    '',
-    diff.slice(0, DIFF_LIMIT),
-    '',
-  ].join('\n');
-}
-
+const ALLOWED_TOOLS = 'Read,Grep,Glob';
 const pr = process.argv[2] ?? process.env.PR_NUMBER;
 if (!pr) {
   console.error('Usage: mise run pr-impact <pr-number>');
@@ -67,9 +32,7 @@ const { floor, reason } = computeFloor({ repo, pr });
 console.error(`    floor: ${floor}${reason ? ` (${reason})` : ''}`);
 
 console.error('==> Asking Claude');
-for (const f of Object.values(FILES)) {
-  rmSync(f, { force: true });
-}
+const { text: prompt, truncated } = buildPrompt({ repo, pr });
 const model = process.env.CLAUDE_MODEL ?? 'claude-sonnet-5';
 // Defaulted to match the workflow, and passed to the CLI below rather than only
 // reported: the footer is there to be trusted.
@@ -79,7 +42,7 @@ let message;
 try {
   message = execFileSync(
     'claude',
-    ['-p', buildPrompt({ repo, pr }), '--model', model, '--effort', effort, '--allowedTools', ALLOWED_TOOLS],
+    ['-p', prompt, '--model', model, '--effort', effort, '--allowedTools', ALLOWED_TOOLS],
     { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], maxBuffer: 32 * 1024 * 1024 }
   );
 } catch (error) {
@@ -91,26 +54,12 @@ try {
 }
 
 console.error('==> Reading the rating');
-let files;
-try {
-  files = Object.fromEntries(Object.entries(FILES).map(([name, path]) => [name, readFileSync(path, 'utf8')]));
-} catch (error) {
-  console.error(`Claude did not write ${error.path ?? 'one of the report files'}. What it said instead:`);
+const { tier: rating, spots, summary: body } = readFindings(message);
+if (!rating) {
+  console.error('No IMPACT line at the end of what Claude said. It said:');
   console.error(message);
   process.exit(1);
-} finally {
-  for (const f of Object.values(FILES)) {
-    rmSync(f, { force: true });
-  }
 }
-
-const rating = readTier(files.tier);
-if (!rating) {
-  console.error(`${FILES.tier} held "${files.tier.trim()}", which is not a tier.`);
-  process.exit(1);
-}
-const spots = readSpots(files.spots);
-const body = files.summary.trim();
 console.error(`    ${rating}, with ${spots.length} spot(s) to check`);
 
 console.error('==> Posting');
@@ -126,7 +75,7 @@ post({
   model,
   effort,
   took: humanDuration(Date.now() - startedAt),
-  truncated: diffWasCut,
+  truncated,
   dryRun: !process.env.POST,
 });
 

@@ -68,8 +68,3 @@ ci/
 
 # mise local configuration (per-developer tools)
 mise.local.toml
-
-# Written by the pr-impact tasks while they run
-pr-impact-tier.txt
-pr-impact-spots.tsv
-pr-impact-summary.md

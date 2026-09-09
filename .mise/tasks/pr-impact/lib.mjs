@@ -4,6 +4,8 @@
 // executable file under .mise/tasks into a task, and the only thing worth
 // offering is the whole run, not the steps it is made of.
 
+import { appendFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
@@ -29,6 +31,31 @@ export function ghJson(args, input) {
 /** Every page of a paginated endpoint, flattened into one array. */
 export function ghPaginate(path) {
   return ghJson(['api', '--paginate', '--slurp', path]).flat();
+}
+
+/**
+ * Hand values to the next step. Two steps need this, so it lives here rather
+ * than twice over.
+ *
+ * The delimiter for a multi-line value is random, never a fixed string. Some of
+ * what goes through here is Claude writing about a diff, which anyone opening a
+ * PR controls: a predictable delimiter could be printed on purpose, ending the
+ * value early and leaving the rest to be read as further outputs — including a
+ * second, lower tier that wins by being last.
+ */
+export function setOutput(values) {
+  const text = Object.entries(values)
+    .map(([key, raw]) => {
+      const value = String(raw);
+      if (!value.includes('\n')) {
+        return `${key}=${value}`;
+      }
+      const delimiter = `EOF_${randomUUID().replaceAll('-', '')}`;
+      return `${key}<<${delimiter}\n${value}\n${delimiter}`;
+    })
+    .join('\n');
+
+  appendFileSync(env('GITHUB_OUTPUT'), `${text}\n`);
 }
 
 export function env(name, fallback) {
