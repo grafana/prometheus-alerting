@@ -1,6 +1,5 @@
-// A step of the pr-impact workflow, run by .github/workflows/pr-impact.yml.
-// Not executable, so mise offers only the one task — `mise run pr-impact
-// <number>` — rather than each step separately.
+// Used by the pr-impact workflow. Not a step of its own: the job that posts
+// works the floor out for itself, so nothing has to be carried between jobs.
 //
 // A cheap, deterministic check that runs before Claude sees anything. It sets a
 // floor under the rating that Claude can raise but never lower, so no judgement
@@ -12,7 +11,7 @@
 // one-line PR can be the dangerous one. Claude judges that from the diff; a line
 // count can't.
 
-import { ghPaginate, setOutput, env, isMain } from './lib.mjs';
+import { ghPaginate } from './lib.mjs';
 
 // Paths where a small diff can still have a large blast radius: CI and release
 // plumbing (also the route someone would take to weaken this workflow), the
@@ -49,10 +48,4 @@ export function computeFloor({ repo, pr }) {
   // unseen — letting a wide PR through that should have been held.
   const paths = ghPaginate(`repos/${repo}/pulls/${pr}/files`).map((file) => file.filename);
   return floorFor(paths);
-}
-
-if (isMain(import.meta.url)) {
-  const result = computeFloor({ repo: env('GH_REPO'), pr: env('PR_NUMBER') });
-  console.error(`Floor: ${result.floor}${result.reason ? ` (${result.reason})` : ''}`);
-  setOutput(result);
 }

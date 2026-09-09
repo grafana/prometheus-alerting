@@ -121,7 +121,7 @@ post({
   claudeTier: rating,
   claudeBody: body,
   floor,
-  floorReason: reason,
+  reason,
   spots,
   model,
   effort,

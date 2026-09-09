@@ -78,16 +78,10 @@ jobs:
       contents: read
       pull-requests: read
       id-token: write
+    # The only thing this job tells the next one directly. Claude's findings
+    # travel as files, in the pr-impact-findings artifact.
     outputs:
-      floor: ${{ steps.floor.outputs.floor }}
-      reason: ${{ steps.floor.outputs.reason }}
-      tier: ${{ steps.parse.outputs.tier }}
-      body: ${{ steps.parse.outputs.body }}
-      spots: ${{ steps.parse.outputs.spots }}
       ready: ${{ steps.gate.outputs.ready }}
-      model: ${{ steps.parse.outputs.model }}
-      took: ${{ steps.parse.outputs.took }}
-      truncated: ${{ steps.prompt.outputs.truncated }}
     steps:
       # The base branch, not the PR head: Claude reads the repository's own code
       # to judge what the change touches, and gets the diff through `gh pr diff`.
@@ -109,15 +103,6 @@ jobs:
           fi
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
-
-      - name: Work out the floor
-        id: floor
-        if: steps.gate.outputs.ready == 'true'
-        run: node .mise/tasks/pr-impact/floor.mjs
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
 
       # The prompt is prose in its own file; only the two facts that change per
       # run are added here. claude-code-action passes `prompt` through verbatim,
@@ -168,8 +153,9 @@ jobs:
             echo
             echo "$delimiter"
           } >> "$GITHUB_OUTPUT"
-          # The post job holds a PR rated on half a diff to medium at best.
-          echo "truncated=$truncated" >> "$GITHUB_OUTPUT"
+          # The posting job holds a PR rated on half a diff to medium at best.
+          mkdir -p findings
+          echo "$truncated" > findings/truncated.txt
 
       # Vault rather than workload identity federation, because this runs on a
       # pull_request event. A WIF exchange proves who is asking with the OIDC
@@ -213,17 +199,30 @@ jobs:
         if: steps.gate.outputs.ready == 'true'
         run: git checkout -- .
 
-      - name: Read the rating
-        id: parse
+      - name: Check the rating and note what produced it
         if: steps.gate.outputs.ready == 'true'
-        run: node .mise/tasks/pr-impact/parse.mjs
+        run: |
+          set -euo pipefail
+          mv pr-impact-tier.txt findings/tier.txt
+          mv pr-impact-spots.tsv findings/spots.tsv
+          mv pr-impact-summary.md findings/summary.md
+          node .mise/tasks/pr-impact/parse.mjs
         env:
-          TIER_FILE: pr-impact-tier.txt
-          SPOTS_FILE: pr-impact-spots.tsv
-          SUMMARY_FILE: pr-impact-summary.md
+          TIER_FILE: findings/tier.txt
+          META_FILE: findings/meta.tsv
           EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
           # Only used if the transcript does not name the model itself.
           CLAUDE_MODEL: ${{ env.CLAUDE_MODEL }}
+
+      # Claude's files, as it wrote them. The posting job is a different runner,
+      # so this is how they get there.
+      - name: Hand the findings over
+        if: steps.gate.outputs.ready == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pr-impact-findings
+          path: findings/
+          retention-days: 1
 
   post:
     name: Post rating
@@ -245,18 +244,16 @@ jobs:
           ref: ${{ github.event.pull_request.base.ref }}
           sparse-checkout: .mise/tasks/pr-impact
 
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: pr-impact-findings
+          path: findings/
+
       - run: node .mise/tasks/pr-impact/post.mjs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          FLOOR: ${{ needs.judge.outputs.floor }}
-          FLOOR_REASON: ${{ needs.judge.outputs.reason }}
-          CLAUDE_TIER: ${{ needs.judge.outputs.tier }}
-          CLAUDE_BODY: ${{ needs.judge.outputs.body }}
-          SPOTS: ${{ needs.judge.outputs.spots }}
-          MODEL: ${{ needs.judge.outputs.model }}
+          FINDINGS_DIR: findings
           EFFORT: ${{ env.CLAUDE_EFFORT }}
-          TOOK: ${{ needs.judge.outputs.took }}
-          TRUNCATED: ${{ needs.judge.outputs.truncated }}

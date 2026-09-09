@@ -2,8 +2,10 @@
 // Not executable, so mise offers only the one task — `mise run pr-impact
 // <number>` — rather than each step separately.
 //
-// There is no parsing here, on purpose. Claude writes three files, each holding
-// one thing, so reading them is a trim, a split on tabs, and a file read.
+// Claude writes three files, each holding one thing, so reading them is a trim,
+// a split on tabs, and a file read. This step checks the rating is one of the
+// four words and writes down the model and duration, which live in the action's
+// transcript rather than in Claude's files. The posting job reads the rest.
 //
 // It used to pull all three out of Claude's chat message, where prose and data
 // shared one channel and kept colliding — once when it wrapped the findings in
@@ -12,8 +14,8 @@
 // asking more firmly. Neither was fixed by construction. Now the summary is a
 // file of its own that nothing looks inside, so there is nothing left to collide.
 
-import { readFileSync } from 'node:fs';
-import { setOutput, env, isMain } from './lib.mjs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { env, isMain } from './lib.mjs';
 
 const TIERS = new Set(['trivial', 'low', 'medium', 'high']);
 const MAX_SPOTS = 8;
@@ -84,24 +86,17 @@ function modelUsed(result) {
 }
 
 if (isMain(import.meta.url)) {
-  const tier = readTier(read(env('TIER_FILE')));
+  // Only checks that Claude wrote something usable, and records the two facts
+  // that live in the transcript rather than in its files. Everything else is
+  // read straight from the files by the job that posts.
+  const tier = readTier(readFileSync(env('TIER_FILE'), 'utf8'));
   if (!tier) {
     console.error(`${env('TIER_FILE')} does not hold one of trivial, low, medium, high.`);
     process.exit(1);
   }
 
-  const spots = readSpots(read(env('SPOTS_FILE')));
-  const body = read(env('SUMMARY_FILE')).trim().slice(0, 4000);
+  const result = lastResult(env('EXECUTION_FILE'));
+  writeFileSync(env('META_FILE'), `${modelUsed(result)}\t${humanDuration(result?.duration_ms)}\n`);
 
-  // Timings and the model come from the action's own transcript.
-  const result = process.env.EXECUTION_FILE ? lastResult(process.env.EXECUTION_FILE) : undefined;
-
-  console.error(`Claude rated this ${tier}, with ${spots.length} spot(s) to check`);
-  setOutput({
-    tier,
-    spots: JSON.stringify(spots),
-    body,
-    model: modelUsed(result),
-    took: humanDuration(result?.duration_ms),
-  });
+  console.error(`Claude rated this ${tier}`);
 }
