@@ -138,6 +138,46 @@ describe('GroupEditPage', () => {
     expect(upserts).toHaveLength(0);
   });
 
+  it('clears an interval error when a valid quick interval is selected and saves that value', async () => {
+    const upserts = captureRulerWrites();
+    const user = userEvent.setup();
+
+    renderGroupEditPage();
+
+    const intervalInput = await screen.findByRole('textbox', { name: /Evaluation interval/i });
+    await user.clear(intervalInput);
+    await user.type(intervalInput, 'bogus99');
+    await user.tab();
+
+    const intervalError = await screen.findByText('Invalid duration format. Use formats like 1m, 30s, 1h.');
+    await user.click(screen.getByRole('button', { name: '5m' }));
+
+    expect(intervalInput).toHaveValue('5m');
+    await waitFor(() => expect(intervalError).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: /Save/i }));
+
+    await waitFor(() => expect(upserts).toHaveLength(1));
+    expect(upserts[0]).toEqual({ ...tunedGroup, interval: '5m' });
+  });
+
+  it('allows saving a group whose evaluation interval exceeds a rule pending period', async () => {
+    const longIntervalGroup = { ...tunedGroup, interval: '10m' };
+    setMockNamespaces({ [NAMESPACE]: [longIntervalGroup] });
+    const upserts = captureRulerWrites();
+    const user = userEvent.setup();
+
+    renderGroupEditPage();
+
+    const groupNameInput = await screen.findByRole('textbox', { name: /Evaluation group name/i });
+    await user.clear(groupNameInput);
+    await user.type(groupNameInput, 'renamed-group');
+    await user.click(screen.getByRole('button', { name: /Save/i }));
+
+    await waitFor(() => expect(upserts).toHaveLength(1));
+    expect(upserts[0]).toEqual({ ...longIntervalGroup, name: 'renamed-group' });
+  });
+
   it('offers no form for a federated group', async () => {
     setMockNamespaces({ [NAMESPACE]: [federatedGroup] });
 

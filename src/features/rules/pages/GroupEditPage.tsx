@@ -372,7 +372,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
           <Controller
             name="interval"
             control={control}
-            rules={{ validate: (value) => validateInterval(value, rulerGroup.rules) }}
+            rules={{ validate: validateInterval }}
             render={({ field: { value, onChange, onBlur } }) => (
               <EvaluationIntervalInput value={value} onChange={onChange} onBlur={onBlur} />
             )}
