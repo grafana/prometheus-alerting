@@ -120,12 +120,15 @@ jobs:
         id: secrets
         uses: grafana/shared-workflows/actions/get-vault-secrets@2e3743a1f8abfd3e921e53a7726ec0744c11bb01 # get-vault-secrets/v2.0.1
         with:
-          # Reads ci/repo/grafana/prometheus-alerting/anthropic in Vault, field
-          # api-key. It stays on this step's output rather than being exported
-          # into the environment of every later step, which is what v2 does by
-          # default.
+          # Reads ci/repo/grafana/prometheus-alerting/anthropic-api-key in
+          # Vault, field api-key — the name SLO and service-model use, so
+          # whoever writes it is doing the same thing they did last time. The
+          # key itself is the one several repos already share.
+          #
+          # It stays on this step's output rather than being exported into the
+          # environment of every later step, which is what v2 does by default.
           repo_secrets: |
-            ANTHROPIC_API_KEY=anthropic:api-key
+            ANTHROPIC_API_KEY=anthropic-api-key:api-key
 
       - name: Ask Claude
         id: claude
