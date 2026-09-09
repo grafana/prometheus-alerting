@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 
 import { t } from '@grafana/i18n';
-import { Checkbox, Counter, Input, MultiCombobox, Stack } from '@grafana/ui';
+import { Checkbox, Counter, Field, Input, MultiCombobox, Stack } from '@grafana/ui';
 import type { AlertGroup } from '@grafana/external-alertmanager/vanilla';
 
 import type { AlertsFiltersState, AlertsFiltersActions } from '../hooks/useAlertsFilters';
@@ -31,12 +31,14 @@ export function AlertsFilters({ filters, actions, alertGroups }: AlertsFiltersPr
 
   return (
     <Stack direction="row" gap={2} alignItems="center">
-      <Input
-        width={32}
-        value={filters.labelInput}
-        onChange={(e) => actions.setLabelInput(e.currentTarget.value)}
-        placeholder={t('alerts.filters.label-placeholder', 'Filter by labels, e.g. foo=bar, env=~prod.*')}
-      />
+      <Field noMargin invalid={!!filters.labelInputError} error={filters.labelInputError}>
+        <Input
+          width={32}
+          value={filters.labelInput}
+          onChange={(e) => actions.setLabelInput(e.currentTarget.value)}
+          placeholder={t('alerts.filters.label-placeholder', 'Filter by labels, e.g. foo=bar, env=~prod.*')}
+        />
+      </Field>
       <MultiCombobox
         width={24}
         options={receiverOptions}
