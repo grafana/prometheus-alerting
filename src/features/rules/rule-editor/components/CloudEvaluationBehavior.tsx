@@ -27,48 +27,50 @@ export const CloudEvaluationBehavior = () => {
       stepNo={2}
       title={t('alerting.cloud-evaluation-behavior.title-set-evaluation-behavior', 'Set evaluation behavior')}
     >
-      <Field
-        label={t('alerting.cloud-evaluation-behavior.label-pending-period', 'Pending period')}
-        description={t(
-          'alerting.cloud-evaluation-behavior.description-pending-period',
-          'Period during which the threshold condition must be met to trigger an alert. Selecting "None" triggers the alert immediately once the condition is met.'
-        )}
-      >
-        <div className={styles.flexRow}>
-          <Field invalid={!!errors.forTime?.message} error={errors.forTime?.message} className={styles.inlineField}>
-            <Input
-              {...register('forTime', {
-                valueAsNumber: true,
-                min: {
-                  value: 0,
-                  message: t(
-                    'alerting.cloud-evaluation-behavior.message.must-be-positive',
-                    'Must be a positive number.'
-                  ),
-                },
-              })}
-              width={8}
-              type="number"
-              min={0}
+      {type === RuleFormType.cloudAlerting && (
+        <Field
+          label={t('alerting.cloud-evaluation-behavior.label-pending-period', 'Pending period')}
+          description={t(
+            'alerting.cloud-evaluation-behavior.description-pending-period',
+            'Period during which the threshold condition must be met to trigger an alert. Selecting "None" triggers the alert immediately once the condition is met.'
+          )}
+        >
+          <div className={styles.flexRow}>
+            <Field invalid={!!errors.forTime?.message} error={errors.forTime?.message} className={styles.inlineField}>
+              <Input
+                {...register('forTime', {
+                  valueAsNumber: true,
+                  min: {
+                    value: 0,
+                    message: t(
+                      'alerting.cloud-evaluation-behavior.message.must-be-positive',
+                      'Must be a positive number.'
+                    ),
+                  },
+                })}
+                width={8}
+                type="number"
+                min={0}
+              />
+            </Field>
+            <Controller
+              name="forTimeUnit"
+              render={({ field: { onChange, value, onBlur } }) => (
+                <div className={styles.timeUnit}>
+                  <Combobox
+                    value={value}
+                    options={timeOptions}
+                    onChange={(option) => onChange(option?.value)}
+                    onBlur={onBlur}
+                    width={15}
+                  />
+                </div>
+              )}
+              control={control}
             />
-          </Field>
-          <Controller
-            name="forTimeUnit"
-            render={({ field: { onChange, value, onBlur } }) => (
-              <div className={styles.timeUnit}>
-                <Combobox
-                  value={value}
-                  options={timeOptions}
-                  onChange={(option) => onChange(option?.value)}
-                  onBlur={onBlur}
-                  width={15}
-                />
-              </div>
-            )}
-            control={control}
-          />
-        </div>
-      </Field>
+          </div>
+        </Field>
+      )}
 
       {type === RuleFormType.cloudAlerting && (
         <Field

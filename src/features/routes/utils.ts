@@ -23,3 +23,7 @@ function normalizeRoute(route: Route): Route {
 export function attachRouteIds(route: Route): RouteWithID {
   return addUniqueIdentifierToRoute(normalizeRoute(route));
 }
+
+export function isRootRoute(route: RouteWithID, rootRoute?: RouteWithID): boolean {
+  return route.id === rootRoute?.id;
+}

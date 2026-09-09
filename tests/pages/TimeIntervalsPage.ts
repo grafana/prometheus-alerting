@@ -6,8 +6,6 @@ import { AlertmanagerPage } from './AlertmanagerPage';
 export class TimeIntervalsPage extends AlertmanagerPage {
   readonly container: Locator;
   readonly createLink: Locator;
-  readonly table: Locator;
-  readonly rows: Locator;
   readonly drawer: Locator;
   readonly editButton: Locator;
   readonly removeButton: Locator;
@@ -24,8 +22,6 @@ export class TimeIntervalsPage extends AlertmanagerPage {
 
     this.container = page.getByTestId('data-testid prom-time-intervals');
     this.createLink = page.getByRole('link', { name: 'Create time interval', exact: true });
-    this.table = this.container.getByRole('table');
-    this.rows = this.table.locator('tbody tr');
     this.drawer = page.getByRole('dialog').first();
     this.editButton = this.drawer.getByRole('button', { name: 'Edit', exact: true });
     this.removeButton = this.drawer.getByRole('button', { name: 'Remove', exact: true });
@@ -72,8 +68,8 @@ export class TimeIntervalsPage extends AlertmanagerPage {
     return this.interval(intervalNumber).getByRole('textbox', { name: `End time ${rangeNumber}` });
   }
 
-  getRow(name: string): Locator {
-    return this.rows.filter({ has: this.page.getByText(name, { exact: true }) });
+  getIntervalHeading(name: string): Locator {
+    return this.container.getByRole('heading', { name, exact: true });
   }
 
   async openCreateForm() {
@@ -86,11 +82,12 @@ export class TimeIntervalsPage extends AlertmanagerPage {
     await this.startTimeInput().fill(startTime);
     await this.endTimeInput().fill(endTime);
     await this.createSubmitButton.click();
-    await expect(this.getRow(name)).toBeVisible();
+    await expect(this.getIntervalHeading(name)).toBeVisible();
   }
 
   async openByName(name: string) {
-    await this.getRow(name).getByText(name, { exact: true }).click();
+    const heading = this.getIntervalHeading(name);
+    await heading.locator('..').getByRole('button', { name: 'View', exact: true }).click();
     await expect(this.drawer).toBeVisible();
   }
 
