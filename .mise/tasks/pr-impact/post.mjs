@@ -17,9 +17,9 @@ const SPOT_MARKER = '<!-- pr-impact-spot -->';
 // plain (`impact:medium`, no emoji) so a future merge gate can match on them.
 const STYLE = {
   trivial: { emoji: '🟢', colour: '0E8A16', blurb: 'nothing that runs changes' },
-  low: { emoji: '🟡', colour: 'FBCA04', blurb: 'visible, but behaviour is preserved' },
-  medium: { emoji: '🟠', colour: 'D4741F', blurb: 'behaviour changes, in a contained way' },
-  high: { emoji: '🔴', colour: 'B60205', blurb: 'a mistake here costs a user something' },
+  low: { emoji: '🟡', colour: 'FBCA04', blurb: 'you can see the change, but it works the same' },
+  medium: { emoji: '🟠', colour: 'D4741F', blurb: 'something works differently now, in one part of the app' },
+  high: { emoji: '🔴', colour: 'B60205', blurb: 'if this is wrong, someone loses something real' },
 };
 
 /**

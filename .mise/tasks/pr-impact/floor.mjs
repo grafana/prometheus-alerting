@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 //MISE description="Work out the lowest impact rating a PR is allowed, from its file list alone"
 
-// Cheap, deterministic rules that run before Claude sees anything. They set a
+// A cheap, deterministic check that runs before Claude sees anything. It sets a
 // floor under the rating that Claude can raise but never lower, so no judgement
 // call can pull a change touching sensitive paths down into the tiers we might
 // one day auto-approve.
+//
+// Size is deliberately not part of this. A big PR can still be low impact if it
+// doesn't change how anything behaves — a rename across fifty files, say — and a
+// one-line PR can be the dangerous one. Claude judges that from the diff; a line
+// count can't.
 
 import { ghPaginate, setOutput, env, isMain } from './lib.mjs';
-
-// Past these, a change stops being something a reviewer can eyeball, whatever
-// it touches.
-const MAX_FILES = Number(process.env.MAX_FILES ?? 15);
-const MAX_LINES = Number(process.env.MAX_LINES ?? 300);
 
 // Paths where a small diff can still have a large blast radius: CI and release
 // plumbing (also the route someone would take to weaken this workflow), the
@@ -34,54 +34,20 @@ const NEVER_FAST_TRACK = [
   /^SECURITY/,
 ];
 
-// Prose a reviewer reads rather than checks. An architecture decision record
-// runs to hundreds of lines and is still one idea, so its length shouldn't be
-// what pushes a PR out of the band we might fast-track.
-//
-// docs/sources is deliberately not on this list: it ships to users, so a large
-// change to it is a large review, the same as code.
-const SIZE_EXEMPT = [/^docs\/adr\//];
+function floorFor(paths) {
+  const denied = paths.filter((path) => NEVER_FAST_TRACK.some((pattern) => pattern.test(path)));
 
-function floorFor(files) {
-  const denied = files
-    .map((file) => file.path)
-    .filter((path) => NEVER_FAST_TRACK.some((pattern) => pattern.test(path)));
-
-  // The size limits are about how much there is to review, so measure them over
-  // the files that need reviewing.
-  const counted = files.filter((file) => !SIZE_EXEMPT.some((pattern) => pattern.test(file.path)));
-  const changed = counted.reduce((total, file) => total + file.additions + file.deletions, 0);
-  const skipped = files.length - counted.length;
-  const aside = skipped > 0 ? `, not counting ${skipped} ADR file${skipped === 1 ? '' : 's'}` : '';
-
-  if (denied.length > 0) {
-    return { floor: 'high', reason: `touches paths that are never fast-tracked: ${denied.join(', ')}` };
-  }
-  if (counted.length > MAX_FILES) {
-    return {
-      floor: 'medium',
-      reason: `touches ${counted.length} files (over the ${MAX_FILES} that still reads as a small change)${aside}`,
-    };
-  }
-  if (changed > MAX_LINES) {
-    return {
-      floor: 'medium',
-      reason: `changes ${changed} lines (over the ${MAX_LINES} that still reads as a small change)${aside}`,
-    };
-  }
-  return { floor: 'trivial', reason: '' };
+  return denied.length > 0
+    ? { floor: 'high', reason: `touches paths that are never fast-tracked: ${denied.join(', ')}` }
+    : { floor: 'trivial', reason: '' };
 }
 
 export function computeFloor({ repo, pr }) {
   // The REST endpoint, paginated, rather than `gh pr view --json files`: that
   // one stops at 100 files, and a denied path sitting past the cap would go
-  // unseen — scoring a wide PR medium when it should be high.
-  const files = ghPaginate(`repos/${repo}/pulls/${pr}/files`).map((file) => ({
-    path: file.filename,
-    additions: file.additions,
-    deletions: file.deletions,
-  }));
-  return floorFor(files);
+  // unseen — letting a wide PR through that should have been held.
+  const paths = ghPaginate(`repos/${repo}/pulls/${pr}/files`).map((file) => file.filename);
+  return floorFor(paths);
 }
 
 if (isMain(import.meta.url)) {
