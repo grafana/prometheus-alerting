@@ -101,7 +101,7 @@ export interface Delims {
   readonly right: string;
 }
 
-export const DEFAULT_DELIMS: Delims = { left: '{{', right: '}}' };
+const DEFAULT_DELIMS: Delims = { left: '{{', right: '}}' };
 
 const COMMENT_OPEN = '/*';
 const COMMENT_CLOSE = '*/';
@@ -712,20 +712,4 @@ function isIdentPart(c: string): boolean {
     return true;
   }
   return c.length > 0 && c.charCodeAt(0) > 0x7f && UNICODE_DIGIT.test(c);
-}
-
-// ---------------------------------------------------------------------------
-// Convenience: tokenize an entire source.
-// ---------------------------------------------------------------------------
-
-export function tokenize(src: string, delims?: Delims): readonly Token[] {
-  const lex = delims ? new Lexer(src, delims) : new Lexer(src);
-  const out: Token[] = [];
-  while (true) {
-    const t = lex.next();
-    out.push(t);
-    if (t.type === 'EOF') {
-      return out;
-    }
-  }
 }

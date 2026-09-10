@@ -55,7 +55,7 @@ import type { Pos } from './pos';
  * that invoked it, so an error inside it must snippet against ITS source,
  * not the invoker's.
  */
-export interface DefineEntry {
+interface DefineEntry {
   readonly list: ListNode;
   readonly source: string;
 }
@@ -87,11 +87,11 @@ let chainDefines: (own: ReadonlyMap<string, DefineEntry>, parent: Defines) => De
 let readDefine: (defines: Defines, name: string) => DefineEntry | undefined;
 
 /** Nearest-first entry lookup through the inheritance chain. Package-internal. */
-export function lookupDefine(defines: Defines, name: string): DefineEntry | undefined {
+function lookupDefine(defines: Defines, name: string): DefineEntry | undefined {
   return readDefine(defines, name);
 }
 
-export class Defines {
+class Defines {
   static readonly EMPTY = new Defines(new Map(), undefined);
   // Plain private fields rather than `#private` ones: this repo compiles to a
   // target where `#` fields need a tslib helper that isn't installed.
@@ -113,7 +113,7 @@ export class Defines {
   }
 }
 
-export interface ParseResult {
+interface ParseResult {
   /** The body of the unnamed/root template. */
   readonly root: ListNode;
   /**

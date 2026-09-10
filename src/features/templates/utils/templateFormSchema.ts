@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { t } from '@grafana/i18n';
-import { validateTemplateForSave } from '@grafana/go-template';
+import { validateTemplateForSave, type TemplateProblem } from '@grafana/go-template';
 
 interface TemplateFormSchemaOptions {
   /** Names already taken by other templates. */
@@ -32,7 +32,7 @@ export function createTemplateFormSchema({ existingTemplateNames, originalName }
 
       // Checked against the text that actually gets saved, which is the
       // content wrapped in {{ define }} when it doesn't already have one.
-      const problem = validateTemplateForSave(values.title, values.content);
+      const problem: TemplateProblem | undefined = validateTemplateForSave(values.title, values.content);
       if (problem) {
         ctx.addIssue({
           code: 'custom',

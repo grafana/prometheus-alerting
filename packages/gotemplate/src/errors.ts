@@ -11,7 +11,7 @@
 
 import type { Pos } from './pos';
 
-export interface ParseErrorContext {
+interface ParseErrorContext {
   readonly source?: string | undefined;
   /** What the parser wanted to see here, when it knows. */
   readonly expected?: string;

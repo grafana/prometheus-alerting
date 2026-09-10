@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "goVersion": "go1.24.3",
+  "goVersion": "go1.24",
   "funcs": [
     "and",
     "append",

@@ -27,8 +27,6 @@ export interface TrimMarkers {
   readonly trimRight: boolean;
 }
 
-export const NO_TRIM: TrimMarkers = { trimLeft: false, trimRight: false };
-
 // ---------------------------------------------------------------------------
 // Node base — type discriminator + position.
 // ---------------------------------------------------------------------------
@@ -246,19 +244,3 @@ export type Node =
   | ContinueNode
   | TemplateNode
   | BlockNode;
-
-export type NodeType = Node['type'];
-
-export type NodeOf<T extends NodeType> = Extract<Node, { type: T }>;
-
-// ---------------------------------------------------------------------------
-// Type-level exhaustiveness helper.
-//
-// Use `assertNever` in switches over Node
-// to make adding a new node kind a compile error at every dispatch site,
-// not a silent fallthrough.
-// ---------------------------------------------------------------------------
-
-export function assertNever(value: never): never {
-  throw new Error(`unhandled node kind: ${JSON.stringify(value)}`);
-}

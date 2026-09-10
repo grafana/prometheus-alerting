@@ -12,7 +12,7 @@
  */
 
 /** Functions text/template installs by itself. */
-export const GO_BUILTIN_FUNCS = [
+const GO_BUILTIN_FUNCS = [
   'and',
   'call',
   'eq',
@@ -38,7 +38,7 @@ export const GO_BUILTIN_FUNCS = [
  * DefaultFuncs from prometheus/alertmanager's template package, taken from
  * template/template.go. See VENDOR.md for the version.
  */
-export const ALERTMANAGER_FUNCS = [
+const ALERTMANAGER_FUNCS = [
   'append',
   'base64decode',
   'base64encode',
