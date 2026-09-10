@@ -147,13 +147,13 @@ describe('normalizeInhibitRuleMatchers', () => {
     expect(result.target_matchers).toEqual([['baz', '!=', 'qux']]);
   });
 
-  it('normalizes deprecated source_match and target_match', () => {
+  it('turns deprecated map values into safe editable tokens', () => {
     const result = normalizeInhibitRuleMatchers({
       source_match: { foo: 'bar' },
       target_match_re: { baz: 'qux' },
     });
-    expect(result.source_matchers).toEqual([['foo', '=', 'bar']]);
-    expect(result.target_matchers).toEqual([['baz', '=~', 'qux']]);
+    expect(result.source_matchers).toEqual([['foo', '=', '"bar"']]);
+    expect(result.target_matchers).toEqual([['baz', '=~', '"qux"']]);
     expect(result).not.toHaveProperty('source_match');
     expect(result).not.toHaveProperty('target_match_re');
   });
@@ -162,6 +162,72 @@ describe('normalizeInhibitRuleMatchers', () => {
     const result = normalizeInhibitRuleMatchers({});
     expect(result.source_matchers).toEqual([]);
     expect(result.target_matchers).toEqual([]);
+  });
+
+  it('preserves quoted current matcher syntax without decoding escapes', () => {
+    const result = normalizeInhibitRuleMatchers({
+      source_matchers: ['team = "ops"', 'message!=" leading and trailing "'],
+      target_matchers: ['path=~"C:\\\\temp\\\\.*"'],
+    });
+
+    expect(result.source_matchers).toEqual([
+      ['team', '=', '"ops"'],
+      ['message', '!=', '" leading and trailing "'],
+    ]);
+    expect(result.target_matchers).toEqual([['path', '=~', '"C:\\\\temp\\\\.*"']]);
+  });
+
+  it('preserves brace syntax and safely quotes deprecated literal values', () => {
+    const result = normalizeInhibitRuleMatchers({
+      source_matchers: ['{team="ops",empty=""}'],
+      source_match: { literal: '"ops"' },
+      source_match_re: { path: 'C:\\temp\\.*' },
+      target_matchers: ['severity!~"warning|info"'],
+    });
+
+    expect(result.source_matchers).toEqual([
+      ['team', '=', '"ops"'],
+      ['empty', '=', '""'],
+      ['path', '=~', '"C:\\\\temp\\\\.*"'],
+      ['literal', '=', '"\\"ops\\""'],
+    ]);
+    expect(result.target_matchers).toEqual([['severity', '!~', '"warning|info"']]);
+  });
+
+  it('keeps lexical backslash escapes and makes literal line feeds editable', () => {
+    const result = normalizeInhibitRuleMatchers({
+      source_matchers: ['{team = "ops", message = "a\\nb", literal="a\nb"}'],
+      target_matchers: ['path="literal\\\\n"'],
+    });
+
+    expect(result.source_matchers).toEqual([
+      ['team', '=', '"ops"'],
+      ['message', '=', '"a\\nb"'],
+      ['literal', '=', '"a\\nb"'],
+    ]);
+    expect(result.target_matchers).toEqual([['path', '=', '"literal\\\\n"']]);
+  });
+
+  it('preserves literal line-feed semantics around backslash runs', () => {
+    const lineFeed = '\n';
+    const normalized = normalizeInhibitRuleMatchers({
+      source_matchers: [`zero="a${lineFeed}b"`, `one="a\\${lineFeed}b"`, `two="a\\\\${lineFeed}b"`],
+      target_matchers: ['target="value"'],
+    });
+
+    expect(normalized.source_matchers).toEqual([
+      ['zero', '=', String.raw`"a\nb"`],
+      ['one', '=', String.raw`"a\\\nb"`],
+      ['two', '=', String.raw`"a\\\nb"`],
+    ]);
+  });
+
+  it('does not reinterpret malformed quoted modern values', () => {
+    const result = normalizeInhibitRuleMatchers({
+      source_matchers: ['team="unterminated'],
+    });
+
+    expect(result.source_matchers).toEqual([['team', '=', '"unterminated']]);
   });
 });
 

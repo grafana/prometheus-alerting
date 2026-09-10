@@ -36,8 +36,9 @@ export const normalizeMatchers = (route: Route): ObjectMatcher[] => {
 };
 
 /**
- * Normalized inhibit rule with matchers converted to ObjectMatcher arrays
- * and deprecated properties omitted
+ * Normalized inhibit rule with deprecated properties omitted. Its matcher
+ * values are editable lexical Alertmanager tokens: current matcher syntax keeps
+ * quotes and escapes, and deprecated map values are quoted and escaped.
  */
 export type NormalizedInhibitRule = Omit<
   InhibitRule,
@@ -55,6 +56,10 @@ export type NormalizedInhibitRule = Omit<
  * - target_match / target_match_re (deprecated)
  *
  * The deprecated properties are normalized into the new format and then omitted from the result.
+ *
+ * Matcher values remain lexical tokens for the inhibition editor. Do not decode
+ * and re-encode them: Alertmanager's classic and UTF-8 parsers support different
+ * escape dialects.
  */
 export const normalizeInhibitRuleMatchers = (inhibitRule: InhibitRule): NormalizedInhibitRule => {
   const sourceMatchers: ObjectMatcher[] = [];
@@ -63,44 +68,42 @@ export const normalizeInhibitRuleMatchers = (inhibitRule: InhibitRule): Normaliz
   // Parse source_matchers (current property)
   if (inhibitRule.source_matchers) {
     inhibitRule.source_matchers.forEach((matcher) => {
-      const parsedMatchers = parseMatcherToArray(matcher).map(matcherToObjectMatcher);
-      sourceMatchers.push(...parsedMatchers);
+      sourceMatchers.push(...parseInhibitRuleMatcher(matcher));
     });
   }
 
   // Parse source_match_re (deprecated)
   if (inhibitRule.source_match_re) {
     Object.entries(inhibitRule.source_match_re).forEach(([label, value]) => {
-      sourceMatchers.push([label, '=~', value]);
+      sourceMatchers.push([label, '=~', legacyInhibitMatcherValueToToken(value)]);
     });
   }
 
   // Parse source_match (deprecated)
   if (inhibitRule.source_match) {
     Object.entries(inhibitRule.source_match).forEach(([label, value]) => {
-      sourceMatchers.push([label, '=', value]);
+      sourceMatchers.push([label, '=', legacyInhibitMatcherValueToToken(value)]);
     });
   }
 
   // Parse target_matchers (current property)
   if (inhibitRule.target_matchers) {
     inhibitRule.target_matchers.forEach((matcher) => {
-      const parsedMatchers = parseMatcherToArray(matcher).map(matcherToObjectMatcher);
-      targetMatchers.push(...parsedMatchers);
+      targetMatchers.push(...parseInhibitRuleMatcher(matcher));
     });
   }
 
   // Parse target_match_re (deprecated)
   if (inhibitRule.target_match_re) {
     Object.entries(inhibitRule.target_match_re).forEach(([label, value]) => {
-      targetMatchers.push([label, '=~', value]);
+      targetMatchers.push([label, '=~', legacyInhibitMatcherValueToToken(value)]);
     });
   }
 
   // Parse target_match (deprecated)
   if (inhibitRule.target_match) {
     Object.entries(inhibitRule.target_match).forEach(([label, value]) => {
-      targetMatchers.push([label, '=', value]);
+      targetMatchers.push([label, '=', legacyInhibitMatcherValueToToken(value)]);
     });
   }
 
@@ -113,6 +116,50 @@ export const normalizeInhibitRuleMatchers = (inhibitRule: InhibitRule): Normaliz
     target_matchers: targetMatchers,
   };
 };
+
+/**
+ * Converts current inhibit matcher strings to editable lexical tokens. Inhibit
+ * forms keep those tokens escaped rather than decoding them because Alertmanager's
+ * classic and UTF-8 parsers support different escape dialects.
+ */
+function parseInhibitRuleMatcher(matcher: string): ObjectMatcher[] {
+  const parsedMatchers = isPromQLStyleMatcher(matcher)
+    ? parseInhibitPromQLStyleMatcher(matcher)
+    : [parseMatcher(matcher)];
+
+  return parsedMatchers
+    .map(matcherToObjectMatcher)
+    .map(([name, operator, value]) => [name, operator, escapeLiteralLineFeeds(value.trim())]);
+}
+
+/**
+ * Makes physical line feeds safe for the single-line inhibition matcher editor
+ * without changing the meaning of the classic Alertmanager escape syntax.
+ */
+function escapeLiteralLineFeeds(value: string): string {
+  return value.replace(/(\\*)\n/g, (_, precedingBackslashes: string) => {
+    // The extra slash keeps an odd final backslash literal before the escaped LF.
+    const hasOddPrecedingBackslashes = precedingBackslashes.length % 2 === 1;
+    const escapedLineFeed = hasOddPrecedingBackslashes ? '\\\\n' : '\\n';
+    return `${precedingBackslashes}${escapedLineFeed}`;
+  });
+}
+
+function parseInhibitPromQLStyleMatcher(matcher: string): Matcher[] {
+  const commaUnlessQuoted = /,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/;
+  return matcher
+    .replace(/^\{/, '')
+    .replace(/\}$/, '')
+    .trim()
+    .split(commaUnlessQuoted)
+    .filter((part) => part.trim().length > 0)
+    .map(parseMatcher);
+}
+
+/** Converts deprecated semantic map values into editable classic matcher tokens. */
+function legacyInhibitMatcherValueToToken(value: string): string {
+  return `"${value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/"/g, '\\"')}"`;
+}
 
 export function matcherToObjectMatcher(matcher: Matcher): ObjectMatcher {
   const operator = matcherToOperator(matcher);

@@ -112,9 +112,9 @@ describe('Prometheus matcher utilities', () => {
       const normalized = normalizeInhibitRuleMatchers(inhibitRule);
 
       expect(normalized.source_matchers).toEqual<ObjectMatcher[]>([
-        ['region', regex, 'us-.*'],
-        ['severity', eq, 'critical'],
-        ['alertname', eq, 'HostDown'],
+        ['region', regex, '"us-.*"'],
+        ['severity', eq, '"critical"'],
+        ['alertname', eq, '"HostDown"'],
       ]);
       expect(normalized.target_matchers).toEqual<ObjectMatcher[]>([['severity', eq, 'warning']]);
       // Deprecated properties should be omitted
@@ -133,9 +133,9 @@ describe('Prometheus matcher utilities', () => {
 
       expect(normalized.source_matchers).toEqual<ObjectMatcher[]>([['severity', eq, 'critical']]);
       expect(normalized.target_matchers).toEqual<ObjectMatcher[]>([
-        ['region', regex, 'eu-.*'],
-        ['severity', eq, 'warning'],
-        ['alertname', eq, 'ServiceDown'],
+        ['region', regex, '"eu-.*"'],
+        ['severity', eq, '"warning"'],
+        ['alertname', eq, '"ServiceDown"'],
       ]);
       // Deprecated properties should be omitted
       expect(normalized).not.toHaveProperty('target_match');
@@ -156,11 +156,11 @@ describe('Prometheus matcher utilities', () => {
       // Both current and deprecated properties should be merged
       expect(normalized.source_matchers).toEqual<ObjectMatcher[]>([
         ['severity', eq, 'critical'],
-        ['instance', eq, 'host-1'],
+        ['instance', eq, '"host-1"'],
       ]);
       expect(normalized.target_matchers).toEqual<ObjectMatcher[]>([
         ['severity', eq, 'warning'],
-        ['job', regex, 'node-.*'],
+        ['job', regex, '"node-.*"'],
       ]);
       expect(normalized.equal).toEqual(['instance']);
       // All deprecated properties should be omitted
