@@ -3,13 +3,13 @@
 /**
  * Recursive-descent parser for Go-template syntax.
  *
- * [LAW:dataflow-not-control-flow] The parser is a single class whose
+ * The parser is a single class whose
  * methods read the token stream and emit AST nodes. There are no
  * conditional code paths that produce *different program structure* —
  * every grammar production is one method whose shape is fixed; the
  * variability is in the token values it observes.
  *
- * [LAW:single-enforcer] All token consumption goes through `next` /
+ * All token consumption goes through `next` /
  * `peek` / `expect`. No grammar production reaches into the lexer
  * directly — that would let two productions disagree about position
  * tracking or lookahead state.
@@ -68,7 +68,7 @@ export interface DefineEntry {
  * below) nor reach the AST inside — the entry lookup is `lookupDefine`, a
  * module export index.ts never re-exports.
  *
- * [LAW:one-source-of-truth] Inheritance is a parent LINK, never a copy. N
+ * Inheritance is a parent LINK, never a copy. N
  * templates parsed against one shared preamble hold one preamble AST among
  * them — the alternative (prepending the preamble's source to each parse)
  * multiplies the preamble's AST by N, which is how a 2 KB helper block became
@@ -78,8 +78,8 @@ export interface DefineEntry {
  * name its inherited set already holds (the same `redefinition` error as two
  * declarations in one source), so nearest-first never actually shadows.
  */
-// [LAW:one-source-of-truth] The parser is the only place a Defines is built
-// and the evaluator the only reader of its entries — both captured from the
+// The parser is the only place a Defines is built
+// and lookupDefine the only reader of its entries — both captured from the
 // static block below, the same way Engine reaches Template's private
 // constructor — so the public surface carries neither a constructor nor an
 // AST-returning method.
@@ -146,7 +146,7 @@ class Parser {
   private readonly defines = new Map<string, DefineEntry>();
   private readonly inherit: Defines;
   private readonly source: string;
-  // [LAW:types-are-the-program] Lexical-only counter: how many enclosing
+  // Lexical-only counter: how many enclosing
   // `{{range}}` bodies surround the current parse position. `{{break}}`
   // and `{{continue}}` are legal iff this is > 0. Mirrors Go's
   // text/template/parse `Tree.rangeDepth`. Saved/restored around
@@ -169,7 +169,7 @@ class Parser {
     while (this.buf.length <= n) {
       this.buf.push(this.lex.next());
     }
-    // [LAW:no-defensive-null-guards] We just filled the buffer to n+1
+    // We just filled the buffer to n+1
     // entries, so buf[n] is non-undefined by construction. Cast rather
     // than guard — the alternative throw would be unreachable.
     return this.buf[n] as Token;
@@ -334,7 +334,7 @@ class Parser {
   private parseBranch(kind: 'If' | 'Range' | 'With', startPos: Pos, trimLeft: boolean): IfNode | RangeNode | WithNode {
     const pipe = this.parsePipeline();
     this.expect('RightDelim', '`}}`');
-    // [LAW:types-are-the-program] `rangeDepth` counts the enclosing
+    // `rangeDepth` counts the enclosing
     // ranges that can absorb a `{{break}}` / `{{continue}}` at the
     // current parse position. A range's body contributes 1; a range's
     // else clause contributes 0 — the else only runs on empty input
@@ -372,13 +372,13 @@ class Parser {
   // -------------------------------------------------------------------
   // {{break}} / {{continue}} — range-body control flow.
   //
-  // [LAW:types-are-the-program] Both are leaves with only a position +
+  // Both are leaves with only a position +
   // trim markers. The strongest theorem about them is that they carry
   // no value, no body, no pipeline — encode that in the type so the
   // body of every visitor is forced to treat them as leaves.
   //
-  // [LAW:single-enforcer] The "must be inside a `{{range}}`" rule
-  // lives here at the gate. Once the AST is built, the evaluator
+  // The "must be inside a `{{range}}`" rule
+  // lives here at the gate. Once the AST is built, a consumer
   // trusts the lexical guarantee — no runtime guard re-checks.
   // -------------------------------------------------------------------
   private parseBreakOrContinue(kind: 'Break' | 'Continue', startPos: Pos, trimLeft: boolean): BreakNode | ContinueNode {
@@ -457,7 +457,7 @@ class Parser {
     const name = this.parseQuotedName();
     const pipe = this.peek().type === 'RightDelim' ? undefined : this.parsePipeline();
     this.expect('RightDelim', '`}}`');
-    // [LAW:types-are-the-program] A `{{block}}` body is invoked via the
+    // A `{{block}}` body is invoked via the
     // sub-template machinery: a separate parse context in Go's
     // text/template. Save and reset rangeDepth so a `{{break}}` inside
     // a block body — even when the block is lexically nested in an
@@ -483,7 +483,7 @@ class Parser {
   private parseDefine(_startPos: Pos, _trimLeft: boolean): void {
     const name = this.parseQuotedName();
     this.expect('RightDelim', '`}}`');
-    // [LAW:types-are-the-program] Defines are independent parse
+    // Defines are independent parse
     // contexts in Go's text/template — `{{break}}` inside a `{{define}}`
     // body is illegal even when the define is lexically nested inside
     // a range. Save and reset rangeDepth so the depth tracked here

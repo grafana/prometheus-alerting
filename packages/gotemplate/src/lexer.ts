@@ -8,13 +8,13 @@
  * token, `peek()` to look without consuming. EOF is emitted explicitly
  * as a terminal token.
  *
- * [LAW:dataflow-not-control-flow] The state of the lexer is captured in
+ * The state of the lexer is captured in
  * a single `mode` discriminator (`text` | `action` | `done`), and the
  * `next()` method dispatches on that mode in one switch. Variability
  * lives in the data (current offset, current mode), not in scattered
  * conditional code paths around side effects.
  *
- * [LAW:single-enforcer] All position tracking happens through `advance`.
+ * All position tracking happens through `advance`.
  * Callers never adjust `offset`, `line`, or `column` directly — that
  * would let line/column drift from offset.
  */
@@ -90,7 +90,7 @@ const KEYWORDS = new Map<string, TokenType>([
  * derived mechanically: `<left>-` opens with-trim and `-<right>` closes
  * with-trim, matching Go's `text/template`.
  *
- * [LAW:types-are-the-program] Both sides are required if specified —
+ * Both sides are required if specified —
  * neither may be empty. This is a stronger theorem than Go's API
  * (which lets one side default while the other is set) and forbids
  * the half-configured state that would otherwise have to be defended
@@ -114,7 +114,7 @@ type Mode = 'text' | 'action' | 'done';
 
 export class Lexer {
   private readonly src: string;
-  // [LAW:dataflow-not-control-flow] Delims are data, not modes. Lifting
+  // Delims are data, not modes. Lifting
   // them from module-level constants to instance fields adds no
   // branches — the existing state machine reads its delimiter strings
   // from these fields instead of from compile-time constants.

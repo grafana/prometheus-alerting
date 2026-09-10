@@ -7,7 +7,7 @@
  * `offset` is a 0-indexed byte offset into the source string for snippet
  * extraction and machine-precise spans.
  *
- * [LAW:one-source-of-truth] All AST nodes carry the same Pos shape — there
+ * All AST nodes carry the same Pos shape — there
  * is exactly one canonical position type, never per-node ad-hoc shapes.
  */
 export interface Pos {

@@ -6,13 +6,13 @@
  * Mirrors `text/template/parse` (https://pkg.go.dev/text/template/parse) so
  * an eventual Go port shares the same shape.
  *
- * [LAW:dataflow-not-control-flow] Every node has a single string literal
- * `type` discriminator. Downstream code (evaluator, walker, stringifier) is
+ * Every node has a single string literal
+ * `type` discriminator. Downstream code is
  * one exhaustive switch over `Node["type"]` — no class hierarchies, no
  * instanceof checks. Variability lives in the data (the discriminator
  * value), not in scattered conditionals.
  *
- * [LAW:one-source-of-truth] Every node carries `pos: Pos` from a single
+ * Every node carries `pos: Pos` from a single
  * canonical Pos type. No node grows its own ad-hoc position fields.
  */
 
@@ -62,7 +62,7 @@ export interface BoolNode extends NodeBase<'Bool'> {
 /**
  * Numeric literal. Go's parser admits ints, floats, complex, and untyped
  * constants in several bases. We preserve the original source `text` and
- * tag the parsed flavors so the evaluator can pick the right runtime
+ * tag the parsed flavors so a consumer can pick the right runtime
  * representation without re-lexing.
  */
 export interface NumberNode extends NodeBase<'Number'> {
@@ -155,7 +155,7 @@ export interface ActionNode extends NodeBase<'Action'> {
 
 // ---------------------------------------------------------------------------
 // Branch nodes — if / range / with all share the same shape conceptually.
-// We keep them as separate types so the discriminator lets the evaluator
+// We keep them as separate types so the discriminator lets a consumer
 // switch exhaustively, matching Go's parse package which emits IfNode,
 // RangeNode, WithNode as distinct concrete types.
 // ---------------------------------------------------------------------------
@@ -175,9 +175,9 @@ export interface WithNode extends NodeBase<'With'>, BranchFields {}
 // ---------------------------------------------------------------------------
 // Range-body control-flow leaves — `{{break}}` and `{{continue}}`.
 //
-// [LAW:types-are-the-program] Break/continue carry no pipeline and no
+// Break/continue carry no pipeline and no
 // body. They are leaves whose only purpose is the discriminator: the
-// evaluator's range loop switches on `type` to know which control-flow
+// a range loop would switch on `type` to know which control-flow
 // transition to perform. Encoding them as leaves (instead of, say, an
 // ActionNode with a magic identifier) is the strongest theorem about
 // them — the type forbids "{{break .foo}}" by construction, so no body
@@ -254,7 +254,7 @@ export type NodeOf<T extends NodeType> = Extract<Node, { type: T }>;
 // ---------------------------------------------------------------------------
 // Type-level exhaustiveness helper.
 //
-// [LAW:dataflow-not-control-flow] Use `assertNever` in switches over Node
+// Use `assertNever` in switches over Node
 // to make adding a new node kind a compile error at every dispatch site,
 // not a silent fallthrough.
 // ---------------------------------------------------------------------------
