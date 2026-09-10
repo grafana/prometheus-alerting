@@ -152,6 +152,32 @@ jobs:
             --max-turns 30
             --allowedTools "Read,Grep,Glob"
 
+      # When the step above fails, the reason is in a string the action keeps
+      # out of the logs on purpose — the transcript holds tool results, which
+      # could be anything Claude read. It writes the whole thing to a file, but
+      # under RUNNER_TEMP, which goes away with the runner, so by the time you
+      # come to look there is nothing left to look at. Turning `show_full_output`
+      # on prints it, and that is worse: it puts the transcript in a log rather
+      # than a file only people who can already read this repo can download.
+      #
+      # A 401 from the token exchange took a throwaway PR with that flag on to
+      # read. Keeping the file makes the next one a download instead.
+      #
+      #   gh run download <id> -n claude-execution -D /tmp/x
+      #   jq -r '.[-1].result' /tmp/x/claude-execution-output.json
+      #
+      # `always()` is the point: the step this follows is exactly the one that
+      # fails, so without it the upload is skipped when it is needed.
+      - name: Keep the transcript
+        if: always() && steps.claude.outputs.execution_file != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: claude-execution
+          path: ${{ steps.claude.outputs.execution_file }}
+          # Long enough to look into a failure, short enough that transcripts
+          # aren't sitting around for months.
+          retention-days: 7
+
       - name: Read the rating
         id: parse
         run: node .mise/tasks/pr-impact/parse.mjs
