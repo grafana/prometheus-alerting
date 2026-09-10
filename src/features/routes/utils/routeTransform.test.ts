@@ -1,7 +1,7 @@
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 
-import { MatcherOperator, FormAmRoute } from '../types';
+import type { FormAmRoute } from '../types';
 import { amRouteToFormAmRoute, formAmRouteToAmRoute, isValidPromDuration } from './routeTransform';
 
 describe('amRouteToFormAmRoute', () => {
@@ -46,17 +46,17 @@ describe('amRouteToFormAmRoute', () => {
     expect(result.object_matchers).toHaveLength(3);
     expect(result.object_matchers[0]).toEqual({
       name: 'severity',
-      operator: MatcherOperator.equal,
+      operator: '=',
       value: 'critical',
     });
     expect(result.object_matchers[1]).toEqual({
       name: 'team',
-      operator: MatcherOperator.notEqual,
+      operator: '!=',
       value: 'backend',
     });
     expect(result.object_matchers[2]).toEqual({
       name: 'region',
-      operator: MatcherOperator.regex,
+      operator: '=~',
       value: 'us-.*',
     });
   });
@@ -142,8 +142,8 @@ describe('formAmRouteToAmRoute', () => {
   it('converts matchers to string format', () => {
     const form: Partial<FormAmRoute> = {
       object_matchers: [
-        { name: 'severity', operator: MatcherOperator.equal, value: 'critical' },
-        { name: 'team', operator: MatcherOperator.regex, value: 'platform.*' },
+        { name: 'severity', operator: '=', value: 'critical' },
+        { name: 'team', operator: '=~', value: 'platform.*' },
       ],
     };
 
@@ -155,8 +155,8 @@ describe('formAmRouteToAmRoute', () => {
   it('filters out matchers without a name', () => {
     const form: Partial<FormAmRoute> = {
       object_matchers: [
-        { name: 'valid', operator: MatcherOperator.equal, value: 'yes' },
-        { name: '', operator: MatcherOperator.equal, value: 'ignored' },
+        { name: 'valid', operator: '=', value: 'yes' },
+        { name: '', operator: '=', value: 'ignored' },
       ],
     };
 

@@ -1,6 +1,13 @@
 import { Locator, expect } from '@playwright/test';
 import { AlertmanagerPage } from './AlertmanagerPage';
-import { MatcherOperator } from '../../src/features/routes/types';
+import type { MatcherOperator } from '../../src/features/routes/types';
+
+const matcherOperatorOptionNames: Record<MatcherOperator, string> = {
+  '=': '= Equals',
+  '!=': '!= Does not equal',
+  '=~': '=~ Matches regular expression',
+  '!~': '!~ Does not match regular expression',
+};
 
 /**
  * Page object for the Routes / notification tree view (`/routes`).
@@ -181,7 +188,7 @@ export class RoutesListPage extends AlertmanagerPage {
     await this.matcherLabelInput(index).fill(params.label);
     if (params.operator !== undefined) {
       await this.matcherOperatorCombobox(index).click();
-      await this.page.getByRole('option', { name: params.operator, exact: true }).click();
+      await this.page.getByRole('option', { name: matcherOperatorOptionNames[params.operator], exact: true }).click();
     }
     await this.matcherValueInput(index).fill(params.value);
   }

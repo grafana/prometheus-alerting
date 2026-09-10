@@ -571,6 +571,20 @@
     "nested-items-count_other": "{{count}} item(s)",
     "true": "Yes"
   },
+  "matcher-field-array": {
+    "label": "Label",
+    "label-placeholder": "label",
+    "operator": "Operator",
+    "operator-description": {
+      "does-not-match-regex": "Does not match regular expression",
+      "equals": "Equals",
+      "matches-regex": "Matches regular expression",
+      "not-equals": "Does not equal"
+    },
+    "required": "Required",
+    "value": "Value",
+    "value-placeholder": "value"
+  },
   "pages": {
     "alerts": {
       "subtitle": "Alert instances grouped by Alertmanager"
@@ -1194,7 +1208,6 @@
       "cancel": "Cancel",
       "continue": "Continue matching subsequent sibling nodes",
       "continue-description": "If enabled, matching will continue to subsequent sibling routes",
-      "field-required": "Required",
       "group-by": "Group by",
       "group-by-aria": "Group by",
       "group-by-description": "Combine alerts into a single notification by grouping by the same label values.",
@@ -1204,14 +1217,11 @@
       "group-wait": "Group wait",
       "group-wait-description": "How long to wait before sending the first notification for a group",
       "group-wait-placeholder": "30s",
-      "label": "Label",
-      "label-placeholder": "label",
       "matching-labels": "Matching labels",
       "mute-timings": "Mute timings",
       "mute-timings-description": "Notifications are not sent while any selected interval matches.",
       "mute-timings-placeholder": "Select mute timings",
       "no-matchers-warning": "If no matchers are specified, this route will handle all alert instances.",
-      "operator": "Operator",
       "override-grouping": "Override grouping",
       "override-timings": "Override general timings",
       "receiver": "Receiver",
@@ -1227,9 +1237,7 @@
       "timing-summary-active-title": "Active",
       "timing-summary-muted-only": "Notifications are not sent when any mute timing matches.",
       "timing-summary-muted-title": "Muted",
-      "timing-summary-title": "Timing behavior",
-      "value": "Value",
-      "value-placeholder": "value"
+      "timing-summary-title": "Timing behavior"
     },
     "error-loading-title": "Error loading routes",
     "group-by-label": "Group by",
