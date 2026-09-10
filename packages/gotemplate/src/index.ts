@@ -1,8 +1,11 @@
 import { ParseError } from './errors';
 import { parse } from './parser';
+import { wrapTemplateForSave } from './wrap';
 
 export { ParseError } from './errors';
 export type { Pos } from './pos';
+export { wrapTemplateForSave } from './wrap';
+export type { WrappedTemplate } from './wrap';
 
 export interface TemplateProblem {
   /** Human-readable description of what went wrong. */
@@ -38,4 +41,39 @@ export function validateTemplate(source: string): TemplateProblem | undefined {
     // seen and fixed.
     throw error;
   }
+}
+
+/**
+ * Validates a template as it will be stored, and reports any problem against
+ * what the author actually typed.
+ *
+ * Content without a `{{ define }}` gets wrapped before being saved, so the
+ * text that has to parse is not the text in the editor. Positions come back
+ * shifted into the editor's coordinates, so line 1 means the first line the
+ * author sees.
+ */
+export function validateTemplateForSave(templateName: string, templateContent: string): TemplateProblem | undefined {
+  const wrapped = wrapTemplateForSave(templateName, templateContent);
+  const problem = validateTemplate(wrapped.text);
+  if (!problem) {
+    return undefined;
+  }
+
+  // The wrapping adds a `{{ define }}` line above the content and an
+  // `{{ end }}` below it, and a problem can land on either of those -- lines
+  // the author never wrote and cannot see. Pin those to the nearest line that
+  // is theirs, so the position always points somewhere real in the editor.
+  const authorLineCount = templateContent.trim().split('\n').length;
+  const line = clamp(problem.line - wrapped.lineOffset, 1, authorLineCount);
+
+  // Only the author's own lines were indented, so a column is worth shifting
+  // only when the problem really is on one of them.
+  const onAuthorLine = problem.line - wrapped.lineOffset === line;
+  const column = onAuthorLine ? problem.column - wrapped.columnOffset : problem.column;
+
+  return { message: problem.message, line, column: Math.max(1, column) };
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
 }

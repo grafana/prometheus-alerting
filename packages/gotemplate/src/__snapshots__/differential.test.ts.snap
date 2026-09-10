@@ -42,3 +42,5 @@ exports[`parser agrees with Go about what is broken > misses only the known set 
   "sem-variable-out-of-scope: Go says "undefined variable "$x""",
 ]
 `;
+
+exports[`parser agrees with Go about what is broken > points at the same line as Go, apart from the known cases 1`] = `[]`;
