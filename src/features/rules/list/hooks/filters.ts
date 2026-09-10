@@ -65,20 +65,23 @@ export function ruleFilter(rule: PromRuleDTO, filterState: RuleFilterOptions): b
 
   // Filter by labels
   if (labelFilters.length > 0) {
-    const matchers = labelFilters.map(looseParseMatcher).filter((m): m is NonNullable<typeof m> => m !== undefined);
+    const parsedLabelFilters = labelFilters.map(looseParseMatcher);
+    // An unparseable label filter must narrow the result set to nothing, never widen it to everything.
+    if (parsedLabelFilters.some((m) => m === undefined)) {
+      return false;
+    }
+    const matchers = parsedLabelFilters.filter((m): m is NonNullable<typeof m> => m !== undefined);
 
-    if (matchers.length > 0) {
-      const doRuleLabelsMatchQuery = labelsMatchMatchers(labels, matchers);
+    const doRuleLabelsMatchQuery = labelsMatchMatchers(labels, matchers);
 
-      // Also check alerts if they exist (for alerting rules)
-      let doAlertsContainMatchingLabels = false;
-      if (rule.type === 'alerting' && rule.alerts) {
-        doAlertsContainMatchingLabels = rule.alerts.some((alert) => labelsMatchMatchers(alert.labels || {}, matchers));
-      }
+    // Also check alerts if they exist (for alerting rules)
+    let doAlertsContainMatchingLabels = false;
+    if (rule.type === 'alerting' && rule.alerts) {
+      doAlertsContainMatchingLabels = rule.alerts.some((alert) => labelsMatchMatchers(alert.labels || {}, matchers));
+    }
 
-      if (!doRuleLabelsMatchQuery && !doAlertsContainMatchingLabels) {
-        return false;
-      }
+    if (!doRuleLabelsMatchQuery && !doAlertsContainMatchingLabels) {
+      return false;
     }
   }
 

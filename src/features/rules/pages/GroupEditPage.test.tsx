@@ -22,16 +22,18 @@ const DATA_SOURCE_UID = 'test-mimir-uid';
 const NAMESPACE = 'test-namespace';
 const GROUP_NAME = 'test-group';
 
-/** A federated Mimir group: most of these settings have no field in the edit form. */
-const federatedGroup: RulerRuleGroupDTO = {
+/** A Mimir group whose settings mostly have no field in the edit form. */
+const tunedGroup: RulerRuleGroupDTO = {
   name: GROUP_NAME,
   interval: '1m',
   limit: 10,
   query_offset: '2m',
-  source_tenants: ['tenant-a', 'tenant-b'],
   align_evaluation_time_on_interval: true,
   rules: [{ alert: 'HighErrorRate', expr: 'up == 0', for: '5m' }],
 };
+
+/** `source_tenants` is what makes a group federated, and federated groups are not editable here. */
+const federatedGroup: RulerRuleGroupDTO = { ...tunedGroup, source_tenants: ['tenant-a', 'tenant-b'] };
 
 const mimirDataSource = DataSourceInstanceSettingsFactory.build({
   uid: DATA_SOURCE_UID,
@@ -96,7 +98,7 @@ function renderGroupEditPage() {
 
 describe('GroupEditPage', () => {
   beforeEach(async () => {
-    setMockNamespaces({ [NAMESPACE]: [federatedGroup] });
+    setMockNamespaces({ [NAMESPACE]: [tunedGroup] });
     setCurrentUserPermissions(AlertingPermission.RulesRead, AlertingPermission.RulesWrite);
     await loadDataSource();
   });
@@ -115,6 +117,74 @@ describe('GroupEditPage', () => {
     // The payload used to be rebuilt from name, interval and rules alone, so a group edit
     // de-federated the group and dropped its limit and query offset
     await waitFor(() => expect(upserts).toHaveLength(1));
-    expect(upserts[0]).toEqual({ ...federatedGroup, interval: '5m' });
+    expect(upserts[0]).toEqual({ ...tunedGroup, interval: '5m' });
+  });
+
+  it('shows an inline error and blocks saving an invalid evaluation interval', async () => {
+    const upserts = captureRulerWrites();
+    const user = userEvent.setup();
+
+    renderGroupEditPage();
+
+    const intervalInput = await screen.findByRole('textbox', { name: /Evaluation interval/i });
+    await user.clear(intervalInput);
+    await user.type(intervalInput, 'bogus99');
+    await user.tab(); // blur the field
+
+    expect(await screen.findByText('Invalid duration format. Use formats like 1m, 30s, 1h.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Save/i }));
+
+    expect(upserts).toHaveLength(0);
+  });
+
+  it('clears an interval error when a valid quick interval is selected and saves that value', async () => {
+    const upserts = captureRulerWrites();
+    const user = userEvent.setup();
+
+    renderGroupEditPage();
+
+    const intervalInput = await screen.findByRole('textbox', { name: /Evaluation interval/i });
+    await user.clear(intervalInput);
+    await user.type(intervalInput, 'bogus99');
+    await user.tab();
+
+    const intervalError = await screen.findByText('Invalid duration format. Use formats like 1m, 30s, 1h.');
+    await user.click(screen.getByRole('button', { name: '5m' }));
+
+    expect(intervalInput).toHaveValue('5m');
+    await waitFor(() => expect(intervalError).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: /Save/i }));
+
+    await waitFor(() => expect(upserts).toHaveLength(1));
+    expect(upserts[0]).toEqual({ ...tunedGroup, interval: '5m' });
+  });
+
+  it('allows saving a group whose evaluation interval exceeds a rule pending period', async () => {
+    const longIntervalGroup = { ...tunedGroup, interval: '10m' };
+    setMockNamespaces({ [NAMESPACE]: [longIntervalGroup] });
+    const upserts = captureRulerWrites();
+    const user = userEvent.setup();
+
+    renderGroupEditPage();
+
+    const groupNameInput = await screen.findByRole('textbox', { name: /Evaluation group name/i });
+    await user.clear(groupNameInput);
+    await user.type(groupNameInput, 'renamed-group');
+    await user.click(screen.getByRole('button', { name: /Save/i }));
+
+    await waitFor(() => expect(upserts).toHaveLength(1));
+    expect(upserts[0]).toEqual({ ...longIntervalGroup, name: 'renamed-group' });
+  });
+
+  it('offers no form for a federated group', async () => {
+    setMockNamespaces({ [NAMESPACE]: [federatedGroup] });
+
+    renderGroupEditPage();
+
+    // Its source_tenants decide which tenants the rules read, and this form cannot express that
+    expect(await screen.findByRole('status', { name: 'This group is federated' })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /Evaluation interval/i })).not.toBeInTheDocument();
   });
 });

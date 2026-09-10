@@ -6,8 +6,10 @@ verifyDepsBeforeRun: install
 minimumReleaseAge: 4320 # 3 days, in minutes
 minimumReleaseAgeExclude:
   - '@grafana/*'
-  # Renovate security update: js-yaml@4.3.1
-  - js-yaml@4.3.1
+  # Renovate security update: js-yaml@4.3.1 || 4.3.2
+  - js-yaml@4.3.1 || 4.3.2
+  # Renovate security update: vitest@4.1.11
+  - vitest@4.1.11
 
 overrides:
   # i18next 25.x prints a console ad for its paid Locize product on every init (which
@@ -32,10 +34,16 @@ overrides:
   'brace-expansion@>=3 <3.0.6': '^3.0.6'
   'brace-expansion@>=4 <5.0.9': '>=5.0.9'
   # Transitive-only advisories, all reached through build/dev tooling:
-  'fast-uri': '^3.1.5' # GHSA via copy-webpack-plugin>schema-utils; stay on 3.x, schema-utils wants ^3
+  'fast-uri': '^3.1.6' # 4 advisories via copy-webpack-plugin>schema-utils; stay on 3.x, schema-utils wants ^3
+  'browserslist': '>=4.28.7' # 2 advisories via @grafana/ui>react-select>@emotion/react>@babel/core
+  # faker never patched the 9.x line, so this crosses a major. @grafana/alerting only pulls faker in
+  # for its mock factories, and those stick to APIs that 10.x kept (helpers.arrayElement, number.int,
+  # string.alphanumeric and friends) - not helpers.fake, which is the one the advisory is about.
+  '@faker-js/faker': '^10.5.0'
   'ip-address': '>=10.3.1' # 3 advisories via @grafana/sign-plugin>proxy-agent>socks
   'postcss': '>=8.5.23' # via @vitejs/plugin-react>vite
   'undici': '^7.29.0' # 4 advisories via i18next-parser>cheerio; pinned to 7.x, cheerio wants ^7
+  'qs': '>=6.16.0' # 2 advisories via webpack-livereload-plugin>tiny-lr, which wants ^6.4.0
 
 registries:
   '@jsr': https://npm.jsr.io

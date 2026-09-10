@@ -155,6 +155,28 @@ test.describe('RuleDetails Page - E2E', () => {
     });
   });
 
+  test.describe('Unresolvable Rules', () => {
+    test('should show not found for a malformed rule identifier in the URL', async ({ ruleDetailsPage }) => {
+      await ruleDetailsPage.gotoRawIdentifier('totally-bogus-identifier');
+      await ruleDetailsPage.waitForLoad(/rule not found/i);
+
+      expect(await ruleDetailsPage.isNotFound()).toBe(true);
+      await expect(ruleDetailsPage.backToRulesLink).toBeVisible();
+    });
+
+    test('should show not found when the identifier is well-formed but no rule matches', async ({
+      ruleDetailsPage,
+    }) => {
+      const identifier = RuleBuilder.createHighErrorRateIdentifier();
+
+      await ruleDetailsPage.goto({ ...identifier, ruleName: 'ThisRuleDoesNotExist' });
+      await ruleDetailsPage.waitForLoad(/rule not found/i);
+
+      expect(await ruleDetailsPage.isNotFound()).toBe(true);
+      await expect(ruleDetailsPage.backToRulesLink).toBeVisible();
+    });
+  });
+
   test.describe('Breadcrumb Navigation', () => {
     test('should display correct breadcrumb hierarchy', async ({ ruleDetailsPage, page }) => {
       const identifier = RuleBuilder.createHighErrorRateIdentifier();

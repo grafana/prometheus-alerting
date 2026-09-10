@@ -58,6 +58,8 @@ export type RulerTransport = <T>(request: RulerRequest) => Promise<T>;
  */
 export interface RulerBackend {
   getRuleGroup(namespace: string, groupName: string): Promise<RulerRuleGroupDTO | null>;
+  /** Returns the namespace-scoped Ruler configuration response without parsing or reformatting it. */
+  getRuleNamespaceYaml(namespace: string): Promise<string>;
   getAllRules(): Promise<RulerRulesConfigDTO>;
   upsertRuleGroup(namespace: string, group: RulerRuleGroupDTO): Promise<void>;
   deleteRuleGroup(namespace: string, groupName: string): Promise<void>;

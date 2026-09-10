@@ -7,6 +7,7 @@ export interface EmailFormParams {
   hello?: string;
   authUsername?: string;
   authPassword?: string;
+  authSecret?: string;
   requireTls?: boolean;
   html?: string;
   text?: string;
@@ -29,6 +30,7 @@ export class EmailIntegrationForm {
   readonly helloInput: Locator;
   readonly authUsernameInput: Locator;
   readonly authPasswordInput: Locator;
+  readonly authSecretInput: Locator;
   readonly requireTlsCheckbox: Locator;
   readonly htmlInput: Locator;
   readonly textInput: Locator;
@@ -43,6 +45,7 @@ export class EmailIntegrationForm {
     this.helloInput = scope.getByLabel('Hello', { exact: true });
     this.authUsernameInput = scope.getByLabel('Username', { exact: true });
     this.authPasswordInput = scope.getByLabel('Password', { exact: true });
+    this.authSecretInput = scope.getByLabel('Secret', { exact: true });
     this.requireTlsCheckbox = scope.getByLabel('Require TLS', { exact: true });
     this.htmlInput = scope.getByLabel('Email HTML body', { exact: true });
     this.textInput = scope.getByLabel('Email text body', { exact: true });
@@ -65,6 +68,7 @@ export class EmailIntegrationForm {
     hello,
     authUsername,
     authPassword,
+    authSecret,
     requireTls,
     html,
     text,
@@ -88,6 +92,9 @@ export class EmailIntegrationForm {
     }
     if (authPassword !== undefined) {
       await this.authPasswordInput.fill(authPassword);
+    }
+    if (authSecret !== undefined) {
+      await this.authSecretInput.fill(authSecret);
     }
     if (requireTls) {
       // Grafana's `Checkbox` renders a decorative `<span>` checkmark stacked (z-index) above the

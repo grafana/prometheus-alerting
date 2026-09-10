@@ -27,7 +27,6 @@ interface Props {
   onDelete: (identifier: CloudRuleIdentifier) => void;
   onDuplicate: (identifier: DataSourceRuleIdentifier) => void;
   onSilence?: (identifier: DataSourceRuleIdentifier, ruleName: string) => void;
-  onExport?: (rule: RulerRuleDTO) => void;
   buttonSize?: ComponentProps<typeof Button>['size'];
   fill?: ComponentProps<typeof Button>['fill'];
 }
@@ -39,7 +38,6 @@ export function RuleActionsMenu({
   onDelete,
   onDuplicate,
   onSilence,
-  onExport,
   buttonSize = 'md',
   fill,
 }: Props) {
@@ -94,14 +92,6 @@ export function RuleActionsMenu({
       )}
       {(hasSilenceAction || hasDuplicateAction) && <Menu.Divider />}
       <Menu.Item label={t('alerting.rule-actions.copy-link', 'Copy link')} icon="share-alt" onClick={handleCopyLink} />
-      {/* Export - only shown when we have the ruler rule */}
-      {rule && onExport && (
-        <Menu.Item
-          label={t('alerting.rule-actions.export', 'Export')}
-          icon="download-alt"
-          onClick={() => onExport(rule)}
-        />
-      )}
       {rule && canDeleteRules && (
         <>
           <Menu.Divider />

@@ -1,10 +1,11 @@
 import { css } from '@emotion/css';
 import React, { useMemo, useState } from 'react';
-import { SubmitHandler, useForm, useWatch } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 
 import { AppEvents, GrafanaTheme2 } from '@grafana/data';
 import { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
+import { isFederatedRulerGroup } from '@grafana/external-rules/utils';
 import { Trans, t } from '@grafana/i18n';
 import { getAppEvents, locationService, PluginPage } from '@grafana/runtime';
 import {
@@ -29,7 +30,7 @@ import { groups } from '../../../utils/navigation';
 import { AlertingAction, isAbilityAllowed, useScopedAbilities } from '../../../access-control/abilities';
 
 import { DraggableRulesTable, SwapOperation, applySwaps } from '../components/DraggableRulesTable';
-import { EvaluationIntervalInput } from '../components/EvaluationIntervalInput';
+import { EvaluationIntervalInput, validateInterval } from '../components/EvaluationIntervalInput';
 import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { useWaitForGroupConsistency } from '../hooks/useGroupConsistencyCheck';
 import { useInvalidatePromRules } from '../hooks/useInvalidatePromRules';
@@ -136,6 +137,22 @@ function GroupEditPage() {
     );
   }
 
+  // A federated group's source_tenants decide which tenants its rules read, and this form has no
+  // field for them, so saving through it would quietly turn the group single-tenant. The group
+  // details page hides its Edit button, but this page has its own URL.
+  if (isFederatedRulerGroup(rulerGroup)) {
+    return (
+      <PluginPage pageNav={pageNav}>
+        <Alert severity="info" title={t('alerting.group-edit.group-federated', 'This group is federated')}>
+          <Trans i18nKey="alerting.group-edit.group-federated-description">
+            Federated rule groups read data from several tenants, which this editor cannot express. Edit the group
+            through the Ruler API instead.
+          </Trans>
+        </Alert>
+      </PluginPage>
+    );
+  }
+
   return (
     <PluginPage pageNav={pageNav}>
       <GroupEditForm
@@ -178,7 +195,6 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
   const {
     register,
     handleSubmit,
-    setValue,
     control,
     formState: { errors, dirtyFields, isSubmitting },
   } = useForm<GroupEditFormData>({
@@ -353,9 +369,13 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
           className={styles.field}
           htmlFor="interval"
         >
-          <EvaluationIntervalInput
-            value={currentInterval}
-            onChange={(value) => setValue('interval', value, { shouldValidate: true, shouldDirty: true })}
+          <Controller
+            name="interval"
+            control={control}
+            rules={{ validate: validateInterval }}
+            render={({ field: { value, onChange, onBlur } }) => (
+              <EvaluationIntervalInput value={value} onChange={onChange} onBlur={onBlur} />
+            )}
           />
         </Field>
 
