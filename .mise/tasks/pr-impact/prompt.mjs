@@ -21,26 +21,55 @@ import { gh, setOutput, env, isMain } from './lib.mjs';
 
 const WORDING = fileURLToPath(new URL('../../../.github/prompts/pr-impact.md', import.meta.url));
 
-// Diffs longer than this are cut. Two of the last sixty PRs would be, and both
-// touch paths the floor already holds at high, so nothing is lost that would
-// change a rating. Claude is told when it happens, and a rating made on part of
-// a diff cannot come out below medium — see post.mjs.
-const DIFF_LIMIT = 120000;
+// The whole prompt is handed to the action as one shell argument, and Linux
+// refuses a single argument over MAX_ARG_STRLEN, which is 131072 bytes. Go over
+// and the step dies before it starts, with "Argument list too long" and nothing
+// pointing at the prompt.
+//
+// So the ceiling has to cover the entire prompt, not just the diff: the wording
+// file alone is around 5 KB. And it has to be counted in bytes, because that is
+// what the kernel counts -- a diff full of non-ASCII is longer in bytes than it
+// is in characters.
+//
+// 100000 leaves comfortable headroom under the real limit. Claude is told when a
+// diff was cut, and a rating made on part of a diff cannot come out below
+// medium -- see post.mjs.
+const PROMPT_LIMIT = 100000;
+
+const encoder = new TextEncoder();
+
+function byteLength(text) {
+  return encoder.encode(text).length;
+}
+
+/** Cuts `text` to at most `maxBytes`, without splitting a character in half. */
+function sliceBytes(text, maxBytes) {
+  const bytes = encoder.encode(text);
+  if (bytes.length <= maxBytes) {
+    return text;
+  }
+  // fatal: false makes the decoder drop a trailing partial character rather
+  // than replacing it with U+FFFD.
+  return new TextDecoder('utf-8', { fatal: false, ignoreBOM: true })
+    .decode(bytes.subarray(0, maxBytes))
+    .replace(/�$/, '');
+}
 
 export function buildPrompt({ repo, pr }) {
   const diff = gh(['pr', 'diff', String(pr), '--repo', repo]);
-  const truncated = diff.length > DIFF_LIMIT;
+
+  const head = [readFileSync(WORDING, 'utf8'), `Repository: ${repo}`, `PR number: ${pr}`, ''];
+  // The longer of the two intros, so the budget is right either way.
+  const intro = 'The diff follows.\nIt was too long to include whole, so it stops part way through.';
+  const budget = PROMPT_LIMIT - byteLength([...head, intro, '', '', ''].join('\n'));
+
+  const truncated = byteLength(diff) > budget;
 
   const text = [
-    readFileSync(WORDING, 'utf8'),
-    `Repository: ${repo}`,
-    `PR number: ${pr}`,
+    ...head,
+    truncated ? intro : 'The diff follows.',
     '',
-    truncated
-      ? 'The diff follows.\nIt was too long to include whole, so it stops part way through.'
-      : 'The diff follows.',
-    '',
-    diff.slice(0, DIFF_LIMIT),
+    truncated ? sliceBytes(diff, budget) : diff,
     '',
   ].join('\n');
 
