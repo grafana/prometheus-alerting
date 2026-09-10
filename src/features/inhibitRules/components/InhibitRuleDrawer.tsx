@@ -47,7 +47,7 @@ export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: In
         </Stack>
       }
       onClose={onClose}
-      size="sm"
+      size="md"
       footer={
         !isEditMode && canMutateInhibitRules ? (
           <InhibitRuleDrawerViewFooter

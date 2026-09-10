@@ -1,6 +1,21 @@
 import { Locator, expect } from '@playwright/test';
 import { AlertmanagerPage } from './AlertmanagerPage';
 
+type MatcherInput = {
+  label: string;
+  operator?: '=' | '!=' | '=~' | '!~';
+  value: string;
+};
+
+type MatcherSide = 'source' | 'target';
+
+const matcherOperatorOptionNames: Record<NonNullable<MatcherInput['operator']>, string> = {
+  '=': '= Equals',
+  '!=': '!= Does not equal',
+  '=~': '=~ Matches regular expression',
+  '!~': '!~ Does not match regular expression',
+};
+
 /**
  * Page object for the Inhibit Rules view (`/inhibit-rules`).
  *
@@ -16,8 +31,8 @@ export class InhibitRulesPage extends AlertmanagerPage {
   readonly emptyStateMessage: Locator;
 
   // Create/edit form (rendered inside the drawer)
-  readonly sourceMatchersInput: Locator;
-  readonly targetMatchersInput: Locator;
+  readonly sourceMatchers: Locator;
+  readonly targetMatchers: Locator;
   readonly equalLabelsInput: Locator;
   readonly createButton: Locator;
   readonly updateButton: Locator;
@@ -45,10 +60,8 @@ export class InhibitRulesPage extends AlertmanagerPage {
     this.rows = this.table.locator('tbody tr');
     this.emptyStateMessage = page.getByText(/no inhibit rules are configured/i);
 
-    // The Grafana Field label is not associated with the Input, so each textbox's accessible name
-    // is its placeholder. Locate the form fields by placeholder (see InhibitRuleFormFields.tsx).
-    this.sourceMatchersInput = page.getByPlaceholder('severity = critical');
-    this.targetMatchersInput = page.getByPlaceholder('severity = warning');
+    this.sourceMatchers = page.getByRole('group', { name: 'Source Matchers' });
+    this.targetMatchers = page.getByRole('group', { name: 'Target Matchers' });
     this.equalLabelsInput = page.getByPlaceholder('alertname, instance');
     this.createButton = page.getByRole('button', { name: 'Create', exact: true });
     this.updateButton = page.getByRole('button', { name: 'Update', exact: true });
@@ -91,18 +104,48 @@ export class InhibitRulesPage extends AlertmanagerPage {
 
   async openCreateDrawer() {
     await this.addButton.click();
-    await expect(this.sourceMatchersInput).toBeVisible();
+    await expect(this.sourceMatchers).toBeVisible();
   }
 
-  async fillForm({ source, target, equal }: { source?: string; target?: string; equal?: string }) {
+  async fillForm({ source, target, equal }: { source?: MatcherInput[]; target?: MatcherInput[]; equal?: string }) {
     if (source !== undefined) {
-      await this.sourceMatchersInput.fill(source);
+      await this.fillMatcherGroup('source', source);
     }
     if (target !== undefined) {
-      await this.targetMatchersInput.fill(target);
+      await this.fillMatcherGroup('target', target);
     }
     if (equal !== undefined) {
       await this.equalLabelsInput.fill(equal);
+    }
+  }
+
+  private async fillMatcherGroup(side: MatcherSide, matchers: MatcherInput[]) {
+    const group = side === 'source' ? this.sourceMatchers : this.targetMatchers;
+    const matcherName = side === 'source' ? 'source' : 'target';
+    const addMatcherButton = group.getByRole('button', { name: `Add ${matcherName} matcher` });
+    const removeMatcherButton = group.getByRole('button', { name: `Remove ${matcherName} matcher` });
+
+    let labels = group.getByRole('textbox', { name: 'Label' });
+    while ((await labels.count()) > matchers.length) {
+      await removeMatcherButton.last().click();
+      labels = group.getByRole('textbox', { name: 'Label' });
+    }
+    while ((await labels.count()) < matchers.length) {
+      await addMatcherButton.click();
+      labels = group.getByRole('textbox', { name: 'Label' });
+    }
+
+    for (const [index, matcher] of matchers.entries()) {
+      await labels.nth(index).fill(matcher.label);
+      await group.getByRole('textbox', { name: 'Value' }).nth(index).fill(matcher.value);
+      const operator = group.getByRole('combobox', { name: 'Operator' }).nth(index);
+      const requestedOperator = matcher.operator ?? '=';
+      if ((await operator.inputValue()) !== requestedOperator) {
+        await operator.fill(requestedOperator);
+        await this.page
+          .getByRole('option', { name: matcherOperatorOptionNames[requestedOperator], exact: true })
+          .click();
+      }
     }
   }
 

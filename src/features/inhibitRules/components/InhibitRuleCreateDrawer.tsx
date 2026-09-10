@@ -2,7 +2,8 @@ import React from 'react';
 import { t } from '@grafana/i18n';
 import { Stack, Text } from '@grafana/ui';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
-import { InhibitRuleFormFields, type InhibitRuleFormData, formDataToInhibitRule } from './InhibitRuleFormFields';
+import { InhibitRuleFormFields } from './InhibitRuleFormFields';
+import { type InhibitRuleFormData, formDataToInhibitRule } from './InhibitRuleFormModel';
 import { useAddInhibitRule } from '../hooks/useInhibitRules';
 
 interface InhibitRuleCreateDrawerProps {
@@ -32,7 +33,7 @@ export function InhibitRuleCreateDrawer({ onClose }: InhibitRuleCreateDrawerProp
         </Stack>
       }
       onClose={onClose}
-      size="sm"
+      size="md"
     >
       <InhibitRuleFormFields onSubmit={handleCreate} onCancel={onClose} isLoading={isCreating} error={createError} />
     </DrawerWithFooter>

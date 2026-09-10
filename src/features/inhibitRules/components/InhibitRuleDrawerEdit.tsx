@@ -1,13 +1,9 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { t } from '@grafana/i18n';
 import type { NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
 import { useUpdateInhibitRule } from '../hooks/useInhibitRules';
-import {
-  InhibitRuleFormFields,
-  type InhibitRuleFormData,
-  formDataToInhibitRule,
-  normalizedInhibitRuleToInhibitRule,
-} from './InhibitRuleFormFields';
+import { InhibitRuleFormFields } from './InhibitRuleFormFields';
+import { type InhibitRuleFormData, formDataToInhibitRule } from './InhibitRuleFormModel';
 
 interface InhibitRuleDrawerEditProps {
   inhibitRule: NormalizedInhibitRule;
@@ -32,12 +28,9 @@ export function InhibitRuleDrawerEdit({
       // error is surfaced via updateError
     }
   };
-
-  const inhibitRuleForForm = useMemo(() => normalizedInhibitRuleToInhibitRule(inhibitRule), [inhibitRule]);
-
   return (
     <InhibitRuleFormFields
-      inhibitRule={inhibitRuleForForm}
+      inhibitRule={inhibitRule}
       onSubmit={handleSave}
       onCancel={onCancel}
       isLoading={isUpdating}
