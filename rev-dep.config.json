@@ -53,6 +53,14 @@
       "circularImportsDetection": { "enabled": true, "ignoreTypeImports": true }
     },
     {
+      "path": "packages/gotemplate",
+      "prodEntryPoints": ["src/index.ts", "src/funcs.ts"],
+      "devEntryPoints": ["src/**/*.test.{ts,tsx}", "src/corpus.test-helpers.ts"],
+      "unusedExportsDetection": { "enabled": true },
+      "orphanFilesDetection": { "enabled": true },
+      "circularImportsDetection": { "enabled": true, "ignoreTypeImports": true }
+    },
+    {
       "path": "packages/rules",
       "prodEntryPoints": [
         "src/identifiers/index.ts",

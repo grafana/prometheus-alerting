@@ -1,0 +1,17 @@
+{
+  "name": "@grafana/go-template",
+  "version": "1.0.0",
+  "description": "Parse-time validation for Go text/template sources, as used by Alertmanager notification templates.",
+  "scripts": {
+    "test": "false;",
+    "//oracle:refresh": "Regenerates testdata/expected.json from Go's own template parser. Needs Go installed; the generated file is committed so running the tests does not.",
+    "oracle:refresh": "cd oracle && go run ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./funcs": "./src/funcs.ts"
+  }
+}
