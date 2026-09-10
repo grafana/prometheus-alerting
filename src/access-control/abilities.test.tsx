@@ -7,7 +7,7 @@ import { server } from '../test/server';
 import { setCurrentUserPermissions } from '../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../test/utils/test-wrapper';
 
-import { AlertingAction, AlertingPermission, useScopedAbilities, useUnscopedAbilities } from './abilities';
+import { AlertingAction, AlertingPermission, makeAbility, useScopedAbilities, useUnscopedAbilities } from './abilities';
 
 const buildInfoUrl = '/api/datasources/proxy/uid/:uid/api/v1/status/buildinfo';
 const mimirDataSource = DataSourceInstanceSettingsFactory.build({
@@ -164,6 +164,35 @@ describe('useScopedAbilities', () => {
         cause: 'INSUFFICIENT_PERMISSIONS',
         anyOfPermissions: [AlertingPermission.NotificationsWrite],
       },
+    });
+  });
+});
+
+describe('makeAbility', () => {
+  beforeEach(() => {
+    setCurrentUserPermissions(AlertingPermission.NotificationsWrite);
+  });
+
+  it('grants when the permission is held and the capability is there', () => {
+    expect(makeAbility({ permission: AlertingPermission.NotificationsWrite, supported: true })).toEqual({
+      granted: true,
+    });
+  });
+
+  it('denies an Alertmanager with no configuration API', () => {
+    expect(makeAbility({ permission: AlertingPermission.NotificationsWrite, supported: false })).toEqual({
+      granted: false,
+      cause: 'NOT_SUPPORTED',
+    });
+  });
+
+  it('reports a missing permission before checking capabilities', () => {
+    setCurrentUserPermissions();
+
+    expect(makeAbility({ permission: AlertingPermission.NotificationsWrite, supported: false })).toEqual({
+      granted: false,
+      cause: 'INSUFFICIENT_PERMISSIONS',
+      anyOfPermissions: [AlertingPermission.NotificationsWrite],
     });
   });
 });
