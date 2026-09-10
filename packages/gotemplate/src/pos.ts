@@ -15,7 +15,3 @@ export interface Pos {
   readonly column: number;
   readonly offset: number;
 }
-
-export function pos(line: number, column: number, offset: number): Pos {
-  return { line, column, offset };
-}
