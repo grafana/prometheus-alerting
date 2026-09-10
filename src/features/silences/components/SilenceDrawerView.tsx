@@ -6,7 +6,7 @@ import { Alert, Stack, useStyles2, Text, Button, ConfirmModal, TabContent } from
 import { AlertLabel } from '@grafana/alerting';
 import { locationService } from '@grafana/runtime';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
-import { KeyValueList } from '../../../components/KeyValueList';
+import { KeyValueList } from '../../../components/KeyValueList/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
 import { isAbilityAllowed } from '../../../access-control/abilities';
 import { getSilencesAbilities, SilenceAction } from '../../../access-control/abilities.silences';

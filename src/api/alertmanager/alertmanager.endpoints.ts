@@ -131,9 +131,10 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         dataSourceUID,
       }),
       providesTags: ['Alerts'],
-      // Cast needed: zod v4 vendors its own Standard Schema types rather than depending on
-      // @standard-schema/spec, causing a module identity mismatch with RTK Query. Safe at runtime.
-      // See: https://github.com/colinhacks/zod/issues/4938
+      // Cast needed: `webhook_configs.timeout` accepts a bare number the way Alertmanager's YAML
+      // does, but always hands back a string, so what these schemas accept is not the same as what
+      // they return. RTK Query only takes a schema where the two match, which this one cannot be.
+      // Validation itself works fine, so the cast only papers over the type and is safe at runtime.
       responseSchema: GetAlertsApiResponseSchema as unknown as StandardSchemaV1<GetAlertsApiResponse>,
     }),
     postAlerts: build.mutation<PostAlertsApiResponse, WithDataSourceInformation<PostAlertsApiArg>>({
@@ -159,9 +160,10 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         dataSourceUID,
       }),
       providesTags: ['AlertGroups'],
-      // Cast needed: zod v4 vendors its own Standard Schema types rather than depending on
-      // @standard-schema/spec, causing a module identity mismatch with RTK Query. Safe at runtime.
-      // See: https://github.com/colinhacks/zod/issues/4938
+      // Cast needed: `webhook_configs.timeout` accepts a bare number the way Alertmanager's YAML
+      // does, but always hands back a string, so what these schemas accept is not the same as what
+      // they return. RTK Query only takes a schema where the two match, which this one cannot be.
+      // Validation itself works fine, so the cast only papers over the type and is safe at runtime.
       responseSchema: GetAlertGroupsApiResponseSchema as unknown as StandardSchemaV1<GetAlertGroupsApiResponse>,
     }),
   }),
