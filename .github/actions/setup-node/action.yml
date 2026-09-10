@@ -6,8 +6,15 @@ runs:
     - name: Setup mise
       uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
       with:
+        # Pin mise itself. Without this the action asks mise.jdx.dev/VERSION for
+        # "latest", which has pointed at releases that were not on GitHub yet and
+        # 404'd the download. Pinning also means the binary that installs our
+        # verified tools is itself a known one, checked against sha256 below.
+        # Bump both together — the hash is of the extracted linux-x64 binary.
+        version: 2026.9.1
+        sha256: c98423c8470d6dc416d9f7036d0646d8ef5ae92ad9186907f8fcc84cbe7db4ea
         install: true # runs `mise install` using committed mise.lock
-        cache: false # disabled — cached binaries skip checksum re-verification; paranoid mode + mise.lock already verify every download
+        cache: false # disabled — a restored cache skips the checksum check; downloading fresh means mise.lock verifies every binary
         cache_save: false # disabled — see above
       env:
         MISE_ENV: ci # Loads mise.ci.toml (if any) instead of mise.development.toml — dev-only tools (lefthook, trufflehog) are not installed

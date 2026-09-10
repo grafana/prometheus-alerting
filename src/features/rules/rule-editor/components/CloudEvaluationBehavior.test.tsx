@@ -34,6 +34,7 @@ function renderStep(type = RuleFormType.cloudAlerting) {
 
   return {
     keepFiringFor: () => screen.getByLabelText(/Keep firing for/),
+    pendingPeriod: () => screen.getByText(/Pending period/),
     save: () => screen.getByRole('button', { name: 'Save' }),
   };
 }
@@ -49,6 +50,18 @@ describe('CloudEvaluationBehavior', () => {
     renderStep(RuleFormType.cloudRecording);
 
     expect(screen.queryByLabelText(/Keep firing for/)).not.toBeInTheDocument();
+  });
+
+  it('shows the pending period field for alerting rules', () => {
+    const step = renderStep();
+
+    expect(step.pendingPeriod()).toBeInTheDocument();
+  });
+
+  it('hides the pending period field for recording rules, which have no `for` duration', () => {
+    renderStep(RuleFormType.cloudRecording);
+
+    expect(screen.queryByText(/Pending period/)).not.toBeInTheDocument();
   });
 
   it('takes a compound duration', async () => {

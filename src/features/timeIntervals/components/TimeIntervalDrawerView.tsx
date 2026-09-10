@@ -2,32 +2,17 @@ import React, { useState } from 'react';
 import { t } from '@grafana/i18n';
 import { Alert, Stack, Button, ConfirmModal } from '@grafana/ui';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
-import { KeyValueList } from '../../../components/KeyValueList';
-import { Section } from '../../../components/KeyValueList/Section';
 import { useDeleteTimeInterval } from '../hooks/useTimeIntervals';
 import { isAbilityAllowed } from '../../../access-control/abilities';
 import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 import { MutationError } from '../../../access-control/components/MutationError';
+import { TimeIntervalScheduleDetails } from './TimeIntervalScheduleDetails';
 
 interface TimeIntervalDetailsProps {
   timeInterval: TimeInterval;
 }
 
 function TimeIntervalDetails({ timeInterval }: TimeIntervalDetailsProps) {
-  const formatTimeRange = (times?: Array<{ start_time: string; end_time: string }>) => {
-    if (!times || times.length === 0) {
-      return t('time-intervals.all-day', 'All day');
-    }
-    return times.map((t) => `${t.start_time} - ${t.end_time}`).join(', ');
-  };
-
-  const formatList = (items?: string[]) => {
-    if (!items || items.length === 0) {
-      return t('time-intervals.all', 'All');
-    }
-    return items.join(', ');
-  };
-
   if (!timeInterval.time_intervals || timeInterval.time_intervals.length === 0) {
     return (
       <Alert title={t('time-intervals.no-intervals', 'No time intervals')} severity="info">
@@ -36,37 +21,7 @@ function TimeIntervalDetails({ timeInterval }: TimeIntervalDetailsProps) {
     );
   }
 
-  return (
-    <Stack direction="column" gap={2}>
-      {timeInterval.time_intervals.map((ti, index) => {
-        const items = [
-          { label: t('time-intervals.times-label', 'Times'), value: formatTimeRange(ti.times) },
-          ...(ti.weekdays && ti.weekdays.length > 0
-            ? [{ label: t('time-intervals.weekdays-label', 'Weekdays'), value: formatList(ti.weekdays) }]
-            : []),
-          ...(ti.days_of_month && ti.days_of_month.length > 0
-            ? [{ label: t('time-intervals.days-of-month-label', 'Days of Month'), value: formatList(ti.days_of_month) }]
-            : []),
-          ...(ti.months && ti.months.length > 0
-            ? [{ label: t('time-intervals.months-label', 'Months'), value: formatList(ti.months) }]
-            : []),
-          ...(ti.years && ti.years.length > 0
-            ? [{ label: t('time-intervals.years-label', 'Years'), value: formatList(ti.years) }]
-            : []),
-          ...(ti.location ? [{ label: t('time-intervals.location-label', 'Location'), value: ti.location }] : []),
-        ];
-
-        return (
-          <Section
-            key={index}
-            title={t('time-intervals.interval-number', 'Interval {{number}}', { number: index + 1 })}
-          >
-            <KeyValueList items={items} />
-          </Section>
-        );
-      })}
-    </Stack>
-  );
+  return <TimeIntervalScheduleDetails timeInterval={timeInterval} />;
 }
 
 interface TimeIntervalDrawerViewProps {

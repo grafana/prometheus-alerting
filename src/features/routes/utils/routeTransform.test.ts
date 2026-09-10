@@ -84,6 +84,20 @@ describe('amRouteToFormAmRoute', () => {
     expect(result.routes[0].receiver).toBe('child-1');
     expect(result.routes[1].receiver).toBe('child-2');
   });
+
+  it('round-trips active and mute time intervals', () => {
+    const route: Route = {
+      receiver: 'default',
+      active_time_intervals: ['business-hours'],
+      mute_time_intervals: ['holidays', 'maintenance'],
+    };
+
+    const formRoute = amRouteToFormAmRoute(route);
+    const result = formAmRouteToAmRoute(formRoute);
+
+    expect(result.active_time_intervals).toEqual(['business-hours']);
+    expect(result.mute_time_intervals).toEqual(['holidays', 'maintenance']);
+  });
 });
 
 describe('formAmRouteToAmRoute', () => {

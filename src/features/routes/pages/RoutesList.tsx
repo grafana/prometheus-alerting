@@ -21,7 +21,7 @@ import { useRouteMatching, getRouteMatchCount } from '../hooks/useRouteMatching'
 import { useDeleteRoute } from '../hooks/useDeleteRoute';
 import { useRouteDrawer } from '../hooks/useRouteDrawer';
 import { useRouteAbilities } from '../hooks/useRouteAbilities';
-import { attachRouteIds } from '../utils';
+import { attachRouteIds, isRootRoute } from '../utils';
 import { InsertPosition } from '../types';
 
 function RoutesPage() {
@@ -200,7 +200,11 @@ function RoutesPage() {
         />
       )}
       {drawerState.type === 'edit' && canMutateRoutes && (
-        <RouteEditDrawer route={drawerState.route} onClose={handleDrawerClose} />
+        <RouteEditDrawer
+          route={drawerState.route}
+          onClose={handleDrawerClose}
+          isRoot={isRootRoute(drawerState.route, routeTree)}
+        />
       )}
       {drawerState.type === 'add' && canMutateRoutes && (
         <RouteEditDrawer

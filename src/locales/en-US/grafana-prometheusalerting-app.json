@@ -65,6 +65,7 @@
     },
     "draggable-rules-table": {
       "evals-to-start-alerting": "Evaluations to start alerting",
+      "no-pending-period": "None",
       "pending-period": "Pending period",
       "recording": "Recording",
       "rule-name": "Rule name"
@@ -1187,6 +1188,9 @@
       "editing": "Editing Route"
     },
     "edit": {
+      "active-timings": "Active timings",
+      "active-timings-description": "Notifications are sent only while at least one selected interval matches.",
+      "active-timings-placeholder": "Select active timings",
       "add-matcher": "Add matcher",
       "cancel": "Cancel",
       "continue": "Continue matching subsequent sibling nodes",
@@ -1205,8 +1209,8 @@
       "label-placeholder": "label",
       "matching-labels": "Matching labels",
       "mute-timings": "Mute timings",
-      "mute-timings-description": "Mute notifications during specific time intervals",
-      "mute-timings-placeholder": "Select or type mute timing names",
+      "mute-timings-description": "Notifications are not sent while any selected interval matches.",
+      "mute-timings-placeholder": "Select mute timings",
       "no-matchers-warning": "If no matchers are specified, this route will handle all alert instances.",
       "operator": "Operator",
       "override-grouping": "Override grouping",
@@ -1219,6 +1223,12 @@
       "repeat-interval-description": "How long before an unchanged group is sent again. Rounded up to the next group interval.",
       "repeat-interval-placeholder": "4h",
       "save": "Save",
+      "timing-summary-active-and-muted": "Both conditions apply: notifications are sent only when at least one active timing matches and no mute timing matches.",
+      "timing-summary-active-only": "Notifications are sent only when at least one active timing matches.",
+      "timing-summary-active-title": "Active",
+      "timing-summary-muted-only": "Notifications are not sent when any mute timing matches.",
+      "timing-summary-muted-title": "Muted",
+      "timing-summary-title": "Timing behavior",
       "value": "Value",
       "value-placeholder": "value"
     },
@@ -1256,6 +1266,7 @@
       "ruler-unavailable": "⚠ Ruler API Unavailable (Read-only)"
     },
     "error": {
+      "back-to-rules": "Back to rules",
       "evaluation": "Something went wrong when evaluating this alert rule",
       "loading": "Error loading rule",
       "not-found": "Rule not found",
@@ -1517,10 +1528,6 @@
   "time-intervals": {
     "all": "All",
     "all-day": "All day",
-    "column": {
-      "details": "Details",
-      "name": "Name"
-    },
     "confirm-remove": {
       "body": "Are you sure you want to remove the time interval \"{{name}}\"? This action cannot be undone.",
       "cancel": "Cancel",
@@ -1594,16 +1601,29 @@
       "years-label": "Years",
       "years-placeholder": "2024, 2025"
     },
-    "interval-number": "Interval {{number}}",
     "location-label": "Location",
     "months-label": "Months",
     "no-intervals": "No time intervals",
     "no-intervals-defined": "No time intervals defined",
     "no-intervals-desc": "This time interval has no time ranges configured.",
+    "no-search-results": "No time intervals match your search.",
     "no-time-intervals-message": "No time intervals are configured in the Alertmanager.",
     "page-subtitle": "Define time windows for muting or activating notifications",
     "resource-label": "time intervals",
+    "search-label": "Search time intervals by name",
+    "search-placeholder": "Search time intervals",
     "times-label": "Times",
+    "timezone-label": "Timezone",
+    "view-button": "View",
+    "weekday": {
+      "friday": "Friday",
+      "monday": "Monday",
+      "saturday": "Saturday",
+      "sunday": "Sunday",
+      "thursday": "Thursday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday"
+    },
     "weekdays-label": "Weekdays",
     "years-label": "Years"
   }

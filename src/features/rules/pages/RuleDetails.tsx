@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { parseIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
+import { parseIdentifier, type DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import type { PromRuleDTO } from '@grafana/external-rules/vanilla';
-import { Alert, LoadingPlaceholder, Spinner, Stack, Text } from '@grafana/ui';
+import { Alert, EmptyState, LinkButton, LoadingPlaceholder, Spinner, Stack, Text } from '@grafana/ui';
 import { locationService, PluginPage } from '@grafana/runtime';
 import { Trans, t } from '@grafana/i18n';
 import { AlertLabels } from '@grafana/alerting/unstable';
@@ -27,17 +27,19 @@ import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 function RuleDetails() {
   const { ruleIdentifier } = useParams<{ ruleIdentifier: string }>();
 
-  const identifier = useMemo(() => {
-    if (!ruleIdentifier) {
-      throw new Error('Rule identifier is required');
-    }
-    const parsed = parseIdentifier(ruleIdentifier, true);
-    if (!parsed) {
-      throw new Error('Invalid rule identifier format');
-    }
-    return parsed;
-  }, [ruleIdentifier]);
+  const identifier = useMemo(() => (ruleIdentifier ? parseIdentifier(ruleIdentifier, true) : null), [ruleIdentifier]);
 
+  // The identifier comes straight from the URL, so it can be truncated or hand-edited into
+  // something we can't read. That's the same dead end as a rule that no longer exists, so show
+  // the not-found page instead of blowing up into the app's error boundary.
+  if (!identifier) {
+    return <RuleNotFound />;
+  }
+
+  return <RuleDetailsContent identifier={identifier} />;
+}
+
+function RuleDetailsContent({ identifier }: { identifier: DataSourceRuleIdentifier }) {
   const { promRule, rulerRule, promGroup, rulerGroup, loading, error, refetch, ...meta } = useRuleDetails(identifier);
 
   // Check if the rule is newly created and not yet visible in Prometheus
@@ -133,17 +135,7 @@ function RuleDetails() {
   }
 
   if (!promRule) {
-    return (
-      <PluginPage
-        pageNav={{
-          text: t('rule-details.error.not-found', 'Rule not found'),
-        }}
-      >
-        <Alert severity="warning" title={t('rule-details.error.not-found', 'Rule not found')}>
-          {t('rule-details.error.not-found-message', 'The requested rule could not be found.')}
-        </Alert>
-      </PluginPage>
-    );
+    return <RuleNotFound />;
   }
 
   // Setup group identifier for actions
@@ -206,6 +198,28 @@ function RuleDetails() {
       </PluginPage>
       {deleteModal}
     </>
+  );
+}
+
+/**
+ * Shown when the URL points at a rule we can't resolve – either the identifier itself is
+ * unreadable or no rule matches it. Both cases leave the user stuck, so offer a way back.
+ */
+function RuleNotFound() {
+  return (
+    <PluginPage pageNav={{ text: t('rule-details.error.not-found', 'Rule not found') }}>
+      <EmptyState
+        variant="not-found"
+        message={t('rule-details.error.not-found', 'Rule not found')}
+        button={
+          <LinkButton icon="arrow-left" variant="secondary" href={`${PLUGIN_BASE_URL}/${ROUTES.Rules}`}>
+            {t('rule-details.error.back-to-rules', 'Back to rules')}
+          </LinkButton>
+        }
+      >
+        {t('rule-details.error.not-found-message', 'The requested rule could not be found.')}
+      </EmptyState>
+    </PluginPage>
   );
 }
 
