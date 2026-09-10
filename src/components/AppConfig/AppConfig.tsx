@@ -1,43 +1,28 @@
 import React from 'react';
 import { AppPluginMeta, PluginConfigPageProps } from '@grafana/data';
-import { CodeEditor, FieldSet, LoadingPlaceholder, Alert } from '@grafana/ui';
+import { FieldSet, LoadingPlaceholder, Alert } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { testIds } from '../testIds';
-import { KeyValueList } from '../KeyValueList';
+import { KeyValueList } from '../KeyValueList/KeyValueList';
 import { alertmanagerApi } from '../../api/alertmanager/alertmanager.endpoints';
-import { useAlertmanagerSafe } from '../../hooks/useAlertmanager';
+import { useAlertmanagerSafe, type AlertmanagerHookResult } from '../../hooks/useAlertmanager';
 import { StoreProvider } from '../StoreProvider/StoreProvider';
 import { sharedStore } from '../../store/store';
 import { AlertmanagerPicker } from '../AlertmanagerPicker/AlertmanagerPicker';
 import { ClusterStatus } from './ClusterStatus';
+import { AlertmanagerConfiguration } from '../../features/alertmanagerConfig/components/AlertmanagerConfiguration';
 import type { PeerStatus } from '@grafana/external-alertmanager/vanilla';
 
 type AppPluginSettings = {};
 
 export interface AppConfigProps extends PluginConfigPageProps<AppPluginMeta<AppPluginSettings>> {}
 
-const AppConfigStatusContent = () => {
-  const alertmanager = useAlertmanagerSafe();
-
+const AppConfigStatusContent = ({ alertmanager }: { alertmanager: AlertmanagerHookResult }) => {
   const {
     data: status,
     isLoading,
     error,
-  } = alertmanagerApi.endpoints.getStatus.useQuery(
-    { dataSourceUID: alertmanager?.uid ?? '' },
-    { skip: !alertmanager?.uid }
-  );
-
-  if (!alertmanager) {
-    return (
-      <Alert title={t('app-config.no-alertmanager.title', 'No Alertmanager configured')} severity="warning">
-        {t(
-          'app-config.no-alertmanager.message',
-          'No Alertmanager data sources are configured. Please configure at least one Alertmanager data source to use this plugin.'
-        )}
-      </Alert>
-    );
-  }
+  } = alertmanagerApi.endpoints.getStatus.useQuery({ dataSourceUID: alertmanager.uid });
 
   if (isLoading) {
     return <LoadingPlaceholder text={t('app-config.loading', 'Loading Alertmanager status...')} />;
@@ -95,20 +80,47 @@ const AppConfigStatusContent = () => {
       <FieldSet label={t('app-config.version-information.title', 'Version Information')}>
         <KeyValueList items={versionItems} />
       </FieldSet>
-      <FieldSet label={t('app-config.api-settings.title', 'Configuration file')}>
-        <CodeEditor value={status.config.original} language={'yaml'} height={600} readOnly />
-      </FieldSet>
     </>
   );
 };
 
-const AppConfigContent = ({ plugin }: AppConfigProps) => {
+/**
+ * The Alertmanager configuration, kept outside the status fieldsets on purpose. The status endpoint
+ * can be unavailable while the stored configuration is perfectly readable, and that is exactly when
+ * somebody needs to get at the configuration to fix it.
+ */
+const AppConfigConfiguration = () => {
   return (
-    <div data-testid={testIds.appConfig}>
+    <FieldSet label={t('app-config.api-settings.title', 'Configuration')}>
+      <AlertmanagerConfiguration />
+    </FieldSet>
+  );
+};
+
+const AppConfigContent = ({ plugin }: AppConfigProps) => {
+  const alertmanager = useAlertmanagerSafe();
+
+  // Neither section below has anything to read without an Alertmanager to read it from, so the
+  // warning stands in for both of them rather than each one guarding separately and rendering
+  // nothing at all.
+  return (
+    <div data-testid={testIds.appConfig.container}>
       <FieldSet label={t('app-config.alertmanager-selection.title', 'Alertmanager')}>
         <AlertmanagerPicker alwaysShow />
       </FieldSet>
-      <AppConfigStatusContent />
+      {alertmanager ? (
+        <>
+          <AppConfigConfiguration />
+          <AppConfigStatusContent alertmanager={alertmanager} />
+        </>
+      ) : (
+        <Alert title={t('app-config.no-alertmanager.title', 'No Alertmanager configured')} severity="warning">
+          {t(
+            'app-config.no-alertmanager.message',
+            'No Alertmanager data sources are configured. Please configure at least one Alertmanager data source to use this plugin.'
+          )}
+        </Alert>
+      )}
     </div>
   );
 };

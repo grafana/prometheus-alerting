@@ -1,9 +1,5 @@
-import { StandardSchemaV1 } from '@standard-schema/spec';
-import {
-  ParsedUserConfiguration,
-  ParsedUserConfigurationSchema,
-  YamlToParsedUserConfiguration,
-} from '@grafana/external-alertmanager/mimir';
+import { z } from 'zod';
+import { ParsedUserConfiguration, YamlToParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 import { baseAlertmanagerApi } from './alertmanager.endpoints';
 import { WithDataSourceInformation } from './alertmanager.types';
 import {
@@ -36,12 +32,10 @@ export const mimirAlertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         // Parse and validate the YAML response
         return parseUserConfigurationResponse(response.data);
       },
+      // No responseSchema: parseUserConfigurationResponse already decodes through
+      // YamlToParsedUserConfiguration, whose output schema is ParsedUserConfigurationSchema, and it
+      // reports a failure as a PARSING_ERROR with the raw response attached.
       providesTags: ['Configuration'],
-      // Validate the final output from queryFn against the schema
-      // Cast needed: zod v4 vendors its own Standard Schema types rather than depending on
-      // @standard-schema/spec, causing a module identity mismatch with RTK Query. Safe at runtime.
-      // See: https://github.com/colinhacks/zod/issues/4938
-      responseSchema: ParsedUserConfigurationSchema as unknown as StandardSchemaV1<ParsedUserConfiguration>,
     }),
     updateUserConfiguration: build.mutation<UpdateAlertmanagerConfigApiResponse, UpdateAlertmanagerConfigApiArg>({
       query: ({ dataSourceUID, configuration }) => {
@@ -57,8 +51,46 @@ export const mimirAlertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       },
       invalidatesTags: ['Configuration'],
     }),
+    /**
+     * The stored configuration document, exactly as Mimir returns it – no parsing, no reformatting.
+     * The YAML configuration editor reads this so people see the comments, key order and quoting
+     * they wrote, and so a configuration our schemas don't recognise can still be opened and fixed.
+     */
+    getUserConfigurationDocument: build.query<string, WithDataSourceInformation>({
+      queryFn: async ({ dataSourceUID }, api, _extraOptions, baseQuery) => {
+        validateMimirDataSource(dataSourceUID);
+
+        const response = await fetchMimirUserConfigurationWithRetry(dataSourceUID, api, baseQuery);
+        if (response.error) {
+          return { error: response.error };
+        }
+
+        return { data: String(response.data) };
+      },
+      providesTags: ['Configuration'],
+      responseSchema: z.string(),
+    }),
+    /** Posts a configuration document verbatim. Mimir validates the configuration it contains. */
+    updateUserConfigurationDocument: build.mutation<UpdateAlertmanagerConfigApiResponse, UpdateConfigDocumentApiArg>({
+      query: ({ dataSourceUID, document }) => {
+        validateMimirDataSource(dataSourceUID);
+        return {
+          method: 'POST',
+          url: `/${dataSourceUID}/api/v1/alerts`,
+          headers: {
+            'Content-Type': 'application/yaml',
+          },
+          body: document,
+        };
+      },
+      invalidatesTags: ['Configuration'],
+    }),
   }),
 });
+
+export interface UpdateConfigDocumentApiArg extends WithDataSourceInformation {
+  document: string;
+}
 
 export interface UpdateAlertmanagerConfigApiArg extends WithDataSourceInformation {
   configuration: ParsedUserConfiguration;

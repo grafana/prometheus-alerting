@@ -446,7 +446,7 @@
       "title": "Alertmanager"
     },
     "api-settings": {
-      "title": "Configuration file"
+      "title": "Configuration"
     },
     "cluster": {
       "name": "Name",
@@ -455,6 +455,35 @@
     },
     "cluster-status": {
       "title": "Cluster Status"
+    },
+    "configuration": {
+      "acknowledge": "I understand the consequences, I want to edit the configuration",
+      "confirm-save": {
+        "body": "This replaces the entire stored configuration with what is in the editor. Receivers, routes and secrets that are not in the editor will be gone, and there is nothing to undo it with.",
+        "confirm": "Replace configuration",
+        "title": "Replace the Alertmanager configuration"
+      },
+      "discard": "Discard changes",
+      "load-error": "Failed to load the Alertmanager configuration",
+      "loading": "Loading configuration...",
+      "resolved-error": "Failed to load the running configuration",
+      "resolved-note": {
+        "body": "The Alertmanager writes this out from the configuration it is running, so every default is filled in and secrets are redacted. It is not the document that gets saved. To change the configuration, use the Source tab.",
+        "title": "This is what the Alertmanager loaded"
+      },
+      "resource-label": "the configuration",
+      "save": "Save configuration",
+      "save-error": "Failed to update the Alertmanager configuration",
+      "save-success": "Alertmanager configuration updated",
+      "saving": "Saving...",
+      "source-warning": {
+        "body": "The Alertmanager gets exactly what is in the editor. Anything missing from it, whether a receiver, a route or a secret, is removed, and there is no earlier version to go back to.",
+        "title": "Saving replaces the whole configuration"
+      },
+      "tabs": {
+        "resolved": "Resolved",
+        "source": "Source"
+      }
     },
     "error": {
       "message": "Failed to load Alertmanager status. Please check your data source configuration.",
@@ -495,6 +524,7 @@
     "all": "All",
     "cancel": "Cancel",
     "duration-invalid": "Enter a duration such as 30s, 5m, or 1h",
+    "loading": "Loading...",
     "permission-denied": {
       "description": "You do not have the required permissions to access this page.",
       "title": "Permission denied"

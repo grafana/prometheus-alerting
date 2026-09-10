@@ -91,9 +91,12 @@ const mockCurrentUser = {
 
 let originalDatasources: typeof config.datasources;
 
-/** Restore the standard datasource configuration used by most unit tests. */
-export function setMockGrafanaDataSources() {
-  (config as any).datasources = mockDatasourcesConfig;
+/**
+ * Restore the standard datasource configuration used by most unit tests. Pass overrides to add or
+ * replace individual data sources, keyed by UID.
+ */
+export function setMockGrafanaDataSources(overrides: typeof mockDatasourcesConfig = {}) {
+  (config as any).datasources = { ...mockDatasourcesConfig, ...overrides };
 }
 
 /**
