@@ -15,6 +15,8 @@ import { RulerRuleDTO } from '@grafana/external-rules/vanilla';
 import { t } from '@grafana/i18n';
 import { Badge, Icon, Stack, useStyles2 } from '@grafana/ui';
 
+import { safeParsePrometheusDuration } from '../../../utils/time.utils';
+
 export type SwapOperation = [number, number];
 
 interface DraggableRulesTableProps {
@@ -77,49 +79,28 @@ function getPendingPeriod(rule: RulerRuleDTO): string | null {
 }
 
 /**
- * Calculate the number of evaluations before an alert starts firing
+ * Calculate the number of evaluations from a matching expression to a firing alert.
+ *
+ * Prometheus starts the pending period on the first matching evaluation, then promotes
+ * the alert on the first later evaluation where the elapsed time is at least `for`.
+ * The examples below assume the expression remains true for every evaluation.
+ *
+ *   for        interval    evaluation 1        evaluation 2       evaluations
+ *   ---------  ----------  ------------------  -----------------  -----------
+ *   omitted    1s          firing              firing             1
+ *   0s         1s          firing              firing             1
+ *   800ms      1s          pending (t=0)       firing (t=1s)      2
+ *   1s         1s          pending (t=0)       firing (t=1s)      2
  */
 function getEvaluationsToStartAlerting(pendingPeriod: string, groupInterval: string): number {
-  const pendingSeconds = parseDurationToSeconds(pendingPeriod);
-  const intervalSeconds = parseDurationToSeconds(groupInterval);
+  const pendingMs = safeParsePrometheusDuration(pendingPeriod);
+  const intervalMs = safeParsePrometheusDuration(groupInterval);
 
-  if (intervalSeconds === 0) {
+  if (intervalMs === 0) {
     return 0;
   }
 
-  return Math.ceil(pendingSeconds / intervalSeconds) + 1;
-}
-
-/**
- * Parse a duration string (e.g., "5m", "1h30m", "30s") to seconds
- */
-function parseDurationToSeconds(duration: string): number {
-  if (!duration) {
-    return 0;
-  }
-
-  let totalSeconds = 0;
-  const regex = /(\d+)(h|m|s)/g;
-  let match;
-
-  while ((match = regex.exec(duration)) !== null) {
-    const value = parseInt(match[1], 10);
-    const unit = match[2];
-
-    switch (unit) {
-      case 'h':
-        totalSeconds += value * 3600;
-        break;
-      case 'm':
-        totalSeconds += value * 60;
-        break;
-      case 's':
-        totalSeconds += value;
-        break;
-    }
-  }
-
-  return totalSeconds;
+  return Math.ceil(pendingMs / intervalMs) + 1;
 }
 
 export function DraggableRulesTable({ rules, groupInterval, onSwap }: DraggableRulesTableProps) {
@@ -213,7 +194,7 @@ const DraggableListItem = ({ provided, rule, groupInterval, isClone = false }: D
     <ListItem
       dragHandle={<Icon name="draggabledots" />}
       ruleName={ruleName}
-      pendingPeriod={pendingPeriod}
+      pendingPeriod={pendingPeriod || t('alerting.draggable-rules-table.no-pending-period', 'None')}
       evalsToStartAlerting={
         isRecording ? (
           <Badge text={t('alerting.draggable-rules-table.recording', 'Recording')} color="purple" />
