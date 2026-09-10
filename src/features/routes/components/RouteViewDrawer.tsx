@@ -7,7 +7,7 @@ import { AlertLabel } from '@grafana/alerting';
 import { normalizeMatchers, Route, stringifyObjectMatcher } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
-import { KeyValueList } from '../../../components/KeyValueList';
+import { KeyValueList } from '../../../components/KeyValueList/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
 
 interface RouteDetailsProps {

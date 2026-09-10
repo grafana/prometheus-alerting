@@ -131,6 +131,16 @@ pnpm i18n-extract # Extract translation strings after adding t() or <Trans />
 - Try to use `satisfies` instead of `any`
 - Run `pnpm typecheck` to verify types
 
+### Imports
+
+- No barrel files. Do not add an `index.ts` that only re-exports from its neighbours, and do not
+  add re-exports to one that already exists. Import from the file that defines the thing:
+  `features/alertmanagerConfig/components/AlertmanagerConfiguration`, not
+  `features/alertmanagerConfig`. A barrel hides where code lives, makes a rename look like a
+  bigger change than it is, and pulls in modules nobody asked for.
+- The `index.ts` files under `packages/*/src/*/` are the workspace packages' declared entry points
+  (`@grafana/external-alertmanager/mimir` and friends), so they are not covered by this.
+
 ### Linting and Formatting
 
 - Verify code with `pnpm lint` and `pnpm typecheck`
