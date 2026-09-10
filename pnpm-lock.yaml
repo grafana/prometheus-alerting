@@ -14,7 +14,7 @@ overrides:
   '@opentelemetry/core@<2.8.0': ^2.8.0
   react-router@>=6.7.0 <6.30.6: ^6.30.6
   react-router-dom@>=6.30.2 <6.30.6: ^6.30.6
-  '@remix-run/router@<1.23.3': '>=1.23.3'
+  react-router-dom-v5-compat@>=6.30.2 <6.30.6: ^6.30.6
   '@faker-js/faker': ^10.5.0
 
 importers:
@@ -1459,10 +1459,6 @@ packages:
         optional: true
       react-redux:
         optional: true
-
-  '@remix-run/router@1.23.3':
-    resolution: {integrity: sha512-4An71tdz9X8+3sI4Qqqd2LWd9vS39J7sqd9EU4Scw7TJE/qB10Flv/UuqbPVgfQV9XoK8Np6jNquZitnZq5i+Q==}
-    engines: {node: '>=14.0.0'}
 
   '@remix-run/router@1.23.4':
     resolution: {integrity: sha512-q7j5geK7xs3UJSdm9/iytUNclBnLmYx1EnSeCFXHPeutdqgIMeFeHtUZgS3EhlKxdBEAu8OwtJCwmLrEzpSs7Q==}
@@ -4373,8 +4369,8 @@ packages:
       react: '>= 16.3'
       react-dom: '>= 16.3'
 
-  react-router-dom-v5-compat@6.30.3:
-    resolution: {integrity: sha512-WWZtwGYyoaeUDNrhzzDkh4JvN5nU0MIz80Dxim6pznQrfS+dv0mvtVoHTA6HlUl/OiJl7WWjbsQwjTnYXejEHg==}
+  react-router-dom-v5-compat@6.30.6:
+    resolution: {integrity: sha512-I54amXpivD3V0r1BYUIj1qLOljXx+UpbLG63Bqbm3BdKH62z4H3znC0L7SyMTYAMEDZuUjDSlqtkBRG/OEDXBg==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=16.8'
@@ -6453,7 +6449,7 @@ snapshots:
       react-inlinesvg: 4.3.0(react@19.2.6)
       react-loading-skeleton: 3.5.0(react@19.2.6)
       react-router-dom: 5.3.4(react@19.2.6)
-      react-router-dom-v5-compat: 6.30.3(react-dom@19.2.6(react@19.2.6))(react-router-dom@5.3.4(react@19.2.6))(react@19.2.6)
+      react-router-dom-v5-compat: 6.30.6(react-dom@19.2.6(react@19.2.6))(react-router-dom@5.3.4(react@19.2.6))(react@19.2.6)
       react-select: 5.10.2(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@18.3.29)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(supports-color@8.1.1)
       react-table: 7.8.0(react@19.2.6)
       react-transition-group: 4.4.5(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -7116,8 +7112,6 @@ snapshots:
     optionalDependencies:
       react: 19.2.6
       react-redux: 9.3.0(@types/react@18.3.29)(react@19.2.6)(redux@5.0.1)
-
-  '@remix-run/router@1.23.3': {}
 
   '@remix-run/router@1.23.4': {}
 
@@ -10197,9 +10191,9 @@ snapshots:
       react-dom: 19.2.6(react@19.2.6)
       react-draggable: 4.5.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
 
-  react-router-dom-v5-compat@6.30.3(react-dom@19.2.6(react@19.2.6))(react-router-dom@5.3.4(react@19.2.6))(react@19.2.6):
+  react-router-dom-v5-compat@6.30.6(react-dom@19.2.6(react@19.2.6))(react-router-dom@5.3.4(react@19.2.6))(react@19.2.6):
     dependencies:
-      '@remix-run/router': 1.23.3
+      '@remix-run/router': 1.23.4
       history: 5.3.0
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)

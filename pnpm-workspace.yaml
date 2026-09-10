@@ -23,7 +23,7 @@ overrides:
   '@opentelemetry/core@<2.8.0': ^2.8.0
   react-router@>=6.7.0 <6.30.6: ^6.30.6
   react-router-dom@>=6.30.2 <6.30.6: ^6.30.6
-  '@remix-run/router@<1.23.3': '>=1.23.3'
+  react-router-dom-v5-compat@>=6.30.2 <6.30.6: ^6.30.6
   # Transitive-only advisory, reached through test tooling. faker never patched the 9.x line, so
   # this crosses a major. @grafana/alerting only pulls faker in for its mock factories, and those
   # stick to APIs that 10.x kept (helpers.arrayElement, number.int, string.alphanumeric and
