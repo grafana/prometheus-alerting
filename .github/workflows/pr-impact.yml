@@ -15,10 +15,10 @@
 # so the runner's own Node is enough and there is no toolchain step to install,
 # cache, or have go down on us.
 #
-# The scripts come from the base branch while this file comes from the PR, so a
-# PR cannot rewrite the rules it is about to be judged by. The two can disagree
-# — a base branch without the tasks has nothing to run — and the job fails in
-# that case rather than skipping, which only happens if the tasks leave main.
+# The scripts and this file both come from the base branch, so a PR cannot
+# rewrite the rules it is about to be judged by. A base branch without the tasks
+# has nothing to run, and the job fails in that case rather than skipping, which
+# only happens if the tasks leave main.
 #
 # Today this only labels and comments — it gates nothing. The intent is that a
 # later change lets the bot approve PRs at the safe end of the scale, so authors
@@ -31,12 +31,13 @@
 #   1. This repo requires code owner review. A GitHub App approval satisfies a
 #      plain approval count but can never satisfy CODEOWNERS, so reconciling
 #      those two is a prerequisite, and a call for whoever owns the ruleset.
-#   2. The approving step must NOT live in a PR-triggered workflow. On a
-#      pull_request event GitHub runs the workflow file from the PR's own branch,
-#      and the token broker binds the workflow path and event rather than the
-#      file contents, so anyone with push access could edit this file and mint
-#      their own approval. The approval belongs in a scheduled sweep that always
-#      runs the copy on main.
+#   2. The approving step must not be reachable from a PR branch. The token
+#      broker binds the workflow path and event rather than the file contents,
+#      so on a pull_request event anyone with push access could edit this file
+#      and mint their own approval. pull_request_target closes that — GitHub
+#      runs main's copy — but it is worth checking rather than assuming before
+#      an approval hangs off it, and a scheduled sweep remains the option that
+#      needs no argument.
 #
 # Design borrowed from grafana/plugin-actions' renovate-approve.yml. The
 # Anthropic side authenticates with workload identity federation — see the note
@@ -48,8 +49,26 @@
 
 name: PR impact
 
+# pull_request_target, not pull_request. Two reasons, and the second one is why
+# the workflow could not authenticate at all:
+#
+#   1. GitHub runs this file from the base branch rather than the PR's, so a PR
+#      cannot rewrite the step that judges it, or the flags Claude runs under.
+#      On pull_request it could, which is the hole in note 2 further down.
+#   2. The OIDC token a run gets is stamped with the event. A pull_request run's
+#      subject is `repo:grafana/prometheus-alerting:pull_request`; a
+#      pull_request_target run's is a main ref, the same shape every other
+#      Anthropic-federated workflow in the org already uses. Every run on
+#      pull_request came back 401 from the token exchange, and a rule that
+#      admits a main ref is the ordinary thing to point at.
+#
+# The catch that comes with it: the token here can be given write access, and
+# the checkout is deliberately never the PR's code. `permissions` below stays
+# read-only and the checkout stays on base.ref — the diff arrives through
+# `gh pr diff` as data, and nothing out of the PR is ever run. Do not add a
+# checkout of the head, and do not widen these permissions.
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
     types: [opened, reopened, synchronize, ready_for_review]
@@ -125,12 +144,13 @@ jobs:
       # than a reviewed diff. They are set through terraform for that reason, so
       # repointing one at a different service account still takes a review.
       #
-      # They name a federation rule created for this repository, whose subject
-      # condition has to admit the OIDC subject a pull_request run gets
-      # (repo:grafana/prometheus-alerting:pull_request), not just main. An
-      # org-wide rule pinned to main — the kind that keeps the renovate gate's
-      # approving token safe from a branch edit — cannot match a PR-triggered
-      # run, which is why this repo has its own.
+      # They name a federation rule whose subject condition has to admit the
+      # OIDC subject these runs get. That was the whole problem: on
+      # pull_request the subject is repo:grafana/prometheus-alerting:pull_request
+      # and every exchange came back 401. On pull_request_target the subject is
+      # a main ref, which is the shape an org-wide main-pinned rule matches, so
+      # this repo may not need a rule of its own at all — worth checking against
+      # the working rules in the org before leaving a bespoke one lying around.
       #
       # Setting anthropic_api_key alongside these would silently win and
       # federation would never be used, so it is gone.
