@@ -339,3 +339,17 @@ const [loadReceivers, { receivers, isLoading, error }] = useReceivers();
 - Feature pages use `AlertmanagerPage` or `PluginPage` wrappers for consistent layout
 - Components use `@grafana/ui` component library
 - Styles use `@emotion/css` for CSS-in-JS
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `grafana/prometheus-alerting`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical roles, each label string equal to its name. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` plus `docs/adr/` at the repo root. See `docs/agents/domain.md`.
