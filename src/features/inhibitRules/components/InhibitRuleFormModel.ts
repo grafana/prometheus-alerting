@@ -1,7 +1,8 @@
 import {
+  encodeSemanticInhibitMatcher,
   type InhibitRule,
   type NormalizedInhibitRule,
-  type ObjectMatcher,
+  type SemanticInhibitMatcher,
 } from '@grafana/external-alertmanager/vanilla';
 
 import { type MatcherFieldValue, emptyMatcherFieldValue } from '../../../types/matcherFields';
@@ -12,16 +13,12 @@ export interface InhibitRuleFormData {
   equal?: string;
 }
 
-function matcherRowsOrEmpty(matchers: ObjectMatcher[]): MatcherFieldValue[] {
+function matcherRowsOrEmpty(matchers: SemanticInhibitMatcher[]): MatcherFieldValue[] {
   const rows = matchers.map(([name, operator, value]) => ({ name, operator, value }));
   return rows.length > 0 ? rows : [emptyMatcherFieldValue];
 }
 
-/**
- * Maps normalized matcher tuples into form rows. Matcher values are editable
- * lexical tokens: surrounding quotes and escapes stay visible and are submitted
- * unchanged, so this UI does not guess Alertmanager's parser dialect.
- */
+/** Maps normalized semantic matcher tuples into editable form rows. */
 export function normalizedInhibitRuleToFormData(rule: NormalizedInhibitRule): InhibitRuleFormData {
   return {
     sourceMatchers: matcherRowsOrEmpty(rule.source_matchers),
@@ -31,58 +28,24 @@ export function normalizedInhibitRuleToFormData(rule: NormalizedInhibitRule): In
 }
 
 /**
- * Checks tokens intended for the single-line matcher value input. Blank and
- * bare tokens without quotes or surrounding whitespace are allowed; balanced
- * quoted tokens are allowed. Physical line breaks and malformed quotes are rejected.
+ * A browser TextArea normalizes physical CR and CRLF to LF. Block only rules
+ * that contain U+000D before reset so an unchanged save cannot alter them.
  */
-export function isEditableMatcherValueToken(value: string): boolean {
-  if (value === '') {
-    return true;
-  }
-
-  if (/\r|\n/.test(value)) {
-    return false;
-  }
-
-  if (!value.startsWith('"')) {
-    return !value.includes('"') && value.trim() === value;
-  }
-
-  if (!value.endsWith('"') || value.length < 2) {
-    return false;
-  }
-
-  let escaped = false;
-  for (let index = 1; index < value.length - 1; index++) {
-    const character = value[index];
-    if (escaped) {
-      escaped = false;
-    } else if (character === '\\') {
-      escaped = true;
-    } else if (character === '"') {
-      return false;
-    }
-  }
-
-  return !escaped;
+export function containsTextAreaUnsupportedCarriageReturn(rule: NormalizedInhibitRule): boolean {
+  return [...rule.source_matchers, ...rule.target_matchers].some(
+    ([name, , value]) => name.includes('\r') || value.includes('\r')
+  );
 }
 
-export function hasUnsupportedCarriageReturn(rule: NormalizedInhibitRule): boolean {
-  return [...rule.source_matchers, ...rule.target_matchers].some(([, , value]) => value.includes('\r'));
-}
-
-function encodeMatcher({ name, operator, value }: MatcherFieldValue): string {
-  return `${name}${operator}${value || '""'}`;
-}
-
-/**
- * Converts structured form rows to Alertmanager matcher strings. Values are raw
- * matcher tokens; a blank new row is encoded as an empty quoted value.
- */
+/** Converts semantic form rows to canonical Alertmanager matcher strings. */
 export function formDataToInhibitRule(data: InhibitRuleFormData): InhibitRule {
   return {
-    source_matchers: data.sourceMatchers.map(encodeMatcher),
-    target_matchers: data.targetMatchers.map(encodeMatcher),
+    source_matchers: data.sourceMatchers.map((matcher) =>
+      encodeSemanticInhibitMatcher([matcher.name, matcher.operator, matcher.value])
+    ),
+    target_matchers: data.targetMatchers.map((matcher) =>
+      encodeSemanticInhibitMatcher([matcher.name, matcher.operator, matcher.value])
+    ),
     equal: data.equal
       ? data.equal
           .split(',')

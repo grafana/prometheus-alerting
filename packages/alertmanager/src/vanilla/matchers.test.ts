@@ -1,10 +1,9 @@
 import { describe, it, test, expect } from 'vitest';
-import { InhibitRule, Matcher, Route } from './api/types/common';
+import { Matcher, Route } from './api/types/common';
 
 import {
   isPromQLStyleMatcher,
   matcherToObjectMatcher,
-  normalizeInhibitRuleMatchers,
   normalizeMatchers,
   ObjectMatcher,
   parseMatcher,
@@ -43,131 +42,6 @@ describe('Prometheus matcher utilities', () => {
         ['foo', eq, 'bar'],
         ['baz', neq, 'qux'],
       ]);
-    });
-  });
-
-  describe('normalizeInhibitRuleMatchers', () => {
-    const eq = '=';
-    const neq = '!=';
-    const regex = '=~';
-    const notRegex = '!~';
-
-    it('should normalize source_matchers and target_matchers', () => {
-      const inhibitRule: InhibitRule = {
-        source_matchers: ['severity=critical', 'alertname=HostDown'],
-        target_matchers: ['severity=warning', 'alertname!=HostDown'],
-        equal: ['instance'],
-      };
-
-      const normalized = normalizeInhibitRuleMatchers(inhibitRule);
-
-      expect(normalized.source_matchers).toEqual<ObjectMatcher[]>([
-        ['severity', eq, 'critical'],
-        ['alertname', eq, 'HostDown'],
-      ]);
-      expect(normalized.target_matchers).toEqual<ObjectMatcher[]>([
-        ['severity', eq, 'warning'],
-        ['alertname', neq, 'HostDown'],
-      ]);
-      expect(normalized.equal).toEqual(['instance']);
-    });
-
-    it('should work with PromQL style matchers', () => {
-      const inhibitRule: InhibitRule = {
-        source_matchers: ['{ severity=critical, region=~us-.* }'],
-        target_matchers: ['{ severity=warning, region!~eu-.* }'],
-      };
-
-      const normalized = normalizeInhibitRuleMatchers(inhibitRule);
-
-      expect(normalized.source_matchers).toEqual<ObjectMatcher[]>([
-        ['severity', eq, 'critical'],
-        ['region', regex, 'us-.*'],
-      ]);
-      expect(normalized.target_matchers).toEqual<ObjectMatcher[]>([
-        ['severity', eq, 'warning'],
-        ['region', notRegex, 'eu-.*'],
-      ]);
-    });
-
-    it('should handle empty matchers', () => {
-      const inhibitRule: InhibitRule = {
-        equal: ['instance'],
-      };
-
-      const normalized = normalizeInhibitRuleMatchers(inhibitRule);
-
-      expect(normalized.source_matchers).toEqual([]);
-      expect(normalized.target_matchers).toEqual([]);
-      expect(normalized.equal).toEqual(['instance']);
-    });
-
-    it('should normalize deprecated source_match and source_match_re', () => {
-      const inhibitRule: InhibitRule = {
-        source_match: { severity: 'critical', alertname: 'HostDown' },
-        source_match_re: { region: 'us-.*' },
-        target_matchers: ['severity=warning'],
-      };
-
-      const normalized = normalizeInhibitRuleMatchers(inhibitRule);
-
-      expect(normalized.source_matchers).toEqual<ObjectMatcher[]>([
-        ['region', regex, '"us-.*"'],
-        ['severity', eq, '"critical"'],
-        ['alertname', eq, '"HostDown"'],
-      ]);
-      expect(normalized.target_matchers).toEqual<ObjectMatcher[]>([['severity', eq, 'warning']]);
-      // Deprecated properties should be omitted
-      expect(normalized).not.toHaveProperty('source_match');
-      expect(normalized).not.toHaveProperty('source_match_re');
-    });
-
-    it('should normalize deprecated target_match and target_match_re', () => {
-      const inhibitRule: InhibitRule = {
-        source_matchers: ['severity=critical'],
-        target_match: { severity: 'warning', alertname: 'ServiceDown' },
-        target_match_re: { region: 'eu-.*' },
-      };
-
-      const normalized = normalizeInhibitRuleMatchers(inhibitRule);
-
-      expect(normalized.source_matchers).toEqual<ObjectMatcher[]>([['severity', eq, 'critical']]);
-      expect(normalized.target_matchers).toEqual<ObjectMatcher[]>([
-        ['region', regex, '"eu-.*"'],
-        ['severity', eq, '"warning"'],
-        ['alertname', eq, '"ServiceDown"'],
-      ]);
-      // Deprecated properties should be omitted
-      expect(normalized).not.toHaveProperty('target_match');
-      expect(normalized).not.toHaveProperty('target_match_re');
-    });
-
-    it('should combine current and deprecated properties', () => {
-      const inhibitRule: InhibitRule = {
-        source_matchers: ['severity=critical'],
-        source_match: { instance: 'host-1' },
-        target_matchers: ['severity=warning'],
-        target_match_re: { job: 'node-.*' },
-        equal: ['instance'],
-      };
-
-      const normalized = normalizeInhibitRuleMatchers(inhibitRule);
-
-      // Both current and deprecated properties should be merged
-      expect(normalized.source_matchers).toEqual<ObjectMatcher[]>([
-        ['severity', eq, 'critical'],
-        ['instance', eq, '"host-1"'],
-      ]);
-      expect(normalized.target_matchers).toEqual<ObjectMatcher[]>([
-        ['severity', eq, 'warning'],
-        ['job', regex, '"node-.*"'],
-      ]);
-      expect(normalized.equal).toEqual(['instance']);
-      // All deprecated properties should be omitted
-      expect(normalized).not.toHaveProperty('source_match');
-      expect(normalized).not.toHaveProperty('source_match_re');
-      expect(normalized).not.toHaveProperty('target_match');
-      expect(normalized).not.toHaveProperty('target_match_re');
     });
   });
 });

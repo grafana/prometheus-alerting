@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { t } from '@grafana/i18n';
 import { Alert, Button, ConfirmModal, Stack, Text } from '@grafana/ui';
-import { type NormalizedInhibitRule, stringifyObjectMatcher } from '@grafana/external-alertmanager/vanilla';
+import { type NormalizedInhibitRule, formatInhibitMatcherForDisplay } from '@grafana/external-alertmanager/vanilla';
 import { AlertLabel } from '@grafana/alerting';
 import { Section } from '../../../components/KeyValueList/Section';
 import { KeyValuePair } from '../../../components/KeyValueList/KeyValueList';
@@ -25,7 +25,7 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
             hasSourceMatchers && inhibitRule.source_matchers ? (
               <Stack direction="row" gap={0.5} wrap="wrap">
                 {inhibitRule.source_matchers.map((matcher, idx) => (
-                  <AlertLabel key={`source-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
+                  <AlertLabel key={`source-${idx}`} value={formatInhibitMatcherForDisplay(matcher)} colorBy="value" />
                 ))}
               </Stack>
             ) : (
@@ -40,7 +40,7 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
             hasTargetMatchers && inhibitRule.target_matchers ? (
               <Stack direction="row" gap={0.5} wrap="wrap">
                 {inhibitRule.target_matchers.map((matcher, idx) => (
-                  <AlertLabel key={`target-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
+                  <AlertLabel key={`target-${idx}`} value={formatInhibitMatcherForDisplay(matcher)} colorBy="value" />
                 ))}
               </Stack>
             ) : (

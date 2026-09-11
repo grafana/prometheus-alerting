@@ -1,13 +1,7 @@
 import { Locator, expect } from '@playwright/test';
+import type { MatcherOperator } from '../../src/types/matcherFields';
 import { AlertmanagerPage } from './AlertmanagerPage';
-import type { MatcherOperator } from '../../src/features/routes/types';
-
-const matcherOperatorOptionNames: Record<MatcherOperator, string> = {
-  '=': '= Equals',
-  '!=': '!= Does not equal',
-  '=~': '=~ Matches regular expression',
-  '!~': '!~ Does not match regular expression',
-};
+import { matcherOperatorOptionNames } from './matcherOperatorOptionNames';
 
 /**
  * Page object for the Routes / notification tree view (`/routes`).

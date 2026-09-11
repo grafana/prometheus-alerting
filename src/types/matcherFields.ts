@@ -1,9 +1,8 @@
 /**
- * Shared form representation for Alertmanager matcher rows.
+ * Shared UI row shape for Alertmanager matcher editors.
  *
- * Matcher values are feature-specific: routes use semantic values, while
- * inhibition forms keep editable lexical matcher tokens. The row shape stays
- * neutral so neither domain model depends on the React editor.
+ * Syntax ownership is feature-specific: route rows preserve their legacy
+ * textual matcher tokens, while inhibition rows contain semantic strings.
  */
 export const matcherOperators = {
   equals: '=',

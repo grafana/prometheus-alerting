@@ -73,6 +73,7 @@ describe('RouteEditForm matcher fields', () => {
 
     expect(screen.getByRole('textbox', { name: 'Label' })).toHaveValue('severity');
     expect(screen.getByRole('textbox', { name: 'Value' })).toHaveValue('critical');
+    expect(screen.getByRole('textbox', { name: 'Value' }).tagName).toBe('INPUT');
 
     await user.click(screen.getByRole('button', { name: 'Add matcher' }));
     const labels = screen.getAllByRole('textbox', { name: 'Label' });

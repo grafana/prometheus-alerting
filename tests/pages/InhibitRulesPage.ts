@@ -1,20 +1,15 @@
 import { Locator, expect } from '@playwright/test';
+import type { MatcherOperator } from '../../src/types/matcherFields';
 import { AlertmanagerPage } from './AlertmanagerPage';
+import { matcherOperatorOptionNames } from './matcherOperatorOptionNames';
 
 type MatcherInput = {
   label: string;
-  operator?: '=' | '!=' | '=~' | '!~';
+  operator?: MatcherOperator;
   value: string;
 };
 
 type MatcherSide = 'source' | 'target';
-
-const matcherOperatorOptionNames: Record<NonNullable<MatcherInput['operator']>, string> = {
-  '=': '= Equals',
-  '!=': '!= Does not equal',
-  '=~': '=~ Matches regular expression',
-  '!~': '!~ Does not match regular expression',
-};
 
 /**
  * Page object for the Inhibit Rules view (`/inhibit-rules`).

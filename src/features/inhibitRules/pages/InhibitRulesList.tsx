@@ -8,8 +8,8 @@ import { t } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
 import {
   type NormalizedInhibitRule,
-  type ObjectMatcher,
-  stringifyObjectMatcher,
+  type SemanticInhibitMatcher,
+  formatInhibitMatcherForDisplay,
 } from '@grafana/external-alertmanager/vanilla';
 import { AlertLabel } from '@grafana/alerting';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
@@ -20,7 +20,7 @@ import { InhibitRuleCreateDrawer } from '../components/InhibitRuleCreateDrawer';
 import { isAbilityAllowed } from '../../../access-control/abilities';
 import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 
-const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
+const MatchersCell = ({ matchers }: { matchers?: SemanticInhibitMatcher[] }) => {
   if (!matchers || matchers.length === 0) {
     return <span>{t('inhibit-rules.no-matchers', 'None')}</span>;
   }
@@ -29,8 +29,8 @@ const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
     <Stack direction="row">
       {matchers.map((matcher, idx) => (
         <AlertLabel
-          key={`${stringifyObjectMatcher(matcher)}-${idx}`}
-          value={stringifyObjectMatcher(matcher)}
+          key={`${formatInhibitMatcherForDisplay(matcher)}-${idx}`}
+          value={formatInhibitMatcherForDisplay(matcher)}
           colorBy="value"
         />
       ))}

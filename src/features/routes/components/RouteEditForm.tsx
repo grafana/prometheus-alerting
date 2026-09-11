@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import React, { useState } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { produce } from 'immer';
 
 import { GrafanaTheme2 } from '@grafana/data';
@@ -9,7 +9,7 @@ import { Trans, t } from '@grafana/i18n';
 import { Badge, Button, ComboboxOption, Field, Input, MultiCombobox, Stack, Switch, useStyles2 } from '@grafana/ui';
 
 import { useTimeIntervals } from '../../timeIntervals/hooks/useTimeIntervals';
-import { MatcherFieldArray } from '../../../components/MatcherFieldArray';
+import { MatcherFieldArray, MatcherOperatorSelect } from '../../../components/MatcherFieldArray';
 import { emptyMatcherFieldValue } from '../../../types/matcherFields';
 import { FormAmRoute, commonGroupByOptions } from '../types';
 import { amRouteToFormAmRoute, isValidPromDuration } from '../utils/routeTransform';
@@ -39,12 +39,12 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
     handleSubmit,
     control,
     register,
-    getFieldState,
     formState: { errors },
   } = useForm<FormAmRoute>({
     defaultValues: formAmRoute,
   });
 
+  const matcherFields = useFieldArray({ control, name: 'object_matchers' });
   const matchers = useWatch({ control, name: 'object_matchers' }) ?? [];
   const overrideGrouping = useWatch({ control, name: 'overrideGrouping' });
   const overrideTimings = useWatch({ control, name: 'overrideTimings' });
@@ -88,11 +88,26 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
           )}
 
           <MatcherFieldArray
-            control={control}
-            register={register}
-            getFieldState={getFieldState}
-            name="object_matchers"
-            newMatcher={emptyMatcherFieldValue}
+            rows={matcherFields.fields.map((field, index) => ({
+              id: field.id,
+              labelInput: register(`object_matchers.${index}.name`, {
+                required: t('matcher-field-array.required', 'Required'),
+              }),
+              operatorControl: (
+                <Controller
+                  control={control}
+                  name={`object_matchers.${index}.operator`}
+                  render={({ field: { onChange, value } }) => (
+                    <MatcherOperatorSelect value={value} onChange={onChange} />
+                  )}
+                />
+              ),
+              valueInput: register(`object_matchers.${index}.value`),
+              labelError: errors.object_matchers?.[index]?.name?.message,
+              valueError: errors.object_matchers?.[index]?.value?.message,
+            }))}
+            onAdd={() => matcherFields.append(emptyMatcherFieldValue)}
+            onRemove={matcherFields.remove}
             labels={{
               addMatcher: t('routes.edit.add-matcher', 'Add matcher'),
               removeMatcher: t('routes.edit.remove-matcher', 'Remove matcher'),

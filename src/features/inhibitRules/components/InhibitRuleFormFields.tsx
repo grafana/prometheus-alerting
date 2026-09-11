@@ -1,28 +1,25 @@
 import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, Field, FieldSet, Input, Stack } from '@grafana/ui';
+import { Alert, Button, Field, FieldSet, Input, Stack, Text } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { type NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
 
 import { MutationError } from '../../../access-control/components/MutationError';
-import { MatcherFieldArray } from '../../../components/MatcherFieldArray';
+import { MatcherFieldArray, MatcherOperatorSelect } from '../../../components/MatcherFieldArray';
 import { emptyMatcherFieldValue, matcherOperators } from '../../../types/matcherFields';
 import {
-  hasUnsupportedCarriageReturn,
-  isEditableMatcherValueToken,
+  containsTextAreaUnsupportedCarriageReturn,
   normalizedInhibitRuleToFormData,
   type InhibitRuleFormData,
 } from './InhibitRuleFormModel';
 
 function createInhibitRuleFormSchema() {
   const matcher = z.object({
-    name: z.string().trim().min(1, t('inhibit-rules.form.matcher-required', 'Required')),
+    name: z.string().refine((name) => name.trim().length > 0, t('inhibit-rules.form.matcher-required', 'Required')),
     operator: z.enum(matcherOperators),
-    value: z
-      .string()
-      .refine(isEditableMatcherValueToken, t('inhibit-rules.form.matcher-value-invalid', 'Invalid matcher value')),
+    value: z.string(),
   });
 
   return z.object({
@@ -52,11 +49,12 @@ export function InhibitRuleFormFields({
   cancelButtonText,
 }: InhibitRuleFormFieldsProps) {
   const isEditMode = Boolean(inhibitRule);
-  const hasUnsupportedValue = inhibitRule ? hasUnsupportedCarriageReturn(inhibitRule) : false;
+  const hasTextAreaUnsupportedCarriageReturn = inhibitRule
+    ? containsTextAreaUnsupportedCarriageReturn(inhibitRule)
+    : false;
   const {
     control,
     register,
-    getFieldState,
     handleSubmit,
     reset,
     formState: { errors },
@@ -69,13 +67,16 @@ export function InhibitRuleFormFields({
     },
   });
 
+  const sourceMatcherFields = useFieldArray({ control, name: 'sourceMatchers' });
+  const targetMatcherFields = useFieldArray({ control, name: 'targetMatchers' });
+
   useEffect(() => {
-    if (inhibitRule && !hasUnsupportedValue) {
+    if (inhibitRule && !hasTextAreaUnsupportedCarriageReturn) {
       reset(normalizedInhibitRuleToFormData(inhibitRule));
     }
-  }, [hasUnsupportedValue, inhibitRule, reset]);
+  }, [hasTextAreaUnsupportedCarriageReturn, inhibitRule, reset]);
 
-  if (hasUnsupportedValue) {
+  if (hasTextAreaUnsupportedCarriageReturn) {
     return (
       <Stack direction="column" gap={2}>
         <Alert
@@ -84,7 +85,7 @@ export function InhibitRuleFormFields({
         >
           {t(
             'inhibit-rules.form.unsupported-value-description',
-            'This inhibit rule contains a carriage return in a matcher value. Editing it here could change the configuration. Edit it in the Alertmanager configuration instead.'
+            'This inhibit rule contains a carriage return in a matcher. Editing it here could change the configuration. Edit it in the Alertmanager configuration instead.'
           )}
         </Alert>
         <Stack direction="row" gap={2}>
@@ -110,19 +111,35 @@ export function InhibitRuleFormFields({
         />
 
         <FieldSet label={t('inhibit-rules.form.source-matchers-label', 'Source Matchers')}>
-          <p>
+          <Text element="p" color="secondary">
             {t(
               'inhibit-rules.form.source-matchers-description',
-              'The source alert must match all of these matchers. Enter matcher values as Alertmanager syntax; quotes and escapes such as \\n are preserved.'
+              'The source alert must match all of these matchers. Enter values normally; they are escaped for Alertmanager when saved.'
             )}
-          </p>
+          </Text>
           <MatcherFieldArray
-            control={control}
-            register={register}
-            getFieldState={getFieldState}
-            name="sourceMatchers"
-            newMatcher={emptyMatcherFieldValue}
+            rows={sourceMatcherFields.fields.map((field, index) => ({
+              id: field.id,
+              labelInput: register(`sourceMatchers.${index}.name`, {
+                required: t('matcher-field-array.required', 'Required'),
+              }),
+              operatorControl: (
+                <Controller
+                  control={control}
+                  name={`sourceMatchers.${index}.operator`}
+                  render={({ field: { onChange, value } }) => (
+                    <MatcherOperatorSelect value={value} onChange={onChange} />
+                  )}
+                />
+              ),
+              valueInput: register(`sourceMatchers.${index}.value`),
+              labelError: errors.sourceMatchers?.[index]?.name?.message,
+              valueError: errors.sourceMatchers?.[index]?.value?.message,
+            }))}
+            onAdd={() => sourceMatcherFields.append(emptyMatcherFieldValue)}
+            onRemove={sourceMatcherFields.remove}
             minRows={1}
+            valueControl="textarea"
             labels={{
               addMatcher: t('inhibit-rules.form.add-source-matcher', 'Add source matcher'),
               removeMatcher: t('inhibit-rules.form.remove-source-matcher', 'Remove source matcher'),
@@ -131,19 +148,35 @@ export function InhibitRuleFormFields({
         </FieldSet>
 
         <FieldSet label={t('inhibit-rules.form.target-matchers-label', 'Target Matchers')}>
-          <p>
+          <Text element="p" color="secondary">
             {t(
               'inhibit-rules.form.target-matchers-description',
-              'Matching alerts will be suppressed. Enter matcher values as Alertmanager syntax; quotes and escapes such as \\n are preserved.'
+              'Matching alerts will be suppressed. Enter values normally; they are escaped for Alertmanager when saved.'
             )}
-          </p>
+          </Text>
           <MatcherFieldArray
-            control={control}
-            register={register}
-            getFieldState={getFieldState}
-            name="targetMatchers"
-            newMatcher={emptyMatcherFieldValue}
+            rows={targetMatcherFields.fields.map((field, index) => ({
+              id: field.id,
+              labelInput: register(`targetMatchers.${index}.name`, {
+                required: t('matcher-field-array.required', 'Required'),
+              }),
+              operatorControl: (
+                <Controller
+                  control={control}
+                  name={`targetMatchers.${index}.operator`}
+                  render={({ field: { onChange, value } }) => (
+                    <MatcherOperatorSelect value={value} onChange={onChange} />
+                  )}
+                />
+              ),
+              valueInput: register(`targetMatchers.${index}.value`),
+              labelError: errors.targetMatchers?.[index]?.name?.message,
+              valueError: errors.targetMatchers?.[index]?.value?.message,
+            }))}
+            onAdd={() => targetMatcherFields.append(emptyMatcherFieldValue)}
+            onRemove={targetMatcherFields.remove}
             minRows={1}
+            valueControl="textarea"
             labels={{
               addMatcher: t('inhibit-rules.form.add-target-matcher', 'Add target matcher'),
               removeMatcher: t('inhibit-rules.form.remove-target-matcher', 'Remove target matcher'),

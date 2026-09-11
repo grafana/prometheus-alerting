@@ -154,6 +154,9 @@ importers:
       '@swc/helpers':
         specifier: ^0.5.21
         version: 0.5.21
+      '@testing-library/dom':
+        specifier: ^10.4.1
+        version: 10.4.1
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -256,6 +259,9 @@ importers:
       terser-webpack-plugin:
         specifier: ^5.6.0
         version: 5.6.0(@swc/core@1.15.33(@swc/helpers@0.5.21))(lightningcss@1.32.0)(postcss@8.5.25)(webpack@5.107.0)
+      testing-library-selector:
+        specifier: ^0.3.1
+        version: 0.3.1(@testing-library/dom@10.4.1)
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.21))(@types/node@25.9.1)(typescript@6.0.3)
@@ -5011,6 +5017,12 @@ packages:
     resolution: {integrity: sha512-tPbLXTI6ohPASb/1YViL428oEHu6/qv1OxqYnfaonVCFHqx4+wCd95pHrQWsL5X4pl90CTyW9piSAsS2L0VoMw==}
     engines: {node: '>=10'}
     hasBin: true
+
+  testing-library-selector@0.3.1:
+    resolution: {integrity: sha512-DjXyUhY/omIQNXnjOBFpkRaLADlf9yWDAW0KYpuNuurlS4aJNd1cE7yGG1XAH/LaMOSJ8woCkKdcO2UzyDAYQw==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      '@testing-library/dom': ^9.3.3
 
   text-decoder@1.2.7:
     resolution: {integrity: sha512-vlLytXkeP4xvEq2otHeJfSQIRyWxo/oZGEbXrtEEF9Hnmrdly59sUbzZ/QgyWuLYHctCHxFF4tRQZNQ9k60ExQ==}
@@ -10925,6 +10937,10 @@ snapshots:
       acorn: 8.16.0
       commander: 2.20.3
       source-map-support: 0.5.21
+
+  testing-library-selector@0.3.1(@testing-library/dom@10.4.1):
+    dependencies:
+      '@testing-library/dom': 10.4.1
 
   text-decoder@1.2.7:
     dependencies:
