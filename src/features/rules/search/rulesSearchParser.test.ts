@@ -14,4 +14,18 @@ describe('getSearchFilterFromQuery', () => {
       labels: ['team=platform'],
     });
   });
+
+  it('ignores filter keys that carry no value', () => {
+    expect(getSearchFilterFromQuery('rule: state:')).toEqual({});
+    expect(getSearchFilterFromQuery('namespace:"" HighErrorRate')).toEqual({ ruleName: 'HighErrorRate' });
+  });
+
+  it('drops surrounding quotes from free text and unterminated filter values', () => {
+    expect(getSearchFilterFromQuery('"High Error Rate"')).toEqual({ ruleName: 'High Error Rate' });
+    expect(getSearchFilterFromQuery('rule:"HighErrorRate')).toEqual({ ruleName: 'HighErrorRate' });
+  });
+
+  it('keeps the first value of a repeated single-value filter out of the free text', () => {
+    expect(getSearchFilterFromQuery('state:firing state:pending')).toEqual({ ruleState: 'firing' });
+  });
 });

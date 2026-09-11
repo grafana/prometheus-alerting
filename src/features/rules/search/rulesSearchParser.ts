@@ -23,8 +23,34 @@ const FILTER_PATTERNS = {
   label: /label:(?:"([^"]*)"|(\S+))/gi,
 };
 
+/** Matches a filter key with no usable value, such as the `rule:` a user has half typed. */
+const VALUELESS_FILTER_PATTERN = new RegExp(
+  `(?:^|\\s)(?:${Object.keys(FILTER_PATTERNS).join('|')}):(?:"")?(?=\\s|$)`,
+  'gi'
+);
+
 function formatValue(value: string): string {
   return /\s/.test(value) ? `"${value}"` : value;
+}
+
+function readFilterValue(match: RegExpMatchArray): string {
+  const quotedValue = match[1];
+  if (quotedValue !== undefined) {
+    return quotedValue;
+  }
+
+  // An unterminated quote, as in `rule:"my rule`, must not leak the quote into the value.
+  return (match[2] ?? '').replace(/^"/, '');
+}
+
+function normalizeFreeText(text: string): string {
+  return text
+    .replace(VALUELESS_FILTER_PATTERN, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^"+/, '')
+    .replace(/"+$/, '')
+    .trim();
 }
 
 /**
@@ -35,65 +61,58 @@ export function getSearchFilterFromQuery(query: string): RulesFilter {
 
   let processedQuery = query;
 
-  // Extract datasource filters (can have multiple)
-  const datasourceMatches = [...query.matchAll(FILTER_PATTERNS.datasource)];
-  if (datasourceMatches.length > 0) {
-    filter.dataSourceNames = [];
-    datasourceMatches.forEach((match) => {
-      const value = match[1] || match[2]; // Quoted or unquoted
-      filter.dataSourceNames?.push(value);
+  /** Removes every occurrence of a filter from the free text and returns the values it carried. */
+  const consumeFilter = (pattern: RegExp): string[] => {
+    pattern.lastIndex = 0;
+    const values: string[] = [];
+
+    for (const match of query.matchAll(pattern)) {
       processedQuery = processedQuery.replace(match[0], ' ');
-    });
+      const value = readFilterValue(match);
+      if (value) {
+        values.push(value);
+      }
+    }
+
+    return values;
+  };
+
+  const dataSourceNames = consumeFilter(FILTER_PATTERNS.datasource);
+  if (dataSourceNames.length > 0) {
+    filter.dataSourceNames = dataSourceNames;
   }
 
-  // Extract label filters (can have multiple)
-  const labelMatches = [...query.matchAll(FILTER_PATTERNS.label)];
-  if (labelMatches.length > 0) {
-    filter.labels = [];
-    labelMatches.forEach((match) => {
-      const value = match[1] || match[2];
-      filter.labels?.push(value);
-      processedQuery = processedQuery.replace(match[0], ' ');
-    });
+  const labels = consumeFilter(FILTER_PATTERNS.label);
+  if (labels.length > 0) {
+    filter.labels = labels;
   }
 
-  // Extract single-value filters
-  FILTER_PATTERNS.namespace.lastIndex = 0; // Reset regex state
-  const namespaceMatch = FILTER_PATTERNS.namespace.exec(query);
-  if (namespaceMatch) {
-    filter.namespace = namespaceMatch[1] || namespaceMatch[2];
-    processedQuery = processedQuery.replace(namespaceMatch[0], ' ');
+  const [namespace] = consumeFilter(FILTER_PATTERNS.namespace);
+  if (namespace) {
+    filter.namespace = namespace;
   }
 
-  FILTER_PATTERNS.group.lastIndex = 0;
-  const groupMatch = FILTER_PATTERNS.group.exec(query);
-  if (groupMatch) {
-    filter.groupName = groupMatch[1] || groupMatch[2];
-    processedQuery = processedQuery.replace(groupMatch[0], ' ');
+  const [groupName] = consumeFilter(FILTER_PATTERNS.group);
+  if (groupName) {
+    filter.groupName = groupName;
   }
 
-  FILTER_PATTERNS.rule.lastIndex = 0;
-  const ruleMatch = FILTER_PATTERNS.rule.exec(query);
-  if (ruleMatch) {
-    filter.ruleName = ruleMatch[1] || ruleMatch[2];
-    processedQuery = processedQuery.replace(ruleMatch[0], ' ');
+  const [ruleName] = consumeFilter(FILTER_PATTERNS.rule);
+  if (ruleName) {
+    filter.ruleName = ruleName;
   }
 
-  FILTER_PATTERNS.state.lastIndex = 0;
-  const stateMatch = FILTER_PATTERNS.state.exec(query);
-  if (stateMatch) {
-    filter.ruleState = stateMatch[1] || stateMatch[2];
-    processedQuery = processedQuery.replace(stateMatch[0], ' ');
+  const [ruleState] = consumeFilter(FILTER_PATTERNS.state);
+  if (ruleState) {
+    filter.ruleState = ruleState;
   }
 
-  FILTER_PATTERNS.type.lastIndex = 0;
-  const typeMatch = FILTER_PATTERNS.type.exec(query);
-  if (typeMatch) {
-    filter.ruleType = typeMatch[1] || typeMatch[2];
-    processedQuery = processedQuery.replace(typeMatch[0], ' ');
+  const [ruleType] = consumeFilter(FILTER_PATTERNS.type);
+  if (ruleType) {
+    filter.ruleType = ruleType;
   }
 
-  const freeText = processedQuery.replace(/\s+/g, ' ').trim();
+  const freeText = normalizeFreeText(processedQuery);
   if (!filter.ruleName && freeText) {
     filter.ruleName = freeText;
   }
