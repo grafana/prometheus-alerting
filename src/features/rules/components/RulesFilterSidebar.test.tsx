@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 import { TestMemoryRouter } from '../../../test/utils/test-wrapper';
@@ -16,12 +16,21 @@ vi.mock('../hooks/useRuleFilterOptions', () => ({
 
 function LocationSearch() {
   const { search } = useLocation();
-  return <output data-testid="location-search">{search}</output>;
+  const navigate = useNavigate();
+  return (
+    <>
+      <output data-testid="location-search">{search}</output>
+      <button onClick={() => navigate(-1)}>Back</button>
+      <button onClick={() => navigate(1)}>Forward</button>
+    </>
+  );
 }
 
-function renderSidebar(initialSearch: string) {
+function renderSidebar(initialSearch: string, previousSearch?: string) {
+  const initialEntries =
+    previousSearch === undefined ? [`/rules${initialSearch}`] : [`/rules${previousSearch}`, `/rules${initialSearch}`];
   render(
-    <TestMemoryRouter initialEntries={[`/rules${initialSearch}`]}>
+    <TestMemoryRouter initialEntries={initialEntries}>
       <RulesFilter />
       <RulesFilterSidebar />
       <LocationSearch />
@@ -59,6 +68,24 @@ describe('RulesFilterSidebar', () => {
     await waitFor(() => {
       expect(screen.getByTestId('location-search')).toHaveTextContent('?search=rule%3AError');
     });
+  });
+
+  it('syncs with back and forward navigation and still accepts sidebar edits', async () => {
+    const user = userEvent.setup();
+    renderSidebar('?search=ErrorRate', '?search=namespace%3Aprod');
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByTestId('namespace-filter-input')).toHaveValue('prod');
+    expect(screen.getByTestId('rule-name-filter-input')).toHaveValue('');
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?search=namespace%3Aprod');
+
+    await user.click(screen.getByRole('button', { name: 'Forward' }));
+    expect(screen.getByTestId('namespace-filter-input')).toHaveValue('');
+    expect(screen.getByTestId('rule-name-filter-input')).toHaveValue('ErrorRate');
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?search=ErrorRate');
+
+    await user.type(screen.getByTestId('namespace-filter-input'), 'dev');
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?search=namespace%3Adev+rule%3AErrorRate');
   });
 
   it('keeps applying filters after the search query changes outside the sidebar', async () => {
