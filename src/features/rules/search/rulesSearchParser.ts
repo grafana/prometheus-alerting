@@ -23,6 +23,13 @@ const FILTER_PATTERNS = {
   label: /label:(?:"([^"]*)"|(\S+))/gi,
 };
 
+/**
+ * Recording rule names such as `type:request_rate:sum` look exactly like a filter token, so a value
+ * that is not a known state or type is left as free text rather than filtering the list down to nothing.
+ */
+const RULE_STATES = ['firing', 'pending', 'inactive', 'normal', 'recovering', 'unknown'];
+const RULE_TYPES = ['alerting', 'recording'];
+
 /** Matches a filter key with no usable value, such as the `rule:` a user has half typed. */
 const VALUELESS_FILTER_PATTERN = new RegExp(
   `(?:^|\\s)(?:${Object.keys(FILTER_PATTERNS).join('|')}):(?:"")?(?=\\s|$)`,
@@ -61,17 +68,28 @@ export function getSearchFilterFromQuery(query: string): RulesFilter {
 
   let processedQuery = query;
 
-  /** Removes every occurrence of a filter from the free text and returns the values it carried. */
-  const consumeFilter = (pattern: RegExp): string[] => {
+  /**
+   * Removes every occurrence of a filter from the free text and returns the values it carried.
+   * A token rejected by `allowedValues` stays in the free text so it can match a rule name.
+   */
+  const consumeFilter = (pattern: RegExp, allowedValues?: string[]): string[] => {
     pattern.lastIndex = 0;
     const values: string[] = [];
 
     for (const match of query.matchAll(pattern)) {
-      processedQuery = processedQuery.replace(match[0], ' ');
       const value = readFilterValue(match);
-      if (value) {
-        values.push(value);
+      if (!value) {
+        processedQuery = processedQuery.replace(match[0], ' ');
+        continue;
       }
+
+      const normalizedValue = allowedValues ? value.toLowerCase() : value;
+      if (allowedValues && !allowedValues.includes(normalizedValue)) {
+        continue;
+      }
+
+      processedQuery = processedQuery.replace(match[0], ' ');
+      values.push(normalizedValue);
     }
 
     return values;
@@ -102,12 +120,12 @@ export function getSearchFilterFromQuery(query: string): RulesFilter {
     filter.ruleName = ruleName;
   }
 
-  const [ruleState] = consumeFilter(FILTER_PATTERNS.state);
+  const [ruleState] = consumeFilter(FILTER_PATTERNS.state, RULE_STATES);
   if (ruleState) {
     filter.ruleState = ruleState;
   }
 
-  const [ruleType] = consumeFilter(FILTER_PATTERNS.type);
+  const [ruleType] = consumeFilter(FILTER_PATTERNS.type, RULE_TYPES);
   if (ruleType) {
     filter.ruleType = ruleType;
   }
