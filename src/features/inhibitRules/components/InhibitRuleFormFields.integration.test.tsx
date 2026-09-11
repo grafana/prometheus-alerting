@@ -47,30 +47,29 @@ function renderForm(inhibitRule?: NormalizedInhibitRule) {
 }
 
 describe('InhibitRuleFormFields', () => {
-  it('validates source and target labels independently and preserves empty values', async () => {
+  it('rejects empty labels, clears errors on change, and preserves a whitespace-only UTF-8 name', async () => {
     const user = userEvent.setup();
     const { submission } = renderForm();
     const source = ui.sourceMatchers.get();
     const target = ui.targetMatchers.get();
 
-    await user.type(ui.matcherLabel.get(source), '   ');
     await user.click(ui.createButton.get());
 
     expect(await ui.requiredError.find(source)).toBeInTheDocument();
     expect(await ui.requiredError.find(target)).toBeInTheDocument();
     expect(submission.count).toBe(0);
 
-    await user.clear(ui.matcherLabel.get(source));
-    await user.type(ui.matcherLabel.get(source), 'source');
+    await user.type(ui.matcherLabel.get(source), '   ');
     await waitFor(() => expect(ui.requiredError.query(source)).not.toBeInTheDocument());
     await user.type(ui.matcherLabel.get(target), 'target');
     await user.click(ui.createButton.get());
 
     await waitFor(() => expect(submission.count).toBe(1));
     expect(submittedData(submission)).toMatchObject({
-      sourceMatchers: [{ name: 'source', operator: '=', value: '' }],
+      sourceMatchers: [{ name: '   ', operator: '=', value: '' }],
       targetMatchers: [{ name: 'target', operator: '=', value: '' }],
     });
+    expect(formDataToInhibitRule(submittedData(submission)).source_matchers).toEqual(['"   "=""']);
   });
 
   it('preserves source matcher row order after adding and removing a middle row', async () => {
@@ -120,26 +119,33 @@ describe('InhibitRuleFormFields', () => {
     });
   });
 
-  it('blocks physical CR and CRLF values before browser TextAreas can normalize them', async () => {
+  it('blocks a decoded UTF-8 name line feed before a browser Input can strip it', async () => {
     const onCancel = vi.fn();
-    render(
-      <InhibitRuleFormFields
-        inhibitRule={{
-          source_matchers: [['message', '=', 'first\r\nsecond']],
-          target_matchers: [['target\rname', '=', 'value']],
-        }}
-        onSubmit={vi.fn()}
-        onCancel={onCancel}
-        isLoading={false}
-      />
-    );
+    const onSubmit = vi.fn();
+    const rule = normalizeInhibitRuleMatchers({
+      source_matchers: [String.raw`"line\nname"="value"`],
+      target_matchers: ['target="value"'],
+    });
+
+    render(<InhibitRuleFormFields inhibitRule={rule} onSubmit={onSubmit} onCancel={onCancel} isLoading={false} />);
 
     expect(screen.getByRole('alert')).toHaveTextContent('This inhibit rule cannot be edited here');
-    expect(screen.getByRole('alert')).toHaveTextContent('carriage return');
+    expect(screen.getByRole('alert')).toHaveTextContent('line break');
     expect(ui.updateButton.query()).not.toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
 
     await userEvent.setup().click(ui.cancelButton.get());
     expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it('blocks physical CR and CRLF before browser form controls can normalize them', () => {
+    renderForm({
+      source_matchers: [['message', '=', 'first\r\nsecond']],
+      target_matchers: [['target\rname', '=', 'value']],
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('line break');
+    expect(ui.updateButton.query()).not.toBeInTheDocument();
   });
 
   it('resets independent semantic rows before unchanged submission', async () => {

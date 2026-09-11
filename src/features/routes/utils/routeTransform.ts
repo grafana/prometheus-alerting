@@ -1,7 +1,8 @@
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
-import { type FormAmRoute, type MatcherFieldValue, type MatcherOperator, emptyRoute } from '../types';
+import { type MatcherFieldValue, type MatcherOperator } from '../../../types/matcherFields';
 import { isValidPrometheusDuration } from '../../../utils/time.utils';
+import { type FormAmRoute, emptyRoute } from '../types';
 
 /**
  * Parse a matcher string like "severity=critical" or "team=~platform.*"

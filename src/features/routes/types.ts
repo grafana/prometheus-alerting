@@ -1,7 +1,5 @@
 import type { MatcherFieldValue } from '../../types/matcherFields';
 
-export type { MatcherFieldValue, MatcherOperator } from '../../types/matcherFields';
-
 /**
  * Form representation of a route for editing
  */

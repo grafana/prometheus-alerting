@@ -28,12 +28,12 @@ export function normalizedInhibitRuleToFormData(rule: NormalizedInhibitRule): In
 }
 
 /**
- * A browser TextArea normalizes physical CR and CRLF to LF. Block only rules
- * that contain U+000D before reset so an unchanged save cannot alter them.
+ * Browser form controls cannot preserve every semantic matcher line break:
+ * Inputs strip line breaks from names, and TextAreas normalize CR/CRLF values to LF.
  */
-export function containsTextAreaUnsupportedCarriageReturn(rule: NormalizedInhibitRule): boolean {
+export function containsUnsupportedMatcherLineBreak(rule: NormalizedInhibitRule): boolean {
   return [...rule.source_matchers, ...rule.target_matchers].some(
-    ([name, , value]) => name.includes('\r') || value.includes('\r')
+    ([name, , value]) => name.includes('\n') || name.includes('\r') || value.includes('\r')
   );
 }
 

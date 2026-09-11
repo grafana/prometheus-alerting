@@ -2,7 +2,7 @@ import { normalizeInhibitRuleMatchers, type NormalizedInhibitRule } from '@grafa
 
 import {
   formDataToInhibitRule,
-  containsTextAreaUnsupportedCarriageReturn,
+  containsUnsupportedMatcherLineBreak,
   normalizedInhibitRuleToFormData,
 } from './InhibitRuleFormModel';
 
@@ -36,23 +36,21 @@ describe('normalizedInhibitRuleToFormData', () => {
   });
 });
 
-describe('containsTextAreaUnsupportedCarriageReturn', () => {
-  const rulesWithCarriageReturns: NormalizedInhibitRule[] = [
+describe('containsUnsupportedMatcherLineBreak', () => {
+  const rulesWithUnsupportedLineBreaks: NormalizedInhibitRule[] = [
     { source_matchers: [['message', '=', 'a\rb']], target_matchers: [] },
     { source_matchers: [], target_matchers: [['target', '=', 'a\r\nb']] },
     { source_matchers: [['source\rname', '=', 'value']], target_matchers: [] },
+    { source_matchers: [['source\nname', '=', 'value']], target_matchers: [] },
   ];
 
-  it.each(rulesWithCarriageReturns)(
-    'blocks a normalized matcher with physical CR before a TextArea can normalize it',
-    (rule) => {
-      expect(containsTextAreaUnsupportedCarriageReturn(rule)).toBe(true);
-    }
-  );
+  it.each(rulesWithUnsupportedLineBreaks)('blocks line breaks that browser form controls cannot preserve', (rule) => {
+    expect(containsUnsupportedMatcherLineBreak(rule)).toBe(true);
+  });
 
-  it('allows tabs, physical LF, and literal backslash-r', () => {
+  it('allows tabs, physical LF values, and literal backslash-r', () => {
     expect(
-      containsTextAreaUnsupportedCarriageReturn({
+      containsUnsupportedMatcherLineBreak({
         source_matchers: [['message', '=', 'a\nb\tc\\r']],
         target_matchers: [],
       })
@@ -85,13 +83,19 @@ describe('formDataToInhibitRule', () => {
       formDataToInhibitRule({
         sourceMatchers: [
           { name: 'team name', operator: '=', value: '日本語 "primary"' },
+          { name: '   ', operator: '=', value: '' },
           { name: '🚨', operator: '!=', value: 'a,b{c}=~d' },
           { name: 'path', operator: '=~', value: 'C:\\temp\\.*' },
         ],
         targetMatchers: [{ name: 'message', operator: '=', value: 'first\nsecond' }],
       })
     ).toEqual({
-      source_matchers: ['"team name"="日本語 \\"primary\\""', '"🚨"!="a,b{c}=~d"', 'path=~"C:\\\\temp\\\\.*"'],
+      source_matchers: [
+        '"team name"="日本語 \\"primary\\""',
+        '"   "=""',
+        '"🚨"!="a,b{c}=~d"',
+        'path=~"C:\\\\temp\\\\.*"',
+      ],
       target_matchers: ['message="first\\nsecond"'],
       equal: undefined,
     });

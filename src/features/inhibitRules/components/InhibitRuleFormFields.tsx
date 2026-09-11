@@ -10,21 +10,25 @@ import { MutationError } from '../../../access-control/components/MutationError'
 import { MatcherFieldArray, MatcherOperatorSelect } from '../../../components/MatcherFieldArray';
 import { emptyMatcherFieldValue, matcherOperators } from '../../../types/matcherFields';
 import {
-  containsTextAreaUnsupportedCarriageReturn,
+  containsUnsupportedMatcherLineBreak,
   normalizedInhibitRuleToFormData,
   type InhibitRuleFormData,
 } from './InhibitRuleFormModel';
 
 function createInhibitRuleFormSchema() {
   const matcher = z.object({
-    name: z.string().refine((name) => name.trim().length > 0, t('inhibit-rules.form.matcher-required', 'Required')),
+    name: z.string().min(1, t('inhibit-rules.form.matcher-required', 'Required')),
     operator: z.enum(matcherOperators),
     value: z.string(),
   });
 
   return z.object({
-    sourceMatchers: z.array(matcher).min(1, 'At least one source matcher is required'),
-    targetMatchers: z.array(matcher).min(1, 'At least one target matcher is required'),
+    sourceMatchers: z
+      .array(matcher)
+      .min(1, t('inhibit-rules.form.source-matcher-required', 'At least one source matcher is required')),
+    targetMatchers: z
+      .array(matcher)
+      .min(1, t('inhibit-rules.form.target-matcher-required', 'At least one target matcher is required')),
     equal: z.string().optional(),
   });
 }
@@ -49,9 +53,7 @@ export function InhibitRuleFormFields({
   cancelButtonText,
 }: InhibitRuleFormFieldsProps) {
   const isEditMode = Boolean(inhibitRule);
-  const hasTextAreaUnsupportedCarriageReturn = inhibitRule
-    ? containsTextAreaUnsupportedCarriageReturn(inhibitRule)
-    : false;
+  const hasUnsupportedMatcherLineBreak = inhibitRule ? containsUnsupportedMatcherLineBreak(inhibitRule) : false;
   const {
     control,
     register,
@@ -71,12 +73,12 @@ export function InhibitRuleFormFields({
   const targetMatcherFields = useFieldArray({ control, name: 'targetMatchers' });
 
   useEffect(() => {
-    if (inhibitRule && !hasTextAreaUnsupportedCarriageReturn) {
+    if (inhibitRule && !hasUnsupportedMatcherLineBreak) {
       reset(normalizedInhibitRuleToFormData(inhibitRule));
     }
-  }, [hasTextAreaUnsupportedCarriageReturn, inhibitRule, reset]);
+  }, [hasUnsupportedMatcherLineBreak, inhibitRule, reset]);
 
-  if (hasTextAreaUnsupportedCarriageReturn) {
+  if (hasUnsupportedMatcherLineBreak) {
     return (
       <Stack direction="column" gap={2}>
         <Alert
@@ -85,7 +87,7 @@ export function InhibitRuleFormFields({
         >
           {t(
             'inhibit-rules.form.unsupported-value-description',
-            'This inhibit rule contains a carriage return in a matcher. Editing it here could change the configuration. Edit it in the Alertmanager configuration instead.'
+            'This inhibit rule contains a line break that its form control cannot preserve. Edit it in the Alertmanager configuration instead.'
           )}
         </Alert>
         <Stack direction="row" gap={2}>
@@ -120,9 +122,7 @@ export function InhibitRuleFormFields({
           <MatcherFieldArray
             rows={sourceMatcherFields.fields.map((field, index) => ({
               id: field.id,
-              labelInput: register(`sourceMatchers.${index}.name`, {
-                required: t('matcher-field-array.required', 'Required'),
-              }),
+              labelInput: register(`sourceMatchers.${index}.name`),
               operatorControl: (
                 <Controller
                   control={control}
@@ -157,9 +157,7 @@ export function InhibitRuleFormFields({
           <MatcherFieldArray
             rows={targetMatcherFields.fields.map((field, index) => ({
               id: field.id,
-              labelInput: register(`targetMatchers.${index}.name`, {
-                required: t('matcher-field-array.required', 'Required'),
-              }),
+              labelInput: register(`targetMatchers.${index}.name`),
               operatorControl: (
                 <Controller
                   control={control}

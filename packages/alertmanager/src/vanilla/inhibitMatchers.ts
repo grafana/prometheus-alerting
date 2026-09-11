@@ -1,14 +1,13 @@
 import { type InhibitRule } from './api/types/common';
-import { type TupleToUnion } from 'type-fest';
+import { type MatcherOperator } from './matchers.utils';
 
-const matcherOperators = ['=~', '!~', '!=', '='] as const;
-type InhibitMatcherOperator = TupleToUnion<typeof matcherOperators>;
+const matcherOperators: MatcherOperator[] = ['=~', '!~', '!=', '='];
 
 /**
  * A matcher whose name and value have been decoded from Alertmanager syntax.
  * Inhibition forms edit these semantic strings and encode them only on save.
  */
-export type SemanticInhibitMatcher = [name: string, operator: InhibitMatcherOperator, value: string];
+export type SemanticInhibitMatcher = [name: string, operator: MatcherOperator, value: string];
 
 /**
  * An inhibit rule with deprecated matcher maps folded into semantic matcher tuples.
@@ -27,7 +26,7 @@ type MatcherTokenKind = 'name' | 'value';
 
 interface RawMatcherTokens {
   name: string;
-  operator: InhibitMatcherOperator;
+  operator: MatcherOperator;
   value: string;
 }
 
@@ -35,7 +34,7 @@ const classicMatcherLabelName = /^[a-zA-Z_:][a-zA-Z0-9_:]*$/;
 const utf8UnquotedNameDisallowedCharacters = /[\s{}!=~,\\"'`]/;
 
 /** The classic Alertmanager grammar accepts Prometheus label names, including colons. */
-export function isClassicMatcherLabelName(name: string): boolean {
+function isClassicMatcherLabelName(name: string): boolean {
   return classicMatcherLabelName.test(name);
 }
 

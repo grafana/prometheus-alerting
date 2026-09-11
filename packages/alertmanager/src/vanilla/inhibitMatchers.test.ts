@@ -173,6 +173,12 @@ describe('parseInhibitMatcherExpression', () => {
       ]);
     });
 
+    it('decodes an escaped line feed in a quoted UTF-8 matcher name', () => {
+      expect(parseInhibitMatcherExpression(String.raw`"line\nname"="value"`)).toEqual<SemanticInhibitMatcher[]>([
+        ['line\nname', '=', 'value'],
+      ]);
+    });
+
     it('decodes byte, octal, and Unicode escapes as semantic strings', () => {
       expect(parseInhibitMatcherExpression(String.raw`"🚨"="\xc3\xa9 \360\237\231\202 \u65e5\U0001F680"`)).toEqual<
         SemanticInhibitMatcher[]
@@ -224,6 +230,7 @@ describe('canonical encoding', () => {
     { matcher: ['message', '=', String.raw`a\nb`] },
     { matcher: ['foo:bar', '!=', String.raw`a\tb`] },
     { matcher: ['team name', '=~', '日本語 "primary"'] },
+    { matcher: ['   ', '=', ''] },
     { matcher: ['🚨', '!~', ''] },
   ])('round-trips the semantic tuple $matcher', ({ matcher }) => {
     const encoded = encodeSemanticInhibitMatcher(matcher);

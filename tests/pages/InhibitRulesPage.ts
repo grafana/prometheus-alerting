@@ -116,18 +116,15 @@ export class InhibitRulesPage extends AlertmanagerPage {
 
   private async fillMatcherGroup(side: MatcherSide, matchers: MatcherInput[]) {
     const group = side === 'source' ? this.sourceMatchers : this.targetMatchers;
-    const matcherName = side === 'source' ? 'source' : 'target';
-    const addMatcherButton = group.getByRole('button', { name: `Add ${matcherName} matcher` });
-    const removeMatcherButton = group.getByRole('button', { name: `Remove ${matcherName} matcher` });
+    const addMatcherButton = group.getByRole('button', { name: `Add ${side} matcher` });
+    const removeMatcherButton = group.getByRole('button', { name: `Remove ${side} matcher` });
 
-    let labels = group.getByRole('textbox', { name: 'Label' });
+    const labels = group.getByRole('textbox', { name: 'Label' });
     while ((await labels.count()) > matchers.length) {
       await removeMatcherButton.last().click();
-      labels = group.getByRole('textbox', { name: 'Label' });
     }
     while ((await labels.count()) < matchers.length) {
       await addMatcherButton.click();
-      labels = group.getByRole('textbox', { name: 'Label' });
     }
 
     for (const [index, matcher] of matchers.entries()) {

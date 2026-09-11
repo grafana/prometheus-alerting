@@ -45,7 +45,6 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
   });
 
   const matcherFields = useFieldArray({ control, name: 'object_matchers' });
-  const matchers = useWatch({ control, name: 'object_matchers' }) ?? [];
   const overrideGrouping = useWatch({ control, name: 'overrideGrouping' });
   const overrideTimings = useWatch({ control, name: 'overrideTimings' });
   const muteTimeIntervalNames = useWatch({ control, name: 'muteTimeIntervals' }) ?? [];
@@ -75,7 +74,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
             <Trans i18nKey="routes.edit.matching-labels">Matching labels</Trans>
           </div>
 
-          {matchers.length === 0 && (
+          {matcherFields.fields.length === 0 && (
             <Badge
               color="orange"
               className={styles.noMatchersWarning}
