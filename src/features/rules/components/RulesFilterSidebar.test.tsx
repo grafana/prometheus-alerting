@@ -60,4 +60,27 @@ describe('RulesFilterSidebar', () => {
       expect(screen.getByTestId('location-search')).toHaveTextContent('?search=rule%3AError');
     });
   });
+
+  it('keeps applying filters after the search query changes outside the sidebar', async () => {
+    const user = userEvent.setup();
+    renderSidebar('');
+
+    await user.type(screen.getByTestId('namespace-filter-input'), 'prod');
+    await waitFor(() => {
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?search=namespace%3Aprod');
+    });
+
+    await user.clear(screen.getByTestId('search-query-input'));
+    await user.type(screen.getByTestId('search-query-input'), 'ErrorRate');
+    await user.keyboard('{Enter}');
+    await waitFor(() => {
+      expect(screen.getByTestId('namespace-filter-input')).toHaveValue('');
+    });
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?search=ErrorRate');
+
+    await user.type(screen.getByTestId('namespace-filter-input'), 'prod');
+    await waitFor(() => {
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?search=namespace%3Aprod+rule%3AErrorRate');
+    });
+  });
 });
