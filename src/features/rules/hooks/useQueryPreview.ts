@@ -22,11 +22,15 @@ export interface QueryPreviewResult {
   timestamp: number;
 }
 
+const RESULT_TYPES = ['vector', 'matrix', 'scalar', 'string'] as const;
+
+export type QueryPreviewResultType = (typeof RESULT_TYPES)[number];
+
 export interface QueryPreviewState {
   results: QueryPreviewResult[];
   isLoading: boolean;
   error: string | null;
-  resultType: 'vector' | 'matrix' | 'scalar' | 'string' | null;
+  resultType: QueryPreviewResultType | null;
   hasRun: boolean;
 }
 
@@ -94,8 +98,23 @@ function dataFrameToPreviewResults(frame: DataFrame): QueryPreviewResult[] {
   return results;
 }
 
-function queryResponseToPreviewResults(response: DataQueryResponse): QueryPreviewResult[] {
-  return response.data.flatMap((data) => dataFrameToPreviewResults(toDataFrame(data)));
+function isResultType(value: unknown): value is QueryPreviewResultType {
+  return RESULT_TYPES.some((resultType) => resultType === value);
+}
+
+/**
+ * Data sources such as Prometheus report the Prometheus result type on the frame, so prefer that.
+ * Otherwise fall back to the frame shape: more than one sample per series means a range result.
+ */
+function getResultType(frames: DataFrame[]): QueryPreviewResultType {
+  for (const frame of frames) {
+    const reportedResultType: unknown = frame.meta?.custom?.resultType;
+    if (isResultType(reportedResultType)) {
+      return reportedResultType;
+    }
+  }
+
+  return frames.some((frame) => frame.length > 1) ? 'matrix' : 'vector';
 }
 
 export function useQueryPreview(dataSourceUid: string) {
@@ -168,12 +187,13 @@ export function useQueryPreview(dataSourceUid: string) {
           throw responseError;
         }
 
-        const results = queryResponseToPreviewResults(response);
+        const frames = response.data.map((data) => toDataFrame(data));
+        const results = frames.flatMap(dataFrameToPreviewResults);
         setState({
           results,
           isLoading: false,
           error: null,
-          resultType: results.length > 0 ? 'vector' : null,
+          resultType: results.length > 0 ? getResultType(frames) : null,
           hasRun: true,
         });
       } catch (error) {

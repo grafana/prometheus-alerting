@@ -127,6 +127,40 @@ describe('useQueryPreview', () => {
     expect(result.current.hasRun).toBe(true);
   });
 
+  it('reports the result type the datasource put on the frame', async () => {
+    const frame = toDataFrame({
+      fields: [
+        { name: 'Time', type: FieldType.time, values: [1234567890000] },
+        { name: 'Value', type: FieldType.number, labels: {}, values: [1] },
+      ],
+    });
+    frame.meta = { custom: { resultType: 'scalar' } };
+    arrangeConvertedQueryResponse({ data: [frame] });
+    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
+
+    await act(() => result.current.runQuery('scalar(up)'));
+
+    expect(result.current.resultType).toBe('scalar');
+  });
+
+  it('infers a range result from frames with several samples', async () => {
+    arrangeConvertedQueryResponse({
+      data: [
+        toDataFrame({
+          fields: [
+            { name: 'Time', type: FieldType.time, values: [1234567890000, 1234567950000] },
+            { name: 'Value', type: FieldType.number, labels: { job: 'prometheus' }, values: [1, 2] },
+          ],
+        }),
+      ],
+    });
+    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
+
+    await act(() => result.current.runQuery('up'));
+
+    expect(result.current.resultType).toBe('matrix');
+  });
+
   it('reports an empty converted response', async () => {
     arrangeConvertedQueryResponse({ data: [] });
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
