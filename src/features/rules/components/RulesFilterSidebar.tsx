@@ -1,5 +1,5 @@
 import { css, cx } from '@emotion/css';
-import React, { useCallback, useEffect, useId, useRef } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 
 import { GrafanaTheme2 } from '@grafana/data';
@@ -8,7 +8,7 @@ import { Button, Icon, Input, MultiCombobox, Stack, useStyles2, useTheme2 } from
 
 import { useDataSourceOptions, useLabelOptions } from '../hooks/useRuleFilterOptions';
 import { useRulesFilter } from '../hooks/useRulesFilter';
-import { RulesFilter as RulesFilterType } from '../search/rulesSearchParser';
+import { RulesFilter as RulesFilterType, applySearchFilterToQuery } from '../search/rulesSearchParser';
 
 interface AdvancedFilters {
   dataSourceNames: string[];
@@ -80,7 +80,7 @@ export function RulesFilterSidebar() {
 
 function FilterSidebarForm() {
   const { filterState, updateFilters } = useRulesFilter();
-  const isApplyingRef = useRef(false);
+  const appliedQuery = applySearchFilterToQuery(filterState);
 
   const dataSourceOptions = useDataSourceOptions();
   const { labelOptions } = useLabelOptions();
@@ -93,46 +93,35 @@ function FilterSidebarForm() {
   const groupId = useId();
   const dataSourceId = useId();
 
-  const defaultValues = filterStateToAdvancedFilters(filterState);
-
-  const methods = useForm<AdvancedFilters>({ defaultValues });
+  const methods = useForm<AdvancedFilters>({ defaultValues: filterStateToAdvancedFilters(filterState) });
   const { reset, control, register } = methods;
 
-  // Sync form when filterState changes externally (e.g. search query typed in top bar)
+  const values = useWatch({ control });
+  const lastAppliedQueryRef = useRef(appliedQuery);
+
+  // Sync the form with filters changed elsewhere, such as the search query typed in the top bar.
   useEffect(() => {
-    if (isApplyingRef.current) {
-      return;
-    }
     reset(filterStateToAdvancedFilters(filterState));
   }, [filterState, reset]);
 
-  // Watch all values and apply immediately on change
-  const values = useWatch({ control });
-
-  const applyFilters = useCallback(
-    (nextValues: Partial<AdvancedFilters>) => {
-      isApplyingRef.current = true;
-
-      const merged: AdvancedFilters = { ...emptyAdvancedFilters, ...nextValues };
-      const ruleFilter = advancedFiltersToRuleFilter(merged);
-      updateFilters(ruleFilter);
-
-      // Reset the flag after the next render cycle
-      setTimeout(() => {
-        isApplyingRef.current = false;
-      }, 0);
-    },
-    [updateFilters]
-  );
-
-  // Apply on every change of any field value
-  const prevValuesRef = useRef<Partial<AdvancedFilters>>(defaultValues);
+  // Apply immediately on change, but never write a filter the URL already expresses. Echoing one
+  // back would rewrite free text such as `ErrorRate` as `rule:ErrorRate`.
   useEffect(() => {
-    if (JSON.stringify(values) !== JSON.stringify(prevValuesRef.current)) {
-      prevValuesRef.current = values;
-      applyFilters(values);
+    if (lastAppliedQueryRef.current !== appliedQuery) {
+      // The filters changed outside the sidebar and the form values are still catching up.
+      lastAppliedQueryRef.current = appliedQuery;
+      return;
     }
-  }, [values, applyFilters]);
+
+    const nextFilter = advancedFiltersToRuleFilter({ ...emptyAdvancedFilters, ...values });
+    const nextQuery = applySearchFilterToQuery(nextFilter);
+    if (nextQuery === appliedQuery) {
+      return;
+    }
+
+    lastAppliedQueryRef.current = nextQuery;
+    updateFilters(nextFilter);
+  }, [values, appliedQuery, updateFilters]);
 
   return (
     <FormProvider {...methods}>
