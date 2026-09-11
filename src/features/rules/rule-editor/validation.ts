@@ -5,8 +5,51 @@ import { t } from '@grafana/i18n';
 import { isValidMetricName } from '@grafana/external-rules/utils';
 
 import { isValidPrometheusDuration } from '../../../utils/time.utils';
-import { RuleFormType } from './types';
+import { KVObject, RuleFormType } from './types';
 import { isCloudRecordingRuleByType } from './ruleTypeHelpers';
+
+/**
+ * The message shown on a label row whose key repeats an earlier row. Shared with the labels
+ * editor modal so the user sees the same wording whether the modal catches it or the form does.
+ */
+export function duplicateLabelKeyMessage() {
+  return t('alerting.rule-form.validation.duplicate-label-key', 'This label key is already used');
+}
+
+/**
+ * Finds the rows that repeat a key used by an earlier row. Only the repeats are returned, not the
+ * first row that introduced the key, so the message lands on the row the user just typed.
+ *
+ * Keys are compared with surrounding spaces removed, because ` team` and `team` would end up as
+ * the same label on the rule. Rows with a blank key are skipped -- they are the empty rows the
+ * editor keeps around, and they get dropped before the rule is saved. Capitals do count:
+ * Prometheus label keys are case-sensitive, so `team` and `Team` really are two different keys.
+ */
+export function findDuplicateKeyIndexes(items: readonly KVObject[]): number[] {
+  const seen = new Set<string>();
+  const duplicates: number[] = [];
+
+  items.forEach(({ key }, index) => {
+    const trimmed = key.trim();
+    if (trimmed === '') {
+      return;
+    }
+    if (seen.has(trimmed)) {
+      duplicates.push(index);
+      return;
+    }
+    seen.add(trimmed);
+  });
+
+  return duplicates;
+}
+
+/** Puts `message` on the key field of every row that repeats an earlier row's key. */
+function reportDuplicateKeys(items: readonly KVObject[], ctx: z.RefinementCtx, message: string) {
+  for (const index of findDuplicateKeyIndexes(items)) {
+    ctx.addIssue({ code: 'custom', path: [index, 'key'], message });
+  }
+}
 
 /**
  * Creates the Zod schema for rule form validation
@@ -62,19 +105,29 @@ export function createRuleFormSchema() {
         }),
 
       // Labels and annotations
-      labels: z.array(
-        z.object({
-          key: z.string(),
-          value: z.string(),
-        })
-      ),
+      labels: z
+        .array(
+          z.object({
+            key: z.string(),
+            value: z.string(),
+          })
+        )
+        .superRefine((labels, ctx) => reportDuplicateKeys(labels, ctx, duplicateLabelKeyMessage())),
 
-      annotations: z.array(
-        z.object({
-          key: z.string(),
-          value: z.string(),
-        })
-      ),
+      annotations: z
+        .array(
+          z.object({
+            key: z.string(),
+            value: z.string(),
+          })
+        )
+        .superRefine((annotations, ctx) =>
+          reportDuplicateKeys(
+            annotations,
+            ctx,
+            t('alerting.rule-form.validation.duplicate-annotation-key', 'This annotation key is already used')
+          )
+        ),
     })
     .refine(
       (values) =>
