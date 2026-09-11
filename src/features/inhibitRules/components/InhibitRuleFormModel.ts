@@ -1,8 +1,8 @@
 import {
-  encodeSemanticInhibitMatcher,
+  encodeObjectMatcher,
   type InhibitRule,
   type NormalizedInhibitRule,
-  type SemanticInhibitMatcher,
+  type ObjectMatcher,
 } from '@grafana/external-alertmanager/vanilla';
 
 import { type MatcherFieldValue, emptyMatcherFieldValue } from '../../../types/matcherFields';
@@ -13,7 +13,7 @@ export interface InhibitRuleFormData {
   equal?: string;
 }
 
-function matcherRowsOrEmpty(matchers: SemanticInhibitMatcher[]): MatcherFieldValue[] {
+function matcherRowsOrEmpty(matchers: ObjectMatcher[]): MatcherFieldValue[] {
   const rows = matchers.map(([name, operator, value]) => ({ name, operator, value }));
   return rows.length > 0 ? rows : [emptyMatcherFieldValue];
 }
@@ -27,24 +27,14 @@ export function normalizedInhibitRuleToFormData(rule: NormalizedInhibitRule): In
   };
 }
 
-/**
- * Browser form controls cannot preserve every semantic matcher line break:
- * Inputs strip line breaks from names, and TextAreas normalize CR/CRLF values to LF.
- */
-export function containsUnsupportedMatcherLineBreak(rule: NormalizedInhibitRule): boolean {
-  return [...rule.source_matchers, ...rule.target_matchers].some(
-    ([name, , value]) => name.includes('\n') || name.includes('\r') || value.includes('\r')
-  );
-}
-
 /** Converts semantic form rows to canonical Alertmanager matcher strings. */
 export function formDataToInhibitRule(data: InhibitRuleFormData): InhibitRule {
   return {
     source_matchers: data.sourceMatchers.map((matcher) =>
-      encodeSemanticInhibitMatcher([matcher.name, matcher.operator, matcher.value])
+      encodeObjectMatcher([matcher.name, matcher.operator, matcher.value])
     ),
     target_matchers: data.targetMatchers.map((matcher) =>
-      encodeSemanticInhibitMatcher([matcher.name, matcher.operator, matcher.value])
+      encodeObjectMatcher([matcher.name, matcher.operator, matcher.value])
     ),
     equal: data.equal
       ? data.equal

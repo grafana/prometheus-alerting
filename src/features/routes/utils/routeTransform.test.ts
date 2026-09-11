@@ -36,29 +36,25 @@ describe('amRouteToFormAmRoute', () => {
     expect(result.repeatIntervalValue).toBe('4h');
   });
 
-  it('parses matchers from string format', () => {
+  it('parses every matcher operator from string format', () => {
     const route: Route = {
-      matchers: ['severity=critical', 'team!=backend', 'region=~us-.*'],
+      matchers: ['severity=critical', 'team!=backend', 'region=~us-.*', 'service!~internal-.*'],
     };
 
     const result = amRouteToFormAmRoute(route);
 
-    expect(result.object_matchers).toHaveLength(3);
-    expect(result.object_matchers[0]).toEqual({
-      name: 'severity',
-      operator: '=',
-      value: 'critical',
-    });
-    expect(result.object_matchers[1]).toEqual({
-      name: 'team',
-      operator: '!=',
-      value: 'backend',
-    });
-    expect(result.object_matchers[2]).toEqual({
-      name: 'region',
-      operator: '=~',
-      value: 'us-.*',
-    });
+    expect(result.object_matchers).toEqual([
+      { name: 'severity', operator: '=', value: 'critical' },
+      { name: 'team', operator: '!=', value: 'backend' },
+      { name: 'region', operator: '=~', value: 'us-.*' },
+      { name: 'service', operator: '!~', value: 'internal-.*' },
+    ]);
+  });
+
+  it('retains malformed matcher text as the name with equality defaults', () => {
+    const result = amRouteToFormAmRoute({ matchers: ['missing-operator'] });
+
+    expect(result.object_matchers).toEqual([{ name: 'missing-operator', operator: '=', value: '' }]);
   });
 
   it('preserves route ID from RouteWithID', () => {

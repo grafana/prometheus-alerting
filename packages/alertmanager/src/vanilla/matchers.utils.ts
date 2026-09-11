@@ -2,8 +2,12 @@ import { Matcher, Route } from './api/types/common';
 import { TupleToUnion } from 'type-fest';
 
 const matcherOperators = ['=~', '!~', '!=', '='] as const;
+const commaUnlessQuoted = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/;
+const reservedMatcherCharacters = /[{}!=~,\\"'`\s]+/;
+
 export type MatcherOperator = TupleToUnion<typeof matcherOperators>;
 
+/** A matcher tuple whose name and value are semantic (decoded) strings. */
 export type ObjectMatcher = [name: string, operator: MatcherOperator, value: string];
 
 /**
@@ -120,7 +124,6 @@ export function parseMatcher(matcher: string): Matcher {
  */
 export function parsePromQLStyleMatcherLoose(matcher: string): Matcher[] {
   // split by `,` but not when it's used as a label value
-  const commaUnlessQuoted = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/;
   const parts = matcher.replace(/^\{/, '').replace(/\}$/, '').trim().split(commaUnlessQuoted);
 
   return parts
@@ -165,4 +168,59 @@ export function stringifyObjectMatcher([name, operator, value]: ObjectMatcher) {
   // Unquoted value can be an empty string which we want to display as ""
   const unquotedValue = unquoteWithUnescape(value) || '""';
   return `${unquotedName} ${operator} ${unquotedValue}`;
+}
+
+/**
+ * Unquotes a semantic matcher token and decodes Alertmanager's quote, backslash, and newline escapes.
+ * This intentionally differs from unquoteWithUnescape, whose lexical behavior is used by route helpers.
+ */
+export function unquoteSemanticMatcherToken(input: string): string {
+  if (!/^"(.*)"$/s.test(input)) {
+    return input;
+  }
+
+  const contents = input.slice(1, -1);
+  let unescaped = '';
+  for (let index = 0; index < contents.length; index++) {
+    const character = contents[index];
+    const next = contents[index + 1];
+    if (character === '\\' && (next === '"' || next === '\\' || next === 'n')) {
+      unescaped += next === 'n' ? '\n' : next;
+      index++;
+    } else {
+      unescaped += character;
+    }
+  }
+  return unescaped;
+}
+
+/** Parses matcher syntax into semantic tuples using Grafana core's operator and list rules. */
+export function parseObjectMatcherExpression(expression: string): ObjectMatcher[] {
+  const parts = expression.replace(/^\{/, '').replace(/\}$/, '').trim().split(commaUnlessQuoted);
+
+  return parts
+    .filter((part) => part.trim().length > 0)
+    .map((part): ObjectMatcher => {
+      const [name, operator, value] = matcherToObjectMatcher(parseMatcher(part));
+      return [unquoteSemanticMatcherToken(name), operator, unquoteSemanticMatcherToken(value)];
+    });
+}
+
+/** Encodes a semantic matcher tuple using Grafana core's matcher quoting rules. */
+export function encodeObjectMatcher([name, operator, value]: ObjectMatcher): string {
+  return `${quoteMatcherTokenIfRequired(name)}${operator}${quoteMatcherToken(value)}`;
+}
+
+function quoteMatcherTokenIfRequired(input: string): string {
+  return reservedMatcherCharacters.test(input) ? quoteMatcherToken(input) : input;
+}
+
+function quoteMatcherToken(input: string): string {
+  const escaped = input.replace(/[\\"\n]/g, (character) => (character === '\n' ? '\\n' : `\\${character}`));
+  return `"${escaped}"`;
+}
+
+/** Formats a semantic matcher tuple for UI display. */
+export function formatObjectMatcherForDisplay([name, operator, value]: ObjectMatcher): string {
+  return `${name} ${operator} ${value || '""'}`;
 }

@@ -2,18 +2,14 @@ import React, { useEffect } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, Field, FieldSet, Input, Stack, Text } from '@grafana/ui';
+import { Button, Field, FieldSet, Input, Stack, Text } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { type NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
 
 import { MutationError } from '../../../access-control/components/MutationError';
 import { MatcherFieldArray, MatcherOperatorSelect } from '../../../components/MatcherFieldArray';
 import { emptyMatcherFieldValue, matcherOperators } from '../../../types/matcherFields';
-import {
-  containsUnsupportedMatcherLineBreak,
-  normalizedInhibitRuleToFormData,
-  type InhibitRuleFormData,
-} from './InhibitRuleFormModel';
+import { normalizedInhibitRuleToFormData, type InhibitRuleFormData } from './InhibitRuleFormModel';
 
 function createInhibitRuleFormSchema() {
   const matcher = z.object({
@@ -53,7 +49,6 @@ export function InhibitRuleFormFields({
   cancelButtonText,
 }: InhibitRuleFormFieldsProps) {
   const isEditMode = Boolean(inhibitRule);
-  const hasUnsupportedMatcherLineBreak = inhibitRule ? containsUnsupportedMatcherLineBreak(inhibitRule) : false;
   const {
     control,
     register,
@@ -73,31 +68,10 @@ export function InhibitRuleFormFields({
   const targetMatcherFields = useFieldArray({ control, name: 'targetMatchers' });
 
   useEffect(() => {
-    if (inhibitRule && !hasUnsupportedMatcherLineBreak) {
+    if (inhibitRule) {
       reset(normalizedInhibitRuleToFormData(inhibitRule));
     }
-  }, [hasUnsupportedMatcherLineBreak, inhibitRule, reset]);
-
-  if (hasUnsupportedMatcherLineBreak) {
-    return (
-      <Stack direction="column" gap={2}>
-        <Alert
-          title={t('inhibit-rules.form.unsupported-value-title', 'This inhibit rule cannot be edited here')}
-          severity="error"
-        >
-          {t(
-            'inhibit-rules.form.unsupported-value-description',
-            'This inhibit rule contains a line break that its form control cannot preserve. Edit it in the Alertmanager configuration instead.'
-          )}
-        </Alert>
-        <Stack direction="row" gap={2}>
-          <Button type="button" variant="secondary" onClick={onCancel} disabled={isLoading}>
-            {cancelButtonText ?? t('inhibit-rules.form.cancel-button', 'Cancel')}
-          </Button>
-        </Stack>
-      </Stack>
-    );
-  }
+  }, [inhibitRule, reset]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>

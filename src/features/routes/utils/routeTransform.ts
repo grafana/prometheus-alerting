@@ -1,6 +1,6 @@
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
-import { type MatcherFieldValue, type MatcherOperator } from '../../../types/matcherFields';
+import { type MatcherFieldValue } from '../../../types/matcherFields';
 import { isValidPrometheusDuration } from '../../../utils/time.utils';
 import { type FormAmRoute, emptyRoute } from '../types';
 
@@ -11,21 +11,13 @@ function parseMatcherString(matcher: string): MatcherFieldValue {
   const match = matcher.match(/^([^=!~]+)(=~|!~|=|!=)(.*)$/);
   if (match) {
     const [, name, op, value] = match;
-    let operator: MatcherOperator;
     switch (op) {
       case '=~':
-        operator = '=~';
-        break;
       case '!~':
-        operator = '!~';
-        break;
       case '!=':
-        operator = '!=';
-        break;
-      default:
-        operator = '=';
+      case '=':
+        return { name, operator: op, value };
     }
-    return { name, operator, value };
   }
   return { name: matcher, operator: '=', value: '' };
 }

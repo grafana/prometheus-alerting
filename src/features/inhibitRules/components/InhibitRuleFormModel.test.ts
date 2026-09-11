@@ -1,10 +1,6 @@
-import { normalizeInhibitRuleMatchers, type NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
+import { normalizeInhibitRuleMatchers } from '@grafana/external-alertmanager/vanilla';
 
-import {
-  formDataToInhibitRule,
-  containsUnsupportedMatcherLineBreak,
-  normalizedInhibitRuleToFormData,
-} from './InhibitRuleFormModel';
+import { formDataToInhibitRule, normalizedInhibitRuleToFormData } from './InhibitRuleFormModel';
 
 describe('normalizedInhibitRuleToFormData', () => {
   it('hydrates semantic source and target matcher values', () => {
@@ -33,28 +29,6 @@ describe('normalizedInhibitRuleToFormData', () => {
       targetMatchers: [{ name: '', operator: '=', value: '' }],
       equal: '',
     });
-  });
-});
-
-describe('containsUnsupportedMatcherLineBreak', () => {
-  const rulesWithUnsupportedLineBreaks: NormalizedInhibitRule[] = [
-    { source_matchers: [['message', '=', 'a\rb']], target_matchers: [] },
-    { source_matchers: [], target_matchers: [['target', '=', 'a\r\nb']] },
-    { source_matchers: [['source\rname', '=', 'value']], target_matchers: [] },
-    { source_matchers: [['source\nname', '=', 'value']], target_matchers: [] },
-  ];
-
-  it.each(rulesWithUnsupportedLineBreaks)('blocks line breaks that browser form controls cannot preserve', (rule) => {
-    expect(containsUnsupportedMatcherLineBreak(rule)).toBe(true);
-  });
-
-  it('allows tabs, physical LF values, and literal backslash-r', () => {
-    expect(
-      containsUnsupportedMatcherLineBreak({
-        source_matchers: [['message', '=', 'a\nb\tc\\r']],
-        target_matchers: [],
-      })
-    ).toBe(false);
   });
 });
 
@@ -93,7 +67,7 @@ describe('formDataToInhibitRule', () => {
       source_matchers: [
         '"team name"="日本語 \\"primary\\""',
         '"   "=""',
-        '"🚨"!="a,b{c}=~d"',
+        '🚨!="a,b{c}=~d"',
         'path=~"C:\\\\temp\\\\.*"',
       ],
       target_matchers: ['message="first\\nsecond"'],
@@ -116,7 +90,7 @@ describe('formDataToInhibitRule', () => {
 
   it('canonicalizes decoded current and deprecated matcher values', () => {
     const normalized = normalizeInhibitRuleMatchers({
-      source_matchers: ['team = "ops"', '{message="a\\nb",path=~"C:\\\\temp\\\\.*"}', 'unquoted=   '],
+      source_matchers: ['team="ops"', '{message="a\\nb",path=~"C:\\\\temp\\\\.*"}', 'unquoted=   '],
       source_match: { literal: '"ops"' },
       source_match_re: { path: 'C:\\temp\\.*' },
       target_matchers: ['severity!~"warning|info"'],

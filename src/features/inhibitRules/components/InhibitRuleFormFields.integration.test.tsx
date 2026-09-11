@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { byRole, byText } from 'testing-library-selector';
 import { vi } from 'vitest';
@@ -119,35 +119,6 @@ describe('InhibitRuleFormFields', () => {
     });
   });
 
-  it('blocks a decoded UTF-8 name line feed before a browser Input can strip it', async () => {
-    const onCancel = vi.fn();
-    const onSubmit = vi.fn();
-    const rule = normalizeInhibitRuleMatchers({
-      source_matchers: [String.raw`"line\nname"="value"`],
-      target_matchers: ['target="value"'],
-    });
-
-    render(<InhibitRuleFormFields inhibitRule={rule} onSubmit={onSubmit} onCancel={onCancel} isLoading={false} />);
-
-    expect(screen.getByRole('alert')).toHaveTextContent('This inhibit rule cannot be edited here');
-    expect(screen.getByRole('alert')).toHaveTextContent('line break');
-    expect(ui.updateButton.query()).not.toBeInTheDocument();
-    expect(onSubmit).not.toHaveBeenCalled();
-
-    await userEvent.setup().click(ui.cancelButton.get());
-    expect(onCancel).toHaveBeenCalledOnce();
-  });
-
-  it('blocks physical CR and CRLF before browser form controls can normalize them', () => {
-    renderForm({
-      source_matchers: [['message', '=', 'first\r\nsecond']],
-      target_matchers: [['target\rname', '=', 'value']],
-    });
-
-    expect(screen.getByRole('alert')).toHaveTextContent('line break');
-    expect(ui.updateButton.query()).not.toBeInTheDocument();
-  });
-
   it('resets independent semantic rows before unchanged submission', async () => {
     const user = userEvent.setup();
     const initialRule: NormalizedInhibitRule = {
@@ -175,7 +146,7 @@ describe('InhibitRuleFormFields', () => {
     await waitFor(() => expect(submission.count).toBe(1));
     expect(formDataToInhibitRule(submittedData(submission))).toEqual({
       source_matchers: ['service=~"platform.*"', 'message!="\\"literal\\""'],
-      target_matchers: ['"🚨"!~"a,b{c}=~d"', 'empty=""'],
+      target_matchers: ['🚨!~"a,b{c}=~d"', 'empty=""'],
       equal: ['alertname'],
     });
   });

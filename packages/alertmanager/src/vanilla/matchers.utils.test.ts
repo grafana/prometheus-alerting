@@ -1,14 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import {
+  encodeObjectMatcher,
+  formatObjectMatcherForDisplay,
   isPromQLStyleMatcher,
   matcherToObjectMatcher,
   normalizeMatchers,
   parseMatcherToArray,
   parseMatcher,
+  parseObjectMatcherExpression,
   parsePromQLStyleMatcher,
   parsePromQLStyleMatcherLoose,
   parsePromQLStyleMatcherLooseSafe,
   stringifyObjectMatcher,
+  unquoteSemanticMatcherToken,
   unquoteWithUnescape,
   type ObjectMatcher,
 } from './matchers.utils';
@@ -198,5 +202,69 @@ describe('stringifyObjectMatcher', () => {
   it('uses "" for empty value', () => {
     const m: ObjectMatcher = ['foo', '=', ''];
     expect(stringifyObjectMatcher(m)).toBe('foo = ""');
+  });
+});
+
+describe('parseObjectMatcherExpression', () => {
+  it('parses all core-supported operators', () => {
+    expect(parseObjectMatcherExpression('a=one,b!=two,c=~three,d!~four')).toEqual<ObjectMatcher[]>([
+      ['a', '=', 'one'],
+      ['b', '!=', 'two'],
+      ['c', '=~', 'three'],
+      ['d', '!~', 'four'],
+    ]);
+  });
+
+  it('parses quoted names, values, and commas in values', () => {
+    expect(parseObjectMatcherExpression('{"team name"="ops,platform",region="us"}')).toEqual<ObjectMatcher[]>([
+      ['team name', '=', 'ops,platform'],
+      ['region', '=', 'us'],
+    ]);
+  });
+
+  it('supports empty quoted and unquoted values and ordinary Unicode', () => {
+    expect(parseObjectMatcherExpression('quoted="",unquoted=,service="日本語 🚨"')).toEqual<ObjectMatcher[]>([
+      ['quoted', '=', ''],
+      ['unquoted', '=', ''],
+      ['service', '=', '日本語 🚨'],
+    ]);
+  });
+});
+
+describe('unquoteSemanticMatcherToken', () => {
+  it('unescapes quote, backslash, and newline in one pass', () => {
+    expect(unquoteSemanticMatcherToken(String.raw`"a\nb\\c\"d"`)).toBe('a\nb\\c"d');
+  });
+
+  it('keeps literal backslash-n distinct from a line feed', () => {
+    expect(unquoteSemanticMatcherToken(String.raw`"a\\nb"`)).toBe(String.raw`a\nb`);
+    expect(unquoteSemanticMatcherToken(String.raw`"a\nb"`)).toBe('a\nb');
+  });
+});
+
+describe('encodeObjectMatcher', () => {
+  it.each<{ matcher: ObjectMatcher }>([
+    { matcher: ['message', '=', String.raw`a\nb`] },
+    { matcher: ['message', '=', 'a\nb'] },
+    { matcher: ['team name', '=~', '日本語 "primary"'] },
+    { matcher: ['empty', '!~', ''] },
+  ])('round-trips the semantic tuple $matcher', ({ matcher }) => {
+    expect(parseObjectMatcherExpression(encodeObjectMatcher(matcher))).toEqual([matcher]);
+  });
+
+  it('encodes literal backslash-n differently from an actual line feed', () => {
+    expect(encodeObjectMatcher(['message', '=', String.raw`a\nb`])).toBe(String.raw`message="a\\nb"`);
+    expect(encodeObjectMatcher(['message', '=', 'a\nb'])).toBe(String.raw`message="a\nb"`);
+  });
+
+  it('uses core quoting semantics for reserved names and preserves ordinary Unicode names', () => {
+    expect(encodeObjectMatcher(['team name', '=', 'ops'])).toBe('"team name"="ops"');
+    expect(encodeObjectMatcher(['🚨', '=', 'active'])).toBe('🚨="active"');
+  });
+});
+
+describe('formatObjectMatcherForDisplay', () => {
+  it('displays semantic values without applying legacy lexical unquoting', () => {
+    expect(formatObjectMatcherForDisplay(['team', '=', '"ops"'])).toBe('team = "ops"');
   });
 });

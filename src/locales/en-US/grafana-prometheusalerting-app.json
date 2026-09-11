@@ -592,8 +592,6 @@
       "target-matcher-required": "At least one target matcher is required",
       "target-matchers-description": "Matching alerts will be suppressed. Enter values normally; they are escaped for Alertmanager when saved.",
       "target-matchers-label": "Target Matchers",
-      "unsupported-value-description": "This inhibit rule contains a line break that its form control cannot preserve. Edit it in the Alertmanager configuration instead.",
-      "unsupported-value-title": "This inhibit rule cannot be edited here",
       "update-button": "Update",
       "updating": "Updating..."
     },
