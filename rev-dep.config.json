@@ -27,6 +27,7 @@
           "@swc/**",
           "@vitest/**",
           "@grafana/tsconfig",
+          "@testing-library/dom",
           "webpack-cli",
           "@popperjs/core",
           "@grafana/sign-plugin"
