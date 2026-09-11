@@ -6,6 +6,7 @@ import { t } from '@grafana/i18n';
 import { Button, Field, Stack, Text } from '@grafana/ui';
 
 import { RuleFormValues, KVObject } from '../types';
+import { findDuplicateKeyIndexes } from '../validation';
 import { LabelsEditorModal } from './LabelsEditorModal';
 import { RuleEditorSection } from './RuleEditorSection';
 
@@ -23,6 +24,12 @@ function firstLabelKeyError(errors: FieldErrors<RuleFormValues>) {
   return rows.find((row) => row?.key?.message)?.key?.message;
 }
 
+/** Every key used by more than one row, listed once each. */
+function repeatedKeys(labels: KVObject[]) {
+  const keys = findDuplicateKeyIndexes(labels).map((index) => labels[index].key.trim());
+  return Array.from(new Set(keys));
+}
+
 export const LabelsField = () => {
   const {
     watch,
@@ -32,7 +39,16 @@ export const LabelsField = () => {
   const labels = watch('labels');
   const [showModal, setShowModal] = useState(false);
 
-  const labelsError = firstLabelKeyError(errors);
+  // The chips below are built from a record, so a key used twice shows up as one chip. That leaves
+  // nothing on this step for a message to point at, so the message names the keys instead.
+  const keyError = firstLabelKeyError(errors);
+  const duplicateKeys = keyError ? repeatedKeys(labels) : [];
+  const labelsError =
+    duplicateKeys.length > 0
+      ? t('alerting.labels-field.duplicate-keys', 'Duplicate label keys: {{keys}}', {
+          keys: duplicateKeys.join(', '),
+        })
+      : keyError;
 
   const nonEmptyLabels = labels.filter((label) => label.key.trim() !== '');
 

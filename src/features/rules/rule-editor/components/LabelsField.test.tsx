@@ -48,7 +48,7 @@ function renderStep(labels: RuleFormValues['labels']) {
 describe('LabelsField', () => {
   // The modal already stops a repeated key from reaching the form, so this is the backstop: if one
   // gets in anyway the blocked save has to say why instead of doing nothing
-  it('shows why the save was blocked when the form holds a repeated label key', async () => {
+  it('names the repeated key when the form holds one, since the chips collapse it into one', async () => {
     const step = renderStep([
       { key: 'team', value: 'backend' },
       { key: 'team', value: 'frontend' },
@@ -56,8 +56,22 @@ describe('LabelsField', () => {
 
     await userEvent.click(step.save());
 
-    expect(await screen.findByText('This label key is already used')).toBeInTheDocument();
+    expect(await screen.findByText('Duplicate label keys: team')).toBeInTheDocument();
     expect(step.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('names every repeated key, each one once', async () => {
+    const step = renderStep([
+      { key: 'team', value: 'backend' },
+      { key: 'team', value: 'frontend' },
+      { key: 'team', value: 'platform' },
+      { key: 'env', value: 'prod' },
+      { key: 'env', value: 'dev' },
+    ]);
+
+    await userEvent.click(step.save());
+
+    expect(await screen.findByText('Duplicate label keys: team, env')).toBeInTheDocument();
   });
 
   it('saves distinct label keys without complaint', async () => {
@@ -69,6 +83,6 @@ describe('LabelsField', () => {
     await userEvent.click(step.save());
 
     expect(step.onSubmit).toHaveBeenCalled();
-    expect(screen.queryByText('This label key is already used')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Duplicate label keys/)).not.toBeInTheDocument();
   });
 });

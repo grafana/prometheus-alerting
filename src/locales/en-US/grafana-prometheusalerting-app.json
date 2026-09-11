@@ -167,6 +167,7 @@
     "labels-field": {
       "add-labels": "Add labels",
       "description-labels": "Add labels to help you better manage your rules.",
+      "duplicate-keys": "Duplicate label keys: {{keys}}",
       "edit-labels": "Edit labels",
       "no-labels": "No labels defined",
       "title-add-labels": "Labels"
