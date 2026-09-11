@@ -19,6 +19,7 @@ import { extractErrorMessage } from '../../../utils/errors';
 export interface QueryPreviewResult {
   labels: Record<string, string>;
   value: string;
+  /** Epoch milliseconds, matching the time field of the returned data frame. */
   timestamp: number;
 }
 
@@ -71,31 +72,35 @@ function getQueryResponseError(response: DataQueryResponse): unknown {
   return response.errors?.[0];
 }
 
+/**
+ * A frame can hold one series per numeric field, so every numeric field is a series of its own.
+ * Reading only the first one would silently hide the rest of the query result.
+ */
 function dataFrameToPreviewResults(frame: DataFrame): QueryPreviewResult[] {
-  const valueField = frame.fields.find((field) => field.type === FieldType.number);
-  if (!valueField) {
-    return [];
-  }
-
   const timeField = frame.fields.find((field) => field.type === FieldType.time);
-  const labels = valueField.labels ?? {};
-  const results: QueryPreviewResult[] = [];
 
-  for (let index = 0; index < frame.length; index++) {
-    const value = valueField.values[index];
-    if (value === null || value === undefined) {
-      continue;
-    }
+  return frame.fields
+    .filter((field) => field.type === FieldType.number)
+    .flatMap((valueField) => {
+      const labels = valueField.labels ?? {};
+      const results: QueryPreviewResult[] = [];
 
-    const timestamp = timeField?.values[index];
-    results.push({
-      labels,
-      value: String(value),
-      timestamp: typeof timestamp === 'number' ? timestamp / 1000 : Date.now() / 1000,
+      for (let index = 0; index < frame.length; index++) {
+        const value = valueField.values[index];
+        if (typeof value !== 'number') {
+          continue;
+        }
+
+        const timestamp = timeField?.values[index];
+        results.push({
+          labels,
+          value: String(value),
+          timestamp: typeof timestamp === 'number' ? timestamp : Date.now(),
+        });
+      }
+
+      return results;
     });
-  }
-
-  return results;
 }
 
 function isResultType(value: unknown): value is QueryPreviewResultType {

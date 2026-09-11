@@ -115,16 +115,57 @@ describe('useQueryPreview', () => {
       {
         labels: { job: 'prometheus', instance: 'localhost:9090' },
         value: '1',
-        timestamp: 1234567890,
+        timestamp: 1234567890000,
       },
       {
         labels: { job: 'grafana', instance: 'localhost:3000' },
         value: '42',
-        timestamp: 1234567890,
+        timestamp: 1234567890000,
       },
     ]);
     expect(result.current.resultType).toBe('vector');
     expect(result.current.hasRun).toBe(true);
+  });
+
+  it('reads every series of a frame that holds several value fields', async () => {
+    arrangeConvertedQueryResponse({
+      data: [
+        toDataFrame({
+          fields: [
+            { name: 'Time', type: FieldType.time, values: [1234567890000] },
+            { name: 'up{job="a"}', type: FieldType.number, labels: { job: 'a' }, values: [1] },
+            { name: 'up{job="b"}', type: FieldType.number, labels: { job: 'b' }, values: [0] },
+          ],
+        }),
+      ],
+    });
+    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
+
+    await act(() => result.current.runQuery('up'));
+
+    expect(result.current.results).toEqual([
+      { labels: { job: 'a' }, value: '1', timestamp: 1234567890000 },
+      { labels: { job: 'b' }, value: '0', timestamp: 1234567890000 },
+    ]);
+    expect(result.current.resultType).toBe('vector');
+  });
+
+  it('skips samples that carry no numeric value', async () => {
+    arrangeConvertedQueryResponse({
+      data: [
+        toDataFrame({
+          fields: [
+            { name: 'Time', type: FieldType.time, values: [1234567890000, 1234567950000] },
+            { name: 'Value', type: FieldType.number, labels: { job: 'a' }, values: [null, 7] },
+          ],
+        }),
+      ],
+    });
+    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
+
+    await act(() => result.current.runQuery('up'));
+
+    expect(result.current.results).toEqual([{ labels: { job: 'a' }, value: '7', timestamp: 1234567950000 }]);
   });
 
   it('reports the result type the datasource put on the frame', async () => {
