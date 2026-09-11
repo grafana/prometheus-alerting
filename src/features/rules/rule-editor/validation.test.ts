@@ -1,4 +1,4 @@
-import { createRuleFormSchema } from './validation';
+import { createRuleFormSchema, findDuplicateKeyIndexes } from './validation';
 import { RuleFormType } from './types';
 
 function formValues(overrides: Record<string, unknown> = {}) {
@@ -117,5 +117,101 @@ describe('createRuleFormSchema recording rule name validation', () => {
     const result = createRuleFormSchema().safeParse(baseValues({ name: '' }));
 
     expect(nameErrors(result)).toEqual(['Rule name is required']);
+  });
+});
+
+function issuePaths(result: ReturnType<ReturnType<typeof createRuleFormSchema>['safeParse']>) {
+  if (result.success) {
+    return [];
+  }
+  return result.error.issues.map((issue) => issue.path.join('.'));
+}
+
+function issueFor(result: ReturnType<ReturnType<typeof createRuleFormSchema>['safeParse']>, path: string) {
+  if (result.success) {
+    return undefined;
+  }
+  return result.error.issues.find((issue) => issue.path.join('.') === path);
+}
+
+describe('createRuleFormSchema duplicate key validation', () => {
+  it('rejects two labels with the same key and points at the later row', () => {
+    const result = createRuleFormSchema().safeParse(
+      formValues({
+        labels: [
+          { key: 'team', value: 'backend' },
+          { key: 'team', value: 'frontend' },
+        ],
+      })
+    );
+
+    expect(result.success).toBe(false);
+    expect(issuePaths(result)).toEqual(['labels.1.key']);
+    expect(issueFor(result, 'labels.1.key')?.message).toBe('This label key is already used');
+  });
+
+  it('rejects two annotations with the same key and points at the later row', () => {
+    const result = createRuleFormSchema().safeParse(
+      formValues({
+        annotations: [
+          { key: 'summary', value: 'one' },
+          { key: 'summary', value: 'two' },
+        ],
+      })
+    );
+
+    expect(result.success).toBe(false);
+    expect(issuePaths(result)).toEqual(['annotations.1.key']);
+    expect(issueFor(result, 'annotations.1.key')?.message).toBe('This annotation key is already used');
+  });
+});
+
+describe('findDuplicateKeyIndexes', () => {
+  it('finds nothing in rows with distinct keys', () => {
+    expect(
+      findDuplicateKeyIndexes([
+        { key: 'team', value: 'backend' },
+        { key: 'severity', value: 'critical' },
+      ])
+    ).toEqual([]);
+  });
+
+  it('reports every repeat but not the row that introduced the key', () => {
+    expect(
+      findDuplicateKeyIndexes([
+        { key: 'team', value: 'a' },
+        { key: 'team', value: 'b' },
+        { key: 'severity', value: 'critical' },
+        { key: 'team', value: 'c' },
+      ])
+    ).toEqual([1, 3]);
+  });
+
+  it('ignores the blank rows the editor keeps around', () => {
+    expect(
+      findDuplicateKeyIndexes([
+        { key: '', value: '' },
+        { key: '  ', value: '' },
+        { key: '', value: 'orphan value' },
+      ])
+    ).toEqual([]);
+  });
+
+  it('counts keys that differ only in surrounding spaces as the same key', () => {
+    expect(
+      findDuplicateKeyIndexes([
+        { key: 'team', value: 'backend' },
+        { key: ' team ', value: 'frontend' },
+      ])
+    ).toEqual([1]);
+  });
+
+  it('counts keys that differ in capitals as different, like Prometheus does', () => {
+    expect(
+      findDuplicateKeyIndexes([
+        { key: 'team', value: 'backend' },
+        { key: 'Team', value: 'frontend' },
+      ])
+    ).toEqual([]);
   });
 });

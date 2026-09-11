@@ -167,6 +167,7 @@
     "labels-field": {
       "add-labels": "Add labels",
       "description-labels": "Add labels to help you better manage your rules.",
+      "duplicate-keys": "Duplicate label keys: {{keys}}",
       "edit-labels": "Edit labels",
       "no-labels": "No labels defined",
       "title-add-labels": "Labels"
@@ -291,6 +292,8 @@
       "submit-error": "Failed to save rule",
       "validation": {
         "datasource-required": "Data source is required",
+        "duplicate-annotation-key": "This annotation key is already used",
+        "duplicate-label-key": "This label key is already used",
         "expression-required": "Expression is required",
         "for-time-integer": "Must be a positive integer",
         "for-time-positive": "Must be a positive number",
