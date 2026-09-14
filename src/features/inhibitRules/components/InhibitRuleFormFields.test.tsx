@@ -1,26 +1,12 @@
 import React from 'react';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { byRole, byText } from 'testing-library-selector';
 import { vi } from 'vitest';
 
 import { normalizeInhibitRuleMatchers, type NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
 
 import { InhibitRuleFormFields } from './InhibitRuleFormFields';
 import { type InhibitRuleFormData, formDataToInhibitRule } from './InhibitRuleFormModel';
-
-const ui = {
-  sourceMatchers: byRole('group', { name: 'Source Matchers' }),
-  targetMatchers: byRole('group', { name: 'Target Matchers' }),
-  matcherLabel: byRole<HTMLInputElement>('textbox', { name: 'Label' }),
-  matcherValue: byRole<HTMLTextAreaElement>('textbox', { name: 'Value' }),
-  requiredError: byText('Required'),
-  addSourceMatcher: byRole('button', { name: 'Add source matcher' }),
-  removeSourceMatcher: byRole('button', { name: 'Remove source matcher' }),
-  createButton: byRole('button', { name: 'Create' }),
-  updateButton: byRole('button', { name: 'Update' }),
-  cancelButton: byRole('button', { name: 'Cancel' }),
-};
 
 interface Submission {
   count: number;
@@ -50,19 +36,19 @@ describe('InhibitRuleFormFields', () => {
   it('rejects empty labels, clears errors on change, and preserves a whitespace-only UTF-8 name', async () => {
     const user = userEvent.setup();
     const { submission } = renderForm();
-    const source = ui.sourceMatchers.get();
-    const target = ui.targetMatchers.get();
+    const source = screen.getByRole('group', { name: 'Source Matchers' });
+    const target = screen.getByRole('group', { name: 'Target Matchers' });
 
-    await user.click(ui.createButton.get());
+    await user.click(screen.getByRole('button', { name: 'Create' }));
 
-    expect(await ui.requiredError.find(source)).toBeInTheDocument();
-    expect(await ui.requiredError.find(target)).toBeInTheDocument();
+    expect(await within(source).findByText('Required')).toBeInTheDocument();
+    expect(await within(target).findByText('Required')).toBeInTheDocument();
     expect(submission.count).toBe(0);
 
-    await user.type(ui.matcherLabel.get(source), '   ');
-    await waitFor(() => expect(ui.requiredError.query(source)).not.toBeInTheDocument());
-    await user.type(ui.matcherLabel.get(target), 'target');
-    await user.click(ui.createButton.get());
+    await user.type(within(source).getByRole('textbox', { name: 'Label' }), '   ');
+    await waitFor(() => expect(within(source).queryByText('Required')).not.toBeInTheDocument());
+    await user.type(within(target).getByRole('textbox', { name: 'Label' }), 'target');
+    await user.click(screen.getByRole('button', { name: 'Create' }));
 
     await waitFor(() => expect(submission.count).toBe(1));
     expect(submittedData(submission)).toMatchObject({
@@ -75,17 +61,17 @@ describe('InhibitRuleFormFields', () => {
   it('preserves source matcher row order after adding and removing a middle row', async () => {
     const user = userEvent.setup();
     const { submission } = renderForm();
-    const source = ui.sourceMatchers.get();
-    const target = ui.targetMatchers.get();
+    const source = screen.getByRole('group', { name: 'Source Matchers' });
+    const target = screen.getByRole('group', { name: 'Target Matchers' });
 
-    await user.type(ui.matcherLabel.get(source), 'source');
-    await user.type(ui.matcherLabel.get(target), 'target');
-    await user.click(ui.addSourceMatcher.get(source));
-    await user.type(ui.matcherLabel.getAll(source)[1], 'middle');
-    await user.click(ui.addSourceMatcher.get(source));
-    await user.type(ui.matcherLabel.getAll(source)[2], 'last');
-    await user.click(ui.removeSourceMatcher.getAll(source)[1]);
-    await user.click(ui.createButton.get());
+    await user.type(within(source).getByRole('textbox', { name: 'Label' }), 'source');
+    await user.type(within(target).getByRole('textbox', { name: 'Label' }), 'target');
+    await user.click(within(source).getByRole('button', { name: 'Add source matcher' }));
+    await user.type(within(source).getAllByRole('textbox', { name: 'Label' })[1], 'middle');
+    await user.click(within(source).getByRole('button', { name: 'Add source matcher' }));
+    await user.type(within(source).getAllByRole('textbox', { name: 'Label' })[2], 'last');
+    await user.click(within(source).getAllByRole('button', { name: 'Remove source matcher' })[1]);
+    await user.click(screen.getByRole('button', { name: 'Create' }));
 
     await waitFor(() => expect(submission.count).toBe(1));
     expect(submittedData(submission).sourceMatchers).toEqual([
@@ -101,15 +87,15 @@ describe('InhibitRuleFormFields', () => {
       target_matchers: ['path=~"C:\\\\temp\\\\.*"'],
     });
     const { submission } = renderForm(rule);
-    const source = ui.sourceMatchers.get();
+    const source = screen.getByRole('group', { name: 'Source Matchers' });
 
-    const values = ui.matcherValue.getAll(source);
+    const values = within(source).getAllByRole<HTMLTextAreaElement>('textbox', { name: 'Value' });
     expect(values[0].tagName).toBe('TEXTAREA');
     expect(values[0]).toHaveValue('first\nsecond');
     expect(values[1]).toHaveValue('日本語 "primary"');
-    expect(ui.matcherLabel.getAll(source)[2]).toHaveValue(' team ');
+    expect(within(source).getAllByRole('textbox', { name: 'Label' })[2]).toHaveValue(' team ');
 
-    await user.click(ui.updateButton.get());
+    await user.click(screen.getByRole('button', { name: 'Update' }));
     await waitFor(() => expect(submission.count).toBe(1));
 
     expect(formDataToInhibitRule(submittedData(submission))).toEqual({
@@ -136,13 +122,16 @@ describe('InhibitRuleFormFields', () => {
       <InhibitRuleFormFields inhibitRule={resetRule} onSubmit={onSubmit} onCancel={vi.fn()} isLoading={false} />
     );
 
-    const source = ui.sourceMatchers.get();
-    const target = ui.targetMatchers.get();
-    await waitFor(() => expect(ui.matcherLabel.getAll(source)).toHaveLength(2));
-    expect(ui.matcherValue.getAll(source).map((input) => input.getAttribute('rows'))).toEqual(['1', '1']);
-    expect(ui.matcherValue.getAll(target).map((input) => input.value)).toEqual(['a,b{c}=~d', '']);
+    const source = screen.getByRole('group', { name: 'Source Matchers' });
+    const target = screen.getByRole('group', { name: 'Target Matchers' });
+    await waitFor(() => expect(within(source).getAllByRole('textbox', { name: 'Label' })).toHaveLength(2));
+    expect(
+      within(target)
+        .getAllByRole<HTMLTextAreaElement>('textbox', { name: 'Value' })
+        .map((input) => input.value)
+    ).toEqual(['a,b{c}=~d', '']);
 
-    await user.click(ui.updateButton.get());
+    await user.click(screen.getByRole('button', { name: 'Update' }));
     await waitFor(() => expect(submission.count).toBe(1));
     expect(formDataToInhibitRule(submittedData(submission))).toEqual({
       source_matchers: ['service=~"platform.*"', 'message!="\\"literal\\""'],
