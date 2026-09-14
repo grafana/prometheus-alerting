@@ -10,7 +10,7 @@ import { Badge, Button, ComboboxOption, Field, Input, MultiCombobox, Stack, Swit
 
 import { useTimeIntervals } from '../../timeIntervals/hooks/useTimeIntervals';
 import { MatcherFieldArray, MatcherOperatorSelect } from '../../../components/MatcherFieldArray';
-import { emptyMatcherFieldValue } from '../../../types/matcherFields';
+import { emptyMatcherFieldValue } from '@grafana/external-alertmanager/vanilla';
 import { FormAmRoute, commonGroupByOptions } from '../types';
 import { amRouteToFormAmRoute, isValidPromDuration } from '../utils/routeTransform';
 import { invalidDurationMessage } from '../../../utils/time.utils';

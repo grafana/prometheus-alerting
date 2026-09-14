@@ -4,11 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Field, FieldSet, Input, Stack, Text } from '@grafana/ui';
 import { t } from '@grafana/i18n';
-import { type NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
+import {
+  emptyMatcherFieldValue,
+  matcherOperators,
+  type NormalizedInhibitRule,
+} from '@grafana/external-alertmanager/vanilla';
 
 import { MutationError } from '../../../access-control/components/MutationError';
 import { MatcherFieldArray, MatcherOperatorSelect } from '../../../components/MatcherFieldArray';
-import { emptyMatcherFieldValue, matcherOperators } from '../../../types/matcherFields';
 import { normalizedInhibitRuleToFormData, type InhibitRuleFormData } from './InhibitRuleFormModel';
 
 function createInhibitRuleFormSchema() {

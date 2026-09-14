@@ -1,4 +1,4 @@
-import type { MatcherOperator } from '../../src/types/matcherFields';
+import type { MatcherOperator } from '@grafana/external-alertmanager/vanilla';
 
 /** Accessible names rendered by the matcher operator Combobox options. */
 export const matcherOperatorOptionNames: Record<MatcherOperator, string> = {

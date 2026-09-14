@@ -1,11 +1,11 @@
 import {
+  emptyMatcherFieldValue,
   encodeObjectMatcher,
   type InhibitRule,
+  type MatcherFieldValue,
   type NormalizedInhibitRule,
   type ObjectMatcher,
 } from '@grafana/external-alertmanager/vanilla';
-
-import { type MatcherFieldValue, emptyMatcherFieldValue } from '../../../types/matcherFields';
 
 export interface InhibitRuleFormData {
   sourceMatchers: MatcherFieldValue[];
@@ -29,6 +29,11 @@ export function normalizedInhibitRuleToFormData(rule: NormalizedInhibitRule): In
 
 /** Converts semantic form rows to canonical Alertmanager matcher strings. */
 export function formDataToInhibitRule(data: InhibitRuleFormData): InhibitRule {
+  const equal = (data.equal ?? '')
+    .split(',')
+    .map((label) => label.trim())
+    .filter(Boolean);
+
   return {
     source_matchers: data.sourceMatchers.map((matcher) =>
       encodeObjectMatcher([matcher.name, matcher.operator, matcher.value])
@@ -36,11 +41,6 @@ export function formDataToInhibitRule(data: InhibitRuleFormData): InhibitRule {
     target_matchers: data.targetMatchers.map((matcher) =>
       encodeObjectMatcher([matcher.name, matcher.operator, matcher.value])
     ),
-    equal: data.equal
-      ? data.equal
-          .split(',')
-          .map((label) => label.trim())
-          .filter(Boolean)
-      : undefined,
+    equal: equal.length ? equal : undefined,
   };
 }

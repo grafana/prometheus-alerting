@@ -1,4 +1,4 @@
-import type { MatcherFieldValue } from '../../types/matcherFields';
+import type { MatcherFieldValue } from '@grafana/external-alertmanager/vanilla';
 
 /**
  * Form representation of a route for editing

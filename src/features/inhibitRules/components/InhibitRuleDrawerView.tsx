@@ -24,9 +24,10 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
           value={
             hasSourceMatchers && inhibitRule.source_matchers ? (
               <Stack direction="row" gap={0.5} wrap="wrap">
-                {inhibitRule.source_matchers.map((matcher, idx) => (
-                  <AlertLabel key={`source-${idx}`} value={formatObjectMatcherForDisplay(matcher)} colorBy="value" />
-                ))}
+                {inhibitRule.source_matchers.map((matcher) => {
+                  const value = formatObjectMatcherForDisplay(matcher);
+                  return <AlertLabel key={value} value={value} colorBy="value" />;
+                })}
               </Stack>
             ) : (
               <Text color="secondary">{t('inhibit-rules.drawer.none', 'None')}</Text>
@@ -39,9 +40,10 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
           value={
             hasTargetMatchers && inhibitRule.target_matchers ? (
               <Stack direction="row" gap={0.5} wrap="wrap">
-                {inhibitRule.target_matchers.map((matcher, idx) => (
-                  <AlertLabel key={`target-${idx}`} value={formatObjectMatcherForDisplay(matcher)} colorBy="value" />
-                ))}
+                {inhibitRule.target_matchers.map((matcher) => {
+                  const value = formatObjectMatcherForDisplay(matcher);
+                  return <AlertLabel key={value} value={value} colorBy="value" />;
+                })}
               </Stack>
             ) : (
               <Text color="secondary">{t('inhibit-rules.drawer.none', 'None')}</Text>

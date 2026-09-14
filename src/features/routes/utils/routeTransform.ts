@@ -1,6 +1,5 @@
-import { Route } from '@grafana/external-alertmanager/vanilla';
+import { Route, type MatcherFieldValue } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
-import { type MatcherFieldValue } from '../../../types/matcherFields';
 import { isValidPrometheusDuration } from '../../../utils/time.utils';
 import { type FormAmRoute, emptyRoute } from '../types';
 

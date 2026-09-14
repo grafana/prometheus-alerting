@@ -1,5 +1,5 @@
 import { Locator, expect } from '@playwright/test';
-import type { MatcherOperator } from '../../src/types/matcherFields';
+import type { MatcherOperator } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from './AlertmanagerPage';
 import { matcherOperatorOptionNames } from './matcherOperatorOptionNames';
 

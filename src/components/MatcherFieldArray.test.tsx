@@ -7,7 +7,7 @@ import { expect, vi } from 'vitest';
 import { Button } from '@grafana/ui';
 
 import { MatcherFieldArray, MatcherOperatorSelect } from './MatcherFieldArray';
-import { type MatcherFieldValue, emptyMatcherFieldValue } from '../types/matcherFields';
+import { type MatcherFieldValue, emptyMatcherFieldValue } from '@grafana/external-alertmanager/vanilla';
 
 interface MatcherFormData {
   matchers: MatcherFieldValue[];
@@ -113,9 +113,6 @@ describe('MatcherFieldArray', () => {
       await user.click(screen.getByRole('combobox', { name: 'Operator' }));
 
       expect(await screen.findByText('Equals')).toBeInTheDocument();
-      expect(screen.getByText('Does not equal')).toBeInTheDocument();
-      expect(screen.getByText('Matches regular expression')).toBeInTheDocument();
-      expect(screen.getByText('Does not match regular expression')).toBeInTheDocument();
       expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
         '=Equals',
         '!=Does not equal',

@@ -20,20 +20,17 @@ import { InhibitRuleCreateDrawer } from '../components/InhibitRuleCreateDrawer';
 import { isAbilityAllowed } from '../../../access-control/abilities';
 import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 
-const MatchersCell = ({ matchers }: { matchers?: ObjectMatcher[] }) => {
-  if (!matchers || matchers.length === 0) {
+const MatchersCell = ({ matchers }: { matchers: ObjectMatcher[] }) => {
+  if (matchers.length === 0) {
     return <span>{t('inhibit-rules.no-matchers', 'None')}</span>;
   }
 
   return (
     <Stack direction="row">
-      {matchers.map((matcher, idx) => (
-        <AlertLabel
-          key={`${formatObjectMatcherForDisplay(matcher)}-${idx}`}
-          value={formatObjectMatcherForDisplay(matcher)}
-          colorBy="value"
-        />
-      ))}
+      {matchers.map((matcher) => {
+        const value = formatObjectMatcherForDisplay(matcher);
+        return <AlertLabel key={value} value={value} colorBy="value" />;
+      })}
     </Stack>
   );
 };

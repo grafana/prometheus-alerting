@@ -1,14 +1,39 @@
 import { Matcher, Route } from './api/types/common';
 import { TupleToUnion } from 'type-fest';
 
-const matcherOperators = ['=~', '!~', '!=', '='] as const;
+const matcherOperatorTokens = ['=~', '!~', '!=', '='] as const;
 const commaUnlessQuoted = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/;
 const reservedMatcherCharacters = /[{}!=~,\\"'`\s]+/;
 
-export type MatcherOperator = TupleToUnion<typeof matcherOperators>;
+export type MatcherOperator = TupleToUnion<typeof matcherOperatorTokens>;
+
+export const matcherOperators = {
+  equals: '=',
+  notEquals: '!=',
+  matchesRegex: '=~',
+  doesNotMatchRegex: '!~',
+} as const satisfies Record<string, MatcherOperator>;
 
 /** A matcher tuple whose name and value are semantic (decoded) strings. */
 export type ObjectMatcher = [name: string, operator: MatcherOperator, value: string];
+
+/**
+ * Shared UI row shape for Alertmanager matcher editors.
+ *
+ * Syntax ownership is feature-specific: route rows preserve their legacy
+ * textual matcher tokens, while inhibition rows contain semantic strings.
+ */
+export interface MatcherFieldValue {
+  name: string;
+  value: string;
+  operator: MatcherOperator;
+}
+
+export const emptyMatcherFieldValue: MatcherFieldValue = {
+  name: '',
+  value: '',
+  operator: matcherOperators.equals,
+};
 
 /**
  * We need to deal with multiple (deprecated) properties such as "match" and "match_re"
@@ -94,7 +119,7 @@ export function parseMatcher(matcher: string): Matcher {
     );
   }
 
-  const operatorsFound = matcherOperators
+  const operatorsFound = matcherOperatorTokens
     .map((op): [MatcherOperator, number] => [op, matcher.indexOf(op)])
     .filter(([_, idx]) => idx > -1)
     .sort((a, b) => a[1] - b[1]);
@@ -123,11 +148,7 @@ export function parseMatcher(matcher: string): Matcher {
  * @throws
  */
 export function parsePromQLStyleMatcherLoose(matcher: string): Matcher[] {
-  // split by `,` but not when it's used as a label value
-  const parts = matcher.replace(/^\{/, '').replace(/\}$/, '').trim().split(commaUnlessQuoted);
-
-  return parts
-    .filter((part) => part.trim().length > 0) // Filter out empty strings before parsing
+  return splitMatcherExpression(matcher)
     .flatMap(parseMatcher)
     .map((matcher) => ({
       ...matcher,
@@ -194,16 +215,21 @@ export function unquoteSemanticMatcherToken(input: string): string {
   return unescaped;
 }
 
+function splitMatcherExpression(expression: string): string[] {
+  return expression
+    .replace(/^\{/, '')
+    .replace(/\}$/, '')
+    .trim()
+    .split(commaUnlessQuoted)
+    .filter((part) => part.trim().length > 0);
+}
+
 /** Parses matcher syntax into semantic tuples using Grafana core's operator and list rules. */
 export function parseObjectMatcherExpression(expression: string): ObjectMatcher[] {
-  const parts = expression.replace(/^\{/, '').replace(/\}$/, '').trim().split(commaUnlessQuoted);
-
-  return parts
-    .filter((part) => part.trim().length > 0)
-    .map((part): ObjectMatcher => {
-      const [name, operator, value] = matcherToObjectMatcher(parseMatcher(part));
-      return [unquoteSemanticMatcherToken(name), operator, unquoteSemanticMatcherToken(value)];
-    });
+  return splitMatcherExpression(expression).map((part): ObjectMatcher => {
+    const [name, operator, value] = matcherToObjectMatcher(parseMatcher(part));
+    return [unquoteSemanticMatcherToken(name), operator, unquoteSemanticMatcherToken(value)];
+  });
 }
 
 /** Encodes a semantic matcher tuple using Grafana core's matcher quoting rules. */

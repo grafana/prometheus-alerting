@@ -4,7 +4,7 @@ import { type UseFormRegisterReturn } from 'react-hook-form';
 import { t } from '@grafana/i18n';
 import { Box, Button, Combobox, Field, IconButton, Input, Stack, TextArea, type ComboboxOption } from '@grafana/ui';
 
-import { matcherOperators, type MatcherOperator } from '../types/matcherFields';
+import { matcherOperators, type MatcherOperator } from '@grafana/external-alertmanager/vanilla';
 
 function getMatcherOperatorOptions(): Array<ComboboxOption<MatcherOperator>> {
   const descriptions: Record<MatcherOperator, string> = {

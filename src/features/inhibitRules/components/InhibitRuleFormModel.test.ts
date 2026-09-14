@@ -52,6 +52,16 @@ describe('formDataToInhibitRule', () => {
     });
   });
 
+  it('omits empty equal labels', () => {
+    expect(
+      formDataToInhibitRule({
+        sourceMatchers: [{ name: 'source', operator: '=', value: '' }],
+        targetMatchers: [{ name: 'target', operator: '=', value: '' }],
+        equal: ' , ',
+      }).equal
+    ).toBeUndefined();
+  });
+
   it('quotes UTF-8 and special matcher names and escapes semantic values', () => {
     expect(
       formDataToInhibitRule({

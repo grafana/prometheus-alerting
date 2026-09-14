@@ -29,12 +29,9 @@ export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: In
     onClose();
   };
 
-  const getTitle = () => {
-    if (inhibitRule.source_matchers && inhibitRule.source_matchers.length > 0) {
-      return formatObjectMatcherForDisplay(inhibitRule.source_matchers[0]);
-    }
-    return t('inhibit-rules.drawer.default-title', 'Inhibit Rule');
-  };
+  const title = inhibitRule.source_matchers.length
+    ? formatObjectMatcherForDisplay(inhibitRule.source_matchers[0])
+    : t('inhibit-rules.drawer.default-title', 'Inhibit Rule');
 
   return (
     <DrawerWithFooter
@@ -43,7 +40,7 @@ export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: In
           <Text variant="bodySmall" color="secondary">
             {t('inhibit-rules.drawer.title', 'Inhibit Rule')}
           </Text>
-          <Text variant="h2">{getTitle()}</Text>
+          <Text variant="h2">{title}</Text>
         </Stack>
       }
       onClose={onClose}
