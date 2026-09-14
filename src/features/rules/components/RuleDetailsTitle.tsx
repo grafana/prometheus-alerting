@@ -1,9 +1,19 @@
 import React from 'react';
+import { css } from '@emotion/css';
 import { t } from '@grafana/i18n';
 import { Stack, Text } from '@grafana/ui';
 import { StateText } from '@grafana/alerting/unstable';
 
 import { FederatedGroupBadge } from './FederatedGroupBadge';
+
+const nameStyle = css({
+  minWidth: 0,
+  overflowWrap: 'anywhere',
+  overflow: 'hidden',
+  display: '-webkit-box',
+  WebkitBoxOrient: 'vertical',
+  WebkitLineClamp: 2,
+});
 
 interface RuleDetailsTitleProps {
   name: string;
@@ -39,10 +49,12 @@ export function RuleDetailsTitle({ name, type, state, health, sourceTenants }: R
   };
 
   return (
-    <Stack direction="row" gap={1} alignItems="center" minWidth={0}>
-      <Text variant="h1" element="h1" truncate>
-        {name}
-      </Text>
+    <Stack direction="row" gap={1} alignItems="center" minWidth={0} wrap="wrap">
+      <div className={nameStyle}>
+        <Text variant="h1" element="h1" title={name}>
+          {name}
+        </Text>
+      </div>
       {type === 'alerting' && (
         <span aria-label={getStateLabel()}>
           <StateText type="alerting" state={normalizedState} health={normalizedHealth} />
