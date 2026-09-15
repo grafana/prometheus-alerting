@@ -120,6 +120,10 @@ max by (environment, namespace, service) (service_condition{environment!="produc
     expect(hashQuery('rate(requests_total[5m])')).not.toBe(hashQuery('rate(requests_total[6m])'));
   });
 
+  it('should still produce different hashes for rules that differ only in a duration-shaped label', () => {
+    expect(hashQuery('slo_burn{window="60m"}')).not.toBe(hashQuery('slo_burn{window="1h"}'));
+  });
+
   it('should produce the same hash for a ruler expr and a Prometheus query that rewrote its durations', () => {
     const rulerExpr = `((sum_over_time((service_signal{check="success",sensitivity="high"} < bool 100)[4m:]) >= bool 4 or sum_over_time((service_signal{check="success",sensitivity="low"} < bool 100)[60m:]) >= bool 60) > bool 0) * 4`;
     const promQuery = `((sum_over_time((service_signal{check="success",sensitivity="high"} < bool 100)[4m:]) >= bool 4 or sum_over_time((service_signal{check="success",sensitivity="low"} < bool 100)[1h:]) >= bool 60) > bool 0) * 4`;
@@ -154,6 +158,30 @@ describe('normalizePromQLDurations', () => {
 
   it('should leave a query without durations unchanged', () => {
     expect(normalizePromQLDurations('max by (cluster) (up)')).toBe('max by (cluster) (up)');
+  });
+
+  it('should leave a duration-shaped label value alone', () => {
+    // A burn-rate rule labels each window, and `{window="60m"}` and `{window="1h"}` are different
+    // series - rewriting inside the quotes would make two unrelated rules look like one.
+    expect(normalizePromQLDurations('slo_burn{window="60m"}')).toBe('slo_burn{window="60m"}');
+    expect(normalizePromQLDurations('label_replace(up, "window", "30d", "", "")')).toBe(
+      'label_replace(up, "window", "30d", "", "")'
+    );
+  });
+
+  it('should leave duration-shaped values in single-quoted and backtick strings alone', () => {
+    expect(normalizePromQLDurations("slo_burn{window='60m'}")).toBe("slo_burn{window='60m'}");
+    expect(normalizePromQLDurations('slo_burn{window=`60m`}')).toBe('slo_burn{window=`60m`}');
+  });
+
+  it('should still rewrite the durations outside a quoted string', () => {
+    expect(normalizePromQLDurations('rate(slo_burn{window="60m"}[5m])')).toBe('rate(slo_burn{window="60m"}[300000ms])');
+  });
+
+  it('should not be thrown off by an escaped quote inside a string', () => {
+    expect(normalizePromQLDurations('rate(up{note="say \\"60m\\""}[5m])')).toBe(
+      'rate(up{note="say \\"60m\\""}[300000ms])'
+    );
   });
 });
 

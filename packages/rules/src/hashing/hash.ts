@@ -45,30 +45,43 @@ export function stripPromQLComments(query: string): string {
 }
 
 /**
- * Finds a PromQL duration – one or more `<number><unit>` parts, e.g. `5m`, `1h30m`, `500ms`.
- * The lookbehind and lookahead keep us from matching a duration-looking tail inside a longer name,
- * so a recording rule called `job:latency:rate5m` is left alone.
+ * Finds either a quoted string or a PromQL duration, whichever comes first.
+ *
+ * A duration is one or more `<number><unit>` parts, e.g. `5m`, `1h30m`, `500ms`. The lookbehind
+ * and lookahead keep us from matching a duration-looking tail inside a longer name, so a recording
+ * rule called `job:latency:rate5m` is left alone.
+ *
+ * Quoted strings (double, single and backtick) are matched first and on purpose: a label value can
+ * be spelled like a duration without being one, and `{window="60m"}` and `{window="1h"}` select
+ * different series. Because the scan runs left to right, an opening quote swallows the whole
+ * literal, so a duration inside it is never considered.
  *
  * Unlike the anchored duration patterns elsewhere in the app, this one scans a whole expression,
  * so it can't be shared with them.
  */
-const PROMQL_DURATION_REGEX = /(?<![\w.])(?:\d+(?:ms|[smhdwy]))+(?![\w.])/g;
+const PROMQL_STRING_OR_DURATION_REGEX =
+  /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`[^`]*`)|(?<![\w.])(?:\d+(?:ms|[smhdwy]))+(?![\w.])/g;
 
 /**
- * Rewrites every duration in a query to a plain number of milliseconds.
+ * Rewrites every duration in a query to a plain number of milliseconds, leaving the contents of
+ * quoted strings alone.
  *
  * Mimir parses the expression and prints it back out when it exposes the rule through the
  * Prometheus rules API, and printing picks the largest unit that fits. A hand-written `[60m:]` in
  * the ruler YAML therefore comes back as `[1h:]`, which would otherwise hash differently.
  */
 export function normalizePromQLDurations(query: string): string {
-  return query.replace(PROMQL_DURATION_REGEX, (duration) => {
+  return query.replace(PROMQL_STRING_OR_DURATION_REGEX, (match, quotedString?: string) => {
+    if (quotedString !== undefined) {
+      return quotedString;
+    }
+
     try {
-      return `${parsePrometheusDuration(duration)}ms`;
+      return `${parsePrometheusDuration(match)}ms`;
     } catch {
       // Anything the regex above matched should parse, but hashQuery runs on every rule we render,
       // so if it ever doesn't we leave the duration as written rather than throwing.
-      return duration;
+      return match;
     }
   });
 }
