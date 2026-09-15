@@ -52,6 +52,22 @@ describe('formDataToInhibitRule', () => {
     });
   });
 
+  it('leaves a space-separated matcher untouched through an edit and save', () => {
+    // "severity = critical" is the conventional way to write a matcher in
+    // alertmanager.yml. Reading the value without trimming used to carry the space
+    // into the form and quote it back in, so saving an untouched rule changed what
+    // it matched.
+    const fromConfig = { source_matchers: ['severity = critical'], target_matchers: ['severity = warning'] };
+
+    const form = normalizedInhibitRuleToFormData(normalizeInhibitRuleMatchers(fromConfig));
+
+    expect(form.sourceMatchers).toEqual([{ name: 'severity', operator: '=', value: 'critical' }]);
+    expect(formDataToInhibitRule(form)).toMatchObject({
+      source_matchers: ['severity="critical"'],
+      target_matchers: ['severity="warning"'],
+    });
+  });
+
   it('omits empty equal labels', () => {
     expect(
       formDataToInhibitRule({

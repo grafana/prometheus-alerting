@@ -129,7 +129,10 @@ export function parseMatcher(matcher: string): Matcher {
   }
   const [operator, idx] = operatorsFound[0];
   const name = matcher.slice(0, idx).trim();
-  const value = matcher.slice(idx + operator.length);
+  // Alertmanager skips whitespace on both sides of the operator, so "severity = critical"
+  // means the value "critical", not " critical". Trimming is safe for a quoted value
+  // because its own spaces sit inside the quotes.
+  const value = matcher.slice(idx + operator.length).trim();
   if (!name) {
     throw new Error(`Invalid matcher: ${matcher}`);
   }

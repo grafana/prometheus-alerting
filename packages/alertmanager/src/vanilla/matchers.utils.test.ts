@@ -46,6 +46,25 @@ describe('parseMatcher', () => {
     expect(parseMatcher('foo!~bar')).toEqual({ name: 'foo', value: 'bar', isRegex: true, isEqual: false });
   });
 
+  it('ignores whitespace around the operator, the way Alertmanager does', () => {
+    expect(parseMatcher('severity = critical')).toEqual({
+      name: 'severity',
+      value: 'critical',
+      isRegex: false,
+      isEqual: true,
+    });
+    expect(parseMatcher('team  !~  platform.*')).toEqual({
+      name: 'team',
+      value: 'platform.*',
+      isRegex: true,
+      isEqual: false,
+    });
+  });
+
+  it('keeps spaces that sit inside a quoted value', () => {
+    expect(parseMatcher('message = " padded "').value).toBe('" padded "');
+  });
+
   it('throws for PromQL-style input', () => {
     expect(() => parseMatcher('{foo="bar"}')).toThrow();
   });
