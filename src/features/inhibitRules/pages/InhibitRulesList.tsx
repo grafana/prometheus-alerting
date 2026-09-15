@@ -6,11 +6,7 @@ import { Button, InteractiveTable, Stack, EmptyState } from '@grafana/ui';
 import { useInhibitRules } from '../hooks/useInhibitRules';
 import { t } from '@grafana/i18n';
 import { DEFAULT_PAGE_SIZE } from '../../../constants';
-import {
-  type NormalizedInhibitRule,
-  type ObjectMatcher,
-  formatObjectMatcherForDisplay,
-} from '@grafana/external-alertmanager/vanilla';
+import { type NormalizedInhibitRule, type ObjectMatcher } from '@grafana/external-alertmanager/vanilla';
 import { AlertLabel } from '@grafana/alerting';
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
 import { ViewState } from '../../../components/ViewState';
@@ -19,20 +15,14 @@ import { InhibitRuleDrawer } from '../components/InhibitRuleDrawer';
 import { InhibitRuleCreateDrawer } from '../components/InhibitRuleCreateDrawer';
 import { isAbilityAllowed } from '../../../access-control/abilities';
 import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
+import { MatcherLabels } from '../components/MatcherLabels';
 
 const MatchersCell = ({ matchers }: { matchers: ObjectMatcher[] }) => {
   if (matchers.length === 0) {
     return <span>{t('inhibit-rules.no-matchers', 'None')}</span>;
   }
 
-  return (
-    <Stack direction="row">
-      {matchers.map((matcher) => {
-        const value = formatObjectMatcherForDisplay(matcher);
-        return <AlertLabel key={value} value={value} colorBy="value" />;
-      })}
-    </Stack>
-  );
+  return <MatcherLabels matchers={matchers} />;
 };
 
 function InhibitRulesPage() {

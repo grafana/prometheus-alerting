@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { t } from '@grafana/i18n';
-import { Stack, Text } from '@grafana/ui';
-import { type NormalizedInhibitRule, formatObjectMatcherForDisplay } from '@grafana/external-alertmanager/vanilla';
+import { type NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { InhibitRuleDrawerView, InhibitRuleDrawerViewFooter } from './InhibitRuleDrawerView';
 import { InhibitRuleDrawerEdit } from './InhibitRuleDrawerEdit';
@@ -29,20 +28,9 @@ export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: In
     onClose();
   };
 
-  const title = inhibitRule.source_matchers.length
-    ? formatObjectMatcherForDisplay(inhibitRule.source_matchers[0])
-    : t('inhibit-rules.drawer.default-title', 'Inhibit Rule');
-
   return (
     <DrawerWithFooter
-      title={
-        <Stack direction="column" gap={0}>
-          <Text variant="bodySmall" color="secondary">
-            {t('inhibit-rules.drawer.title', 'Inhibit Rule')}
-          </Text>
-          <Text variant="h2">{title}</Text>
-        </Stack>
-      }
+      title={t('inhibit-rules.drawer.title', 'Inhibit Rule')}
       onClose={onClose}
       size="md"
       footer={

@@ -6,46 +6,6 @@ import { Box, Button, Combobox, Field, IconButton, Input, Stack, TextArea, type 
 
 import { matcherOperators, type MatcherOperator } from '@grafana/external-alertmanager/vanilla';
 
-function getMatcherOperatorOptions(): Array<ComboboxOption<MatcherOperator>> {
-  const descriptions: Record<MatcherOperator, string> = {
-    [matcherOperators.equals]: t('matcher-field-array.operator-description.equals', 'Equals'),
-    [matcherOperators.notEquals]: t('matcher-field-array.operator-description.not-equals', 'Does not equal'),
-    [matcherOperators.matchesRegex]: t(
-      'matcher-field-array.operator-description.matches-regex',
-      'Matches regular expression'
-    ),
-    [matcherOperators.doesNotMatchRegex]: t(
-      'matcher-field-array.operator-description.does-not-match-regex',
-      'Does not match regular expression'
-    ),
-  };
-
-  return Object.values(matcherOperators).map((operator) => ({
-    label: operator,
-    value: operator,
-    description: descriptions[operator],
-  }));
-}
-
-interface MatcherOperatorSelectProps {
-  value: MatcherOperator;
-  onChange: (operator: MatcherOperator) => void;
-}
-
-export function MatcherOperatorSelect({ value, onChange }: MatcherOperatorSelectProps) {
-  const options = getMatcherOperatorOptions();
-  const selectedOption = options.find((option) => option.value === value);
-
-  return (
-    <Combobox
-      value={selectedOption}
-      options={options}
-      onChange={(option) => option && onChange(option.value)}
-      width={12}
-    />
-  );
-}
-
 interface MatcherFieldRow {
   id: string;
   labelInput: UseFormRegisterReturn;
@@ -65,6 +25,11 @@ interface MatcherFieldArrayProps {
   };
   minRows?: number;
   valueControl?: 'input' | 'textarea';
+}
+
+interface MatcherOperatorSelectProps {
+  value: MatcherOperator;
+  onChange: (operator: MatcherOperator) => void;
 }
 
 /**
@@ -126,4 +91,39 @@ export function MatcherFieldArray({
       </Box>
     </>
   );
+}
+
+export function MatcherOperatorSelect({ value, onChange }: MatcherOperatorSelectProps) {
+  const options = getMatcherOperatorOptions();
+  const selectedOption = options.find((option) => option.value === value);
+
+  return (
+    <Combobox
+      value={selectedOption}
+      options={options}
+      onChange={(option) => option && onChange(option.value)}
+      width={12}
+    />
+  );
+}
+
+function getMatcherOperatorOptions(): Array<ComboboxOption<MatcherOperator>> {
+  const descriptions: Record<MatcherOperator, string> = {
+    [matcherOperators.equals]: t('matcher-field-array.operator-description.equals', 'Equals'),
+    [matcherOperators.notEquals]: t('matcher-field-array.operator-description.not-equals', 'Does not equal'),
+    [matcherOperators.matchesRegex]: t(
+      'matcher-field-array.operator-description.matches-regex',
+      'Matches regular expression'
+    ),
+    [matcherOperators.doesNotMatchRegex]: t(
+      'matcher-field-array.operator-description.does-not-match-regex',
+      'Does not match regular expression'
+    ),
+  };
+
+  return Object.values(matcherOperators).map((operator) => ({
+    label: operator,
+    value: operator,
+    description: descriptions[operator],
+  }));
 }

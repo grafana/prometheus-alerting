@@ -192,8 +192,11 @@ export function stringifyObjectMatcher([name, operator, value]: ObjectMatcher) {
 }
 
 /**
- * Unquotes a semantic matcher token and decodes Alertmanager's quote, backslash, and newline escapes.
- * This intentionally differs from unquoteWithUnescape, whose lexical behavior is used by route helpers.
+ * Decodes a quoted Alertmanager matcher token into the semantic value edited by inhibit-rule forms.
+ *
+ * Unlike the legacy route helper unquoteWithUnescape, this decodes `\n` and processes escapes in one
+ * pass so a literal `\\n` remains distinct from a newline. Grafana core has no shared decoder for this;
+ * these are Alertmanager's classic matcher escape rules.
  */
 export function unquoteSemanticMatcherToken(input: string): string {
   if (!/^"(.*)"$/s.test(input)) {

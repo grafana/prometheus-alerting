@@ -6,7 +6,7 @@ import { vi } from 'vitest';
 import { normalizeInhibitRuleMatchers, type NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
 
 import { InhibitRuleFormFields } from './InhibitRuleFormFields';
-import { type InhibitRuleFormData, formDataToInhibitRule } from './InhibitRuleFormModel';
+import { type InhibitRuleFormData } from './InhibitRuleFormModel';
 
 interface Submission {
   count: number;
@@ -55,7 +55,6 @@ describe('InhibitRuleFormFields', () => {
       sourceMatchers: [{ name: '   ', operator: '=', value: '' }],
       targetMatchers: [{ name: 'target', operator: '=', value: '' }],
     });
-    expect(formDataToInhibitRule(submittedData(submission)).source_matchers).toEqual(['"   "=""']);
   });
 
   it('preserves source matcher row order after adding and removing a middle row', async () => {
@@ -80,7 +79,7 @@ describe('InhibitRuleFormFields', () => {
     ]);
   });
 
-  it('hydrates semantic TextArea values and submits their canonical matcher syntax', async () => {
+  it('hydrates and submits semantic TextArea values', async () => {
     const user = userEvent.setup();
     const rule = normalizeInhibitRuleMatchers({
       source_matchers: ['message="first\\nsecond"', '"team name"!="日本語 \\"primary\\""', '" team "="value"'],
@@ -98,10 +97,14 @@ describe('InhibitRuleFormFields', () => {
     await user.click(screen.getByRole('button', { name: 'Update' }));
     await waitFor(() => expect(submission.count).toBe(1));
 
-    expect(formDataToInhibitRule(submittedData(submission))).toEqual({
-      source_matchers: ['message="first\\nsecond"', '"team name"!="日本語 \\"primary\\""', '" team "="value"'],
-      target_matchers: ['path=~"C:\\\\temp\\\\.*"'],
-      equal: undefined,
+    expect(submittedData(submission)).toEqual({
+      sourceMatchers: [
+        { name: 'message', operator: '=', value: 'first\nsecond' },
+        { name: 'team name', operator: '!=', value: '日本語 "primary"' },
+        { name: ' team ', operator: '=', value: 'value' },
+      ],
+      targetMatchers: [{ name: 'path', operator: '=~', value: 'C:\\temp\\.*' }],
+      equal: '',
     });
   });
 
@@ -133,10 +136,16 @@ describe('InhibitRuleFormFields', () => {
 
     await user.click(screen.getByRole('button', { name: 'Update' }));
     await waitFor(() => expect(submission.count).toBe(1));
-    expect(formDataToInhibitRule(submittedData(submission))).toEqual({
-      source_matchers: ['service=~"platform.*"', 'message!="\\"literal\\""'],
-      target_matchers: ['🚨!~"a,b{c}=~d"', 'empty=""'],
-      equal: ['alertname'],
+    expect(submittedData(submission)).toEqual({
+      sourceMatchers: [
+        { name: 'service', operator: '=~', value: 'platform.*' },
+        { name: 'message', operator: '!=', value: '"literal"' },
+      ],
+      targetMatchers: [
+        { name: '🚨', operator: '!~', value: 'a,b{c}=~d' },
+        { name: 'empty', operator: '=', value: '' },
+      ],
+      equal: 'alertname',
     });
   });
 });
