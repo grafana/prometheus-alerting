@@ -2,12 +2,17 @@
 # comment, and leaves inline review comments on the files a reviewer should read
 # first.
 #
+# Each run rates the whole diff again, so the inline comments are a round and
+# not a running list: the previous round is resolved before the new one lands.
+#
 # The parts worth reading are not in this file:
 #
 #   .github/prompts/pr-impact.md      what Claude is asked, as prose
 #   .mise/tasks/pr-impact/floor.mjs   the deterministic rules that run first
 #   .mise/tasks/pr-impact/parse.mjs   turning Claude's answer into a rating
 #   .mise/tasks/pr-impact/post.mjs    the labelling and commenting
+#
+# `mise run pr-impact:check` runs the unit tests for the posting rules, offline.
 #
 # Those are mise file tasks, so `mise run pr-impact <number>` rates a real PR
 # locally and prints what it would post, which is how to iterate on the prompt.
