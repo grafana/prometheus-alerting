@@ -156,6 +156,10 @@ describe('normalizePromQLDurations', () => {
     expect(normalizePromQLDurations('up > bool 100')).toBe('up > bool 100');
   });
 
+  it('should not read the tail of a decimal as a duration', () => {
+    expect(normalizePromQLDurations('up > bool 0.5m')).toBe('up > bool 0.5m');
+  });
+
   it('should leave a query without durations unchanged', () => {
     expect(normalizePromQLDurations('max by (cluster) (up)')).toBe('max by (cluster) (up)');
   });

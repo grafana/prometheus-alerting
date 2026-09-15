@@ -45,22 +45,37 @@ export function stripPromQLComments(query: string): string {
 }
 
 /**
- * Finds either a quoted string or a PromQL duration, whichever comes first.
- *
- * A duration is one or more `<number><unit>` parts, e.g. `5m`, `1h30m`, `500ms`. The lookbehind
- * and lookahead keep us from matching a duration-looking tail inside a longer name, so a recording
- * rule called `job:latency:rate5m` is left alone.
- *
- * Quoted strings (double, single and backtick) are matched first and on purpose: a label value can
- * be spelled like a duration without being one, and `{window="60m"}` and `{window="1h"}` select
- * different series. Because the scan runs left to right, an opening quote swallows the whole
- * literal, so a duration inside it is never considered.
- *
- * Unlike the anchored duration patterns elsewhere in the app, this one scans a whole expression,
- * so it can't be shared with them.
+ * A PromQL string literal, in any of the three syntaxes PromQL allows. A backslash escapes the next
+ * character in a quoted string, so `"{{\"FOO\"}}"` is one string and not two – but not in a backtick
+ * raw string, where a backslash is just a backslash.
  */
-const PROMQL_STRING_OR_DURATION_REGEX =
-  /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`[^`]*`)|(?<![\w.])(?:\d+(?:ms|[smhdwy]))+(?![\w.])/g;
+const PROMQL_STRING = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`[^`]*`/;
+
+/**
+ * A PromQL duration – one or more `<number><unit>` parts, e.g. `5m`, `1h30m`, `500ms`.
+ *
+ * The lookbehind and lookahead keep us from matching a duration-looking tail inside a longer name,
+ * so a recording rule called `job:latency:rate5m` is left alone. They exclude a dot as well as word
+ * characters, so a decimal like `0.5m` isn't read as a duration of 5 minutes.
+ *
+ * The duration patterns elsewhere in the app can't stand in for this one – they all anchor to the
+ * whole string, so none of them can find a duration inside an expression.
+ */
+const PROMQL_DURATION = /(?<![\w.])(?:\d+(?:ms|[smhdwy]))+(?![\w.])/;
+
+/**
+ * Strings come first, and the scan runs left to right, so an opening quote swallows the whole literal
+ * before anything inside it can be read as a duration. That matters because a label value can be
+ * spelled like a duration without being one, and `{window="60m"}` and `{window="1h"}` select
+ * different series.
+ *
+ * `duration.ts` warns against building a regex with `new RegExp` — that's about named capture groups,
+ * which the transpiler used to polyfill and which `new RegExp` then broke. Neither pattern above uses
+ * one, and the production bundle keeps both as plain literals, so composing them here is fine.
+ */
+const PROMQL_STRING_OR_DURATION = new RegExp(`${PROMQL_STRING.source}|${PROMQL_DURATION.source}`, 'g');
+
+const QUOTE_CHARACTERS = ['"', "'", '`'];
 
 /**
  * Rewrites every duration in a query to a plain number of milliseconds, leaving the contents of
@@ -71,9 +86,9 @@ const PROMQL_STRING_OR_DURATION_REGEX =
  * the ruler YAML therefore comes back as `[1h:]`, which would otherwise hash differently.
  */
 export function normalizePromQLDurations(query: string): string {
-  return query.replace(PROMQL_STRING_OR_DURATION_REGEX, (match, quotedString?: string) => {
-    if (quotedString !== undefined) {
-      return quotedString;
+  return query.replace(PROMQL_STRING_OR_DURATION, (match) => {
+    if (QUOTE_CHARACTERS.includes(match[0])) {
+      return match;
     }
 
     try {
