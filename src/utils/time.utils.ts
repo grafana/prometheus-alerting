@@ -1,6 +1,14 @@
 import { rangeUtil } from '@grafana/data';
 import { t } from '@grafana/i18n';
 
+// Reading a Prometheus duration lives in the rules package, because query hashing needs it too
+// and the package can't import from the app. Re-exported here so app code has one place to look.
+export {
+  isValidPrometheusDuration,
+  parsePrometheusDuration,
+  safeParsePrometheusDuration,
+} from '@grafana/external-rules/utils/duration';
+
 export enum TimeOptions {
   seconds = 's',
   minutes = 'm',
@@ -8,13 +16,6 @@ export enum TimeOptions {
   days = 'd',
   weeks = 'w',
 }
-
-/**
- * ⚠️
- * Some of these functions might be confusing, but there is a significant difference between "Golang duration",
- * supported by the time.ParseDuration() function and "prometheus duration" which is similar but does not support anything
- * smaller than seconds and adds the following supported units: "d, w, y"
- */
 
 export function parseInterval(value: string): [number, string] {
   const match = value.match(/(\d+)(\w+)/);
@@ -41,80 +42,6 @@ export const timeOptions = Object.entries(TimeOptions).map(([key, value]) => ({
  */
 export function invalidDurationMessage(): string {
   return t('common.duration-invalid', 'Enter a duration such as 30s, 5m, or 1h');
-}
-
-export function isValidPrometheusDuration(duration: string): boolean {
-  try {
-    parsePrometheusDuration(duration);
-    return true;
-  } catch (err) {
-    return false;
-  }
-}
-
-const PROMETHEUS_SUFFIX_MULTIPLIER: Record<string, number> = {
-  ms: 1,
-  s: 1000,
-  m: 60 * 1000,
-  h: 60 * 60 * 1000,
-  d: 24 * 60 * 60 * 1000,
-  w: 7 * 24 * 60 * 60 * 1000,
-  y: 365 * 24 * 60 * 60 * 1000,
-};
-
-// ⚠️ Keep this a bare regex literal. Wrapping it in `new RegExp(...)` looks harmless, but the
-// build compiles down to a target without named capture groups and swaps the literal for a
-// polyfill object that supplies `.groups` itself. `new RegExp(someRegex)` copies the pattern out
-// of that object's internals, losing the polyfill — so `.groups` comes back undefined in the
-// browser and every duration below is rejected as invalid. Tests don't compile down that far, so
-// they can't catch it.
-const DURATION_REGEXP = /^(?:(?<value>\d+)(?<type>ms|s|m|h|d|w|y))|0$/;
-const INVALID_FORMAT = new Error(
-  `Must be of format "(number)(unit)", for example "1m", or just "0". Available units: ${Object.values(
-    TimeOptions
-  ).join(', ')}`
-);
-
-/**
- * According to https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
- * see <duration>
- *
- * @returns Duration in milliseconds
- */
-export function parsePrometheusDuration(duration: string): number {
-  let input = duration;
-  const parts: Array<[number, string]> = [];
-
-  function matchDuration(part: string) {
-    const match = DURATION_REGEXP.exec(part);
-    const hasValueAndType = match?.groups?.value && match?.groups?.type;
-
-    if (!match || !hasValueAndType) {
-      throw INVALID_FORMAT;
-    }
-
-    if (match && match.groups?.value && match.groups?.type) {
-      input = input.replace(match[0], '');
-      parts.push([Number(match.groups.value), match.groups.type]);
-    }
-
-    if (input) {
-      matchDuration(input);
-    }
-  }
-
-  matchDuration(duration);
-
-  if (!parts.length) {
-    throw INVALID_FORMAT;
-  }
-
-  const totalDuration = parts.reduce((acc, [value, type]) => {
-    const duration = value * PROMETHEUS_SUFFIX_MULTIPLIER[type];
-    return acc + duration;
-  }, 0);
-
-  return totalDuration;
 }
 
 /**
@@ -155,21 +82,6 @@ export function formatPrometheusDuration(milliseconds: number): string {
       .join('')
   );
 }
-
-/**
- * Parses a Prometheus duration string and returns the duration in milliseconds.
- * If the duration is invalid, it returns 0.
- *
- * @param duration - The Prometheus duration string to parse.
- * @returns The duration in milliseconds.
- */
-export const safeParsePrometheusDuration = (duration: string): number => {
-  try {
-    return parsePrometheusDuration(duration);
-  } catch (e) {
-    return 0;
-  }
-};
 
 export const isNullDate = (date: string) => {
   return date.includes('0001-01-01T00');
