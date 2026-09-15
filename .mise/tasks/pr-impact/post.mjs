@@ -6,6 +6,15 @@
 // the rating and the spots without ever holding a token that can write;
 // everything here is plain code working from that output.
 //
+// Every run says everything it has to say. Claude is handed the whole PR diff
+// each time, not just the newest commit, so the latest answer is a complete
+// read of the PR rather than an addition to earlier ones. That is why this
+// resolves the inline comments from earlier runs and posts the current round
+// fresh, instead of trying to work out which of the new points were already
+// made. Matching new text against old text only ever half worked: Claude
+// rewords, so a reworded repeat came out twice, and it sat there for good if
+// the line under it never changed again.
+//
 // Set DRY_RUN=1 to print what would be posted instead of posting it.
 
 import { gh, ghJson, ghPaginate, env, isMain, rank, TIERS } from './lib.mjs';
@@ -13,6 +22,12 @@ import { computeFloor } from './floor.mjs';
 
 const SUMMARY_MARKER = '<!-- pr-impact -->';
 const SPOT_MARKER = '<!-- pr-impact-spot -->';
+
+// Said on every summary. The inline comments are a round rather than a running
+// list, so a reader who finds a stack of resolved threads above should know
+// that is how it works and not somebody tidying up after the bot.
+const ROUND_NOTE =
+  'Every run rates the whole PR again, so the open inline comments are this round and earlier rounds are resolved.';
 
 // One four-step ramp, used the same way everywhere: the label colour, the emoji
 // in the summary, and the prefix on each inline comment. The label names stay
@@ -37,17 +52,19 @@ function scale(tier) {
 }
 
 /**
- * A comment we left, as opposed to one that merely quotes our marker. Anyone
- * who can push can post a comment containing the marker; without this check
- * that comment is the one we would keep rewriting, and a line could be muted by
- * pre-flagging it. Outside Actions the poster is a person, so the bot check
- * only applies where the bot is doing the posting.
+ * Whether a comment carrying our marker was really left by us. Anyone who can
+ * push can post a comment containing the marker; without this check that
+ * comment is the one we would keep rewriting, and a spot could be muted by
+ * pre-flagging its line. Outside Actions the poster is a person, so the bot
+ * check only applies where the bot is doing the posting.
  */
+function postedByUs(isBot) {
+  return !process.env.GITHUB_ACTIONS || isBot;
+}
+
+/** A comment we left, as opposed to one that merely quotes our marker. */
 function oursAlone(comment, marker) {
-  if (!comment.body?.includes(marker)) {
-    return false;
-  }
-  return !process.env.GITHUB_ACTIONS || comment.user?.type === 'Bot';
+  return Boolean(comment.body?.includes(marker)) && postedByUs(comment.user?.type === 'Bot');
 }
 
 /** The floor wins wherever it is higher than what Claude said. */
@@ -89,12 +106,21 @@ function addedLines(patch) {
  * do not all land on changed lines is rejected whole. So work out from the patch
  * itself which lines can take a comment, and drop anything else.
  */
-function pickComments({ spots, files, alreadyFlagged }) {
+export function pickComments({ spots, files }) {
   const addable = new Map(files.map((file) => [file.filename, addedLines(file.patch)]));
+  // Claude sometimes makes the very same point at two places in one answer.
+  const said = new Set();
 
   return spots
     .filter((spot) => addable.get(spot.path)?.has(spot.line))
-    .filter((spot) => !alreadyFlagged.has(`${spot.path}:${spot.line}`))
+    .filter((spot) => {
+      const key = `${spot.path}\n${spot.why}`;
+      if (said.has(key)) {
+        return false;
+      }
+      said.add(key);
+      return true;
+    })
     .map((spot) => ({
       path: spot.path,
       line: spot.line,
@@ -103,24 +129,106 @@ function pickComments({ spots, files, alreadyFlagged }) {
     }));
 }
 
+// Review threads have to come from GraphQL: the REST list of review comments
+// has no thread id, and a thread id is what resolving needs. The first comment
+// in a thread is the one we wrote, so that is the only one worth asking for.
+const THREADS_QUERY = `
+query($owner:String!, $name:String!, $pr:Int!, $cursor:String) {
+  repository(owner:$owner, name:$name) {
+    pullRequest(number:$pr) {
+      reviewThreads(first:100, after:$cursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          id
+          isResolved
+          comments(first:1) { totalCount nodes { body author { __typename } } }
+        }
+      }
+    }
+  }
+}`;
+
+const RESOLVE_MUTATION = `
+mutation($thread:ID!) {
+  resolveReviewThread(input:{threadId:$thread}) { thread { id } }
+}`;
+
+/** Every review thread on the PR, as GraphQL returns them. */
+function reviewThreads({ repo, pr }) {
+  const [owner, name] = repo.split('/');
+  const nodes = [];
+  let cursor = null;
+
+  // Paged by hand rather than with `gh --paginate`, which for GraphQL wants the
+  // cursor variable spelled its way. The loop is shorter than the explanation
+  // of the flag would be. `cursor` is left out of the first call: a nullable
+  // variable that isn't supplied reads as null, which is where paging starts.
+  for (;;) {
+    const args = [
+      'api',
+      'graphql',
+      '-f',
+      `query=${THREADS_QUERY}`,
+      '-f',
+      `owner=${owner}`,
+      '-f',
+      `name=${name}`,
+      '-F',
+      `pr=${pr}`,
+    ];
+    if (cursor) {
+      args.push('-f', `cursor=${cursor}`);
+    }
+
+    const page = ghJson(args).data.repository.pullRequest.reviewThreads;
+    nodes.push(...page.nodes);
+    if (!page.pageInfo.hasNextPage) {
+      return nodes;
+    }
+    cursor = page.pageInfo.endCursor;
+  }
+}
+
+/**
+ * The ids of our own open spot threads, which is what the current round
+ * replaces.
+ *
+ * Resolving rather than deleting: a resolved thread folds out of the way but
+ * keeps what was said under it. That is what lets this be unconditional —
+ * nothing a person wrote is ever lost, so there is no need to work out which
+ * old comments are safe to remove.
+ *
+ * A thread somebody has replied to is left open anyway. Someone is mid
+ * conversation there and it is theirs to close, not ours to fold up under them.
+ */
+export function ourOpenThreads(threads, { onlyBot = Boolean(process.env.GITHUB_ACTIONS) } = {}) {
+  return threads
+    .filter((thread) => {
+      const top = thread.comments?.nodes?.[0];
+      if (thread.isResolved || !top?.body?.includes(SPOT_MARKER)) {
+        return false;
+      }
+      // Only our own comment is in there, so nobody has replied.
+      const alone = (thread.comments.totalCount ?? 1) === 1;
+      return alone && (!onlyBot || top.author?.__typename === 'Bot');
+    })
+    .map((thread) => thread.id);
+}
+
 /**
  * What the diff pass came to, said out loud. Silence would leave a reader
- * guessing whether nothing was found or nothing was looked at, and "nothing
- * stood out" is a different claim from "everything found was already said".
+ * guessing whether nothing was found or nothing was looked at.
  */
-function spotNote({ marked, offered, repeats }) {
+function spotNote({ marked, offered }) {
   if (marked > 0) {
     return `Marked ${marked} place${marked === 1 ? '' : 's'} on the diff worth reading first.`;
   }
   if (offered === 0) {
     return 'Nothing in the diff stood out as needing a closer look.';
   }
-  if (repeats === offered) {
-    return 'Nothing new to mark on this commit — what stood out was already flagged on an earlier one.';
-  }
   // Something was named but could not be placed on a changed line. Say only
   // that, rather than claiming a reason that might not be the real one.
-  return 'Nothing new to mark on this commit.';
+  return 'Nothing to mark on the lines this diff changes.';
 }
 
 /** The footer line, listing only the facts that were actually available. */
@@ -137,10 +245,10 @@ function provenance({ repo, headSha, model, effort, took }) {
   if (took) {
     parts.push(`took ${took}`);
   }
-  return parts.join(' \u00b7 ');
+  return parts.join(' · ');
 }
 
-function summaryBody({ repo, tier, explanation, headSha, model, effort, took, marked, offered, repeats }) {
+function summaryBody({ repo, tier, explanation, headSha, model, effort, took, marked, offered }) {
   return [
     SUMMARY_MARKER,
     '',
@@ -152,7 +260,8 @@ function summaryBody({ repo, tier, explanation, headSha, model, effort, took, ma
     '',
     explanation,
     '',
-    spotNote({ marked, offered, repeats }),
+    spotNote({ marked, offered }),
+    ROUND_NOTE,
     '',
     `Advisory only — this does not change what is needed to merge.`,
     `Rated at ${provenance({ repo, headSha, model, effort, took })}.`,
@@ -213,6 +322,20 @@ function upsertSummary({ repo, pr, body }) {
   }
 }
 
+function resolveThreads({ ids }) {
+  let done = 0;
+  for (const id of ids) {
+    try {
+      gh(['api', 'graphql', '-f', `query=${RESOLVE_MUTATION}`, '-f', `thread=${id}`]);
+      done++;
+    } catch {
+      // Gone, or we are not allowed to. Tidying up is not worth failing the run
+      // over — the rating is the point.
+    }
+  }
+  console.error(`Resolved ${done} inline comment thread(s) from an earlier run.`);
+}
+
 function leaveReview({ repo, pr, headSha, tier, comments }) {
   const review = {
     commit_id: headSha,
@@ -254,18 +377,14 @@ export function post({
     ? `${claudeBody}\n\nClaude rated this ${STYLE[claudeTier]?.emoji ?? ''} **${claudeTier}**, raised to ${STYLE[tier].emoji} **${tier}** because the PR ${effectiveReason}.`
     : claudeBody;
   const files = ghPaginate(`repos/${repo}/pulls/${pr}/files`);
-  // Don't repeat the same point on the same line across pushes.
-  const alreadyFlagged = new Set(
-    ghPaginate(`repos/${repo}/pulls/${pr}/comments`)
-      .filter((comment) => oursAlone(comment, SPOT_MARKER))
-      .map((comment) => `${comment.path}:${comment.line ?? comment.original_line}`)
-  );
-  const comments = pickComments({ spots, files, alreadyFlagged });
-  const repeats = spots.filter((spot) => alreadyFlagged.has(`${spot.path}:${spot.line}`)).length;
+  // Read before anything is posted, so the current round is never in the list
+  // of what gets resolved.
+  const superseded = ourOpenThreads(reviewThreads({ repo, pr }));
+  const comments = pickComments({ spots, files });
 
   const dropped = spots.length - comments.length;
   if (dropped > 0) {
-    console.error(`Dropped ${dropped} spot(s): not on a changed line, or already flagged.`);
+    console.error(`Dropped ${dropped} spot(s): not on a changed line, or said twice in one answer.`);
   }
 
   const summary = summaryBody({
@@ -278,7 +397,6 @@ export function post({
     took,
     marked: comments.length,
     offered: spots.length,
-    repeats,
   });
 
   if (dryRun) {
@@ -289,14 +407,19 @@ export function post({
     console.log(
       comments.length === 0 ? '(none)' : comments.map((c) => `${c.path}:${c.line}  ${c.body.split('\n')[0]}`).join('\n')
     );
+    console.log(`--- would resolve ${superseded.length} inline comment thread(s) from an earlier run ---`);
     return;
   }
 
   applyLabel({ repo, pr, tier });
   upsertSummary({ repo, pr, body: summary });
 
+  if (superseded.length > 0) {
+    resolveThreads({ ids: superseded });
+  }
+
   if (comments.length === 0) {
-    console.error('Nothing new to point at on the diff.');
+    console.error('Nothing on the diff to point at.');
     return;
   }
   leaveReview({ repo, pr, headSha, tier, comments });
