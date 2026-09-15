@@ -64,6 +64,28 @@ export const normalizeMatchers = (route: Route): ObjectMatcher[] => {
   return routeMatchers;
 };
 
+/**
+ * Normalize route matchers to decoded values for semantic matching.
+ *
+ * Modern matcher strings reuse the shared semantic parser. Legacy map values are already data
+ * rather than matcher syntax, so they are preserved verbatim.
+ */
+export function normalizeMatchersForMatching(route: Route): ObjectMatcher[] {
+  const modernMatchers = (route.matchers ?? []).flatMap(parseObjectMatcherExpression);
+  const regexMatchers: ObjectMatcher[] = Object.entries(route.match_re ?? {}).map(([label, value]) => [
+    label,
+    '=~',
+    value,
+  ]);
+  const equalityMatchers: ObjectMatcher[] = Object.entries(route.match ?? {}).map(([label, value]) => [
+    label,
+    '=',
+    value,
+  ]);
+
+  return [...modernMatchers, ...regexMatchers, ...equalityMatchers];
+}
+
 export function matcherToObjectMatcher(matcher: Matcher): ObjectMatcher {
   const operator = matcherToOperator(matcher);
   return [matcher.name, operator, matcher.value];

@@ -5,6 +5,7 @@ import {
   isPromQLStyleMatcher,
   matcherToObjectMatcher,
   normalizeMatchers,
+  normalizeMatchersForMatching,
   parseMatcherToArray,
   parseMatcher,
   parseObjectMatcherExpression,
@@ -116,6 +117,67 @@ describe('matcherToObjectMatcher', () => {
       '!~',
       'bar',
     ]);
+  });
+});
+
+describe('normalizeMatchersForMatching', () => {
+  it('decodes modern matcher syntax for every operator', () => {
+    expect(
+      normalizeMatchersForMatching({
+        matchers: [' severity = "critical" ', 'team != "ops"', 'service =~ "api.*"', 'zone !~ "dev.*"'],
+      })
+    ).toEqual([
+      ['severity', '=', 'critical'],
+      ['team', '!=', 'ops'],
+      ['service', '=~', 'api.*'],
+      ['zone', '!~', 'dev.*'],
+    ]);
+  });
+
+  it('decodes quoted values exactly once', () => {
+    expect(
+      normalizeMatchersForMatching({
+        matchers: [
+          'empty = ""',
+          'spaces = " keep me "',
+          'quoted = "\\"critical\\""',
+          'newline = "line\\nnext"',
+          'literal = "line\\\\nnext"',
+          'path = "C:\\\\alerts"',
+        ],
+      })
+    ).toEqual([
+      ['empty', '=', ''],
+      ['spaces', '=', ' keep me '],
+      ['quoted', '=', '"critical"'],
+      ['newline', '=', 'line\nnext'],
+      ['literal', '=', 'line\\nnext'],
+      ['path', '=', 'C:\\alerts'],
+    ]);
+  });
+
+  it('handles braced matchers and commas without double decoding', () => {
+    expect(normalizeMatchersForMatching({ matchers: ['{service="api,worker",message="\\"critical\\""}'] })).toEqual([
+      ['service', '=', 'api,worker'],
+      ['message', '=', '"critical"'],
+    ]);
+  });
+
+  it('preserves legacy map values verbatim', () => {
+    expect(
+      normalizeMatchersForMatching({
+        match: { quoted: '"literal"', whitespace: ' keep me ' },
+        match_re: { path: 'C:\\alerts' },
+      })
+    ).toEqual([
+      ['path', '=~', 'C:\\alerts'],
+      ['quoted', '=', '"literal"'],
+      ['whitespace', '=', ' keep me '],
+    ]);
+  });
+
+  it('throws for malformed modern matchers', () => {
+    expect(() => normalizeMatchersForMatching({ matchers: ['invalid'] })).toThrow('Invalid matcher');
   });
 });
 
