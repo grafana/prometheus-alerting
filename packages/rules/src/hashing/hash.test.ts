@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { simpleHash, hashLabelsOrAnnotations, hashQuery, stripPromQLComments } from './hash';
+import { simpleHash, hashLabelsOrAnnotations, hashQuery, normalizePromQLDurations, stripPromQLComments } from './hash';
 
 describe('simpleHash', () => {
   it('returns 0 for empty string', () => {
@@ -56,16 +56,17 @@ describe('hashLabelsOrAnnotations', () => {
 
 describe('hashQuery', () => {
   it('returns the query trimmed', () => {
-    expect(hashQuery('  rate(http[5m])  ')).toBe('rate(http[5m])');
+    // durations come back as milliseconds, see normalizePromQLDurations
+    expect(hashQuery('  rate(http[5m])  ')).toBe('rate(http[300000ms])');
   });
 
   it('strips comment lines', () => {
     const query = '# this is a comment\nrate(http[5m])';
-    expect(hashQuery(query)).toBe('rate(http[5m])');
+    expect(hashQuery(query)).toBe('rate(http[300000ms])');
   });
 
   it('strips surrounding parentheses', () => {
-    expect(hashQuery('(rate(http[5m]))')).toBe('rate(http[5m])');
+    expect(hashQuery('(rate(http[5m]))')).toBe('rate(http[300000ms])');
   });
 
   it('does not strip parens when query is a single character', () => {
@@ -106,6 +107,53 @@ or
 max by (environment, namespace, service) (service_condition{environment!="production"})`;
 
     expect(hashQuery(query1)).toBe(hashQuery(query2));
+  });
+
+  it('should produce the same hash for equivalent durations written with different units', () => {
+    expect(hashQuery('sum_over_time(up[60m:])')).toBe(hashQuery('sum_over_time(up[1h:])'));
+    expect(hashQuery('rate(requests_total[90m])')).toBe(hashQuery('rate(requests_total[1h30m])'));
+    expect(hashQuery('rate(requests_total[3600s])')).toBe(hashQuery('rate(requests_total[1h])'));
+    expect(hashQuery('up offset 60m')).toBe(hashQuery('up offset 1h'));
+  });
+
+  it('should still produce different hashes for durations that are not equivalent', () => {
+    expect(hashQuery('rate(requests_total[5m])')).not.toBe(hashQuery('rate(requests_total[6m])'));
+  });
+
+  it('should produce the same hash for a ruler expr and a Prometheus query that rewrote its durations', () => {
+    const rulerExpr = `((sum_over_time((service_signal{check="success",sensitivity="high"} < bool 100)[4m:]) >= bool 4 or sum_over_time((service_signal{check="success",sensitivity="low"} < bool 100)[60m:]) >= bool 60) > bool 0) * 4`;
+    const promQuery = `((sum_over_time((service_signal{check="success",sensitivity="high"} < bool 100)[4m:]) >= bool 4 or sum_over_time((service_signal{check="success",sensitivity="low"} < bool 100)[1h:]) >= bool 60) > bool 0) * 4`;
+
+    expect(hashQuery(rulerExpr)).toBe(hashQuery(promQuery));
+  });
+});
+
+describe('normalizePromQLDurations', () => {
+  it('should rewrite durations to milliseconds', () => {
+    expect(normalizePromQLDurations('rate(up[5m])')).toBe('rate(up[300000ms])');
+    expect(normalizePromQLDurations('rate(up[1h])')).toBe('rate(up[3600000ms])');
+    expect(normalizePromQLDurations('rate(up[500ms])')).toBe('rate(up[500ms])');
+  });
+
+  it('should add up multi-part durations', () => {
+    expect(normalizePromQLDurations('rate(up[1h30m])')).toBe('rate(up[5400000ms])');
+  });
+
+  it('should rewrite both parts of a subquery', () => {
+    expect(normalizePromQLDurations('sum_over_time(up[60m:5m])')).toBe('sum_over_time(up[3600000ms:300000ms])');
+  });
+
+  it('should leave a duration-looking suffix inside a longer name alone', () => {
+    expect(normalizePromQLDurations('job:latency:rate5m')).toBe('job:latency:rate5m');
+    expect(normalizePromQLDurations('requests_5m_total')).toBe('requests_5m_total');
+  });
+
+  it('should leave plain numbers alone', () => {
+    expect(normalizePromQLDurations('up > bool 100')).toBe('up > bool 100');
+  });
+
+  it('should leave a query without durations unchanged', () => {
+    expect(normalizePromQLDurations('max by (cluster) (up)')).toBe('max by (cluster) (up)');
   });
 });
 
