@@ -5,7 +5,6 @@ import {
   isPromQLStyleMatcher,
   matcherToObjectMatcher,
   normalizeMatchers,
-  normalizeMatchersForMatching,
   parseMatcherToArray,
   parseMatcher,
   parseObjectMatcherExpression,
@@ -120,10 +119,10 @@ describe('matcherToObjectMatcher', () => {
   });
 });
 
-describe('normalizeMatchersForMatching', () => {
+describe('normalizeMatchers semantic parsing', () => {
   it('decodes modern matcher syntax for every operator', () => {
     expect(
-      normalizeMatchersForMatching({
+      normalizeMatchers({
         matchers: [' severity = "critical" ', 'team != "ops"', 'service =~ "api.*"', 'zone !~ "dev.*"'],
       })
     ).toEqual([
@@ -136,7 +135,7 @@ describe('normalizeMatchersForMatching', () => {
 
   it('decodes quoted values exactly once', () => {
     expect(
-      normalizeMatchersForMatching({
+      normalizeMatchers({
         matchers: [
           'empty = ""',
           'spaces = " keep me "',
@@ -157,7 +156,7 @@ describe('normalizeMatchersForMatching', () => {
   });
 
   it('handles braced matchers and commas without double decoding', () => {
-    expect(normalizeMatchersForMatching({ matchers: ['{service="api,worker",message="\\"critical\\""}'] })).toEqual([
+    expect(normalizeMatchers({ matchers: ['{service="api,worker",message="\\"critical\\""}'] })).toEqual([
       ['service', '=', 'api,worker'],
       ['message', '=', '"critical"'],
     ]);
@@ -165,7 +164,7 @@ describe('normalizeMatchersForMatching', () => {
 
   it('preserves legacy map values verbatim', () => {
     expect(
-      normalizeMatchersForMatching({
+      normalizeMatchers({
         match: { quoted: '"literal"', whitespace: ' keep me ' },
         match_re: { path: 'C:\\alerts' },
       })
@@ -177,7 +176,7 @@ describe('normalizeMatchersForMatching', () => {
   });
 
   it('throws for malformed modern matchers', () => {
-    expect(() => normalizeMatchersForMatching({ matchers: ['invalid'] })).toThrow('Invalid matcher');
+    expect(() => normalizeMatchers({ matchers: ['invalid'] })).toThrow('Invalid matcher');
   });
 });
 
@@ -277,8 +276,8 @@ describe('parseObjectMatcherExpression', () => {
     ]);
   });
 
-  it('parses quoted names, values, and commas in values', () => {
-    expect(parseObjectMatcherExpression('{"team name"="ops,platform",region="us"}')).toEqual<ObjectMatcher[]>([
+  it('parses quoted names, values, commas in values, and surrounding syntax whitespace', () => {
+    expect(parseObjectMatcherExpression('{ "team name" = "ops,platform", region = "us" }')).toEqual<ObjectMatcher[]>([
       ['team name', '=', 'ops,platform'],
       ['region', '=', 'us'],
     ]);

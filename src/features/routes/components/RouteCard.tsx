@@ -26,7 +26,7 @@ import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { MetaText } from '../../rules/list/components/MetaText';
 import MoreButton from '../../rules/list/components/MoreButton';
 import { AlertLabel } from '@grafana/alerting';
-import { RouteMatchingCounts, getRouteMatchCount } from '../hooks/useRouteMatching';
+import { getRouteMatchCount, type RouteMatchingCounts } from '../utils/routeMatching';
 import { InsertPosition } from '../types';
 
 const ROUTES_PER_PAGE = 20;

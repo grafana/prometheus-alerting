@@ -5,7 +5,7 @@ import hashObject from 'object-hash';
 import { ERROR_NEWER_CONFIGURATION } from './constants';
 import { arrayUtils } from '@grafana/data';
 
-export type RouteWithID = Route & { id: string };
+export type RouteWithID = Omit<Route, 'routes'> & { id: string; routes?: RouteWithID[] };
 export type InsertPosition = 'above' | 'below' | 'child';
 
 /**
@@ -247,5 +247,16 @@ export function findRouteInTree(
  * @returns The matching route or undefined if not found
  */
 export function findExistingRoute(id: string, routeTree: RouteWithID): RouteWithID | undefined {
-  return routeTree.id === id ? routeTree : routeTree.routes?.find((route) => findExistingRoute(id, route));
+  if (routeTree.id === id) {
+    return routeTree;
+  }
+
+  for (const child of routeTree.routes ?? []) {
+    const match = findExistingRoute(id, child);
+    if (match) {
+      return match;
+    }
+  }
+
+  return undefined;
 }

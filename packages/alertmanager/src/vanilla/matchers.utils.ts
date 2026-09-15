@@ -39,51 +39,16 @@ export const emptyMatcherFieldValue: MatcherFieldValue = {
  * We need to deal with multiple (deprecated) properties such as "match" and "match_re"
  * this function will normalize all of the different ways to define matchers in to a single one.
  */
-export const normalizeMatchers = (route: Route): ObjectMatcher[] => {
-  let routeMatchers: ObjectMatcher[] = [];
+export function normalizeMatchers(route: Route): ObjectMatcher[] {
+  const currentMatchers = (route.matchers ?? []).flatMap(parseObjectMatcherExpression);
+  const deprecatedRegexMatchers = Object.entries(route.match_re ?? {}).map(
+    ([name, value]): ObjectMatcher => [name, '=~', value]
+  );
+  const deprecatedEqualityMatchers = Object.entries(route.match ?? {}).map(
+    ([name, value]): ObjectMatcher => [name, '=', value]
+  );
 
-  if (route.matchers) {
-    route.matchers.forEach((matcher) => {
-      const parsedMatchers = parseMatcherToArray(matcher).map(matcherToObjectMatcher);
-      routeMatchers = routeMatchers.concat(parsedMatchers);
-    });
-  }
-
-  if (route.match_re) {
-    Object.entries(route.match_re).forEach(([label, value]) => {
-      routeMatchers.push([label, '=~', value]);
-    });
-  }
-
-  if (route.match) {
-    Object.entries(route.match).forEach(([label, value]) => {
-      routeMatchers.push([label, '=', value]);
-    });
-  }
-
-  return routeMatchers;
-};
-
-/**
- * Normalize route matchers to decoded values for semantic matching.
- *
- * Modern matcher strings reuse the shared semantic parser. Legacy map values are already data
- * rather than matcher syntax, so they are preserved verbatim.
- */
-export function normalizeMatchersForMatching(route: Route): ObjectMatcher[] {
-  const modernMatchers = (route.matchers ?? []).flatMap(parseObjectMatcherExpression);
-  const regexMatchers: ObjectMatcher[] = Object.entries(route.match_re ?? {}).map(([label, value]) => [
-    label,
-    '=~',
-    value,
-  ]);
-  const equalityMatchers: ObjectMatcher[] = Object.entries(route.match ?? {}).map(([label, value]) => [
-    label,
-    '=',
-    value,
-  ]);
-
-  return [...modernMatchers, ...regexMatchers, ...equalityMatchers];
+  return [...currentMatchers, ...deprecatedRegexMatchers, ...deprecatedEqualityMatchers];
 }
 
 export function matcherToObjectMatcher(matcher: Matcher): ObjectMatcher {
@@ -253,7 +218,7 @@ function splitMatcherExpression(expression: string): string[] {
 export function parseObjectMatcherExpression(expression: string): ObjectMatcher[] {
   return splitMatcherExpression(expression).map((part): ObjectMatcher => {
     const [name, operator, value] = matcherToObjectMatcher(parseMatcher(part));
-    return [unquoteSemanticMatcherToken(name), operator, unquoteSemanticMatcherToken(value)];
+    return [unquoteSemanticMatcherToken(name), operator, unquoteSemanticMatcherToken(value.trim())];
   });
 }
 
