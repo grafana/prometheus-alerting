@@ -90,7 +90,7 @@ describe('InhibitRuleFormFields', () => {
 
     const values = within(source).getAllByRole<HTMLTextAreaElement>('textbox', { name: 'Value' });
     expect(values[0].tagName).toBe('TEXTAREA');
-    expect(values[0]).toHaveValue('first\nsecond');
+    expect(values[0]).toHaveValue(String.raw`first\nsecond`);
     expect(values[1]).toHaveValue('日本語 "primary"');
     expect(within(source).getAllByRole('textbox', { name: 'Label' })[2]).toHaveValue(' team ');
 
@@ -99,7 +99,7 @@ describe('InhibitRuleFormFields', () => {
 
     expect(submittedData(submission)).toEqual({
       sourceMatchers: [
-        { name: 'message', operator: '=', value: 'first\nsecond' },
+        { name: 'message', operator: '=', value: String.raw`first\nsecond` },
         { name: 'team name', operator: '!=', value: '日本語 "primary"' },
         { name: ' team ', operator: '=', value: 'value' },
       ],

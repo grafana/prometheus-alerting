@@ -111,7 +111,7 @@ describe('formDataToInhibitRule', () => {
     expect(formDataToInhibitRule(normalizedInhibitRuleToFormData(normalized))).toEqual({
       source_matchers: [
         'team="ops"',
-        'message="a\\nb"',
+        'message="a\\\\nb"',
         'path=~"C:\\\\temp\\\\.*"',
         'unquoted=""',
         'path=~"C:\\\\temp\\\\.*"',
