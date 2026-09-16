@@ -31,7 +31,7 @@ export function FilterStatus({ state, numberOfRules, onCancel }: FilterStatusPro
           {/* search is in progress */}
           {state === 'searching' && (
             <Trans i18nKey="alerting.rule-list.filter-view.results-loading">
-              Searching – found {{ numberOfRules }} rules
+              Search in progress. Found {{ numberOfRules }} rules so far
             </Trans>
           )}
         </Text>
