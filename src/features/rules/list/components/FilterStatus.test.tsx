@@ -5,11 +5,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { FilterStatus, type FilterProgressState } from './FilterStatus';
 
 describe('FilterStatus', () => {
-  it('does not report a result count while searching', () => {
-    render(<FilterStatus state="searching" numberOfRules={0} onCancel={vi.fn()} />);
+  it('updates the result count while searching', () => {
+    const onCancel = vi.fn();
+    const { rerender } = render(<FilterStatus state="searching" numberOfRules={0} onCancel={onCancel} />);
 
-    expect(screen.getByText('Searching for rules...')).toBeInTheDocument();
-    expect(screen.queryByText(/found 0 rules/i)).not.toBeInTheDocument();
+    expect(screen.getByText('Search in progress. Found 0 rules so far')).toBeInTheDocument();
+
+    rerender(<FilterStatus state="searching" numberOfRules={10} onCancel={onCancel} />);
+
+    expect(screen.getByText('Search in progress. Found 10 rules so far')).toBeInTheDocument();
   });
 
   it.each<[FilterProgressState, string]>([
