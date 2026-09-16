@@ -5,12 +5,12 @@ import { normalizeMatchers, type AlertGroup, type ObjectMatcher } from '@grafana
 export type RouteMatchingCounts = Map<string, number>;
 
 /** Convert Alertmanager string matchers to the objects expected by Grafana's matching utilities. */
-function toMatchingRoute(route: AlertmanagerRouteWithID): GrafanaRouteWithID {
+function toGrafanaRoute(route: AlertmanagerRouteWithID): GrafanaRouteWithID {
   return {
     id: route.id,
     continue: route.continue ?? false,
     matchers: normalizeMatchers(route).map(toLabelMatcher),
-    routes: route.routes?.map(toMatchingRoute) ?? [],
+    routes: route.routes?.map(toGrafanaRoute) ?? [],
   };
 }
 
@@ -28,7 +28,7 @@ export function countRouteMatches(
     return counts;
   }
 
-  const matchingTree = toMatchingRoute(routeTree);
+  const matchingTree = toGrafanaRoute(routeTree);
   const seenFingerprints = new Set<string>();
 
   for (const group of alertGroups) {
