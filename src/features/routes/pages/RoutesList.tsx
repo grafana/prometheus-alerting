@@ -51,7 +51,7 @@ function RoutesPage() {
   const routeWithIds = useMemo(() => (route ? attachRouteIds(route) : undefined), [route]);
   const routeTree = useMemo(() => (routeWithIds ? computeInheritedTree(routeWithIds) : undefined), [routeWithIds]);
 
-  const matchingCounts = useRouteMatching(routeWithIds, alertGroups);
+  const matchingCounts = useRouteMatching(routeTree, alertGroups);
   const canShowMatchingCounts = canViewInstances && !isLoadingAlerts && !alertGroupsError;
 
   // Find the selected receiver
