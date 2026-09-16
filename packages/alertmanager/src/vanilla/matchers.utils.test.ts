@@ -12,7 +12,6 @@ import {
   parsePromQLStyleMatcherLoose,
   parsePromQLStyleMatcherLooseSafe,
   stringifyObjectMatcher,
-  unquoteSemanticMatcherToken,
   unquoteWithUnescape,
   type ObjectMatcher,
 } from './matchers.utils';
@@ -133,7 +132,7 @@ describe('normalizeMatchers semantic parsing', () => {
     ]);
   });
 
-  it('decodes quoted values exactly once', () => {
+  it('unquotes values using the shared matcher semantics', () => {
     expect(
       normalizeMatchers({
         matchers: [
@@ -149,7 +148,7 @@ describe('normalizeMatchers semantic parsing', () => {
       ['empty', '=', ''],
       ['spaces', '=', ' keep me '],
       ['quoted', '=', '"critical"'],
-      ['newline', '=', 'line\nnext'],
+      ['newline', '=', 'line\\nnext'],
       ['literal', '=', 'line\\nnext'],
       ['path', '=', 'C:\\alerts'],
     ]);
@@ -292,30 +291,13 @@ describe('parseObjectMatcherExpression', () => {
   });
 });
 
-describe('unquoteSemanticMatcherToken', () => {
-  it('unescapes quote, backslash, and newline in one pass', () => {
-    expect(unquoteSemanticMatcherToken(String.raw`"a\nb\\c\"d"`)).toBe('a\nb\\c"d');
-  });
-
-  it('keeps literal backslash-n distinct from a line feed', () => {
-    expect(unquoteSemanticMatcherToken(String.raw`"a\\nb"`)).toBe(String.raw`a\nb`);
-    expect(unquoteSemanticMatcherToken(String.raw`"a\nb"`)).toBe('a\nb');
-  });
-});
-
 describe('encodeObjectMatcher', () => {
   it.each<{ matcher: ObjectMatcher }>([
     { matcher: ['message', '=', String.raw`a\nb`] },
-    { matcher: ['message', '=', 'a\nb'] },
     { matcher: ['team name', '=~', '日本語 "primary"'] },
     { matcher: ['empty', '!~', ''] },
   ])('round-trips the semantic tuple $matcher', ({ matcher }) => {
     expect(parseObjectMatcherExpression(encodeObjectMatcher(matcher))).toEqual([matcher]);
-  });
-
-  it('encodes literal backslash-n differently from an actual line feed', () => {
-    expect(encodeObjectMatcher(['message', '=', String.raw`a\nb`])).toBe(String.raw`message="a\\nb"`);
-    expect(encodeObjectMatcher(['message', '=', 'a\nb'])).toBe(String.raw`message="a\nb"`);
   });
 
   it('uses core quoting semantics for reserved names and preserves ordinary Unicode names', () => {

@@ -133,6 +133,9 @@ importers:
       '@grafana/external-rules':
         specifier: workspace:*
         version: link:packages/rules
+      '@grafana/go-template':
+        specifier: workspace:*
+        version: link:packages/gotemplate
       '@grafana/plugin-e2e':
         specifier: ^3.8.0
         version: 3.8.0(@playwright/test@1.60.0)
@@ -295,6 +298,8 @@ importers:
       yaml:
         specifier: ^2.9.0
         version: 2.9.0
+
+  packages/gotemplate: {}
 
   packages/rules:
     dependencies:

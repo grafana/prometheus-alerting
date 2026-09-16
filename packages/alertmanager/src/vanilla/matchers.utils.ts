@@ -178,33 +178,6 @@ export function stringifyObjectMatcher([name, operator, value]: ObjectMatcher) {
   return `${unquotedName} ${operator} ${unquotedValue}`;
 }
 
-/**
- * Decodes a quoted Alertmanager matcher token into the semantic value edited by inhibit-rule forms.
- *
- * Unlike the legacy route helper unquoteWithUnescape, this decodes `\n` and processes escapes in one
- * pass so a literal `\\n` remains distinct from a newline. Grafana core has no shared decoder for this;
- * these are Alertmanager's classic matcher escape rules.
- */
-export function unquoteSemanticMatcherToken(input: string): string {
-  if (!/^"(.*)"$/s.test(input)) {
-    return input;
-  }
-
-  const contents = input.slice(1, -1);
-  let unescaped = '';
-  for (let index = 0; index < contents.length; index++) {
-    const character = contents[index];
-    const next = contents[index + 1];
-    if (character === '\\' && (next === '"' || next === '\\' || next === 'n')) {
-      unescaped += next === 'n' ? '\n' : next;
-      index++;
-    } else {
-      unescaped += character;
-    }
-  }
-  return unescaped;
-}
-
 function splitMatcherExpression(expression: string): string[] {
   return expression
     .replace(/^\{/, '')
@@ -218,7 +191,7 @@ function splitMatcherExpression(expression: string): string[] {
 export function parseObjectMatcherExpression(expression: string): ObjectMatcher[] {
   return splitMatcherExpression(expression).map((part): ObjectMatcher => {
     const [name, operator, value] = matcherToObjectMatcher(parseMatcher(part));
-    return [unquoteSemanticMatcherToken(name), operator, unquoteSemanticMatcherToken(value.trim())];
+    return [unquoteWithUnescape(name), operator, unquoteWithUnescape(value.trim())];
   });
 }
 

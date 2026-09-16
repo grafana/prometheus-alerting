@@ -1,4 +1,5 @@
 import { now } from 'lodash';
+import { wrapTemplateForSave } from '@grafana/go-template';
 
 export interface TemplateFormValues {
   title: string;
@@ -8,16 +9,12 @@ export interface TemplateFormValues {
 // notification template content must be wrapped in {{ define "name" }} tag,
 // but this is not obvious because user also has to provide name separately in the form.
 // so if user does not manually add {{ define }} tag, we do it automatically
+//
+// The wrapping itself lives in @grafana/go-template because the form validates
+// the wrapped text -- it has to check the same string that gets saved, and it
+// needs to know how far the wrapping shifted the line and column numbers.
 export function ensureDefine(templateName: string, templateContent: string): string {
-  let content = templateContent.trim();
-  if (!content.match(/\{\{\s*define/)) {
-    const indentedContent = content
-      .split('\n')
-      .map((line) => '  ' + line)
-      .join('\n');
-    content = `{{ define "${templateName}" }}\n${indentedContent}\n{{ end }}`;
-  }
-  return content;
+  return wrapTemplateForSave(templateName, templateContent).text;
 }
 
 /**

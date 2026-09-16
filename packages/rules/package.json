@@ -15,6 +15,7 @@
     "./identifiers": "./src/identifiers/index.ts",
     "./hashing": "./src/hashing/index.ts",
     "./utils": "./src/utils/rule.ts",
+    "./utils/duration": "./src/utils/duration.ts",
     "./matching": "./src/matching.ts",
     "./vanilla": "./src/vanilla/index.ts",
     "./ruler": "./src/ruler/types.ts",

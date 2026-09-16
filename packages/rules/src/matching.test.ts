@@ -176,6 +176,40 @@ describe('getMatchingRulerRule', () => {
     );
     expect(result).toBe(rulerRules[0]);
   });
+
+  it('matches same-named rules where Prometheus rewrote the durations in the expression', () => {
+    // Mimir prints the expression back out using the largest unit that fits, so a hand-written
+    // `[60m:]` in the ruler YAML is returned as `[1h:]` in Prometheus state. Both rules share the
+    // same name and have no labels, so the matcher has nothing to go on but the query.
+    const rulerRules = [
+      RulerRuleDTOSchema.parse({
+        record: 'service_condition',
+        labels: {},
+        expr: `sum_over_time((service_signal{sensitivity="high"} < bool 100)[4m:]) >= bool 4 or sum_over_time((service_signal{sensitivity="low"} < bool 100)[60m:]) >= bool 60`,
+      }),
+      RulerRuleDTOSchema.parse({
+        record: 'service_condition',
+        labels: {},
+        expr: `sum_over_time((service_signal{sensitivity="high"} > bool 9000)[5m:]) >= bool 5 or sum_over_time((service_signal{sensitivity="low"} > bool 9000)[90m:]) >= bool 90`,
+      }),
+    ];
+
+    const firstPromRule = promRule({
+      name: 'service_condition',
+      type: 'recording',
+      labels: {},
+      query: `sum_over_time((service_signal{sensitivity="high"} < bool 100)[4m:]) >= bool 4 or sum_over_time((service_signal{sensitivity="low"} < bool 100)[1h:]) >= bool 60`,
+    });
+    const secondPromRule = promRule({
+      name: 'service_condition',
+      type: 'recording',
+      labels: {},
+      query: `sum_over_time((service_signal{sensitivity="high"} > bool 9000)[5m:]) >= bool 5 or sum_over_time((service_signal{sensitivity="low"} > bool 9000)[1h30m:]) >= bool 90`,
+    });
+
+    expect(getMatchingRulerRule(rulerRules, firstPromRule)).toBe(rulerRules[0]);
+    expect(getMatchingRulerRule(rulerRules, secondPromRule)).toBe(rulerRules[1]);
+  });
 });
 
 describe('getMatchingPromRule (inverse direction)', () => {
