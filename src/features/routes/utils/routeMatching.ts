@@ -4,18 +4,8 @@ import { normalizeMatchers, type AlertGroup, type ObjectMatcher } from '@grafana
 
 export type RouteMatchingCounts = Map<string, number>;
 
-/**
- * Alertmanager routes store matchers as strings, while findMatchingRoutes expects Grafana LabelMatcher objects.
- * This local recursive type describes the converted tree and works around the upstream recursive type's
- * incompatibility with TypeScript 6.
- */
-type MatchingRouteWithID = Omit<GrafanaRouteWithID, 'routes'> & {
-  continue: boolean;
-  matchers: LabelMatcher[];
-  routes: MatchingRouteWithID[];
-};
-
-function toMatchingRoute(route: AlertmanagerRouteWithID): MatchingRouteWithID {
+/** Convert Alertmanager string matchers to the objects expected by Grafana's matching utilities. */
+function toMatchingRoute(route: AlertmanagerRouteWithID): GrafanaRouteWithID {
   return {
     id: route.id,
     continue: route.continue ?? false,
