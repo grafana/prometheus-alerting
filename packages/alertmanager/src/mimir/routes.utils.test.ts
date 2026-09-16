@@ -4,6 +4,7 @@ import {
   addRouteToReferenceRoute,
   addUniqueIdentifierToRoute,
   cleanRouteIDs,
+  findExistingRoute,
   mergePartialRouteWithRouteTree,
   omitRouteFromRouteTree,
   renameReceiverInRoute,
@@ -76,6 +77,20 @@ describe('routes.utils', () => {
       } catch (error) {
         expect((error as Error).cause).toBe(ERROR_NEWER_CONFIGURATION);
       }
+    });
+  });
+
+  describe('findExistingRoute', () => {
+    it('returns the exact nested route', () => {
+      const routeTree = addUniqueIdentifierToRoute({
+        receiver: 'default',
+        routes: [{ receiver: 'parent', routes: [{ receiver: 'nested' }] }],
+      });
+      const nestedRoute = routeTree.routes?.[0].routes?.[0];
+
+      expect(nestedRoute).toBeDefined();
+      expect(findExistingRoute(nestedRoute?.id ?? '', routeTree)).toBe(nestedRoute);
+      expect(findExistingRoute('missing', routeTree)).toBeUndefined();
     });
   });
 

@@ -11,17 +11,18 @@ import { computeInheritedTree } from '@grafana/alerting';
 import { RouteCard, RouteCardActions } from '../components/RouteCard';
 import { AlertmanagerError } from '../../../components/AlertmanagerError';
 import { Receiver } from '@grafana/external-alertmanager/vanilla';
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
+import { findExistingRoute, type RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { RouteViewDrawer } from '../components/RouteViewDrawer';
 import { RouteEditDrawer } from '../components/RouteEditDrawer';
 import { ReceiverDrawer } from '../../receivers/components/ReceiverDrawer';
 import { useReceivers } from '../../receivers/hooks/useReceivers';
 import { useAlertGroups } from '../hooks/useAlertGroups';
-import { useRouteMatching, getRouteMatchCount } from '../hooks/useRouteMatching';
+import { useRouteMatching } from '../hooks/useRouteMatching';
 import { useDeleteRoute } from '../hooks/useDeleteRoute';
 import { useRouteDrawer } from '../hooks/useRouteDrawer';
 import { useRouteAbilities } from '../hooks/useRouteAbilities';
 import { attachRouteIds, isRootRoute } from '../utils';
+import { getRouteMatchCount } from '../utils/routeMatching';
 import { InsertPosition } from '../types';
 
 function RoutesPage() {
@@ -47,31 +48,10 @@ function RoutesPage() {
     triggerFetchReceivers();
   }, [triggerFetchReceivers]);
 
-  // Compute the inherited tree to show all properties including inherited ones
-  const routeTree = useMemo((): RouteWithID | undefined => {
-    if (!route) {
-      return undefined;
-    }
+  const routeWithIds = useMemo(() => (route ? attachRouteIds(route) : undefined), [route]);
+  const routeTree = useMemo(() => (routeWithIds ? computeInheritedTree(routeWithIds) : undefined), [routeWithIds]);
 
-    // Attach IDs to the raw tree first so they're based on the raw, fetched
-    // content — matching what the add/delete/update hooks compute — before
-    // computeInheritedTree fills in inherited display fields on child nodes.
-    const routeWithIds = attachRouteIds(route);
-
-    // Type assertion needed due to package type differences between
-    // @grafana/external-alertmanager and @grafana/alerting. computeInheritedTree
-    // returns a type from @grafana/alerting/unstable which has matchers as
-    // RoutingTreeMatcher[] instead of string[] - this is the one cross-package
-    // boundary where we need type assertions. IDs survive untouched since
-    // computeInheritedTree only ever spreads existing own-properties.
-    const inheritedTree = computeInheritedTree(routeWithIds);
-
-    return inheritedTree;
-  }, [route]);
-
-  // Compute matching counts for each route in the tree
-  // Type assertion needed for the same package type differences
-  const matchingCounts = useRouteMatching(routeTree as Parameters<typeof useRouteMatching>[0], alertGroups);
+  const matchingCounts = useRouteMatching(routeTree, alertGroups);
   const canShowMatchingCounts = canViewInstances && !isLoadingAlerts && !alertGroupsError;
 
   // Find the selected receiver
@@ -90,23 +70,31 @@ function RoutesPage() {
     setSelectedReceiverName(null);
   };
 
-  // Handle clicking on a route to view it
+  const resolveConfiguredRoute = useCallback(
+    (id: string) => (routeWithIds ? findExistingRoute(id, routeWithIds) : undefined),
+    [routeWithIds]
+  );
+
   const handleRouteClick = useCallback(
     (route: RouteWithID) => {
-      dispatchDrawer({ type: 'view', route });
+      const configuredRoute = resolveConfiguredRoute(route.id);
+      if (configuredRoute) {
+        dispatchDrawer({ type: 'view', route: configuredRoute });
+      }
     },
-    [dispatchDrawer]
+    [dispatchDrawer, resolveConfiguredRoute]
   );
 
-  // Handle editing a route directly (from the RouteCard menu, or the view drawer's Edit button)
   const handleEditRoute = useCallback(
     (route: RouteWithID) => {
-      dispatchDrawer({ type: 'edit', route });
+      const configuredRoute = resolveConfiguredRoute(route.id);
+      if (configuredRoute) {
+        dispatchDrawer({ type: 'edit', route: configuredRoute });
+      }
     },
-    [dispatchDrawer]
+    [dispatchDrawer, resolveConfiguredRoute]
   );
 
-  // Handle adding a new route
   const handleAddRoute = useCallback(
     (referenceRoute: RouteWithID, position: InsertPosition) => {
       dispatchDrawer({ type: 'add', referenceRouteId: referenceRoute.id, insertPosition: position });
@@ -121,9 +109,15 @@ function RoutesPage() {
   }, [dispatchDrawer]);
 
   // Handle deleting a route (from the RouteCard menu, or the view drawer's Delete button)
-  const handleDeleteRoute = useCallback((route: RouteWithID) => {
-    setRouteToDelete(route);
-  }, []);
+  const handleDeleteRoute = useCallback(
+    (route: RouteWithID) => {
+      const configuredRoute = resolveConfiguredRoute(route.id);
+      if (configuredRoute) {
+        setRouteToDelete(configuredRoute);
+      }
+    },
+    [resolveConfiguredRoute]
+  );
 
   // Confirm deletion
   const handleConfirmDelete = useCallback(async () => {
@@ -141,7 +135,7 @@ function RoutesPage() {
   }, [routeToDelete, deleteRoute, drawerState, dispatchDrawer]);
 
   // Check if the route currently open in the view drawer can be deleted (not the root route)
-  const canDeleteViewingRoute = drawerState.type === 'view' && drawerState.route.id !== routeTree?.id;
+  const canDeleteViewingRoute = drawerState.type === 'view' && drawerState.route.id !== routeWithIds?.id;
   const routeToDeleteHasChildren = routeToDelete?.routes && routeToDelete.routes.length > 0;
 
   const routeCardActions: RouteCardActions = canMutateRoutes
@@ -203,7 +197,7 @@ function RoutesPage() {
         <RouteEditDrawer
           route={drawerState.route}
           onClose={handleDrawerClose}
-          isRoot={isRootRoute(drawerState.route, routeTree)}
+          isRoot={isRootRoute(drawerState.route, routeWithIds)}
         />
       )}
       {drawerState.type === 'add' && canMutateRoutes && (
