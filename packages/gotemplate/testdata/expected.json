@@ -1,0 +1,1252 @@
+{
+  "version": 1,
+  "goVersion": "go1.24",
+  "funcs": [
+    "and",
+    "append",
+    "base64decode",
+    "base64encode",
+    "call",
+    "date",
+    "dict",
+    "eq",
+    "ge",
+    "gt",
+    "html",
+    "humanizeDuration",
+    "index",
+    "join",
+    "js",
+    "le",
+    "len",
+    "list",
+    "lt",
+    "match",
+    "mustToDate",
+    "ne",
+    "not",
+    "now",
+    "or",
+    "print",
+    "printf",
+    "println",
+    "reReplaceAll",
+    "routeLabels",
+    "safeHtml",
+    "safeUrl",
+    "since",
+    "slice",
+    "stringSlice",
+    "title",
+    "toDate",
+    "toJson",
+    "toLower",
+    "toUpper",
+    "trimSpace",
+    "tz",
+    "urlUnescape",
+    "urlquery"
+  ],
+  "results": {
+    "lex-bad-character": {
+      "ok": false,
+      "err": "template: lex-bad-character:1: unexpected \"#\" in operand"
+    },
+    "lex-bad-character#wrapped": {
+      "ok": false,
+      "err": "template: lex-bad-character#wrapped:2: unexpected \"#\" in operand"
+    },
+    "lex-bad-escape-in-string": {
+      "ok": false,
+      "err": "template: lex-bad-escape-in-string:1: invalid syntax"
+    },
+    "lex-bad-escape-in-string#wrapped": {
+      "ok": false,
+      "err": "template: lex-bad-escape-in-string#wrapped:2: invalid syntax"
+    },
+    "lex-comment-ends-early": {
+      "ok": false,
+      "err": "template: lex-comment-ends-early:1: comment ends before closing delimiter"
+    },
+    "lex-comment-ends-early#wrapped": {
+      "ok": false,
+      "err": "template: lex-comment-ends-early#wrapped:2: comment ends before closing delimiter"
+    },
+    "lex-empty-char": {
+      "ok": false,
+      "err": "template: lex-empty-char:1: invalid syntax"
+    },
+    "lex-empty-char#wrapped": {
+      "ok": false,
+      "err": "template: lex-empty-char#wrapped:2: invalid syntax"
+    },
+    "lex-expected-colon-equals": {
+      "ok": false,
+      "err": "template: lex-expected-colon-equals:1: undefined variable \"$x\""
+    },
+    "lex-expected-colon-equals#wrapped": {
+      "ok": false,
+      "err": "template: lex-expected-colon-equals#wrapped:2: undefined variable \"$x\""
+    },
+    "lex-newline-in-string": {
+      "ok": false,
+      "err": "template: lex-newline-in-string:1: unterminated quoted string"
+    },
+    "lex-newline-in-string#wrapped": {
+      "ok": false,
+      "err": "template: lex-newline-in-string#wrapped:2: unterminated quoted string"
+    },
+    "lex-unclosed-action": {
+      "ok": false,
+      "err": "template: lex-unclosed-action:2: unclosed action started at lex-unclosed-action:1"
+    },
+    "lex-unclosed-action#wrapped": {
+      "ok": false,
+      "err": "template: lex-unclosed-action#wrapped:3: unexpected \"{\" in operand"
+    },
+    "lex-unclosed-action-eof": {
+      "ok": false,
+      "err": "template: lex-unclosed-action-eof:2: unclosed action started at lex-unclosed-action-eof:1"
+    },
+    "lex-unclosed-action-eof#wrapped": {
+      "ok": false,
+      "err": "template: lex-unclosed-action-eof#wrapped:3: unexpected \"{\" in command"
+    },
+    "lex-unclosed-comment": {
+      "ok": false,
+      "err": "template: lex-unclosed-comment:1: unclosed comment"
+    },
+    "lex-unclosed-comment#wrapped": {
+      "ok": false,
+      "err": "template: lex-unclosed-comment#wrapped:2: unclosed comment"
+    },
+    "lex-unclosed-paren": {
+      "ok": false,
+      "err": "template: lex-unclosed-paren:1: unclosed left paren"
+    },
+    "lex-unclosed-paren#wrapped": {
+      "ok": false,
+      "err": "template: lex-unclosed-paren#wrapped:2: unclosed left paren"
+    },
+    "lex-unexpected-right-paren": {
+      "ok": false,
+      "err": "template: lex-unexpected-right-paren:1: unexpected right paren"
+    },
+    "lex-unexpected-right-paren#wrapped": {
+      "ok": false,
+      "err": "template: lex-unexpected-right-paren#wrapped:2: unexpected right paren"
+    },
+    "lex-unterminated-char": {
+      "ok": false,
+      "err": "template: lex-unterminated-char:1: unterminated character constant"
+    },
+    "lex-unterminated-char#wrapped": {
+      "ok": false,
+      "err": "template: lex-unterminated-char#wrapped:2: unterminated character constant"
+    },
+    "lex-unterminated-raw-string": {
+      "ok": false,
+      "err": "template: lex-unterminated-raw-string:1: unterminated raw quoted string"
+    },
+    "lex-unterminated-raw-string#wrapped": {
+      "ok": false,
+      "err": "template: lex-unterminated-raw-string#wrapped:2: unterminated raw quoted string"
+    },
+    "lex-unterminated-string": {
+      "ok": false,
+      "err": "template: lex-unterminated-string:1: unterminated quoted string"
+    },
+    "lex-unterminated-string#wrapped": {
+      "ok": false,
+      "err": "template: lex-unterminated-string#wrapped:2: unterminated quoted string"
+    },
+    "num-bad-hex": {
+      "ok": false,
+      "err": "template: num-bad-hex:1: illegal number syntax: \"0x\""
+    },
+    "num-bad-hex#wrapped": {
+      "ok": false,
+      "err": "template: num-bad-hex#wrapped:2: illegal number syntax: \"0x\""
+    },
+    "num-bad-letters": {
+      "ok": false,
+      "err": "template: num-bad-letters:1: bad number syntax: \"12a\""
+    },
+    "num-bad-letters#wrapped": {
+      "ok": false,
+      "err": "template: num-bad-letters#wrapped:2: bad number syntax: \"12a\""
+    },
+    "num-bad-trailing-e": {
+      "ok": false,
+      "err": "template: num-bad-trailing-e:1: illegal number syntax: \"1e\""
+    },
+    "num-bad-trailing-e#wrapped": {
+      "ok": false,
+      "err": "template: num-bad-trailing-e#wrapped:2: illegal number syntax: \"1e\""
+    },
+    "num-bad-two-dots": {
+      "ok": false,
+      "err": "template: num-bad-two-dots:1: unexpected \".3\" in operand"
+    },
+    "num-bad-two-dots#wrapped": {
+      "ok": false,
+      "err": "template: num-bad-two-dots#wrapped:2: unexpected \".3\" in operand"
+    },
+    "num-big-uint64": {
+      "ok": true
+    },
+    "num-big-uint64#wrapped": {
+      "ok": true
+    },
+    "num-binary": {
+      "ok": true
+    },
+    "num-binary#wrapped": {
+      "ok": true
+    },
+    "num-decimal": {
+      "ok": true
+    },
+    "num-decimal#wrapped": {
+      "ok": true
+    },
+    "num-float": {
+      "ok": true
+    },
+    "num-float#wrapped": {
+      "ok": true
+    },
+    "num-float-exponent": {
+      "ok": true
+    },
+    "num-float-exponent#wrapped": {
+      "ok": true
+    },
+    "num-float-leading-dot": {
+      "ok": true
+    },
+    "num-float-leading-dot#wrapped": {
+      "ok": true
+    },
+    "num-hex": {
+      "ok": true
+    },
+    "num-hex#wrapped": {
+      "ok": true
+    },
+    "num-hex-float": {
+      "ok": true
+    },
+    "num-hex-float#wrapped": {
+      "ok": true
+    },
+    "num-hex-underscores": {
+      "ok": true
+    },
+    "num-hex-underscores#wrapped": {
+      "ok": true
+    },
+    "num-imaginary": {
+      "ok": true
+    },
+    "num-imaginary#wrapped": {
+      "ok": true
+    },
+    "num-imaginary-float": {
+      "ok": true
+    },
+    "num-imaginary-float#wrapped": {
+      "ok": true
+    },
+    "num-negative": {
+      "ok": true
+    },
+    "num-negative#wrapped": {
+      "ok": true
+    },
+    "num-octal-legacy": {
+      "ok": true
+    },
+    "num-octal-legacy#wrapped": {
+      "ok": true
+    },
+    "num-octal-new": {
+      "ok": true
+    },
+    "num-octal-new#wrapped": {
+      "ok": true
+    },
+    "num-overflow": {
+      "ok": false,
+      "err": "template: num-overflow:1: integer overflow: \"99999999999999999999999999\""
+    },
+    "num-overflow#wrapped": {
+      "ok": false,
+      "err": "template: num-overflow#wrapped:2: integer overflow: \"99999999999999999999999999\""
+    },
+    "num-positive-sign": {
+      "ok": true
+    },
+    "num-positive-sign#wrapped": {
+      "ok": true
+    },
+    "num-underscores": {
+      "ok": true
+    },
+    "num-underscores#wrapped": {
+      "ok": true
+    },
+    "ok-am-func-base64": {
+      "ok": true
+    },
+    "ok-am-func-base64#wrapped": {
+      "ok": true
+    },
+    "ok-am-func-datetime": {
+      "ok": true
+    },
+    "ok-am-func-datetime#wrapped": {
+      "ok": true
+    },
+    "ok-am-func-dict": {
+      "ok": true
+    },
+    "ok-am-func-dict#wrapped": {
+      "ok": true
+    },
+    "ok-am-func-humanizeduration": {
+      "ok": true
+    },
+    "ok-am-func-humanizeduration#wrapped": {
+      "ok": true
+    },
+    "ok-am-func-list-append": {
+      "ok": true
+    },
+    "ok-am-func-list-append#wrapped": {
+      "ok": true
+    },
+    "ok-am-func-match": {
+      "ok": true
+    },
+    "ok-am-func-match#wrapped": {
+      "ok": true
+    },
+    "ok-am-func-rereplaceall": {
+      "ok": true
+    },
+    "ok-am-func-rereplaceall#wrapped": {
+      "ok": true
+    },
+    "ok-am-func-safehtml": {
+      "ok": true
+    },
+    "ok-am-func-safehtml#wrapped": {
+      "ok": true
+    },
+    "ok-am-func-title-join": {
+      "ok": true
+    },
+    "ok-am-func-title-join#wrapped": {
+      "ok": true
+    },
+    "ok-am-func-tojson": {
+      "ok": true
+    },
+    "ok-am-func-tojson#wrapped": {
+      "ok": true
+    },
+    "ok-am-func-toupper": {
+      "ok": true
+    },
+    "ok-am-func-toupper#wrapped": {
+      "ok": true
+    },
+    "ok-block": {
+      "ok": true
+    },
+    "ok-block#wrapped": {
+      "ok": true
+    },
+    "ok-block-in-define": {
+      "ok": true
+    },
+    "ok-block-in-define#wrapped": {
+      "ok": true
+    },
+    "ok-bool": {
+      "ok": true
+    },
+    "ok-bool#wrapped": {
+      "ok": true
+    },
+    "ok-break": {
+      "ok": true
+    },
+    "ok-break#wrapped": {
+      "ok": true
+    },
+    "ok-break-in-if-in-range": {
+      "ok": true
+    },
+    "ok-break-in-if-in-range#wrapped": {
+      "ok": true
+    },
+    "ok-builtin-and-or-not": {
+      "ok": true
+    },
+    "ok-builtin-and-or-not#wrapped": {
+      "ok": true
+    },
+    "ok-builtin-call": {
+      "ok": true
+    },
+    "ok-builtin-call#wrapped": {
+      "ok": true
+    },
+    "ok-builtin-eq": {
+      "ok": true
+    },
+    "ok-builtin-eq#wrapped": {
+      "ok": true
+    },
+    "ok-builtin-html-js-urlquery": {
+      "ok": true
+    },
+    "ok-builtin-html-js-urlquery#wrapped": {
+      "ok": true
+    },
+    "ok-builtin-len-index-slice": {
+      "ok": true
+    },
+    "ok-builtin-len-index-slice#wrapped": {
+      "ok": true
+    },
+    "ok-builtin-ne-lt-gt": {
+      "ok": true
+    },
+    "ok-builtin-ne-lt-gt#wrapped": {
+      "ok": true
+    },
+    "ok-builtin-print-println": {
+      "ok": true
+    },
+    "ok-builtin-print-println#wrapped": {
+      "ok": true
+    },
+    "ok-builtin-printf": {
+      "ok": true
+    },
+    "ok-builtin-printf#wrapped": {
+      "ok": true
+    },
+    "ok-char-literal": {
+      "ok": true
+    },
+    "ok-char-literal#wrapped": {
+      "ok": true
+    },
+    "ok-char-literal-escape": {
+      "ok": true
+    },
+    "ok-char-literal-escape#wrapped": {
+      "ok": true
+    },
+    "ok-char-literal-unicode": {
+      "ok": true
+    },
+    "ok-char-literal-unicode#wrapped": {
+      "ok": true
+    },
+    "ok-comment": {
+      "ok": true
+    },
+    "ok-comment#wrapped": {
+      "ok": true
+    },
+    "ok-comment-multiline": {
+      "ok": true
+    },
+    "ok-comment-multiline#wrapped": {
+      "ok": true
+    },
+    "ok-comment-trim": {
+      "ok": true
+    },
+    "ok-comment-trim#wrapped": {
+      "ok": true
+    },
+    "ok-comment-with-braces": {
+      "ok": true
+    },
+    "ok-comment-with-braces#wrapped": {
+      "ok": true
+    },
+    "ok-continue": {
+      "ok": true
+    },
+    "ok-continue#wrapped": {
+      "ok": true
+    },
+    "ok-define": {
+      "ok": true
+    },
+    "ok-define#wrapped": {
+      "ok": true
+    },
+    "ok-define-empty-body": {
+      "ok": true
+    },
+    "ok-define-empty-body#wrapped": {
+      "ok": true
+    },
+    "ok-define-nested": {
+      "ok": true
+    },
+    "ok-define-nested#wrapped": {
+      "ok": true
+    },
+    "ok-define-two": {
+      "ok": true
+    },
+    "ok-define-two#wrapped": {
+      "ok": true
+    },
+    "ok-dollar": {
+      "ok": true
+    },
+    "ok-dollar#wrapped": {
+      "ok": true
+    },
+    "ok-dollar-field": {
+      "ok": true
+    },
+    "ok-dollar-field#wrapped": {
+      "ok": true
+    },
+    "ok-dot": {
+      "ok": true
+    },
+    "ok-dot#wrapped": {
+      "ok": true
+    },
+    "ok-emoji-in-string": {
+      "ok": true
+    },
+    "ok-emoji-in-string#wrapped": {
+      "ok": true
+    },
+    "ok-empty": {
+      "ok": true
+    },
+    "ok-empty#wrapped": {
+      "ok": true
+    },
+    "ok-field": {
+      "ok": true
+    },
+    "ok-field#wrapped": {
+      "ok": true
+    },
+    "ok-field-chain": {
+      "ok": true
+    },
+    "ok-field-chain#wrapped": {
+      "ok": true
+    },
+    "ok-field-deep-chain": {
+      "ok": true
+    },
+    "ok-field-deep-chain#wrapped": {
+      "ok": true
+    },
+    "ok-if": {
+      "ok": true
+    },
+    "ok-if#wrapped": {
+      "ok": true
+    },
+    "ok-if-else": {
+      "ok": true
+    },
+    "ok-if-else#wrapped": {
+      "ok": true
+    },
+    "ok-if-else-if": {
+      "ok": true
+    },
+    "ok-if-else-if#wrapped": {
+      "ok": true
+    },
+    "ok-if-else-if-else": {
+      "ok": true
+    },
+    "ok-if-else-if-else#wrapped": {
+      "ok": true
+    },
+    "ok-if-nested": {
+      "ok": true
+    },
+    "ok-if-nested#wrapped": {
+      "ok": true
+    },
+    "ok-lots-of-spaces": {
+      "ok": true
+    },
+    "ok-lots-of-spaces#wrapped": {
+      "ok": true
+    },
+    "ok-newline-inside-action": {
+      "ok": true
+    },
+    "ok-newline-inside-action#wrapped": {
+      "ok": true
+    },
+    "ok-nil": {
+      "ok": true
+    },
+    "ok-nil#wrapped": {
+      "ok": true
+    },
+    "ok-no-spaces": {
+      "ok": true
+    },
+    "ok-no-spaces#wrapped": {
+      "ok": true
+    },
+    "ok-parens": {
+      "ok": true
+    },
+    "ok-parens#wrapped": {
+      "ok": true
+    },
+    "ok-parens-call": {
+      "ok": true
+    },
+    "ok-parens-call#wrapped": {
+      "ok": true
+    },
+    "ok-parens-nested": {
+      "ok": true
+    },
+    "ok-parens-nested#wrapped": {
+      "ok": true
+    },
+    "ok-parens-pipeline": {
+      "ok": true
+    },
+    "ok-parens-pipeline#wrapped": {
+      "ok": true
+    },
+    "ok-pipeline": {
+      "ok": true
+    },
+    "ok-pipeline#wrapped": {
+      "ok": true
+    },
+    "ok-pipeline-long": {
+      "ok": true
+    },
+    "ok-pipeline-long#wrapped": {
+      "ok": true
+    },
+    "ok-pipeline-with-args": {
+      "ok": true
+    },
+    "ok-pipeline-with-args#wrapped": {
+      "ok": true
+    },
+    "ok-range": {
+      "ok": true
+    },
+    "ok-range#wrapped": {
+      "ok": true
+    },
+    "ok-range-else": {
+      "ok": true
+    },
+    "ok-range-else#wrapped": {
+      "ok": true
+    },
+    "ok-range-nested": {
+      "ok": true
+    },
+    "ok-range-nested#wrapped": {
+      "ok": true
+    },
+    "ok-range-one-var": {
+      "ok": true
+    },
+    "ok-range-one-var#wrapped": {
+      "ok": true
+    },
+    "ok-range-two-vars": {
+      "ok": true
+    },
+    "ok-range-two-vars#wrapped": {
+      "ok": true
+    },
+    "ok-raw-string": {
+      "ok": true
+    },
+    "ok-raw-string#wrapped": {
+      "ok": true
+    },
+    "ok-raw-string-multiline": {
+      "ok": true
+    },
+    "ok-raw-string-multiline#wrapped": {
+      "ok": true
+    },
+    "ok-realistic-body": {
+      "ok": true
+    },
+    "ok-realistic-body#wrapped": {
+      "ok": true
+    },
+    "ok-realistic-email": {
+      "ok": true
+    },
+    "ok-realistic-email#wrapped": {
+      "ok": true
+    },
+    "ok-realistic-slack": {
+      "ok": true
+    },
+    "ok-realistic-slack#wrapped": {
+      "ok": true
+    },
+    "ok-string-escapes": {
+      "ok": true
+    },
+    "ok-string-escapes#wrapped": {
+      "ok": true
+    },
+    "ok-string-literal": {
+      "ok": true
+    },
+    "ok-string-literal#wrapped": {
+      "ok": true
+    },
+    "ok-string-unicode-escape": {
+      "ok": true
+    },
+    "ok-string-unicode-escape#wrapped": {
+      "ok": true
+    },
+    "ok-tabs-inside-action": {
+      "ok": true
+    },
+    "ok-tabs-inside-action#wrapped": {
+      "ok": true
+    },
+    "ok-template-no-arg": {
+      "ok": true
+    },
+    "ok-template-no-arg#wrapped": {
+      "ok": true
+    },
+    "ok-template-undefined-name": {
+      "ok": true
+    },
+    "ok-template-undefined-name#wrapped": {
+      "ok": true
+    },
+    "ok-template-with-arg": {
+      "ok": true
+    },
+    "ok-template-with-arg#wrapped": {
+      "ok": true
+    },
+    "ok-text-only": {
+      "ok": true
+    },
+    "ok-text-only#wrapped": {
+      "ok": true
+    },
+    "ok-text-with-newlines": {
+      "ok": true
+    },
+    "ok-text-with-newlines#wrapped": {
+      "ok": true
+    },
+    "ok-trim-both": {
+      "ok": true
+    },
+    "ok-trim-both#wrapped": {
+      "ok": true
+    },
+    "ok-trim-in-define": {
+      "ok": true
+    },
+    "ok-trim-in-define#wrapped": {
+      "ok": true
+    },
+    "ok-trim-left": {
+      "ok": true
+    },
+    "ok-trim-left#wrapped": {
+      "ok": true
+    },
+    "ok-trim-right": {
+      "ok": true
+    },
+    "ok-trim-right#wrapped": {
+      "ok": true
+    },
+    "ok-unicode-astral-field": {
+      "ok": true
+    },
+    "ok-unicode-astral-field#wrapped": {
+      "ok": true
+    },
+    "ok-unicode-field": {
+      "ok": true
+    },
+    "ok-unicode-field#wrapped": {
+      "ok": true
+    },
+    "ok-unicode-text": {
+      "ok": true
+    },
+    "ok-unicode-text#wrapped": {
+      "ok": true
+    },
+    "ok-var-assign": {
+      "ok": true
+    },
+    "ok-var-assign#wrapped": {
+      "ok": true
+    },
+    "ok-var-decl": {
+      "ok": true
+    },
+    "ok-var-decl#wrapped": {
+      "ok": true
+    },
+    "ok-var-in-if-scope": {
+      "ok": true
+    },
+    "ok-var-in-if-scope#wrapped": {
+      "ok": true
+    },
+    "ok-var-shadow": {
+      "ok": true
+    },
+    "ok-var-shadow#wrapped": {
+      "ok": true
+    },
+    "ok-var-two-decl": {
+      "ok": false,
+      "err": "template: ok-var-two-decl:1: too many declarations in command"
+    },
+    "ok-var-two-decl#wrapped": {
+      "ok": false,
+      "err": "template: ok-var-two-decl#wrapped:2: too many declarations in command"
+    },
+    "ok-with": {
+      "ok": true
+    },
+    "ok-with#wrapped": {
+      "ok": true
+    },
+    "ok-with-else": {
+      "ok": true
+    },
+    "ok-with-else#wrapped": {
+      "ok": true
+    },
+    "ok-with-else-with": {
+      "ok": true
+    },
+    "ok-with-else-with#wrapped": {
+      "ok": true
+    },
+    "parse-assign-to-literal": {
+      "ok": false,
+      "err": "template: parse-assign-to-literal:1: unexpected \":=\" in operand"
+    },
+    "parse-assign-to-literal#wrapped": {
+      "ok": false,
+      "err": "template: parse-assign-to-literal#wrapped:2: unexpected \":=\" in operand"
+    },
+    "parse-block-no-end": {
+      "ok": false,
+      "err": "template: parse-block-no-end:2: unexpected EOF"
+    },
+    "parse-block-no-end#wrapped": {
+      "ok": false,
+      "err": "template: parse-block-no-end#wrapped:3: unexpected EOF"
+    },
+    "parse-block-no-name": {
+      "ok": false,
+      "err": "template: parse-block-no-name:1: unexpected \u003c.\u003e in block clause"
+    },
+    "parse-block-no-name#wrapped": {
+      "ok": false,
+      "err": "template: parse-block-no-name#wrapped:2: unexpected \u003c.\u003e in block clause"
+    },
+    "parse-define-inside-if": {
+      "ok": false,
+      "err": "template: parse-define-inside-if:1: unexpected \u003cdefine\u003e in command"
+    },
+    "parse-define-inside-if#wrapped": {
+      "ok": false,
+      "err": "template: parse-define-inside-if#wrapped:1: unexpected \u003cdefine\u003e in command"
+    },
+    "parse-define-no-end": {
+      "ok": false,
+      "err": "template: parse-define-no-end:2: unexpected EOF"
+    },
+    "parse-define-no-end#wrapped": {
+      "ok": false,
+      "err": "template: parse-define-no-end#wrapped:1: unexpected EOF"
+    },
+    "parse-define-no-name": {
+      "ok": false,
+      "err": "template: parse-define-no-name:1: unexpected \"}}\" in define clause"
+    },
+    "parse-define-no-name#wrapped": {
+      "ok": false,
+      "err": "template: parse-define-no-name#wrapped:1: unexpected \"}}\" in define clause"
+    },
+    "parse-define-unquoted-name": {
+      "ok": false,
+      "err": "template: parse-define-unquoted-name:1: unexpected \"t\" in define clause"
+    },
+    "parse-define-unquoted-name#wrapped": {
+      "ok": false,
+      "err": "template: parse-define-unquoted-name#wrapped:1: unexpected \"t\" in define clause"
+    },
+    "parse-dot-after-paren-number": {
+      "ok": true
+    },
+    "parse-dot-after-paren-number#wrapped": {
+      "ok": true
+    },
+    "parse-dot-after-term": {
+      "ok": false,
+      "err": "template: parse-dot-after-term:1: unexpected . after term \"\\\"string\\\"\""
+    },
+    "parse-dot-after-term#wrapped": {
+      "ok": false,
+      "err": "template: parse-dot-after-term#wrapped:2: unexpected . after term \"\\\"string\\\"\""
+    },
+    "parse-double-pipe": {
+      "ok": false,
+      "err": "template: parse-double-pipe:1: unexpected \"|\" in command"
+    },
+    "parse-double-pipe#wrapped": {
+      "ok": false,
+      "err": "template: parse-double-pipe#wrapped:2: unexpected \"|\" in command"
+    },
+    "parse-else-after-else": {
+      "ok": false,
+      "err": "template: parse-else-after-else:1: expected end; found {{else}}"
+    },
+    "parse-else-after-else#wrapped": {
+      "ok": false,
+      "err": "template: parse-else-after-else#wrapped:2: expected end; found {{else}}"
+    },
+    "parse-else-outside-if": {
+      "ok": false,
+      "err": "template: parse-else-outside-if:1: unexpected {{else}}"
+    },
+    "parse-else-outside-if#wrapped": {
+      "ok": false,
+      "err": "template: parse-else-outside-if#wrapped:2: unexpected {{else}} in define clause"
+    },
+    "parse-empty-action": {
+      "ok": false,
+      "err": "template: parse-empty-action:1: missing value for command"
+    },
+    "parse-empty-action#wrapped": {
+      "ok": false,
+      "err": "template: parse-empty-action#wrapped:2: missing value for command"
+    },
+    "parse-empty-action-spaces": {
+      "ok": false,
+      "err": "template: parse-empty-action-spaces:1: missing value for command"
+    },
+    "parse-empty-action-spaces#wrapped": {
+      "ok": false,
+      "err": "template: parse-empty-action-spaces#wrapped:2: missing value for command"
+    },
+    "parse-if-no-condition": {
+      "ok": false,
+      "err": "template: parse-if-no-condition:1: missing value for if"
+    },
+    "parse-if-no-condition#wrapped": {
+      "ok": false,
+      "err": "template: parse-if-no-condition#wrapped:2: missing value for if"
+    },
+    "parse-if-no-end": {
+      "ok": false,
+      "err": "template: parse-if-no-end:2: unexpected EOF"
+    },
+    "parse-if-no-end#wrapped": {
+      "ok": false,
+      "err": "template: parse-if-no-end#wrapped:3: unexpected EOF"
+    },
+    "parse-leading-pipe": {
+      "ok": false,
+      "err": "template: parse-leading-pipe:1: unexpected \"|\" in command"
+    },
+    "parse-leading-pipe#wrapped": {
+      "ok": false,
+      "err": "template: parse-leading-pipe#wrapped:2: unexpected \"|\" in command"
+    },
+    "parse-non-executable-pipeline": {
+      "ok": true
+    },
+    "parse-non-executable-pipeline#wrapped": {
+      "ok": true
+    },
+    "parse-non-executable-stage-string": {
+      "ok": false,
+      "err": "template: parse-non-executable-stage-string:1: non executable command in pipeline stage 2"
+    },
+    "parse-non-executable-stage-string#wrapped": {
+      "ok": false,
+      "err": "template: parse-non-executable-stage-string#wrapped:2: non executable command in pipeline stage 2"
+    },
+    "parse-range-no-argument": {
+      "ok": false,
+      "err": "template: parse-range-no-argument:1: missing value for range"
+    },
+    "parse-range-no-argument#wrapped": {
+      "ok": false,
+      "err": "template: parse-range-no-argument#wrapped:2: missing value for range"
+    },
+    "parse-range-no-end": {
+      "ok": false,
+      "err": "template: parse-range-no-end:2: unexpected EOF"
+    },
+    "parse-range-no-end#wrapped": {
+      "ok": false,
+      "err": "template: parse-range-no-end#wrapped:3: unexpected EOF"
+    },
+    "parse-template-no-name": {
+      "ok": false,
+      "err": "template: parse-template-no-name:1: unexpected \"}}\" in template clause"
+    },
+    "parse-template-no-name#wrapped": {
+      "ok": false,
+      "err": "template: parse-template-no-name#wrapped:2: unexpected \"}}\" in template clause"
+    },
+    "parse-template-unquoted-name": {
+      "ok": false,
+      "err": "template: parse-template-unquoted-name:1: unexpected \"t\" in template clause"
+    },
+    "parse-template-unquoted-name#wrapped": {
+      "ok": false,
+      "err": "template: parse-template-unquoted-name#wrapped:2: unexpected \"t\" in template clause"
+    },
+    "parse-three-decls": {
+      "ok": false,
+      "err": "template: parse-three-decls:1: too many declarations in command"
+    },
+    "parse-three-decls#wrapped": {
+      "ok": false,
+      "err": "template: parse-three-decls#wrapped:2: too many declarations in command"
+    },
+    "parse-trailing-pipe": {
+      "ok": true
+    },
+    "parse-trailing-pipe#wrapped": {
+      "ok": true
+    },
+    "parse-trailing-pipe-bare": {
+      "ok": true
+    },
+    "parse-trailing-pipe-bare#wrapped": {
+      "ok": true
+    },
+    "parse-two-decls-in-if": {
+      "ok": false,
+      "err": "template: parse-two-decls-in-if:1: too many declarations in if"
+    },
+    "parse-two-decls-in-if#wrapped": {
+      "ok": false,
+      "err": "template: parse-two-decls-in-if#wrapped:2: too many declarations in if"
+    },
+    "parse-unexpected-else": {
+      "ok": false,
+      "err": "template: parse-unexpected-else:1: unexpected {{else}}"
+    },
+    "parse-unexpected-else#wrapped": {
+      "ok": false,
+      "err": "template: parse-unexpected-else#wrapped:2: unexpected {{else}} in define clause"
+    },
+    "parse-unexpected-end": {
+      "ok": false,
+      "err": "template: parse-unexpected-end:1: unexpected {{end}}"
+    },
+    "parse-unexpected-end#wrapped": {
+      "ok": false,
+      "err": "template: parse-unexpected-end#wrapped:3: unexpected {{end}}"
+    },
+    "parse-with-no-argument": {
+      "ok": false,
+      "err": "template: parse-with-no-argument:1: missing value for with"
+    },
+    "parse-with-no-argument#wrapped": {
+      "ok": false,
+      "err": "template: parse-with-no-argument#wrapped:2: missing value for with"
+    },
+    "parse-with-no-end": {
+      "ok": false,
+      "err": "template: parse-with-no-end:2: unexpected EOF"
+    },
+    "parse-with-no-end#wrapped": {
+      "ok": false,
+      "err": "template: parse-with-no-end#wrapped:3: unexpected EOF"
+    },
+    "sem-assign-undeclared": {
+      "ok": true
+    },
+    "sem-assign-undeclared#wrapped": {
+      "ok": true
+    },
+    "sem-break-in-define-inside-range": {
+      "ok": false,
+      "err": "template: sem-break-in-define-inside-range:1: unexpected \u003cdefine\u003e in command"
+    },
+    "sem-break-in-define-inside-range#wrapped": {
+      "ok": false,
+      "err": "template: sem-break-in-define-inside-range#wrapped:1: unexpected \u003cdefine\u003e in command"
+    },
+    "sem-break-in-if-outside-range": {
+      "ok": false,
+      "err": "template: sem-break-in-if-outside-range:1: {{break}} outside {{range}}"
+    },
+    "sem-break-in-if-outside-range#wrapped": {
+      "ok": false,
+      "err": "template: sem-break-in-if-outside-range#wrapped:2: {{break}} outside {{range}}"
+    },
+    "sem-break-outside-range": {
+      "ok": false,
+      "err": "template: sem-break-outside-range:1: {{break}} outside {{range}}"
+    },
+    "sem-break-outside-range#wrapped": {
+      "ok": false,
+      "err": "template: sem-break-outside-range#wrapped:2: {{break}} outside {{range}}"
+    },
+    "sem-continue-in-with": {
+      "ok": false,
+      "err": "template: sem-continue-in-with:1: {{continue}} outside {{range}}"
+    },
+    "sem-continue-in-with#wrapped": {
+      "ok": false,
+      "err": "template: sem-continue-in-with#wrapped:2: {{continue}} outside {{range}}"
+    },
+    "sem-continue-outside-range": {
+      "ok": false,
+      "err": "template: sem-continue-outside-range:1: {{continue}} outside {{range}}"
+    },
+    "sem-continue-outside-range#wrapped": {
+      "ok": false,
+      "err": "template: sem-continue-outside-range#wrapped:2: {{continue}} outside {{range}}"
+    },
+    "sem-duplicate-define": {
+      "ok": false,
+      "err": "template: sem-duplicate-define:1: template: multiple definition of template \"dup\""
+    },
+    "sem-duplicate-define#wrapped": {
+      "ok": false,
+      "err": "template: sem-duplicate-define#wrapped:1: template: multiple definition of template \"dup\""
+    },
+    "sem-duplicate-define-both-empty": {
+      "ok": true
+    },
+    "sem-duplicate-define-both-empty#wrapped": {
+      "ok": true
+    },
+    "sem-duplicate-define-one-empty": {
+      "ok": true
+    },
+    "sem-duplicate-define-one-empty#wrapped": {
+      "ok": true
+    },
+    "sem-range-var-out-of-scope": {
+      "ok": false,
+      "err": "template: sem-range-var-out-of-scope:1: undefined variable \"$a\""
+    },
+    "sem-range-var-out-of-scope#wrapped": {
+      "ok": false,
+      "err": "template: sem-range-var-out-of-scope#wrapped:2: undefined variable \"$a\""
+    },
+    "sem-undefined-variable": {
+      "ok": false,
+      "err": "template: sem-undefined-variable:1: undefined variable \"$nope\""
+    },
+    "sem-undefined-variable#wrapped": {
+      "ok": false,
+      "err": "template: sem-undefined-variable#wrapped:2: undefined variable \"$nope\""
+    },
+    "sem-undefined-variable-field": {
+      "ok": false,
+      "err": "template: sem-undefined-variable-field:1: undefined variable \"$nope\""
+    },
+    "sem-undefined-variable-field#wrapped": {
+      "ok": false,
+      "err": "template: sem-undefined-variable-field#wrapped:2: undefined variable \"$nope\""
+    },
+    "sem-undefined-variable-in-pipeline": {
+      "ok": false,
+      "err": "template: sem-undefined-variable-in-pipeline:1: undefined variable \"$nope\""
+    },
+    "sem-undefined-variable-in-pipeline#wrapped": {
+      "ok": false,
+      "err": "template: sem-undefined-variable-in-pipeline#wrapped:2: undefined variable \"$nope\""
+    },
+    "sem-unknown-function": {
+      "ok": false,
+      "err": "template: sem-unknown-function:1: function \"nosuchfunc\" not defined"
+    },
+    "sem-unknown-function#wrapped": {
+      "ok": false,
+      "err": "template: sem-unknown-function#wrapped:2: function \"nosuchfunc\" not defined"
+    },
+    "sem-unknown-function-in-pipeline": {
+      "ok": false,
+      "err": "template: sem-unknown-function-in-pipeline:1: function \"nosuchfunc\" not defined"
+    },
+    "sem-unknown-function-in-pipeline#wrapped": {
+      "ok": false,
+      "err": "template: sem-unknown-function-in-pipeline#wrapped:2: function \"nosuchfunc\" not defined"
+    },
+    "sem-unknown-function-nested": {
+      "ok": false,
+      "err": "template: sem-unknown-function-nested:1: function \"nosuchfunc\" not defined"
+    },
+    "sem-unknown-function-nested#wrapped": {
+      "ok": false,
+      "err": "template: sem-unknown-function-nested#wrapped:2: function \"nosuchfunc\" not defined"
+    },
+    "sem-unknown-function-sprig-not-in-am": {
+      "ok": false,
+      "err": "template: sem-unknown-function-sprig-not-in-am:1: function \"upper\" not defined"
+    },
+    "sem-unknown-function-sprig-not-in-am#wrapped": {
+      "ok": false,
+      "err": "template: sem-unknown-function-sprig-not-in-am#wrapped:2: function \"upper\" not defined"
+    },
+    "sem-unknown-function-typo": {
+      "ok": false,
+      "err": "template: sem-unknown-function-typo:1: function \"toUppercase\" not defined"
+    },
+    "sem-unknown-function-typo#wrapped": {
+      "ok": false,
+      "err": "template: sem-unknown-function-typo#wrapped:2: function \"toUppercase\" not defined"
+    },
+    "sem-variable-out-of-scope": {
+      "ok": false,
+      "err": "template: sem-variable-out-of-scope:1: undefined variable \"$x\""
+    },
+    "sem-variable-out-of-scope#wrapped": {
+      "ok": false,
+      "err": "template: sem-variable-out-of-scope#wrapped:2: undefined variable \"$x\""
+    }
+  }
+}
