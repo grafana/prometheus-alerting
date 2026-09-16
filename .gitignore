@@ -30,6 +30,7 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+benchmark-results/
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 dist/
