@@ -45,6 +45,15 @@ describe('parseMatcher', () => {
     expect(parseMatcher('foo!~bar')).toEqual({ name: 'foo', value: 'bar', isRegex: true, isEqual: false });
   });
 
+  it('trims syntax whitespace around names and values', () => {
+    expect(parseMatcher(' foo = " keep me " ')).toEqual({
+      name: 'foo',
+      value: '" keep me "',
+      isRegex: false,
+      isEqual: true,
+    });
+  });
+
   it('throws for PromQL-style input', () => {
     expect(() => parseMatcher('{foo="bar"}')).toThrow();
   });

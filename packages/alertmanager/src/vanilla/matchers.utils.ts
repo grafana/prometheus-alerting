@@ -116,7 +116,7 @@ export function parseMatcher(matcher: string): Matcher {
   }
   const [operator, idx] = operatorsFound[0];
   const name = matcher.slice(0, idx).trim();
-  const value = matcher.slice(idx + operator.length);
+  const value = matcher.slice(idx + operator.length).trim();
   if (!name) {
     throw new Error(`Invalid matcher: ${matcher}`);
   }
@@ -191,7 +191,7 @@ function splitMatcherExpression(expression: string): string[] {
 export function parseObjectMatcherExpression(expression: string): ObjectMatcher[] {
   return splitMatcherExpression(expression).map((part): ObjectMatcher => {
     const [name, operator, value] = matcherToObjectMatcher(parseMatcher(part));
-    return [unquoteWithUnescape(name), operator, unquoteWithUnescape(value.trim())];
+    return [unquoteWithUnescape(name), operator, unquoteWithUnescape(value)];
   });
 }
 
