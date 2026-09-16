@@ -428,6 +428,7 @@
     "error-loading-title": "Error loading alert groups",
     "filters": {
       "active": "Active",
+      "label-input-invalid": "Invalid label matcher syntax",
       "label-placeholder": "Filter by labels, e.g. foo=bar, env=~prod.*",
       "receiver-placeholder": "Filter by receiver",
       "suppressed": "Suppressed",
@@ -1542,6 +1543,7 @@
     "form": {
       "content": "Content",
       "content-description": "Use Go template syntax. The template should be wrapped in {{ define \"name\" }} ... {{ end }}",
+      "content-invalid": "Template syntax error on line {{line}}: {{detail}}",
       "content-required": "Template content is required",
       "create": "Create template",
       "name": "Name",

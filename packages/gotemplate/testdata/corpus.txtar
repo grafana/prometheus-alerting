@@ -1,0 +1,391 @@
+Corpus of Go template sources, shared by the Go oracle and the TypeScript tests.
+
+Each entry is one template source. The Go oracle (oracle/main.go) parses every
+entry with text/template and html/template and records whether it parsed and
+what the error said, into expected.json. The TypeScript differential test reads
+that same file and checks our parser agrees about which entries are broken.
+
+Format is Go's txtar: a "-- name --" line starts a new entry, everything up to
+the next such line is its content.
+
+Names are prefixed by what they are testing:
+  ok-      expected to parse
+  lex-     expected to fail in the lexer
+  parse-   expected to fail in the parser (structure)
+  sem-     expected to fail on a semantic check (scope, funcs, duplicates)
+  num-     number literal syntax
+
+-- ok-empty --
+-- ok-text-only --
+hello world
+-- ok-text-with-newlines --
+line one
+line two
+
+line four
+-- ok-dot --
+{{ . }}
+-- ok-field --
+{{ .Status }}
+-- ok-field-chain --
+{{ .CommonLabels.alertname }}
+-- ok-field-deep-chain --
+{{ .A.B.C.D.E }}
+-- ok-dollar --
+{{ $ }}
+-- ok-dollar-field --
+{{ range .Alerts }}{{ $.Status }}{{ end }}
+-- ok-no-spaces --
+{{.Status}}
+-- ok-lots-of-spaces --
+{{     .Status     }}
+-- ok-tabs-inside-action --
+{{	.Status	}}
+-- ok-newline-inside-action --
+{{
+  .Status
+}}
+-- ok-define --
+{{ define "t" }}body{{ end }}
+-- ok-define-empty-body --
+{{ define "t" }}{{ end }}
+-- ok-define-two --
+{{ define "a" }}A{{ end }}{{ define "b" }}B{{ end }}
+-- ok-define-nested --
+{{ define "outer" }}{{ template "inner" }}{{ end }}{{ define "inner" }}x{{ end }}
+-- ok-block --
+{{ block "b" . }}fallback{{ end }}
+-- ok-block-in-define --
+{{ define "d" }}{{ block "b" . }}x{{ end }}{{ end }}
+-- ok-template-no-arg --
+{{ template "t" }}
+-- ok-template-with-arg --
+{{ template "t" . }}
+-- ok-template-undefined-name --
+{{ template "does-not-exist-anywhere" . }}
+-- ok-if --
+{{ if .Alerts }}yes{{ end }}
+-- ok-if-else --
+{{ if .Alerts }}yes{{ else }}no{{ end }}
+-- ok-if-else-if --
+{{ if .A }}a{{ else if .B }}b{{ end }}
+-- ok-if-else-if-else --
+{{ if .A }}a{{ else if .B }}b{{ else if .C }}c{{ else }}d{{ end }}
+-- ok-if-nested --
+{{ if .A }}{{ if .B }}ab{{ end }}{{ end }}
+-- ok-with --
+{{ with .CommonLabels }}{{ .alertname }}{{ end }}
+-- ok-with-else --
+{{ with .CommonLabels }}{{ .alertname }}{{ else }}none{{ end }}
+-- ok-with-else-with --
+{{ with .A }}a{{ else with .B }}b{{ end }}
+-- ok-range --
+{{ range .Alerts }}{{ .Status }}{{ end }}
+-- ok-range-else --
+{{ range .Alerts }}{{ .Status }}{{ else }}no alerts{{ end }}
+-- ok-range-one-var --
+{{ range $a := .Alerts }}{{ $a.Status }}{{ end }}
+-- ok-range-two-vars --
+{{ range $i, $a := .Alerts }}{{ $i }}{{ $a.Status }}{{ end }}
+-- ok-range-nested --
+{{ range .Alerts }}{{ range .Labels }}{{ . }}{{ end }}{{ end }}
+-- ok-break --
+{{ range .Alerts }}{{ break }}{{ end }}
+-- ok-continue --
+{{ range .Alerts }}{{ continue }}{{ end }}
+-- ok-break-in-if-in-range --
+{{ range .Alerts }}{{ if .Status }}{{ break }}{{ end }}{{ end }}
+-- ok-var-decl --
+{{ $x := .Status }}{{ $x }}
+-- ok-var-assign --
+{{ $x := .Status }}{{ $x = .Status }}{{ $x }}
+-- ok-var-two-decl --
+{{ $i, $v := .Alerts }}{{ $i }}{{ $v }}
+-- ok-var-in-if-scope --
+{{ if .A }}{{ $x := .A }}{{ $x }}{{ end }}
+-- ok-var-shadow --
+{{ $x := 1 }}{{ if .A }}{{ $x := 2 }}{{ $x }}{{ end }}{{ $x }}
+-- ok-pipeline --
+{{ .Status | toUpper }}
+-- ok-pipeline-long --
+{{ .Status | toLower | toUpper | trimSpace }}
+-- ok-pipeline-with-args --
+{{ .Labels | join "," }}
+-- ok-parens --
+{{ (.Status) }}
+-- ok-parens-pipeline --
+{{ (.Status | toUpper) }}
+-- ok-parens-nested --
+{{ ((( .Status ))) }}
+-- ok-parens-call --
+{{ (index .Alerts 0).Status }}
+-- ok-builtin-eq --
+{{ if eq .Status "firing" }}f{{ end }}
+-- ok-builtin-ne-lt-gt --
+{{ if ne .A .B }}{{ if lt 1 2 }}{{ if gt 3 2 }}x{{ end }}{{ end }}{{ end }}
+-- ok-builtin-and-or-not --
+{{ if and .A (or .B (not .C)) }}x{{ end }}
+-- ok-builtin-printf --
+{{ printf "%s=%s" .A .B }}
+-- ok-builtin-len-index-slice --
+{{ len .Alerts }}{{ index .Alerts 0 }}{{ slice .Alerts 0 1 }}
+-- ok-builtin-print-println --
+{{ print .A }}{{ println .B }}
+-- ok-builtin-call --
+{{ call .Fn "arg" }}
+-- ok-builtin-html-js-urlquery --
+{{ html .A }}{{ js .B }}{{ urlquery .C }}
+-- ok-am-func-toupper --
+{{ .Status | toUpper }}
+-- ok-am-func-rereplaceall --
+{{ reReplaceAll "a+" "b" .Status }}
+-- ok-am-func-humanizeduration --
+{{ .Duration | humanizeDuration }}
+-- ok-am-func-safehtml --
+{{ .Body | safeHtml }}
+-- ok-am-func-match --
+{{ if match "^fir" .Status }}x{{ end }}
+-- ok-am-func-dict --
+{{ $d := dict "k" "v" }}{{ $d }}
+-- ok-am-func-list-append --
+{{ $l := list 1 2 }}{{ append $l 3 }}
+-- ok-am-func-title-join --
+{{ .Labels | join ", " | title }}
+-- ok-am-func-tojson --
+{{ .CommonLabels | toJson }}
+-- ok-am-func-datetime --
+{{ date "2006-01-02" .At }}{{ now }}{{ since .At }}{{ tz "UTC" .At }}
+-- ok-am-func-base64 --
+{{ base64encode .A }}{{ base64decode .B }}
+-- ok-string-literal --
+{{ "hello" }}
+-- ok-string-escapes --
+{{ "a\tb\nc\"d\\e" }}
+-- ok-string-unicode-escape --
+{{ "é\U0001F600\x41\101" }}
+-- ok-raw-string --
+{{ `raw \n not escaped` }}
+-- ok-raw-string-multiline --
+{{ `line one
+line two` }}
+-- ok-char-literal --
+{{ 'a' }}
+-- ok-char-literal-escape --
+{{ '\n' }}
+-- ok-char-literal-unicode --
+{{ 'é' }}
+-- ok-bool --
+{{ if true }}t{{ end }}{{ if false }}f{{ end }}
+-- ok-nil --
+{{ if eq .A nil }}x{{ end }}
+-- ok-comment --
+{{/* a comment */}}
+-- ok-comment-multiline --
+{{/* line one
+line two */}}
+-- ok-comment-with-braces --
+{{/* this has {{ and }} inside */}}
+-- ok-comment-trim --
+{{- /* trimmed comment */ -}}
+-- ok-trim-left --
+text  {{- .A }}
+-- ok-trim-right --
+{{ .A -}}  text
+-- ok-trim-both --
+a  {{- .A -}}  b
+-- ok-trim-in-define --
+{{ define "t" -}}
+  body
+{{- end }}
+-- ok-unicode-field --
+{{ .Ünïcødé }}
+-- ok-unicode-text --
+héllo wörld 日本語 🎉
+-- ok-unicode-astral-field --
+{{ .𝕏 }}
+-- ok-emoji-in-string --
+{{ "🎉 done" }}
+-- ok-realistic-slack --
+{{ define "slack.title" }}[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}{{ end }}
+-- ok-realistic-body --
+{{ define "slack.text" }}
+{{ range .Alerts }}
+*Alert:* {{ .Annotations.summary }}
+*Severity:* {{ .Labels.severity | toUpper }}
+{{ range .Labels.SortedPairs }} • {{ .Name }}: `{{ .Value }}`
+{{ end }}
+{{ end }}
+{{ end }}
+-- ok-realistic-email --
+{{ define "email.subject" }}{{ template "__subject" . }}{{ end }}{{ define "__subject" }}{{ .Status | toUpper }} {{ .CommonLabels.alertname }}{{ end }}
+-- num-decimal --
+{{ 42 }}
+-- num-negative --
+{{ -42 }}
+-- num-positive-sign --
+{{ +42 }}
+-- num-float --
+{{ 3.14 }}
+-- num-float-leading-dot --
+{{ .5 }}
+-- num-float-exponent --
+{{ 1e10 }}{{ 1E10 }}{{ 1e-10 }}{{ 1.5e+3 }}
+-- num-hex --
+{{ 0xff }}{{ 0XFF }}
+-- num-octal-new --
+{{ 0o17 }}{{ 0O17 }}
+-- num-octal-legacy --
+{{ 017 }}
+-- num-binary --
+{{ 0b1010 }}{{ 0B1010 }}
+-- num-underscores --
+{{ 1_000_000 }}
+-- num-hex-underscores --
+{{ 0x_ff_ff }}
+-- num-hex-float --
+{{ 0x1p-2 }}
+-- num-imaginary --
+{{ 3i }}
+-- num-imaginary-float --
+{{ 1.5i }}
+-- num-big-uint64 --
+{{ 18446744073709551615 }}
+-- num-overflow --
+{{ 99999999999999999999999999 }}
+-- num-bad-hex --
+{{ 0x }}
+-- num-bad-two-dots --
+{{ 1.2.3 }}
+-- num-bad-trailing-e --
+{{ 1e }}
+-- num-bad-letters --
+{{ 12abc }}
+-- lex-unclosed-action --
+{{ .Status
+-- lex-unclosed-action-eof --
+text {{
+-- lex-unclosed-comment --
+{{/* never closed
+-- lex-comment-ends-early --
+{{/* comment */ }}
+-- lex-unterminated-string --
+{{ "no closing quote }}
+-- lex-newline-in-string --
+{{ "line one
+line two" }}
+-- lex-unterminated-raw-string --
+{{ `no closing backtick }}
+-- lex-unterminated-char --
+{{ 'a }}
+-- lex-empty-char --
+{{ '' }}
+-- lex-unclosed-paren --
+{{ (.Status }}
+-- lex-unexpected-right-paren --
+{{ .Status ) }}
+-- lex-bad-character --
+{{ .Status # }}
+-- lex-expected-colon-equals --
+{{ $x : .Status }}
+-- lex-bad-escape-in-string --
+{{ "\q" }}
+-- parse-empty-action --
+{{ }}
+-- parse-empty-action-spaces --
+{{    }}
+-- parse-trailing-pipe --
+{{ define "broken" }}{{ .Alerts | }}{{ end }}
+-- parse-trailing-pipe-bare --
+{{ .Alerts | }}
+-- parse-leading-pipe --
+{{ | toUpper }}
+-- parse-double-pipe --
+{{ .A || toUpper }}
+-- parse-unexpected-end --
+{{ end }}
+-- parse-unexpected-else --
+{{ else }}
+-- parse-if-no-end --
+{{ if .A }}yes
+-- parse-range-no-end --
+{{ range .Alerts }}x
+-- parse-with-no-end --
+{{ with .A }}x
+-- parse-define-no-end --
+{{ define "t" }}body
+-- parse-block-no-end --
+{{ block "b" . }}x
+-- parse-if-no-condition --
+{{ if }}x{{ end }}
+-- parse-range-no-argument --
+{{ range }}x{{ end }}
+-- parse-with-no-argument --
+{{ with }}x{{ end }}
+-- parse-else-after-else --
+{{ if .A }}a{{ else }}b{{ else }}c{{ end }}
+-- parse-else-outside-if --
+{{ range .Alerts }}{{ end }}{{ else }}
+-- parse-define-unquoted-name --
+{{ define t }}body{{ end }}
+-- parse-define-no-name --
+{{ define }}body{{ end }}
+-- parse-template-no-name --
+{{ template }}
+-- parse-template-unquoted-name --
+{{ template t }}
+-- parse-block-no-name --
+{{ block . }}x{{ end }}
+-- parse-dot-after-term --
+{{ "string".Field }}
+-- parse-dot-after-paren-number --
+{{ (1).Field }}
+-- parse-define-inside-if --
+{{ if .A }}{{ define "t" }}x{{ end }}{{ end }}
+-- parse-two-decls-in-if --
+{{ if $x, $y := .A }}x{{ end }}
+-- parse-three-decls --
+{{ $a, $b, $c := .A }}
+-- parse-assign-to-literal --
+{{ 1 := .A }}
+-- parse-non-executable-pipeline --
+{{ .A | .B }}
+-- parse-non-executable-stage-string --
+{{ .A | "literal" }}
+-- sem-break-outside-range --
+{{ break }}
+-- sem-break-in-if-outside-range --
+{{ if .A }}{{ break }}{{ end }}
+-- sem-break-in-define-inside-range --
+{{ range .Alerts }}{{ define "t" }}{{ break }}{{ end }}{{ end }}
+-- sem-continue-outside-range --
+{{ continue }}
+-- sem-continue-in-with --
+{{ with .A }}{{ continue }}{{ end }}
+-- sem-duplicate-define --
+{{ define "dup" }}a{{ end }}{{ define "dup" }}b{{ end }}
+-- sem-duplicate-define-one-empty --
+{{ define "dup" }}{{ end }}{{ define "dup" }}b{{ end }}
+-- sem-duplicate-define-both-empty --
+{{ define "dup" }}{{ end }}{{ define "dup" }}{{ end }}
+-- sem-undefined-variable --
+{{ $nope }}
+-- sem-undefined-variable-in-pipeline --
+{{ $nope | toUpper }}
+-- sem-undefined-variable-field --
+{{ $nope.Field }}
+-- sem-variable-out-of-scope --
+{{ if .A }}{{ $x := 1 }}{{ end }}{{ $x }}
+-- sem-range-var-out-of-scope --
+{{ range $a := .Alerts }}{{ end }}{{ $a }}
+-- sem-assign-undeclared --
+{{ $nope = 1 }}
+-- sem-unknown-function --
+{{ nosuchfunc .A }}
+-- sem-unknown-function-in-pipeline --
+{{ .A | nosuchfunc }}
+-- sem-unknown-function-typo --
+{{ toUppercase .A }}
+-- sem-unknown-function-sprig-not-in-am --
+{{ .A | upper }}
+-- sem-unknown-function-nested --
+{{ if eq (nosuchfunc .A) "x" }}y{{ end }}

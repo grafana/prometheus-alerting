@@ -1,8 +1,10 @@
 import React, { useCallback, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { t, Trans } from '@grafana/i18n';
 import { Button, Field, Input, Stack, CodeEditor } from '@grafana/ui';
 import { Template } from '../hooks/useTemplates';
+import { createTemplateFormSchema } from '../utils/templateFormSchema';
 
 export interface TemplateFormValues {
   title: string;
@@ -40,6 +42,11 @@ export function TemplateEditForm({
     };
   }, [template]);
 
+  const schema = useMemo(
+    () => createTemplateFormSchema({ existingTemplateNames, originalName }),
+    [existingTemplateNames, originalName]
+  );
+
   const {
     register,
     control,
@@ -47,6 +54,7 @@ export function TemplateEditForm({
     formState: { errors, isSubmitting },
   } = useForm<TemplateFormValues>({
     defaultValues,
+    resolver: zodResolver(schema),
     mode: 'onBlur',
   });
 
@@ -55,17 +63,6 @@ export function TemplateEditForm({
       await onSave(values);
     },
     [onSave]
-  );
-
-  const isNameUnique = useCallback(
-    (name: string) => {
-      // If editing and name hasn't changed, it's valid
-      if (originalName && name === originalName) {
-        return true;
-      }
-      return !existingTemplateNames.includes(name);
-    },
-    [existingTemplateNames, originalName]
   );
 
   return (
@@ -79,15 +76,7 @@ export function TemplateEditForm({
           required
         >
           <Input
-            {...register('title', {
-              required: t('templates.form.name-required', 'Template name is required'),
-              validate: (value) => {
-                if (!isNameUnique(value)) {
-                  return t('templates.form.name-duplicate', 'A template with this name already exists');
-                }
-                return true;
-              },
-            })}
+            {...register('title')}
             placeholder={t('templates.form.name-placeholder', 'e.g., slack-notification.tmpl')}
             aria-label={t('templates.form.name', 'Name')}
           />
@@ -107,9 +96,6 @@ export function TemplateEditForm({
           <Controller
             name="content"
             control={control}
-            rules={{
-              required: t('templates.form.content-required', 'Template content is required'),
-            }}
             render={({ field: { onChange, value } }) => (
               <CodeEditor
                 value={value}
