@@ -7,6 +7,24 @@ services:
     extends:
       file: .config/docker-compose-base.yaml
       service: grafana
+
+    # Everything below is ours. It can't live in .config/docker-compose-base.yaml, which the
+    # scaffolding tool regenerates — compose merges these into what that file sets.
+    build:
+      args:
+        # The plugin needs >= 13.1.0 (see grafanaDependency in src/plugin.json), while the
+        # scaffolded default trails behind.
+        grafana_version: ${GRAFANA_VERSION:-13.1.0}
+
+    environment:
+      # Sign in as an admin without typing a password, so `pnpm server` lands straight in the app.
+      GF_USERS_DEFAULT_PERMISSIONS: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: false
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      # Writing rules through the Prometheus ruler proxy is still behind a toggle.
+      GF_FEATURE_TOGGLES_ENABLE: promRulerApiViaProxyWrite
+      GF_FEATURE_TOGGLES_splashScreen: 'false'
+
     depends_on:
       - prometheus
       - alertmanager

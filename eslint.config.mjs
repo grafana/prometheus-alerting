@@ -62,6 +62,22 @@ export default defineConfig([
     },
   },
   {
+    // The scaffolded config turns on type-aware linting for `src` only, and it gets regenerated
+    // by the scaffolding tool, so the same settings for our workspace packages live here.
+    name: 'grafana/typed-lint-packages',
+    files: ['packages/**/*.{ts,tsx}'],
+
+    languageOptions: {
+      parserOptions: {
+        project: './tsconfig.json',
+      },
+    },
+
+    rules: {
+      '@typescript-eslint/no-deprecated': 'warn',
+    },
+  },
+  {
     name: 'grafana/typescript-safety',
     files: ['src/**/*.{ts,tsx}', 'packages/**/*.{ts,tsx}'],
     ignores: ['**/*.test.ts', '**/*.test.tsx', '**/test/**/*.ts', '**/test/**/*.tsx'],

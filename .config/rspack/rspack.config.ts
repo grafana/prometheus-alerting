@@ -5,28 +5,26 @@
  * https://grafana.com/developers/plugin-tools/how-to-guides/extend-configurations#extend-the-webpack-config
  */
 
-import CopyWebpackPlugin from 'copy-webpack-plugin';
+import rspack, { type Configuration } from '@rspack/core';
 import ESLintPlugin from 'eslint-webpack-plugin';
-import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
+import { TsCheckerRspackPlugin } from 'ts-checker-rspack-plugin';
 import path from 'path';
 import ReplaceInFileWebpackPlugin from 'replace-in-file-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
-import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
-import webpack, { type Configuration } from 'webpack';
-import LiveReloadPlugin from 'webpack-livereload-plugin';
-import VirtualModulesPlugin from 'webpack-virtual-modules';
+import { RspackVirtualModulePlugin } from 'rspack-plugin-virtual-module';
 
-import { BuildModeWebpackPlugin } from './BuildModeWebpackPlugin.ts';
-import { DIST_DIR, SOURCE_DIR } from './constants.ts';
-import { getCPConfigVersion, getEntries, getPackageJson, getPluginJson, hasReadme, isWSL } from './utils.ts';
+import RspackLiveReloadPlugin from './liveReloadPlugin.ts';
+import { BuildModeRspackPlugin } from './BuildModeRspackPlugin.ts';
+import { DIST_DIR, SOURCE_DIR } from '../bundler/constants.ts';
+import { getCPConfigVersion, getEntries, getPackageJson, getPluginJson, isWSL } from '../bundler/utils.ts';
 import { externals } from '../bundler/externals.ts';
+import { copyFilePatterns } from '../bundler/copyFiles.ts';
 
+const { SubresourceIntegrityPlugin } = rspack.experiments;
 const pluginJson = getPluginJson();
 const cpVersion = getCPConfigVersion();
-const pluginVersion = getPackageJson().version;
-
-const virtualPublicPath = new VirtualModulesPlugin({
-  'node_modules/grafana-public-path.js': `
+const virtualPublicPath = new RspackVirtualModulePlugin({
+  'grafana-public-path': `
 import amdMetaModule from 'amd-module';
 
 __webpack_public_path__ =
@@ -36,20 +34,8 @@ __webpack_public_path__ =
 `,
 });
 
-export type Env = {
-  [key: string]: true | string | Env;
-};
-
-const config = async (env: Env): Promise<Configuration> => {
+const config = async (env): Promise<Configuration> => {
   const baseConfig: Configuration = {
-    cache: {
-      type: 'filesystem',
-      buildDependencies: {
-        // __filename doesn't work in Node 24
-        config: [path.resolve(process.cwd(), '.config', 'webpack', 'webpack.config.ts')],
-      },
-    },
-
     context: path.join(process.cwd(), SOURCE_DIR),
 
     devtool: env.production ? 'source-map' : 'eval-source-map',
@@ -82,28 +68,34 @@ const config = async (env: Env): Promise<Configuration> => {
         {
           exclude: /(node_modules)/,
           test: /\.[tj]sx?$/,
-          type: 'javascript/auto',
           use: {
-            loader: 'swc-loader',
+            loader: 'builtin:swc-loader',
             options: {
               jsc: {
-                baseUrl: path.resolve(process.cwd(), SOURCE_DIR),
-                target: 'es2015',
-                loose: false,
-                transform: {
-                  react: {
-                    runtime: 'automatic',
-                  },
-                },
+                externalHelpers: true,
                 parser: {
                   syntax: 'typescript',
                   tsx: true,
-                  decorators: false,
-                  dynamicImport: true,
                 },
+                transform: {
+                  react: {
+                    development: !env.production,
+                    refresh: false,
+                  },
+                },
+                target: 'es2022',
               },
             },
           },
+          type: 'javascript/auto',
+        },
+        {
+          test: /\.css$/,
+          use: ['style-loader', 'css-loader'],
+        },
+        {
+          test: /\.s[ac]ss$/,
+          use: ['style-loader', 'css-loader', 'sass-loader'],
         },
         {
           test: /\.(png|jpe?g|gif|svg)$/,
@@ -154,43 +146,26 @@ const config = async (env: Env): Promise<Configuration> => {
     },
 
     plugins: [
-      new BuildModeWebpackPlugin(),
+      new BuildModeRspackPlugin(),
       virtualPublicPath,
       // Insert create plugin version information into the bundle
-      new webpack.BannerPlugin({
-        banner: `/* [create-plugin] version: ${cpVersion} */
-          /* [create-plugin] plugin: ${pluginJson.id}@${pluginVersion} */`,
+      new rspack.BannerPlugin({
+        banner: '/* [create-plugin] version: ' + cpVersion + ' */',
         raw: true,
         entryOnly: true,
       }),
-      new CopyWebpackPlugin({
-        patterns: [
-          // If src/README.md exists use it; otherwise the root README
-          // To `compiler.options.output`
-          { from: hasReadme() ? 'README.md' : '../README.md', to: '.', force: true },
-          { from: 'plugin.json', to: '.' },
-          { from: '../LICENSE', to: '.' },
-          { from: '../CHANGELOG.md', to: '.', force: true },
-          { from: '**/*.json', to: '.' },
-          { from: '**/*.svg', to: '.', noErrorOnMissing: true },
-          { from: '**/*.png', to: '.', noErrorOnMissing: true },
-          { from: '**/*.html', to: '.', noErrorOnMissing: true },
-          { from: 'img/**/*', to: '.', noErrorOnMissing: true },
-          { from: 'libs/**/*', to: '.', noErrorOnMissing: true },
-          { from: 'static/**/*', to: '.', noErrorOnMissing: true },
-          { from: '**/query_help.md', to: '.', noErrorOnMissing: true },
-        ],
+      new rspack.CopyRspackPlugin({
+        patterns: copyFilePatterns,
       }),
       // Replace certain template-variables in the README and plugin.json
       new ReplaceInFileWebpackPlugin([
         {
           dir: DIST_DIR,
-          test: [/(^|\/)plugin\.json$/, /(^|\/)README\.md$/],
-
+          files: ['plugin.json', 'README.md'],
           rules: [
             {
               search: /\%VERSION\%/g,
-              replace: pluginVersion,
+              replace: getPackageJson().version,
             },
             {
               search: /\%TODAY\%/g,
@@ -208,8 +183,8 @@ const config = async (env: Env): Promise<Configuration> => {
       }),
       ...(env.development
         ? [
-            new LiveReloadPlugin(),
-            new ForkTsCheckerWebpackPlugin({
+            new RspackLiveReloadPlugin(),
+            new TsCheckerRspackPlugin({
               async: Boolean(env.development),
               issue: {
                 include: [{ file: '**/*.{ts,tsx}' }],
@@ -219,7 +194,6 @@ const config = async (env: Env): Promise<Configuration> => {
             new ESLintPlugin({
               extensions: ['.ts', '.tsx'],
               lintDirtyModulesOnly: Boolean(env.development), // don't lint on start, only lint changed files
-              failOnError: Boolean(env.production),
             }),
           ]
         : []),
@@ -229,13 +203,6 @@ const config = async (env: Env): Promise<Configuration> => {
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
       // handle resolving "rootDir" paths
       modules: [path.resolve(process.cwd(), 'src'), 'node_modules'],
-      unsafeCache: true,
-      alias: {
-        // Force all @grafana/i18n imports to resolve to a single instance
-        // This prevents @grafana/alerting from bundling its own duplicate copy
-        // which would have a separate uninitialized tFunc variable
-        '@grafana/i18n': path.resolve(process.cwd(), 'node_modules/@grafana/i18n'),
-      },
     },
   };
 

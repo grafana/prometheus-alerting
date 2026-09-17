@@ -11,8 +11,6 @@
     "rootDir": "../src",
     "typeRoots": ["../node_modules/@types"],
     "resolveJsonModule": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
     "paths": {
       "*": ["../src/*"]
     }

@@ -15,7 +15,7 @@ set -euo pipefail
 #     publish workflow puts it on the website. Cross-page links use /latest/, so
 #     mounting it unversioned would 404 every one of them locally.
 #
-#   - .config/docs-plugins-index.md is mounted as the `plugins` section page.
+#   - .mise/docs-plugins-index.md is mounted as the `plugins` section page.
 #     The image ships content for every other Grafana product but no `plugins`
 #     section, and without one the sidebar walks the whole bundled docs tree and
 #     lists them all. The plugin level below it is left to Hugo on purpose:
@@ -39,7 +39,7 @@ cleanup
 docker run --detach --init --name "$name" \
   --publish 3002:3002 --publish 3003:3003 \
   --volume "$MISE_PROJECT_ROOT/docs/sources:/hugo/content/docs/plugins/grafana-prometheusalerting-app/latest:ro" \
-  --volume "$MISE_PROJECT_ROOT/.config/docs-plugins-index.md:/hugo/content/docs/plugins/_index.md:ro" \
+  --volume "$MISE_PROJECT_ROOT/.mise/docs-plugins-index.md:/hugo/content/docs/plugins/_index.md:ro" \
   grafana/docs-base:latest \
   make server-docs >/dev/null
 
