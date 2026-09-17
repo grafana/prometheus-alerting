@@ -1,4 +1,9 @@
-import type { Route, RouteWithID } from '@grafana/external-alertmanager/vanilla';
+import {
+  findExistingRoute,
+  findRouteInTree,
+  type Route,
+  type RouteWithID,
+} from '@grafana/external-alertmanager/vanilla';
 import { produce } from 'immer';
 import { omit } from 'lodash';
 import { ERROR_NEWER_CONFIGURATION } from './constants';
@@ -165,66 +170,4 @@ export function renameReceiverInRoute(route: Route, oldName: string, newName: st
   }
 
   return updated;
-}
-
-type RouteMatch = Route | undefined;
-
-/**
- * Recursively searches for a route in the tree by its ID.
- * Returns the matching route, its parent route, and its position within the parent's children.
- *
- * @param routeTree - The root of the route tree to search
- * @param referenceRouteIdentifier - The ID of the route to find
- * @returns A tuple containing [matchingRoute, parentRoute, positionInParent]
- */
-export function findRouteInTree(
-  routeTree: RouteWithID,
-  referenceRouteIdentifier: string
-): [matchingRoute: RouteMatch, parentRoute: RouteMatch, positionInParent: number | undefined] {
-  let matchingRoute: RouteMatch;
-  let matchingRouteParent: RouteMatch;
-  let matchingRoutePositionInParent: number | undefined;
-
-  // recurse through the tree to find the matching route, its parent and the position of the route in the parent
-  function findRouteInTree(currentRoute: RouteWithID, index: number, parentRoute: RouteWithID) {
-    if (matchingRoute) {
-      return;
-    }
-
-    if (currentRoute.id === referenceRouteIdentifier) {
-      matchingRoute = currentRoute;
-      matchingRouteParent = parentRoute;
-      matchingRoutePositionInParent = index;
-    }
-
-    if (currentRoute.routes) {
-      currentRoute.routes.forEach((route, index) => findRouteInTree(route, index, currentRoute));
-    }
-  }
-
-  findRouteInTree(routeTree, 0, routeTree);
-
-  return [matchingRoute, matchingRouteParent, matchingRoutePositionInParent];
-}
-
-/**
- * Recursively searches for a route in the tree by its ID.
- *
- * @param id - The ID of the route to find
- * @param routeTree - The root of the route tree to search
- * @returns The matching route or undefined if not found
- */
-export function findExistingRoute(id: string, routeTree: RouteWithID): RouteWithID | undefined {
-  if (routeTree.id === id) {
-    return routeTree;
-  }
-
-  for (const child of routeTree.routes ?? []) {
-    const match = findExistingRoute(id, child);
-    if (match) {
-      return match;
-    }
-  }
-
-  return undefined;
 }
