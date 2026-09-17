@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 import { validateTemplate, validateTemplateForSave } from './index';
 
 describe('validateTemplate', () => {

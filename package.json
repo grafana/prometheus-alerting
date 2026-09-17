@@ -4,9 +4,8 @@
   "scripts": {
     "build": "rspack -c ./.config/rspack/rspack.config.ts --env production",
     "dev": "rspack -w -c ./.config/rspack/rspack.config.ts --env development",
-    "test": "vitest --coverage",
-    "test:ci": "vitest run --passWithNoTests",
-    "test:ui": "vitest --ui",
+    "test": "rstest --coverage",
+    "test:ci": "rstest --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --cache .",
     "lint:fix": "pnpx lint -- --fix && prettier --write --list-different .",
@@ -21,7 +20,8 @@
     "sign": "sign-plugin",
     "i18n-extract": "i18next --config src/locales/i18next-parser.config.js",
     "preinstall": "node scripts/check-mise.js",
-    "prepare": "lefthook install || true"
+    "prepare": "lefthook install || true",
+    "test:watch": "rstest --watch"
   },
   "author": "Grafana",
   "license": "Apache-2.0",
@@ -37,6 +37,8 @@
     "@playwright/test": "^1.60.0",
     "@rspack/cli": "^1.6.0",
     "@rspack/core": "^1.6.0",
+    "@rstest/core": "0.11.12",
+    "@rstest/coverage-v8": "0.11.12",
     "@stylistic/eslint-plugin-ts": "^4.4.1",
     "@swc/helpers": "^0.5.21",
     "@testing-library/jest-dom": "^6.9.1",
@@ -53,8 +55,6 @@
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.59.4",
     "@typescript-eslint/parser": "^8.59.4",
-    "@vitest/coverage-v8": "^4.1.7",
-    "@vitest/ui": "^4.1.7",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-jsdoc": "^63.0.0",
@@ -74,7 +74,6 @@
     "terser-webpack-plugin": "^5.6.0",
     "ts-checker-rspack-plugin": "^1.2.0",
     "typescript": "6.0.3",
-    "vitest": "^4.1.7",
     "webpack": "^5.107.0",
     "ws": "^8.13.0"
   },

@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { AppEvents } from '@grafana/data';
 
@@ -10,15 +10,16 @@ import { createTestWrapper } from '../../../test/utils/test-wrapper';
 import { useAddRoute } from './useAddRoute';
 import { useDeleteRoute } from './useDeleteRoute';
 import { useUpdateRoute } from './useUpdateRoute';
+import * as grafanaRuntimeActual from '@grafana/runtime' with { rstest: 'importActual' };
 
-const mocks = vi.hoisted(() => ({
-  produceConfiguration: vi.fn(),
-  publish: vi.fn(),
-  refetchRoutes: vi.fn(),
+const mocks = rs.hoisted(() => ({
+  produceConfiguration: rs.fn(),
+  publish: rs.fn(),
+  refetchRoutes: rs.fn(),
 }));
 
-vi.mock('@grafana/runtime', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@grafana/runtime')>();
+rs.mock('@grafana/runtime', () => {
+  const actual = grafanaRuntimeActual;
 
   return {
     ...actual,
@@ -26,17 +27,17 @@ vi.mock('@grafana/runtime', async (importOriginal) => {
   };
 });
 
-vi.mock('../../../hooks/useProduceNewAlertmanagerConfiguration', () => ({
+rs.mock('../../../hooks/useProduceNewAlertmanagerConfiguration', () => ({
   useProduceNewAlertmanagerConfiguration: () => [mocks.produceConfiguration, { isLoading: false }],
 }));
 
-vi.mock('./useRoutes', () => ({
+rs.mock('./useRoutes', () => ({
   useRoutes: () => ({ refetch: mocks.refetchRoutes }),
 }));
 
 describe('route mutation permission feedback', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     setMockGrafanaDataSources();
     mocks.produceConfiguration.mockRejectedValue(new PermissionDeniedError('Insufficient permissions'));
   });

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import { config } from '@grafana/runtime';
 
@@ -10,7 +10,7 @@ import { testIds } from './testIds';
 import { mockMimirDs, mockPrometheusDs, setMockGrafanaDataSources } from '../test/mocks/grafana-runtime';
 import { TestMemoryRouter } from '../test/utils/test-wrapper';
 
-vi.mock('@grafana/runtime');
+rs.mock('@grafana/runtime');
 
 function renderGuardedRoute() {
   return render(

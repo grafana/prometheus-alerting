@@ -1,25 +1,25 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import type { RouteEditFormProps } from './RouteEditForm';
 import { RouteEditDrawer } from './RouteEditDrawer';
 
-vi.mock('../hooks/useUpdateRoute', () => ({
-  useUpdateRoute: () => ({ updateRoute: vi.fn(), isUpdating: false }),
+rs.mock('../hooks/useUpdateRoute', () => ({
+  useUpdateRoute: () => ({ updateRoute: rs.fn(), isUpdating: false }),
 }));
 
-vi.mock('../hooks/useAddRoute', () => ({
-  useAddRoute: () => ({ addRoute: vi.fn(), isAdding: false }),
+rs.mock('../hooks/useAddRoute', () => ({
+  useAddRoute: () => ({ addRoute: rs.fn(), isAdding: false }),
 }));
 
-vi.mock('./RouteEditForm', () => ({
+rs.mock('./RouteEditForm', () => ({
   RouteEditForm: ({ isRoot }: RouteEditFormProps) => <div data-testid="route-edit-form">{String(isRoot)}</div>,
 }));
 
 describe('RouteEditDrawer', () => {
   it('forwards root route identification to the form', () => {
-    render(<RouteEditDrawer route={{ id: 'root', receiver: 'default' }} onClose={vi.fn()} isRoot />);
+    render(<RouteEditDrawer route={{ id: 'root', receiver: 'default' }} onClose={rs.fn()} isRoot />);
 
     expect(screen.getByTestId('route-edit-form')).toHaveTextContent('true');
   });

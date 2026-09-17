@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { setDataSourceSrv } from '@grafana/runtime';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
@@ -18,7 +18,7 @@ import {
 import { createTestWrapper, TestMemoryRouter } from '../../../test/utils/test-wrapper';
 import SilencesPage from './SilencesList';
 
-vi.mock('../../../components/AlertmanagerPicker/AlertmanagerPicker', () => ({
+rs.mock('../../../components/AlertmanagerPicker/AlertmanagerPicker', () => ({
   AlertmanagerPicker: () => <div data-testid="alertmanager-picker" />,
 }));
 

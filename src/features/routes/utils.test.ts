@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@rstest/core';
 import { computeInheritedTree } from '@grafana/alerting';
 import { attachRouteIds, isRootRoute } from './utils';
 

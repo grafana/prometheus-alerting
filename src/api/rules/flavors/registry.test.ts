@@ -1,5 +1,5 @@
 import { setDataSourceSrv } from '@grafana/runtime';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import { DataSourceInstanceSettingsFactory } from '../../../test/fixtures/datasources';
 

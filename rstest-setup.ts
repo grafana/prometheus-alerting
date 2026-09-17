@@ -1,9 +1,11 @@
-/// <reference types="vitest/globals" />
+/// <reference types="@rstest/core/globals" />
 
-// Vitest setup file
+// Rstest setup file
 import React from 'react';
-import { vi } from 'vitest';
-import '@testing-library/jest-dom/vitest';
+import { expect, rs } from '@rstest/core';
+import * as jestDomMatchers from '@testing-library/jest-dom/matchers';
+
+expect.extend(jestDomMatchers);
 
 // Import MSW server
 import { server } from './src/test/server';
@@ -23,7 +25,7 @@ import { resetVanillaAlertmanagerState } from './src/test/handlers/alertmanager'
  * `/public/img/icon/<icon_name>.svg` we need to mock react-inlinesvg to prevent
  * the failed fetch requests from displaying errors in console.
  */
-vi.mock('react-inlinesvg', () => {
+rs.mock('react-inlinesvg', () => {
   return {
     default: ({ src }: { src: string }) => {
       // testId will be the file name without extension (e.g. `public/img/icons/angle-double-down.svg` -> `angle-double-down`)
@@ -41,13 +43,13 @@ vi.mock('react-inlinesvg', () => {
 /**
  * ResizeObserver Mock
  * Required for @grafana/ui components that use ResizeObserver (e.g. TruncatedText).
- * vi.fn().mockImplementation is not constructable with `new` in Vitest 4.x, so we
+ * rs.fn().mockImplementation is not constructable with `new` in Vitest 4.x, so we
  * use a proper class instead.
  */
 class ResizeObserverMock {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
+  observe = rs.fn();
+  unobserve = rs.fn();
+  disconnect = rs.fn();
 }
 global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
 
@@ -57,29 +59,29 @@ global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
  * Happy DOM provides HTMLCanvasElement but we need to mock getContext for testing
  */
 if (typeof HTMLCanvasElement !== 'undefined') {
-  HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
-    measureText: vi.fn(() => ({ width: 100 })),
-    fillText: vi.fn(),
-    clearRect: vi.fn(),
-    getImageData: vi.fn(() => ({ data: [] })),
-    putImageData: vi.fn(),
-    createImageData: vi.fn(() => []),
-    setTransform: vi.fn(),
-    drawImage: vi.fn(),
-    save: vi.fn(),
-    restore: vi.fn(),
-    beginPath: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    closePath: vi.fn(),
-    stroke: vi.fn(),
-    translate: vi.fn(),
-    scale: vi.fn(),
-    rotate: vi.fn(),
-    arc: vi.fn(),
-    fill: vi.fn(),
-    rect: vi.fn(),
-    clip: vi.fn(),
+  HTMLCanvasElement.prototype.getContext = rs.fn(() => ({
+    measureText: rs.fn(() => ({ width: 100 })),
+    fillText: rs.fn(),
+    clearRect: rs.fn(),
+    getImageData: rs.fn(() => ({ data: [] })),
+    putImageData: rs.fn(),
+    createImageData: rs.fn(() => []),
+    setTransform: rs.fn(),
+    drawImage: rs.fn(),
+    save: rs.fn(),
+    restore: rs.fn(),
+    beginPath: rs.fn(),
+    moveTo: rs.fn(),
+    lineTo: rs.fn(),
+    closePath: rs.fn(),
+    stroke: rs.fn(),
+    translate: rs.fn(),
+    scale: rs.fn(),
+    rotate: rs.fn(),
+    arc: rs.fn(),
+    fill: rs.fn(),
+    rect: rs.fn(),
+    clip: rs.fn(),
   })) as any;
 }
 

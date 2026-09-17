@@ -1,22 +1,23 @@
 import React from 'react';
 
 import { render, screen } from '@testing-library/react';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import { NamespaceYamlDrawer } from './NamespaceYamlDrawer';
+import * as grafanaUiActual from '@grafana/ui' with { rstest: 'importActual' };
 
-const mocks = vi.hoisted(() => ({
-  useGetRuleNamespaceYamlQuery: vi.fn(),
+const mocks = rs.hoisted(() => ({
+  useGetRuleNamespaceYamlQuery: rs.fn(),
 }));
 
-vi.mock('../../../../api/rules/ruler.endpoints', () => ({
+rs.mock('../../../../api/rules/ruler.endpoints', () => ({
   rulerApi: {
     useGetRuleNamespaceYamlQuery: mocks.useGetRuleNamespaceYamlQuery,
   },
 }));
 
-vi.mock('@grafana/ui', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@grafana/ui')>();
+rs.mock('@grafana/ui', () => {
+  const actual = grafanaUiActual;
 
   return {
     ...actual,
@@ -58,7 +59,7 @@ vi.mock('@grafana/ui', async (importOriginal) => {
 const props = {
   dataSourceUid: 'mimir-uid',
   namespace: 'platform-alerts',
-  onClose: vi.fn(),
+  onClose: rs.fn(),
 };
 
 describe('NamespaceYamlDrawer', () => {

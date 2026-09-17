@@ -4,7 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setDataSourceSrv } from '@grafana/runtime';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { parse as parseYaml } from 'yaml';
 
 import { AlertingPermission } from '../../../access-control/abilities';
@@ -21,13 +21,14 @@ import {
 import { server } from '../../../test/server';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 import { StoredConfigEditor } from './StoredConfigEditor';
+import * as grafanaUiActual from '@grafana/ui' with { rstest: 'importActual' };
 
-const mocks = vi.hoisted(() => ({
-  notifySuccess: vi.fn(),
-  notifyError: vi.fn(),
+const mocks = rs.hoisted(() => ({
+  notifySuccess: rs.fn(),
+  notifyError: rs.fn(),
 }));
 
-vi.mock('../../../hooks/useAppNotifications', () => ({
+rs.mock('../../../hooks/useAppNotifications', () => ({
   useAppNotifications: () => ({ success: mocks.notifySuccess, error: mocks.notifyError }),
 }));
 
@@ -37,8 +38,8 @@ vi.mock('../../../hooks/useAppNotifications', () => ({
 // The onChange is captured on first render and never refreshed, which is what @grafana/ui does
 // (handleOnMount destructures it once). Without that, a handler that goes stale looks fine here and
 // only breaks in the real editor.
-vi.mock('@grafana/ui', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@grafana/ui')>();
+rs.mock('@grafana/ui', () => {
+  const actual = grafanaUiActual;
 
   return {
     ...actual,
@@ -84,7 +85,7 @@ const replacement = 'route:\n  receiver: other\nreceivers:\n  - name: other\n';
 const ACKNOWLEDGEMENT = 'I understand the consequences, I want to edit the configuration';
 
 /** Renders the editor over the real write hook, which talks to the Mimir MSW handlers. */
-function renderEditor(onSaved = vi.fn()) {
+function renderEditor(onSaved = rs.fn()) {
   return render(<StoredConfigEditor configuration={configuration} onSaved={onSaved} />, {
     wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
   });
@@ -115,7 +116,7 @@ async function typeConfiguration(text: string) {
 
 describe('StoredConfigEditor', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     setMockGrafanaDataSources();
     setDataSourceSrv(createMockDataSourceSrv());
     setCurrentUserPermissions(AlertingPermission.NotificationsWrite);
@@ -185,7 +186,7 @@ describe('StoredConfigEditor', () => {
   });
 
   it('only writes once the replacement is confirmed', async () => {
-    const onSaved = vi.fn();
+    const onSaved = rs.fn();
     renderEditor(onSaved);
 
     const user = await typeConfiguration(replacement);

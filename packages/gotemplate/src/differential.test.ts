@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 import { readCorpus, readOracle } from './corpus.test-helpers';
 import { validateTemplate } from './index';
 import { wrapTemplateForSave } from './wrap';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import { type InhibitRule } from './api/types/common';
 import { normalizeInhibitRuleMatchers, type NormalizedInhibitRule } from './inhibitMatchers';

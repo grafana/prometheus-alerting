@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@rstest/core';
 
 import { PromAlert } from '@grafana/external-rules/vanilla';
 

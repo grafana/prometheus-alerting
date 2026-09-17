@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 
@@ -10,7 +10,7 @@ import { ReceiverEditForm } from './ReceiverEditForm';
 describe('ReceiverEditForm integrations', () => {
   it('shows field-scoped Zod errors for required receiver and webhook values', async () => {
     const user = userEvent.setup();
-    render(<ReceiverEditForm existingReceivers={[]} onSave={vi.fn()} onCancel={vi.fn()} />);
+    render(<ReceiverEditForm existingReceivers={[]} onSave={rs.fn()} onCancel={rs.fn()} />);
 
     await user.click(screen.getByRole('button', { name: 'Create receiver' }));
 
@@ -22,8 +22,8 @@ describe('ReceiverEditForm integrations', () => {
     render(
       <ReceiverEditForm
         existingReceivers={[]}
-        onSave={vi.fn()}
-        onCancel={vi.fn()}
+        onSave={rs.fn()}
+        onCancel={rs.fn()}
         saveError={new Error('receiver "webhook" is invalid')}
         saveErrorTitle="Failed to update receiver"
       />
@@ -35,14 +35,14 @@ describe('ReceiverEditForm integrations', () => {
   });
 
   it('does not show a save error before anything has been submitted', () => {
-    render(<ReceiverEditForm existingReceivers={[]} onSave={vi.fn()} onCancel={vi.fn()} />);
+    render(<ReceiverEditForm existingReceivers={[]} onSave={rs.fn()} onCancel={rs.fn()} />);
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('allows removing the final integration and adding one back', async () => {
     const user = userEvent.setup();
-    render(<ReceiverEditForm existingReceivers={[]} onSave={vi.fn()} onCancel={vi.fn()} />);
+    render(<ReceiverEditForm existingReceivers={[]} onSave={rs.fn()} onCancel={rs.fn()} />);
 
     await user.click(screen.getByRole('button', { name: 'Remove integration' }));
     expect(screen.getByRole('status', { name: 'No integrations' })).toBeVisible();
@@ -53,8 +53,8 @@ describe('ReceiverEditForm integrations', () => {
 
   it('serializes webhook number input without materializing untouched HTTP defaults', async () => {
     const user = userEvent.setup();
-    const onSave = vi.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
-    render(<ReceiverEditForm existingReceivers={[]} onSave={onSave} onCancel={vi.fn()} />);
+    const onSave = rs.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
+    render(<ReceiverEditForm existingReceivers={[]} onSave={onSave} onCancel={rs.fn()} />);
 
     await user.type(screen.getByRole('textbox', { name: 'Name' }), 'webhook');
     await user.type(screen.getByRole('textbox', { name: 'URL' }), 'https://example.com/webhook');
@@ -86,7 +86,7 @@ describe('ReceiverEditForm integrations', () => {
         },
       ],
     } satisfies Receiver;
-    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={vi.fn()} onCancel={vi.fn()} />);
+    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={rs.fn()} onCancel={rs.fn()} />);
 
     await user.click(screen.getByLabelText('Use proxy from environment'));
     await user.click(screen.getByRole('button', { name: 'Update receiver' }));
@@ -105,8 +105,8 @@ describe('ReceiverEditForm integrations', () => {
         },
       ],
     } satisfies Receiver;
-    const onSave = vi.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
-    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={vi.fn()} />);
+    const onSave = rs.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
+    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={rs.fn()} />);
 
     expect(screen.getByLabelText('Credentials')).toHaveValue('legacy-token');
     expect(screen.getByLabelText('Credentials')).toHaveAttribute('type', 'password');
@@ -136,7 +136,7 @@ describe('ReceiverEditForm integrations', () => {
       name: 'pagerduty',
       pagerduty_configs: [{ routing_key: 'routing-secret' }],
     } satisfies Receiver;
-    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={vi.fn()} onCancel={vi.fn()} />);
+    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={rs.fn()} onCancel={rs.fn()} />);
 
     await user.type(screen.getByLabelText('Authorization credentials'), 'token');
     await user.type(screen.getByLabelText('Basic authentication username'), 'user');
@@ -161,8 +161,8 @@ describe('ReceiverEditForm integrations', () => {
         },
       ],
     } satisfies Receiver;
-    const onSave = vi.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
-    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={vi.fn()} />);
+    const onSave = rs.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
+    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={rs.fn()} />);
 
     expect(screen.getByLabelText('Routing key')).toHaveValue('routing-secret');
     expect(screen.getByLabelText('Routing key')).toHaveAttribute('type', 'password');
@@ -193,8 +193,8 @@ describe('ReceiverEditForm integrations', () => {
         },
       ],
     } satisfies Receiver;
-    const onSave = vi.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
-    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={vi.fn()} />);
+    const onSave = rs.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
+    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={rs.fn()} />);
 
     expect(screen.getByLabelText('Password')).toHaveValue('smtp-secret');
     expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
@@ -221,8 +221,8 @@ describe('ReceiverEditForm integrations', () => {
         },
       ],
     } satisfies Receiver;
-    const onSave = vi.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
-    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={vi.fn()} />);
+    const onSave = rs.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
+    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={rs.fn()} />);
 
     expect(screen.getByLabelText('Secret key')).toHaveValue('secret');
     expect(screen.getByLabelText('Secret key')).toHaveAttribute('type', 'password');
@@ -250,8 +250,8 @@ describe('ReceiverEditForm integrations', () => {
         },
       ],
     } satisfies Receiver;
-    const onSave = vi.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
-    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={vi.fn()} />);
+    const onSave = rs.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
+    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={rs.fn()} />);
 
     expect(screen.getByLabelText('Webhook URL')).toHaveAttribute('type', 'password');
     expect(screen.getByLabelText('Mrkdwn fields')).toHaveValue('text, pretext');
@@ -283,8 +283,8 @@ describe('ReceiverEditForm integrations', () => {
         },
       ],
     } satisfies Receiver;
-    const onSave = vi.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
-    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={vi.fn()} />);
+    const onSave = rs.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
+    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={rs.fn()} />);
 
     expect(screen.getAllByLabelText('Webhook URL')).toHaveLength(2);
     for (const webhookInput of screen.getAllByLabelText('Webhook URL')) {
@@ -322,8 +322,8 @@ describe('ReceiverEditForm integrations', () => {
       victorops_configs: [{ api_key: 'victor-secret', routing_key: 'team' }],
       telegram_configs: [{ bot_token: 'bot-secret', chat_id: -12345, parse_mode: 'HTML' }],
     } satisfies Receiver;
-    const onSave = vi.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
-    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={vi.fn()} />);
+    const onSave = rs.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
+    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={rs.fn()} />);
 
     expect(screen.getByLabelText('Bot token')).toHaveAttribute('type', 'password');
     expect(screen.getByLabelText('Chat ID')).toHaveValue('-12345');
@@ -360,8 +360,8 @@ describe('ReceiverEditForm integrations', () => {
         },
       ],
     } satisfies Receiver;
-    const onSave = vi.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
-    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={vi.fn()} />);
+    const onSave = rs.fn<(receiver: Receiver) => Promise<void>>().mockResolvedValue();
+    render(<ReceiverEditForm receiver={receiver} existingReceivers={[receiver]} onSave={onSave} onCancel={rs.fn()} />);
 
     expect(screen.getByLabelText('Password')).toHaveValue('secret');
     expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');

@@ -92,8 +92,8 @@ function renderActions(dataSourceUid: string) {
       rule={rulerRule}
       promRule={promRule}
       groupIdentifier={groupIdentifier(dataSourceUid)}
-      onDelete={vi.fn()}
-      onDuplicate={vi.fn()}
+      onDelete={rs.fn()}
+      onDuplicate={rs.fn()}
     />,
     { wrapper: createTestWrapper(dataSourceUid) }
   );

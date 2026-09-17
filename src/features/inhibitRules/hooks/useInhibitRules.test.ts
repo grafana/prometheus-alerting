@@ -1,6 +1,6 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { setDataSourceSrv } from '@grafana/runtime';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { rs, describe, it, expect, beforeEach, afterEach } from '@rstest/core';
 import { http, HttpResponse } from 'msw';
 import { YamlToParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 
@@ -13,15 +13,15 @@ import { useInhibitRules, useAddInhibitRule, useUpdateInhibitRule, useDeleteInhi
 import { AlertingPermission } from '../../../access-control/abilities';
 
 // Hoisted top-level mock — applies to all tests in this file.
-// Individual tests can override the return value with vi.mocked(...).mockReturnValueOnce().
-vi.mock('../../../hooks/useAlertmanager', () => ({
-  useAlertmanager: vi.fn(() => ({
+// Individual tests can override the return value with rs.mocked(...).mockReturnValueOnce().
+rs.mock('../../../hooks/useAlertmanager', () => ({
+  useAlertmanager: rs.fn(() => ({
     uid: 'test-mimir-uid',
     settings: { jsonData: { implementation: 'mimir' } } as any,
   })),
 }));
 
-// Import after vi.mock so we get the mocked version
+// Import after rs.mock so we get the mocked version
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 
 beforeEach(() => {
@@ -32,7 +32,7 @@ beforeEach(() => {
 afterEach(() => {
   // Restore the default Mimir implementation after each test
   // (mockReturnValueOnce in individual tests leaves the queue empty after one use)
-  vi.mocked(useAlertmanager).mockImplementation(() => ({
+  rs.mocked(useAlertmanager).mockImplementation(() => ({
     uid: 'test-mimir-uid',
     settings: { jsonData: { implementation: 'mimir' } } as any,
   }));
@@ -93,7 +93,7 @@ describe('useInhibitRules', () => {
     // Override for this test only: use vanilla Alertmanager.
     // Use mockReturnValue (not Once) so all re-renders triggered by RTK Query state
     // changes get the vanilla config. The afterEach restores the default Mimir impl.
-    vi.mocked(useAlertmanager).mockReturnValue({
+    rs.mocked(useAlertmanager).mockReturnValue({
       uid: 'alertmanager-1',
       settings: { jsonData: { implementation: 'prometheus' } } as any,
     });

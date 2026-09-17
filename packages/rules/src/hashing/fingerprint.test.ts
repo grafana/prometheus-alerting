@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@rstest/core';
 import { getPromRuleFingerprint, getRulerRuleFingerprint } from './fingerprint';
 import type { PromRuleDTO, RulerRuleDTO } from '../vanilla/api';
 

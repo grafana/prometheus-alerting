@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import { AppRootProps, PluginType } from '@grafana/data';
 import { render, screen, waitFor } from '@testing-library/react';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import { config, setDataSourceSrv } from '@grafana/runtime';
 
@@ -11,17 +11,17 @@ import { createTestWrapper, TestMemoryRouter } from '../../test/utils/test-wrapp
 import { createMockDataSourceSrv, setMockGrafanaDataSources } from '../../test/mocks/grafana-runtime';
 import { ROUTES } from '../../constants';
 
-vi.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
+rs.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
   AlertmanagerPicker: () => <div data-testid="alertmanager-picker" />,
 }));
 
-vi.mock('@grafana/runtime');
+rs.mock('@grafana/runtime');
 
 describe('Components/App', () => {
   let props: AppRootProps;
 
   beforeEach(() => {
-    vi.resetAllMocks();
+    rs.resetAllMocks();
     setMockGrafanaDataSources();
     setDataSourceSrv(createMockDataSourceSrv());
 
@@ -36,7 +36,7 @@ describe('Components/App', () => {
       },
       query: {},
       path: '',
-      onNavChanged: vi.fn(),
+      onNavChanged: rs.fn(),
     } as unknown as AppRootProps;
   });
 

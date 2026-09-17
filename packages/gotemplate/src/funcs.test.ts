@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 import { readOracle } from './corpus.test-helpers';
 import { KNOWN_TEMPLATE_FUNCS } from './funcs';
 

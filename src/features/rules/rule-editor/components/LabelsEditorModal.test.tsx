@@ -6,7 +6,7 @@ import { KVObject } from '../types';
 import { LabelsEditorModal } from './LabelsEditorModal';
 
 function renderModal(initialLabels: KVObject[]) {
-  const onSave = vi.fn();
+  const onSave = rs.fn();
 
   render(<LabelsEditorModal isOpen onClose={() => {}} onSave={onSave} initialLabels={initialLabels} />);
 

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@rstest/core';
 
 import { createRulePositionHash, getMatchingRulerRule, getMatchingPromRule } from './matching';
 import { RulerRuleDTOSchema, type PromRuleDTO, type RulerRuleDTO } from './vanilla/api';

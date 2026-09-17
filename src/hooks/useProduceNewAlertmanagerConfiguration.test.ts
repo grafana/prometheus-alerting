@@ -1,6 +1,6 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { setDataSourceSrv } from '@grafana/runtime';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { rs, describe, it, expect, beforeEach } from '@rstest/core';
 import { http, HttpResponse } from 'msw';
 
 import {
@@ -35,7 +35,7 @@ describe('useProduceNewAlertmanagerConfiguration', () => {
     setMockGrafanaDataSources();
     setDataSourceSrv(createMockDataSourceSrv());
     setCurrentUserPermissions(AlertingPermission.NotificationsWrite);
-    vi.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   it('rejects before fetching configuration when notification write permission is missing', async () => {
