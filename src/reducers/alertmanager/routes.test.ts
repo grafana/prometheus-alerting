@@ -1,12 +1,11 @@
 import { produce } from 'immer';
 
 import { addRouteAction, deleteRouteAction, routesReducer, updateRouteAction } from './routes';
-import { Route } from '@grafana/external-alertmanager/vanilla';
+import { Route, RouteWithID } from '@grafana/external-alertmanager/vanilla';
 import {
   initialAlertmanagerConfiguration,
   PostableParsedUserConfiguration,
   PostableParsedUserConfigurationSchema,
-  RouteWithID,
 } from '@grafana/external-alertmanager/mimir';
 import { attachRouteIds } from '../../features/routes/utils';
 

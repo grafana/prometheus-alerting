@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
+import { RouteWithID } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 
 import { useAppNotifications } from '../../../hooks/useAppNotifications';

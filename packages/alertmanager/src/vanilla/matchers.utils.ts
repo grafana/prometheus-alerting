@@ -39,30 +39,17 @@ export const emptyMatcherFieldValue: MatcherFieldValue = {
  * We need to deal with multiple (deprecated) properties such as "match" and "match_re"
  * this function will normalize all of the different ways to define matchers in to a single one.
  */
-export const normalizeMatchers = (route: Route): ObjectMatcher[] => {
-  let routeMatchers: ObjectMatcher[] = [];
+export function normalizeMatchers(route: Route): ObjectMatcher[] {
+  const currentMatchers = (route.matchers ?? []).flatMap(parseObjectMatcherExpression);
+  const deprecatedRegexMatchers = Object.entries(route.match_re ?? {}).map(
+    ([name, value]): ObjectMatcher => [name, '=~', value]
+  );
+  const deprecatedEqualityMatchers = Object.entries(route.match ?? {}).map(
+    ([name, value]): ObjectMatcher => [name, '=', value]
+  );
 
-  if (route.matchers) {
-    route.matchers.forEach((matcher) => {
-      const parsedMatchers = parseMatcherToArray(matcher).map(matcherToObjectMatcher);
-      routeMatchers = routeMatchers.concat(parsedMatchers);
-    });
-  }
-
-  if (route.match_re) {
-    Object.entries(route.match_re).forEach(([label, value]) => {
-      routeMatchers.push([label, '=~', value]);
-    });
-  }
-
-  if (route.match) {
-    Object.entries(route.match).forEach(([label, value]) => {
-      routeMatchers.push([label, '=', value]);
-    });
-  }
-
-  return routeMatchers;
-};
+  return [...currentMatchers, ...deprecatedRegexMatchers, ...deprecatedEqualityMatchers];
+}
 
 export function matcherToObjectMatcher(matcher: Matcher): ObjectMatcher {
   const operator = matcherToOperator(matcher);
@@ -129,7 +116,7 @@ export function parseMatcher(matcher: string): Matcher {
   }
   const [operator, idx] = operatorsFound[0];
   const name = matcher.slice(0, idx).trim();
-  const value = matcher.slice(idx + operator.length);
+  const value = matcher.slice(idx + operator.length).trim();
   if (!name) {
     throw new Error(`Invalid matcher: ${matcher}`);
   }

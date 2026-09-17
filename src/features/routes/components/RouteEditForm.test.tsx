@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
-import type { ParsedUserConfiguration, RouteWithID } from '@grafana/external-alertmanager/mimir';
+import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
+import type { RouteWithID } from '@grafana/external-alertmanager/vanilla';
 import { setDataSourceSrv } from '@grafana/runtime';
 
 import { mockMimirAlertmanagerDs } from '../../../test/fixtures/datasources';

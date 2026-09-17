@@ -4,13 +4,12 @@ import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { produce } from 'immer';
 
 import { GrafanaTheme2 } from '@grafana/data';
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { Trans, t } from '@grafana/i18n';
 import { Badge, Button, ComboboxOption, Field, Input, MultiCombobox, Stack, Switch, useStyles2 } from '@grafana/ui';
 
 import { useTimeIntervals } from '../../timeIntervals/hooks/useTimeIntervals';
 import { MatcherFieldArray, MatcherOperatorSelect } from '../../../components/MatcherFieldArray';
-import { emptyMatcherFieldValue } from '@grafana/external-alertmanager/vanilla';
+import { emptyMatcherFieldValue, RouteWithID } from '@grafana/external-alertmanager/vanilla';
 import { FormAmRoute, commonGroupByOptions } from '../types';
 import { amRouteToFormAmRoute, isValidPromDuration } from '../utils/routeTransform';
 import { invalidDurationMessage } from '../../../utils/time.utils';

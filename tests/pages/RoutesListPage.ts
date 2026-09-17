@@ -98,6 +98,11 @@ export class RoutesListPage extends AlertmanagerPage {
     return this.childRoutes.filter({ hasText: text });
   }
 
+  /** The instance count metadata rendered on a route card. */
+  matchingInstances(route: Locator): Locator {
+    return route.getByTestId('matching-instances');
+  }
+
   /** Open a route's drawer by clicking its card. */
   async openRoute(routeLocator: Locator) {
     await routeLocator.click();

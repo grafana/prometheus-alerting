@@ -1,5 +1,4 @@
-import { Route } from '@grafana/external-alertmanager/vanilla';
-import { RouteWithID, addUniqueIdentifierToRoute } from '@grafana/external-alertmanager/mimir';
+import { Route, RouteWithID, addUniqueIdentifierToRoute } from '@grafana/external-alertmanager/vanilla';
 
 /**
  * Recursively defaults fields whose presence/absence would otherwise change the
