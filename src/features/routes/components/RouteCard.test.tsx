@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
+import { RouteWithID } from '@grafana/external-alertmanager/vanilla';
 
 // @grafana/ui/unstable's barrel also pulls in the Table/TableNG module tree (an unrelated
 // "unstable" export from the same file), which needs the `uwrap` package. Skip that whole

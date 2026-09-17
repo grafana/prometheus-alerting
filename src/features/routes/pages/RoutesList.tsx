@@ -10,19 +10,18 @@ import { t } from '@grafana/i18n';
 import { computeInheritedTree } from '@grafana/alerting';
 import { RouteCard, RouteCardActions } from '../components/RouteCard';
 import { AlertmanagerError } from '../../../components/AlertmanagerError';
-import { Receiver } from '@grafana/external-alertmanager/vanilla';
-import { findExistingRoute, type RouteWithID } from '@grafana/external-alertmanager/mimir';
+import { Receiver, type RouteWithID } from '@grafana/external-alertmanager/vanilla';
+import { findExistingRoute } from '@grafana/external-alertmanager/mimir';
 import { RouteViewDrawer } from '../components/RouteViewDrawer';
 import { RouteEditDrawer } from '../components/RouteEditDrawer';
 import { ReceiverDrawer } from '../../receivers/components/ReceiverDrawer';
 import { useReceivers } from '../../receivers/hooks/useReceivers';
 import { useAlertGroups } from '../hooks/useAlertGroups';
-import { useRouteMatching } from '../hooks/useRouteMatching';
+import { getRouteMatchCount, useRouteMatching } from '../hooks/useRouteMatching';
 import { useDeleteRoute } from '../hooks/useDeleteRoute';
 import { useRouteDrawer } from '../hooks/useRouteDrawer';
 import { useRouteAbilities } from '../hooks/useRouteAbilities';
 import { attachRouteIds, isRootRoute } from '../utils';
-import { getRouteMatchCount } from '../utils/routeMatching';
 import { InsertPosition } from '../types';
 
 function RoutesPage() {
@@ -51,7 +50,7 @@ function RoutesPage() {
   const routeWithIds = useMemo(() => (route ? attachRouteIds(route) : undefined), [route]);
   const routeTree = useMemo(() => (routeWithIds ? computeInheritedTree(routeWithIds) : undefined), [routeWithIds]);
 
-  const matchingCounts = useRouteMatching(routeTree, alertGroups);
+  const { counts: matchingCounts } = useRouteMatching(routeTree, alertGroups);
   const canShowMatchingCounts = canViewInstances && !isLoadingAlerts && !alertGroupsError;
 
   // Find the selected receiver

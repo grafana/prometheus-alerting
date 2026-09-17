@@ -1,14 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import type { Route } from '@grafana/external-alertmanager/vanilla';
+import { addUniqueIdentifierToRoute, type Route, type RouteWithID } from '@grafana/external-alertmanager/vanilla';
 import {
   addRouteToReferenceRoute,
-  addUniqueIdentifierToRoute,
   cleanRouteIDs,
   findExistingRoute,
   mergePartialRouteWithRouteTree,
   omitRouteFromRouteTree,
   renameReceiverInRoute,
-  type RouteWithID,
 } from './routes.utils';
 import { ERROR_NEWER_CONFIGURATION } from './constants';
 

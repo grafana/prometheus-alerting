@@ -1,6 +1,6 @@
 import { useReducer } from 'react';
 
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
+import { RouteWithID } from '@grafana/external-alertmanager/vanilla';
 
 import { InsertPosition } from '../types';
 
