@@ -1,7 +1,7 @@
-import { Route } from '@grafana/external-alertmanager/vanilla';
+import { Route, type MatcherFieldValue } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
-import { FormAmRoute, MatcherFieldValue, MatcherOperator, emptyRoute } from '../types';
 import { isValidPrometheusDuration } from '../../../utils/time.utils';
+import { type FormAmRoute, emptyRoute } from '../types';
 
 /**
  * Parse a matcher string like "severity=critical" or "team=~platform.*"
@@ -10,23 +10,15 @@ function parseMatcherString(matcher: string): MatcherFieldValue {
   const match = matcher.match(/^([^=!~]+)(=~|!~|=|!=)(.*)$/);
   if (match) {
     const [, name, op, value] = match;
-    let operator: MatcherOperator;
     switch (op) {
       case '=~':
-        operator = MatcherOperator.regex;
-        break;
       case '!~':
-        operator = MatcherOperator.notRegex;
-        break;
       case '!=':
-        operator = MatcherOperator.notEqual;
-        break;
-      default:
-        operator = MatcherOperator.equal;
+      case '=':
+        return { name, operator: op, value };
     }
-    return { name, operator, value };
   }
-  return { name: matcher, operator: MatcherOperator.equal, value: '' };
+  return { name: matcher, operator: '=', value: '' };
 }
 
 /**

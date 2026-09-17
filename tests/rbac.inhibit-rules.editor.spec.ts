@@ -5,8 +5,8 @@ test.describe('Inhibit rules RBAC - editor', () => {
     await inhibitRulesPage.gotoWithAlertmanager(mimirAlertmanager.uid);
     await inhibitRulesPage.openCreateDrawer();
     await inhibitRulesPage.fillForm({
-      source: 'alertname = RBACEditorSource',
-      target: 'severity = warning',
+      source: [{ label: 'alertname', value: 'RBACEditorSource' }],
+      target: [{ label: 'severity', value: 'warning' }],
       equal: 'instance',
     });
     await inhibitRulesPage.submitCreate();
@@ -14,7 +14,7 @@ test.describe('Inhibit rules RBAC - editor', () => {
     await expect(inhibitRulesPage.table.getByText(/alertname\s*=\s*RBACEditorSource/i)).toBeVisible();
     await inhibitRulesPage.openRuleByText(/alertname\s*=\s*RBACEditorSource/i);
     await inhibitRulesPage.startEdit();
-    await inhibitRulesPage.fillForm({ target: 'severity = info' });
+    await inhibitRulesPage.fillForm({ target: [{ label: 'severity', value: 'info' }] });
     await inhibitRulesPage.submitUpdate();
 
     await expect(inhibitRulesPage.table.getByText(/severity\s*=\s*info/i)).toBeVisible();

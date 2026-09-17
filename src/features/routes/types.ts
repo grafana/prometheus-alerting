@@ -1,22 +1,4 @@
-/**
- * Matcher operator types for label matching
- * These match the operators used in Alertmanager routing matchers
- */
-export enum MatcherOperator {
-  equal = '=',
-  notEqual = '!=',
-  regex = '=~',
-  notRegex = '!~',
-}
-
-/**
- * Matcher field value for forms
- */
-export interface MatcherFieldValue {
-  name: string;
-  value: string;
-  operator: MatcherOperator;
-}
+import type { MatcherFieldValue } from '@grafana/external-alertmanager/vanilla';
 
 /**
  * Form representation of a route for editing
@@ -36,15 +18,6 @@ export interface FormAmRoute {
   activeTimeIntervals: string[];
   routes: FormAmRoute[];
 }
-
-/**
- * Empty matcher for form field arrays
- */
-export const emptyArrayFieldMatcher: MatcherFieldValue = {
-  name: '',
-  value: '',
-  operator: MatcherOperator.equal,
-};
 
 /**
  * Common group by options for multiselect.

@@ -97,6 +97,16 @@ test.describe('Routes', () => {
       await expect(routesListPage.getChildRoute(/severity\s*=\s*warning/)).toBeVisible();
     });
 
+    test('adds a child route with a non-default matcher operator', async ({ routesListPage }) => {
+      await routesListPage.startAddChildRouteFromRoot();
+      await routesListPage.addMatcher({ label: 'severity', operator: '!=', value: 'warning' });
+      await routesListPage.selectReceiver('empty-default-receiver');
+      await routesListPage.submitSave();
+
+      await expect(routesListPage.routeDrawer).toBeHidden();
+      await expect(routesListPage.getChildRoute(/severity\s*!=\s*warning/)).toBeVisible();
+    });
+
     test('edits a route', async ({ routesListPage }) => {
       await routesListPage.startAddChildRouteFromRoot();
       await routesListPage.addMatcher({ label: 'severity', value: 'warning' });

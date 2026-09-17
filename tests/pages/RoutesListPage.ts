@@ -1,6 +1,7 @@
 import { Locator, expect } from '@playwright/test';
+import type { MatcherOperator } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from './AlertmanagerPage';
-import { MatcherOperator } from '../../src/features/routes/types';
+import { matcherOperatorOptionNames } from './matcherOperatorOptionNames';
 
 /**
  * Page object for the Routes / notification tree view (`/routes`).
@@ -181,7 +182,7 @@ export class RoutesListPage extends AlertmanagerPage {
     await this.matcherLabelInput(index).fill(params.label);
     if (params.operator !== undefined) {
       await this.matcherOperatorCombobox(index).click();
-      await this.page.getByRole('option', { name: params.operator, exact: true }).click();
+      await this.page.getByRole('option', { name: matcherOperatorOptionNames[params.operator], exact: true }).click();
     }
     await this.matcherValueInput(index).fill(params.value);
   }

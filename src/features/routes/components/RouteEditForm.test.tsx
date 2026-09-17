@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
@@ -11,6 +11,7 @@ import { setMimirAlertmanagerConfig } from '../../../test/handlers/mimir-alertma
 import { createMockDataSourceSrv, setMockGrafanaDataSources } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 import { RouteEditForm } from './RouteEditForm';
+import { type FormAmRoute } from '../types';
 
 const config: ParsedUserConfiguration = {
   template_files: {},
@@ -52,13 +53,75 @@ const ui = {
   },
 };
 
-function renderForm(route: RouteWithID, onSubmit = vi.fn(), isRoot = false) {
-  render(<RouteEditForm route={route} onSubmit={onSubmit} onCancel={vi.fn()} isRoot={isRoot} />, {
+function renderForm(route: RouteWithID, isRoot = false) {
+  let resolveSubmission: (data: Partial<FormAmRoute>) => void = () => undefined;
+  const submission = new Promise<Partial<FormAmRoute>>((resolve) => {
+    resolveSubmission = resolve;
+  });
+
+  render(<RouteEditForm route={route} onSubmit={resolveSubmission} onCancel={vi.fn()} isRoot={isRoot} />, {
     wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
   });
 
-  return { onSubmit };
+  return { submission };
 }
+
+describe('RouteEditForm matcher fields', () => {
+  beforeEach(() => {
+    setMockGrafanaDataSources();
+    setDataSourceSrv(createMockDataSourceSrv());
+    setMimirAlertmanagerConfig(config);
+  });
+
+  it('preserves existing matchers and adds another matcher', async () => {
+    const user = userEvent.setup();
+    const { submission } = renderForm({ id: 'route-1', receiver: 'default', matchers: ['severity=critical'] });
+
+    expect(screen.getByRole('textbox', { name: 'Label' })).toHaveValue('severity');
+    expect(screen.getByRole('textbox', { name: 'Value' })).toHaveValue('critical');
+    expect(screen.getByRole('textbox', { name: 'Value' }).tagName).toBe('INPUT');
+
+    await user.click(screen.getByRole('button', { name: 'Add matcher' }));
+    const labels = screen.getAllByRole('textbox', { name: 'Label' });
+    const values = screen.getAllByRole('textbox', { name: 'Value' });
+    await user.type(labels[1], 'team');
+    await user.type(values[1], 'platform');
+    await user.click(ui.saveButton.get());
+
+    expect((await submission).object_matchers).toEqual([
+      { name: 'severity', operator: '=', value: 'critical' },
+      { name: 'team', operator: '=', value: 'platform' },
+    ]);
+  });
+
+  it('retains a non-equality operator around a removed middle matcher', async () => {
+    const user = userEvent.setup();
+    const { submission } = renderForm({
+      id: 'route-1',
+      receiver: 'default',
+      matchers: ['first=one', 'middle=two', 'last=~three'],
+    });
+    await user.click(screen.getAllByRole('button', { name: 'Remove matcher' })[1]);
+    await user.click(ui.saveButton.get());
+
+    expect((await submission).object_matchers).toEqual([
+      { name: 'first', operator: '=', value: 'one' },
+      { name: 'last', operator: '=~', value: 'three' },
+    ]);
+  });
+
+  it('allows all route matchers to be removed', async () => {
+    const user = userEvent.setup();
+    renderForm({ id: 'route-1', receiver: 'default', matchers: ['severity=critical'] });
+
+    await user.click(screen.getByRole('button', { name: 'Remove matcher' }));
+
+    expect(screen.queryByRole('textbox', { name: 'Label' })).not.toBeInTheDocument();
+    expect(
+      screen.getByText('If no matchers are specified, this route will handle all alert instances.')
+    ).toBeInTheDocument();
+  });
+});
 
 describe('RouteEditForm timing fields', () => {
   beforeEach(() => {
@@ -69,14 +132,13 @@ describe('RouteEditForm timing fields', () => {
 
   it('hides timing selectors and omits timing values when submitting the root route', async () => {
     const user = userEvent.setup();
-    const { onSubmit } = renderForm(
+    const { submission } = renderForm(
       {
         id: 'root-route',
         receiver: 'default',
         active_time_intervals: ['business-hours'],
         mute_time_intervals: ['holidays'],
       },
-      vi.fn(),
       true
     );
 
@@ -86,9 +148,7 @@ describe('RouteEditForm timing fields', () => {
 
     await user.click(ui.saveButton.get());
 
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
-
-    const submittedValues = onSubmit.mock.calls[0][0];
+    const submittedValues = await submission;
     expect(submittedValues).not.toHaveProperty('muteTimeIntervals');
     expect(submittedValues).not.toHaveProperty('activeTimeIntervals');
   });
@@ -129,7 +189,7 @@ describe('RouteEditForm timing fields', () => {
 
   it('submits selected active and mute timing names', async () => {
     const user = userEvent.setup();
-    const { onSubmit } = renderForm({
+    const { submission } = renderForm({
       id: 'route-1',
       receiver: 'default',
       active_time_intervals: ['business-hours'],
@@ -143,19 +203,15 @@ describe('RouteEditForm timing fields', () => {
 
     await user.click(ui.saveButton.get());
 
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          muteTimeIntervals: ['holidays'],
-          activeTimeIntervals: ['business-hours'],
-        })
-      );
+    expect(await submission).toMatchObject({
+      muteTimeIntervals: ['holidays'],
+      activeTimeIntervals: ['business-hours'],
     });
   });
 
   it('does not create arbitrary timing names', async () => {
     const user = userEvent.setup();
-    const { onSubmit } = renderForm({
+    const { submission } = renderForm({
       id: 'route-1',
       receiver: 'default',
       active_time_intervals: ['business-hours'],
@@ -169,12 +225,6 @@ describe('RouteEditForm timing fields', () => {
     await user.keyboard('{Enter}');
     await user.click(ui.saveButton.get());
 
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          muteTimeIntervals: [],
-        })
-      );
-    });
+    expect((await submission).muteTimeIntervals).toEqual([]);
   });
 });

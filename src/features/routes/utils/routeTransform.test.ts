@@ -1,7 +1,7 @@
 import { Route } from '@grafana/external-alertmanager/vanilla';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 
-import { MatcherOperator, FormAmRoute } from '../types';
+import type { FormAmRoute } from '../types';
 import { amRouteToFormAmRoute, formAmRouteToAmRoute, isValidPromDuration } from './routeTransform';
 
 describe('amRouteToFormAmRoute', () => {
@@ -36,29 +36,25 @@ describe('amRouteToFormAmRoute', () => {
     expect(result.repeatIntervalValue).toBe('4h');
   });
 
-  it('parses matchers from string format', () => {
+  it('parses every matcher operator from string format', () => {
     const route: Route = {
-      matchers: ['severity=critical', 'team!=backend', 'region=~us-.*'],
+      matchers: ['severity=critical', 'team!=backend', 'region=~us-.*', 'service!~internal-.*'],
     };
 
     const result = amRouteToFormAmRoute(route);
 
-    expect(result.object_matchers).toHaveLength(3);
-    expect(result.object_matchers[0]).toEqual({
-      name: 'severity',
-      operator: MatcherOperator.equal,
-      value: 'critical',
-    });
-    expect(result.object_matchers[1]).toEqual({
-      name: 'team',
-      operator: MatcherOperator.notEqual,
-      value: 'backend',
-    });
-    expect(result.object_matchers[2]).toEqual({
-      name: 'region',
-      operator: MatcherOperator.regex,
-      value: 'us-.*',
-    });
+    expect(result.object_matchers).toEqual([
+      { name: 'severity', operator: '=', value: 'critical' },
+      { name: 'team', operator: '!=', value: 'backend' },
+      { name: 'region', operator: '=~', value: 'us-.*' },
+      { name: 'service', operator: '!~', value: 'internal-.*' },
+    ]);
+  });
+
+  it('retains malformed matcher text as the name with equality defaults', () => {
+    const result = amRouteToFormAmRoute({ matchers: ['missing-operator'] });
+
+    expect(result.object_matchers).toEqual([{ name: 'missing-operator', operator: '=', value: '' }]);
   });
 
   it('preserves route ID from RouteWithID', () => {
@@ -142,8 +138,8 @@ describe('formAmRouteToAmRoute', () => {
   it('converts matchers to string format', () => {
     const form: Partial<FormAmRoute> = {
       object_matchers: [
-        { name: 'severity', operator: MatcherOperator.equal, value: 'critical' },
-        { name: 'team', operator: MatcherOperator.regex, value: 'platform.*' },
+        { name: 'severity', operator: '=', value: 'critical' },
+        { name: 'team', operator: '=~', value: 'platform.*' },
       ],
     };
 
@@ -155,8 +151,8 @@ describe('formAmRouteToAmRoute', () => {
   it('filters out matchers without a name', () => {
     const form: Partial<FormAmRoute> = {
       object_matchers: [
-        { name: 'valid', operator: MatcherOperator.equal, value: 'yes' },
-        { name: '', operator: MatcherOperator.equal, value: 'ignored' },
+        { name: 'valid', operator: '=', value: 'yes' },
+        { name: '', operator: '=', value: 'ignored' },
       ],
     };
 

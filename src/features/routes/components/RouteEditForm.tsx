@@ -6,33 +6,16 @@ import { produce } from 'immer';
 import { GrafanaTheme2 } from '@grafana/data';
 import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { Trans, t } from '@grafana/i18n';
-import {
-  Badge,
-  Button,
-  Combobox,
-  ComboboxOption,
-  Field,
-  IconButton,
-  Input,
-  MultiCombobox,
-  Stack,
-  Switch,
-  useStyles2,
-} from '@grafana/ui';
+import { Badge, Button, ComboboxOption, Field, Input, MultiCombobox, Stack, Switch, useStyles2 } from '@grafana/ui';
 
 import { useTimeIntervals } from '../../timeIntervals/hooks/useTimeIntervals';
-import { FormAmRoute, MatcherOperator, commonGroupByOptions, emptyArrayFieldMatcher } from '../types';
+import { MatcherFieldArray, MatcherOperatorSelect } from '../../../components/MatcherFieldArray';
+import { emptyMatcherFieldValue } from '@grafana/external-alertmanager/vanilla';
+import { FormAmRoute, commonGroupByOptions } from '../types';
 import { amRouteToFormAmRoute, isValidPromDuration } from '../utils/routeTransform';
 import { invalidDurationMessage } from '../../../utils/time.utils';
 import { ReceiverSelector } from './ReceiverSelector';
 import { RouteTimingSummary } from './RouteTimingSummary';
-
-const matcherOperatorOptions: Array<ComboboxOption<MatcherOperator>> = [
-  { label: '=', value: MatcherOperator.equal },
-  { label: '!=', value: MatcherOperator.notEqual },
-  { label: '=~', value: MatcherOperator.regex },
-  { label: '!~', value: MatcherOperator.notRegex },
-];
 
 export interface RouteEditFormProps {
   route: RouteWithID;
@@ -61,11 +44,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
     defaultValues: formAmRoute,
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'object_matchers',
-  });
-
+  const matcherFields = useFieldArray({ control, name: 'object_matchers' });
   const overrideGrouping = useWatch({ control, name: 'overrideGrouping' });
   const overrideTimings = useWatch({ control, name: 'overrideTimings' });
   const muteTimeIntervalNames = useWatch({ control, name: 'muteTimeIntervals' }) ?? [];
@@ -95,7 +74,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
             <Trans i18nKey="routes.edit.matching-labels">Matching labels</Trans>
           </div>
 
-          {fields.length === 0 && (
+          {matcherFields.fields.length === 0 && (
             <Badge
               color="orange"
               className={styles.noMatchersWarning}
@@ -107,73 +86,32 @@ export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSub
             />
           )}
 
-          {fields.length > 0 && (
-            <div className={styles.matchersContainer}>
-              {fields.map((field, index) => (
-                <Stack direction="row" key={field.id} alignItems="center" gap={1}>
-                  <Field
-                    label={t('routes.edit.label', 'Label')}
-                    invalid={!!errors.object_matchers?.[index]?.name}
-                    error={errors.object_matchers?.[index]?.name?.message}
-                  >
-                    <Input
-                      {...register(`object_matchers.${index}.name`, {
-                        required: t('routes.edit.field-required', 'Required'),
-                      })}
-                      placeholder={t('routes.edit.label-placeholder', 'label')}
-                    />
-                  </Field>
-
-                  <Field label={t('routes.edit.operator', 'Operator')}>
-                    <Controller
-                      render={({ field: { onChange, value } }) => {
-                        const selectedOption = matcherOperatorOptions.find((opt) => opt.value === value);
-                        return (
-                          <Combobox
-                            value={selectedOption}
-                            options={matcherOperatorOptions}
-                            onChange={(option) => onChange(option?.value)}
-                            width={12}
-                          />
-                        );
-                      }}
-                      control={control}
-                      name={`object_matchers.${index}.operator`}
-                    />
-                  </Field>
-
-                  <Field
-                    label={t('routes.edit.value', 'Value')}
-                    invalid={!!errors.object_matchers?.[index]?.value}
-                    error={errors.object_matchers?.[index]?.value?.message}
-                  >
-                    <Input
-                      {...register(`object_matchers.${index}.value`)}
-                      placeholder={t('routes.edit.value-placeholder', 'value')}
-                    />
-                  </Field>
-
-                  <IconButton
-                    tooltip={t('routes.edit.remove-matcher', 'Remove matcher')}
-                    name="trash-alt"
-                    onClick={() => remove(index)}
-                    aria-label={t('routes.edit.remove-matcher', 'Remove matcher')}
-                  />
-                </Stack>
-              ))}
-            </div>
-          )}
-
-          <Button
-            className={styles.addMatcherBtn}
-            icon="plus"
-            onClick={() => append(emptyArrayFieldMatcher)}
-            variant="secondary"
-            type="button"
-            size="sm"
-          >
-            <Trans i18nKey="routes.edit.add-matcher">Add matcher</Trans>
-          </Button>
+          <MatcherFieldArray
+            rows={matcherFields.fields.map((field, index) => ({
+              id: field.id,
+              labelInput: register(`object_matchers.${index}.name`, {
+                required: t('matcher-field-array.required', 'Required'),
+              }),
+              operatorControl: (
+                <Controller
+                  control={control}
+                  name={`object_matchers.${index}.operator`}
+                  render={({ field: { onChange, value } }) => (
+                    <MatcherOperatorSelect value={value} onChange={onChange} />
+                  )}
+                />
+              ),
+              valueInput: register(`object_matchers.${index}.value`),
+              labelError: errors.object_matchers?.[index]?.name?.message,
+              valueError: errors.object_matchers?.[index]?.value?.message,
+            }))}
+            onAdd={() => matcherFields.append(emptyMatcherFieldValue)}
+            onRemove={matcherFields.remove}
+            labels={{
+              addMatcher: t('routes.edit.add-matcher', 'Add matcher'),
+              removeMatcher: t('routes.edit.remove-matcher', 'Remove matcher'),
+            }}
+          />
         </div>
 
         {/* Receiver */}
@@ -374,18 +312,8 @@ const getStyles = (theme: GrafanaTheme2) => ({
     fontWeight: theme.typography.fontWeightMedium,
     marginBottom: theme.spacing(1),
   }),
-  matchersContainer: css({
-    backgroundColor: theme.colors.background.secondary,
-    padding: theme.spacing(1.5, 2),
-    paddingBottom: 0,
-    marginBottom: theme.spacing(1),
-    borderRadius: theme.shape.radius.default,
-  }),
   noMatchersWarning: css({
     padding: theme.spacing(1, 2),
     marginBottom: theme.spacing(1),
-  }),
-  addMatcherBtn: css({
-    marginBottom: theme.spacing(2),
   }),
 });
