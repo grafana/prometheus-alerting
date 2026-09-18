@@ -1,5 +1,4 @@
-import type { RouteWithID } from '@grafana/external-alertmanager/mimir';
-import type { AlertGroup, Route } from '@grafana/external-alertmanager/vanilla';
+import type { AlertGroup, Route, RouteWithID } from '@grafana/external-alertmanager/vanilla';
 
 import { AlertGroupFactory, GettableAlertFactory } from '../../alerts/mocks/alerts.fakes';
 import { attachRouteIds } from '../utils';

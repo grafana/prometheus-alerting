@@ -1,6 +1,6 @@
 import { bench, describe } from 'vitest';
 
-import { countRouteMatches } from './routeMatching';
+import { countRouteMatches } from './routeMatchingTest.utils';
 import {
   buildBalancedWorkload,
   buildMixedWorkload,

@@ -1,13 +1,13 @@
 import { findMatchingRoutes, type LabelMatcher, type RouteWithID as GrafanaRouteWithID } from '@grafana/alerting';
-import type { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import {
   AlertGroupsSchema,
   normalizeMatchers,
   ParsedAlertmanagerConfigSchema,
+  type RouteWithID,
 } from '@grafana/external-alertmanager/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { countRouteMatches } from './routeMatching';
+import { countRouteMatches } from './routeMatchingTest.utils';
 import {
   buildProductPlatformWorkload,
   buildLargePlatformWorkload,

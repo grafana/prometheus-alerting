@@ -1,6 +1,6 @@
 import { bench, describe, expect } from 'vitest';
 
-import { countRouteMatches } from './routeMatching';
+import { countRouteMatches } from './routeMatchingTest.utils';
 import { buildLargePlatformWorkload } from './routeMatchingRealistic.fixtures';
 
 const policyCounts = [100, 500, 2_000];

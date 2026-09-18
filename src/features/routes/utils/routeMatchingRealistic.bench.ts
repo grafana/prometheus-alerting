@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { bench, describe, expect } from 'vitest';
 
-import { countRouteMatches } from './routeMatching';
+import { countRouteMatches } from './routeMatchingTest.utils';
 import { buildRealisticRouteMatchingWorkloads } from './routeMatchingRealistic.fixtures';
 
 // Optional, inspectable API-shaped snapshots; receiver stubs never send notifications.

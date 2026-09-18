@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { countRouteMatches } from './routeMatching';
+import { countRouteMatches } from './routeMatchingTest.utils';
 import {
   buildBalancedWorkload,
   buildDistinctLabelWorkload,

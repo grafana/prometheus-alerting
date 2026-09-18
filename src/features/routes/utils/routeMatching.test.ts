@@ -1,11 +1,17 @@
 import { findMatchingRoutes, type LabelMatcher, type RouteWithID as GrafanaRouteWithID } from '@grafana/alerting';
-import type { RouteWithID as AlertmanagerRouteWithID } from '@grafana/external-alertmanager/mimir';
-import { normalizeMatchers, type AlertGroup, type ObjectMatcher } from '@grafana/external-alertmanager/vanilla';
+import {
+  matchAlertsToRoutes,
+  normalizeMatchers,
+  type AlertGroup,
+  type ObjectMatcher,
+  type RouteMatches,
+  type RouteWithID as AlertmanagerRouteWithID,
+} from '@grafana/external-alertmanager/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { AlertGroupFactory, GettableAlertFactory } from '../../alerts/mocks/alerts.fakes';
 import { attachRouteIds } from '../utils';
-import { countRouteMatches } from './routeMatching';
+import { countRouteMatches } from './routeMatchingTest.utils';
 
 type ReferenceRoute = Omit<GrafanaRouteWithID, 'routes'> & {
   continue: boolean;
@@ -26,11 +32,11 @@ function toLabelMatcher([label, type, value]: ObjectMatcher): LabelMatcher {
   return { label, type, value };
 }
 
-function countRouteMatchesReference(
+function matchAlertsToRoutesReference(
   routeTree: AlertmanagerRouteWithID | undefined,
   alertGroups: AlertGroup[]
-): Map<string, number> {
-  const counts = new Map<string, number>();
+): RouteMatches {
+  const counts: RouteMatches = new Map();
   if (!routeTree || alertGroups.length === 0) {
     return counts;
   }
@@ -44,7 +50,9 @@ function countRouteMatchesReference(
       }
       seenFingerprints.add(alert.fingerprint);
       for (const match of findMatchingRoutes(matchingTree, Object.entries(alert.labels))) {
-        counts.set(match.route.id, (counts.get(match.route.id) ?? 0) + 1);
+        const alerts = counts.get(match.route.id) ?? [];
+        alerts.push(alert);
+        counts.set(match.route.id, alerts);
       }
     }
   }
@@ -54,16 +62,16 @@ function countRouteMatchesReference(
 function expectEquivalent(routeTree: AlertmanagerRouteWithID | undefined, alertGroups: AlertGroup[]): void {
   let actualError: unknown;
   let referenceError: unknown;
-  let actual: Map<string, number> | undefined;
-  let reference: Map<string, number> | undefined;
+  let actual: RouteMatches | undefined;
+  let reference: RouteMatches | undefined;
 
   try {
-    actual = countRouteMatches(routeTree, alertGroups);
+    actual = matchAlertsToRoutes(routeTree, alertGroups);
   } catch (error) {
     actualError = error;
   }
   try {
-    reference = countRouteMatchesReference(routeTree, alertGroups);
+    reference = matchAlertsToRoutesReference(routeTree, alertGroups);
   } catch (error) {
     referenceError = error;
   }
@@ -74,6 +82,9 @@ function expectEquivalent(routeTree: AlertmanagerRouteWithID | undefined, alertG
   expect(actual ? Array.from(actual.entries()) : actual).toEqual(
     reference ? Array.from(reference.entries()) : reference
   );
+  for (const [id, alerts] of actual ?? []) {
+    alerts.forEach((alert, index) => expect(alert).toBe(reference?.get(id)?.[index]));
+  }
 }
 
 describe('countRouteMatches', () => {

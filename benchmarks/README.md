@@ -1,6 +1,6 @@
 # Route matching benchmarks
 
-These benchmarks measure the synchronous production path used to count unique alert instances for notification-policy routes. They include matcher parsing and compilation, fingerprint deduplication, traversal, and count-map construction.
+These benchmarks measure the synchronous production path used to match and count unique alert instances for notification-policy routes. They include matcher parsing and compilation, fingerprint deduplication, traversal, destination alert arrays, and count-map construction. The shared `matchAlertsToRoutes` implementation returns the matching alerts; the hook derives counts from those arrays. Tests and benchmarks exercise both steps through `routeMatchingTest.utils.ts`.
 
 ## Run
 
