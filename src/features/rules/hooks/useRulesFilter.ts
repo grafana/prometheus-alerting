@@ -32,10 +32,10 @@ export function useRulesFilter() {
   // Update filters (converts filter object to search query and updates URL)
   const updateFilters = useCallback(
     (newFilter: RulesFilter) => {
-      const newSearchQuery = applySearchFilterToQuery(newFilter);
+      const newSearchQuery = applySearchFilterToQuery(searchQuery ?? '', newFilter);
       updateQueryParams({ search: newSearchQuery });
     },
-    [updateQueryParams]
+    [searchQuery, updateQueryParams]
   );
 
   // Directly set the search query string

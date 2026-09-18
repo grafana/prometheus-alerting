@@ -27,7 +27,7 @@ export function QueryTab({ query, dataSourceUid }: Props) {
   const exploreLink = createExploreLink(dataSourceUid, query, dataSourceType);
 
   return (
-    <div className={styles.wrapper}>
+    <Stack direction="column" gap={0} minWidth={0}>
       <div className={styles.header}>
         <Stack gap={1} alignItems="center">
           {dsSettings?.meta.info.logos.small && (
@@ -50,16 +50,11 @@ export function QueryTab({ query, dataSourceUid }: Props) {
         <RawQuery query={query} language={language} />
       </pre>
       <QueryPreviewPanel dataSourceUid={dataSourceUid} expression={query} />
-    </div>
+    </Stack>
   );
 }
 
 const getStyles = (theme: GrafanaTheme2) => ({
-  wrapper: css({
-    display: 'flex',
-    flexDirection: 'column',
-    minWidth: 0,
-  }),
   header: css({
     display: 'flex',
     justifyContent: 'space-between',

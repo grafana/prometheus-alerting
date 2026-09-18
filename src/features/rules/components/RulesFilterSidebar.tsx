@@ -1,5 +1,5 @@
 import { css, cx } from '@emotion/css';
-import React, { useEffect, useId, useRef } from 'react';
+import React, { useEffect, useId } from 'react';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 
 import { GrafanaTheme2 } from '@grafana/data';
@@ -8,7 +8,7 @@ import { Button, Icon, Input, MultiCombobox, Stack, useStyles2, useTheme2 } from
 
 import { useDataSourceOptions, useLabelOptions } from '../hooks/useRuleFilterOptions';
 import { useRulesFilter } from '../hooks/useRulesFilter';
-import { RulesFilter as RulesFilterType, applySearchFilterToQuery } from '../search/rulesSearchParser';
+import { RulesFilter as RulesFilterType } from '../search/rulesSearchParser';
 
 interface AdvancedFilters {
   dataSourceNames: string[];
@@ -80,7 +80,6 @@ export function RulesFilterSidebar() {
 
 function FilterSidebarForm() {
   const { filterState, updateFilters } = useRulesFilter();
-  const appliedQuery = applySearchFilterToQuery(filterState);
 
   const dataSourceOptions = useDataSourceOptions();
   const { labelOptions } = useLabelOptions();
@@ -94,34 +93,30 @@ function FilterSidebarForm() {
   const dataSourceId = useId();
 
   const methods = useForm<AdvancedFilters>({ defaultValues: filterStateToAdvancedFilters(filterState) });
-  const { reset, control, register } = methods;
+  const {
+    reset,
+    control,
+    register,
+    formState: { isDirty },
+  } = methods;
 
   const values = useWatch({ control });
-  const lastAppliedQueryRef = useRef(appliedQuery);
 
   // Sync the form with filters changed elsewhere, such as the search query typed in the top bar.
   useEffect(() => {
     reset(filterStateToAdvancedFilters(filterState));
   }, [filterState, reset]);
 
-  // Apply immediately on change, but never write a filter the URL already expresses. Echoing one
-  // back would rewrite free text such as `ErrorRate` as `rule:ErrorRate`.
+  // Only user edits write to the URL. URL changes are parsed by useRulesFilter and reset the form
+  // above, keeping the URL as the single source of truth.
   useEffect(() => {
-    if (lastAppliedQueryRef.current !== appliedQuery) {
-      // The filters changed outside the sidebar and the form values are still catching up.
-      lastAppliedQueryRef.current = appliedQuery;
+    if (!isDirty) {
       return;
     }
 
     const nextFilter = advancedFiltersToRuleFilter({ ...emptyAdvancedFilters, ...values });
-    const nextQuery = applySearchFilterToQuery(nextFilter);
-    if (nextQuery === appliedQuery) {
-      return;
-    }
-
-    lastAppliedQueryRef.current = nextQuery;
     updateFilters(nextFilter);
-  }, [values, appliedQuery, updateFilters]);
+  }, [values, isDirty, updateFilters]);
 
   return (
     <FormProvider {...methods}>

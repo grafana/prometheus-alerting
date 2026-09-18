@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { catchError, lastValueFrom, map, of, throwError } from 'rxjs';
+import { from, lastValueFrom } from 'rxjs';
 
 import {
   CoreApp,
@@ -10,8 +10,7 @@ import {
   type DataQueryRequest,
   type DataQueryResponse,
 } from '@grafana/data';
-import { getBackendSrv, isFetchError, toDataQueryResponse, type BackendDataSourceResponse } from '@grafana/runtime';
-import { getDataSourceInstanceSettings } from '@grafana/runtime/unstable';
+import { getDataSourceInstance } from '@grafana/runtime/unstable';
 import type { DataQuery } from '@grafana/schema';
 
 import { extractErrorMessage } from '../../../utils/errors';
@@ -63,7 +62,7 @@ function createInstantQueryRequest(dataSourceUid: string, dataSourceType: string
       },
     ],
     timezone: 'browser',
-    app: CoreApp.Unknown,
+    app: CoreApp.CloudAlerting,
     startTime: Date.now(),
   } satisfies DataQueryRequest<InstantExpressionQuery>;
 }
@@ -147,44 +146,11 @@ export function useQueryPreview(dataSourceUid: string) {
       setState((previousState) => ({ ...previousState, isLoading: true, error: null }));
 
       try {
-        const dataSource = await getDataSourceInstanceSettings(dataSourceUid);
-        if (!dataSource) {
-          throw new Error(`Data source with uid "${dataSourceUid}" not found`);
-        }
-
+        // Use the datasource query API instead of its proxy endpoint. This keeps long expressions in
+        // a POST body and lets both Prometheus and Loki use Grafana's standard backend query transport.
+        const dataSource = await getDataSourceInstance(dataSourceUid);
         const request = createInstantQueryRequest(dataSourceUid, dataSource.type, expression);
-        const response = await lastValueFrom(
-          getBackendSrv()
-            .fetch<BackendDataSourceResponse>({
-              url: `/api/ds/query?ds_type=${encodeURIComponent(dataSource.type)}&requestId=${encodeURIComponent(request.requestId)}`,
-              method: 'POST',
-              data: {
-                queries: request.targets.map((target) => ({
-                  ...target,
-                  intervalMs: request.intervalMs,
-                  maxDataPoints: request.maxDataPoints,
-                })),
-                from: request.range.from.valueOf().toString(),
-                to: request.range.to.valueOf().toString(),
-              },
-              requestId: request.requestId,
-              showErrorAlert: false,
-              headers: {
-                'X-Plugin-Id': dataSource.type,
-                'X-Datasource-Uid': dataSourceUid,
-              },
-            })
-            .pipe(
-              map((rawResponse) => toDataQueryResponse(rawResponse, request.targets)),
-              catchError((error: unknown) => {
-                if (!isFetchError<BackendDataSourceResponse>(error)) {
-                  return throwError(() => error);
-                }
-
-                return of(toDataQueryResponse(error, request.targets));
-              })
-            )
-        );
+        const response = await lastValueFrom(from(dataSource.query(request)));
 
         const responseError = getQueryResponseError(response);
 

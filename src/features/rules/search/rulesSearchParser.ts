@@ -23,6 +23,8 @@ const FILTER_PATTERNS = {
   label: /label:(?:"([^"]*)"|(\S+))/gi,
 };
 
+type RulesFilterName = keyof typeof FILTER_PATTERNS;
+
 /**
  * Recording rule names such as `type:request_rate:sum` look exactly like a filter token, so a value
  * that is not a known state or type is left as free text rather than filtering the list down to nothing.
@@ -58,6 +60,75 @@ function normalizeFreeText(text: string): string {
     .replace(/^"+/, '')
     .replace(/"+$/, '')
     .trim();
+}
+
+interface QueryFilter {
+  filterName: RulesFilterName;
+  isFreeTextRule: boolean;
+}
+
+type FilterTokens = Record<RulesFilterName, string[]>;
+
+const QUERY_TOKEN_PATTERN = /(?:\S+:"[^"]*"|"[^"]*"|\S+)/g;
+
+function isAllowedFilterValue(filterName: RulesFilterName, value: string): boolean {
+  const normalizedValue = value.toLowerCase();
+  if (filterName === 'state') {
+    return RULE_STATES.includes(normalizedValue);
+  }
+  if (filterName === 'type') {
+    return RULE_TYPES.includes(normalizedValue);
+  }
+  return true;
+}
+
+function isRulesFilterName(value: string): value is RulesFilterName {
+  return value in FILTER_PATTERNS;
+}
+
+/** Save filters in the same order as the original query. */
+function getQueryFilters(query: string): QueryFilter[] {
+  const queryFilters: QueryFilter[] = [];
+  let hasFreeTextRule = false;
+
+  for (const match of query.matchAll(QUERY_TOKEN_PATTERN)) {
+    const token = match[0];
+    const separatorIndex = token.indexOf(':');
+    const filterName = token.slice(0, separatorIndex).toLowerCase();
+
+    if (separatorIndex > 0 && isRulesFilterName(filterName)) {
+      const value = token.slice(separatorIndex + 1).replace(/^"|"$/g, '');
+      if (!value) {
+        continue;
+      }
+      if (isAllowedFilterValue(filterName, value)) {
+        queryFilters.push({ filterName, isFreeTextRule: false });
+        continue;
+      }
+    }
+
+    if (!hasFreeTextRule) {
+      queryFilters.push({ filterName: 'rule', isFreeTextRule: true });
+      hasFreeTextRule = true;
+    }
+  }
+
+  // A structured rule filter takes precedence over any other free text in the parser.
+  return queryFilters.some(({ filterName, isFreeTextRule }) => filterName === 'rule' && !isFreeTextRule)
+    ? queryFilters.filter(({ isFreeTextRule }) => !isFreeTextRule)
+    : queryFilters;
+}
+
+function buildFilterTokens(filter: RulesFilter): FilterTokens {
+  return {
+    datasource: filter.dataSourceNames?.map((value) => `datasource:${formatValue(value)}`) ?? [],
+    namespace: filter.namespace ? [`namespace:${formatValue(filter.namespace)}`] : [],
+    group: filter.groupName ? [`group:${formatValue(filter.groupName)}`] : [],
+    rule: filter.ruleName ? [`rule:${formatValue(filter.ruleName)}`] : [],
+    state: filter.ruleState ? [`state:${filter.ruleState}`] : [],
+    type: filter.ruleType ? [`type:${filter.ruleType}`] : [],
+    label: filter.labels?.map((value) => `label:${formatValue(value)}`) ?? [],
+  };
 }
 
 /**
@@ -139,38 +210,23 @@ export function getSearchFilterFromQuery(query: string): RulesFilter {
 }
 
 /**
- * Convert a RulesFilter object back to a search query string.
+ * Convert a RulesFilter object back to a search query string while retaining the positions and
+ * free-text syntax of filters already present in the query, matching Grafana alerting search.
  */
-export function applySearchFilterToQuery(filter: RulesFilter): string {
+export function applySearchFilterToQuery(query: string, filter: RulesFilter): string {
+  const tokensByFilter = buildFilterTokens(filter);
   const parts: string[] = [];
 
-  filter.dataSourceNames?.forEach((dataSourceName) => {
-    parts.push(`datasource:${formatValue(dataSourceName)}`);
-  });
-
-  if (filter.namespace) {
-    parts.push(`namespace:${formatValue(filter.namespace)}`);
+  for (const { filterName, isFreeTextRule } of getQueryFilters(query)) {
+    const token = tokensByFilter[filterName].shift();
+    if (token) {
+      parts.push(isFreeTextRule && filter.ruleName ? filter.ruleName : token);
+    }
   }
 
-  if (filter.groupName) {
-    parts.push(`group:${formatValue(filter.groupName)}`);
+  for (const tokens of Object.values(tokensByFilter)) {
+    parts.push(...tokens);
   }
-
-  if (filter.ruleName) {
-    parts.push(`rule:${formatValue(filter.ruleName)}`);
-  }
-
-  if (filter.ruleState) {
-    parts.push(`state:${filter.ruleState}`);
-  }
-
-  if (filter.ruleType) {
-    parts.push(`type:${filter.ruleType}`);
-  }
-
-  filter.labels?.forEach((label) => {
-    parts.push(`label:${formatValue(label)}`);
-  });
 
   return parts.join(' ');
 }

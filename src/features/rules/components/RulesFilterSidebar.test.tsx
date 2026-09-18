@@ -85,7 +85,7 @@ describe('RulesFilterSidebar', () => {
     expect(screen.getByTestId('location-search')).toHaveTextContent('?search=ErrorRate');
 
     await user.type(screen.getByTestId('namespace-filter-input'), 'dev');
-    expect(screen.getByTestId('location-search')).toHaveTextContent('?search=namespace%3Adev+rule%3AErrorRate');
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?search=ErrorRate+namespace%3Adev');
   });
 
   it('keeps applying filters after the search query changes outside the sidebar', async () => {
@@ -107,7 +107,7 @@ describe('RulesFilterSidebar', () => {
 
     await user.type(screen.getByTestId('namespace-filter-input'), 'prod');
     await waitFor(() => {
-      expect(screen.getByTestId('location-search')).toHaveTextContent('?search=namespace%3Aprod+rule%3AErrorRate');
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?search=ErrorRate+namespace%3Aprod');
     });
   });
 });

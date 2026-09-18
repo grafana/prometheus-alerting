@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getSearchFilterFromQuery } from './rulesSearchParser';
+import { applySearchFilterToQuery, getSearchFilterFromQuery } from './rulesSearchParser';
 
 describe('getSearchFilterFromQuery', () => {
   it('uses free text as a rule name filter', () => {
@@ -52,5 +52,33 @@ describe('getSearchFilterFromQuery', () => {
 
   it('keeps a rule name that contains colons', () => {
     expect(getSearchFilterFromQuery('test:request_rate:sum')).toEqual({ ruleName: 'test:request_rate:sum' });
+  });
+});
+
+describe('applySearchFilterToQuery', () => {
+  it('preserves existing filter positions and free-text syntax', () => {
+    const query = 'label:team=platform ErrorRate namespace:prod';
+    const filter = {
+      labels: ['team=alerting'],
+      ruleName: 'LatencyRate',
+      namespace: 'dev',
+    };
+
+    expect(applySearchFilterToQuery(query, filter)).toBe('label:team=alerting LatencyRate namespace:dev');
+  });
+
+  it('appends newly added filters after the existing query layout', () => {
+    expect(applySearchFilterToQuery('ErrorRate', { ruleName: 'ErrorRate', namespace: 'prod' })).toBe(
+      'ErrorRate namespace:prod'
+    );
+  });
+
+  it('keeps rule names that resemble invalid state or type filters as free text', () => {
+    expect(
+      applySearchFilterToQuery('type:request_rate:sum', {
+        ruleName: 'type:request_rate:sum',
+        namespace: 'prod',
+      })
+    ).toBe('type:request_rate:sum namespace:prod');
   });
 });

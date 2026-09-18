@@ -1,23 +1,15 @@
 import { act, renderHook } from '@testing-library/react';
-import { FieldType, toDataFrame, type DataQueryResponse } from '@grafana/data';
+import { CoreApp, FieldType, toDataFrame, type DataQueryResponse } from '@grafana/data';
 import { of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useQueryPreview } from './useQueryPreview';
 
-const mockFetch = vi.fn();
-const mockGetDataSourceInstanceSettings = vi.fn();
-const mockIsFetchError = vi.fn();
-const mockToDataQueryResponse = vi.fn();
-
-vi.mock('@grafana/runtime', () => ({
-  getBackendSrv: () => ({ fetch: mockFetch }),
-  isFetchError: (...args: unknown[]) => mockIsFetchError(...args),
-  toDataQueryResponse: (...args: unknown[]) => mockToDataQueryResponse(...args),
-}));
+const mockQuery = vi.fn();
+const mockGetDataSource = vi.fn();
 
 vi.mock('@grafana/runtime/unstable', () => ({
-  getDataSourceInstanceSettings: (...args: unknown[]) => mockGetDataSourceInstanceSettings(...args),
+  getDataSourceInstance: (...args: unknown[]) => mockGetDataSource(...args),
 }));
 
 function createDataFrameQueryResponse(
@@ -36,18 +28,14 @@ function createDataFrameQueryResponse(
   };
 }
 
-function arrangeConvertedQueryResponse(response: DataQueryResponse) {
-  const backendResponse = { data: { results: {} } };
-  mockFetch.mockReturnValue(of(backendResponse));
-  mockToDataQueryResponse.mockReturnValue(response);
-  return backendResponse;
+function arrangeQueryResponse(response: DataQueryResponse) {
+  mockQuery.mockReturnValue(of(response));
 }
 
 describe('useQueryPreview', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetDataSourceInstanceSettings.mockResolvedValue({ type: 'prometheus' });
-    mockIsFetchError.mockReturnValue(false);
+    mockGetDataSource.mockResolvedValue({ type: 'prometheus', query: mockQuery });
   });
 
   it('initializes with default state', () => {
@@ -69,12 +57,12 @@ describe('useQueryPreview', () => {
 
     expect(result.current.error).toBe('Expression is empty');
     expect(result.current.hasRun).toBe(true);
-    expect(mockGetDataSourceInstanceSettings).not.toHaveBeenCalled();
+    expect(mockGetDataSource).not.toHaveBeenCalled();
   });
 
-  it('executes an instant query through Grafana backend query API', async () => {
-    mockGetDataSourceInstanceSettings.mockResolvedValue({ type: 'loki' });
-    const backendResponse = arrangeConvertedQueryResponse(
+  it('executes an instant query through the datasource API', async () => {
+    mockGetDataSource.mockResolvedValue({ type: 'loki', query: mockQuery });
+    arrangeQueryResponse(
       createDataFrameQueryResponse([
         { labels: { job: 'prometheus', instance: 'localhost:9090' }, value: 1 },
         { labels: { job: 'grafana', instance: 'localhost:3000' }, value: 42 },
@@ -84,32 +72,20 @@ describe('useQueryPreview', () => {
 
     await act(() => result.current.runQuery('sum(rate({job="grafana"}[5m]))'));
 
-    expect(mockGetDataSourceInstanceSettings).toHaveBeenCalledWith('test-ds-uid');
-    expect(mockFetch).toHaveBeenCalledWith(
+    expect(mockGetDataSource).toHaveBeenCalledWith('test-ds-uid');
+    expect(mockQuery).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: '/api/ds/query?ds_type=loki&requestId=query-preview-test-ds-uid',
-        method: 'POST',
-        showErrorAlert: false,
-        headers: {
-          'X-Plugin-Id': 'loki',
-          'X-Datasource-Uid': 'test-ds-uid',
-        },
-        data: expect.objectContaining({
-          queries: [
-            expect.objectContaining({
-              datasource: { uid: 'test-ds-uid', type: 'loki' },
-              expr: 'sum(rate({job="grafana"}[5m]))',
-              instant: true,
-              range: false,
-              queryType: 'instant',
-            }),
-          ],
-        }),
+        app: CoreApp.CloudAlerting,
+        targets: [
+          expect.objectContaining({
+            datasource: { uid: 'test-ds-uid', type: 'loki' },
+            expr: 'sum(rate({job="grafana"}[5m]))',
+            instant: true,
+            range: false,
+            queryType: 'instant',
+          }),
+        ],
       })
-    );
-    expect(mockToDataQueryResponse).toHaveBeenCalledWith(
-      backendResponse,
-      expect.arrayContaining([expect.objectContaining({ refId: 'A' })])
     );
     expect(result.current.results).toEqual([
       {
@@ -128,7 +104,7 @@ describe('useQueryPreview', () => {
   });
 
   it('reads every series of a frame that holds several value fields', async () => {
-    arrangeConvertedQueryResponse({
+    arrangeQueryResponse({
       data: [
         toDataFrame({
           fields: [
@@ -151,7 +127,7 @@ describe('useQueryPreview', () => {
   });
 
   it('skips samples that carry no numeric value', async () => {
-    arrangeConvertedQueryResponse({
+    arrangeQueryResponse({
       data: [
         toDataFrame({
           fields: [
@@ -176,7 +152,7 @@ describe('useQueryPreview', () => {
       ],
     });
     frame.meta = { custom: { resultType: 'scalar' } };
-    arrangeConvertedQueryResponse({ data: [frame] });
+    arrangeQueryResponse({ data: [frame] });
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
     await act(() => result.current.runQuery('scalar(up)'));
@@ -185,7 +161,7 @@ describe('useQueryPreview', () => {
   });
 
   it('infers a range result from frames with several samples', async () => {
-    arrangeConvertedQueryResponse({
+    arrangeQueryResponse({
       data: [
         toDataFrame({
           fields: [
@@ -203,7 +179,7 @@ describe('useQueryPreview', () => {
   });
 
   it('reports an empty converted response', async () => {
-    arrangeConvertedQueryResponse({ data: [] });
+    arrangeQueryResponse({ data: [] });
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
     await act(() => result.current.runQuery('nonexistent_metric'));
@@ -215,7 +191,7 @@ describe('useQueryPreview', () => {
   });
 
   it('surfaces converted datasource errors', async () => {
-    arrangeConvertedQueryResponse({ data: [], errors: [{ message: 'parse error: unexpected token' }] });
+    arrangeQueryResponse({ data: [], errors: [{ message: 'parse error: unexpected token' }] });
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
     await act(() => result.current.runQuery('invalid{'));
@@ -224,50 +200,26 @@ describe('useQueryPreview', () => {
     expect(result.current.hasRun).toBe(true);
   });
 
-  it('passes failed fetch responses to the query response converter', async () => {
-    const backendFetchError = {
-      status: 400,
-      data: { results: { A: { error: 'parse error: unexpected token' } } },
-    };
-    mockFetch.mockReturnValue(throwError(() => backendFetchError));
-    mockIsFetchError.mockReturnValue(true);
-    mockToDataQueryResponse.mockReturnValue({
-      data: [],
-      errors: [{ message: 'parse error: unexpected token' }],
-    });
+  it('surfaces datasource query failures', async () => {
+    mockQuery.mockReturnValue(throwError(() => new Error('parse error: unexpected token')));
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
 
     await act(() => result.current.runQuery('invalid{'));
 
-    expect(mockIsFetchError).toHaveBeenCalledWith(backendFetchError);
-    expect(mockToDataQueryResponse).toHaveBeenCalledWith(
-      backendFetchError,
-      expect.arrayContaining([expect.objectContaining({ refId: 'A' })])
-    );
     expect(result.current.error).toBe('parse error: unexpected token');
-  });
-
-  it('surfaces non-fetch query failures', async () => {
-    mockFetch.mockReturnValue(throwError(() => new Error('Data source unavailable')));
-    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
-
-    await act(() => result.current.runQuery('up'));
-
-    expect(result.current.error).toBe('Data source unavailable');
-    expect(result.current.hasRun).toBe(true);
   });
 
   it('reports a missing datasource', async () => {
-    mockGetDataSourceInstanceSettings.mockResolvedValue(undefined);
+    mockGetDataSource.mockRejectedValue(new Error('Datasource missing was not found'));
     const { result } = renderHook(() => useQueryPreview('missing'));
 
     await act(() => result.current.runQuery('up'));
 
-    expect(result.current.error).toBe('Data source with uid "missing" not found');
+    expect(result.current.error).toBe('Datasource missing was not found');
   });
 
   it('clears preview state', async () => {
-    arrangeConvertedQueryResponse(createDataFrameQueryResponse([{ labels: { job: 'test' }, value: 1 }]));
+    arrangeQueryResponse(createDataFrameQueryResponse([{ labels: { job: 'test' }, value: 1 }]));
     const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
     await act(() => result.current.runQuery('up'));
 
