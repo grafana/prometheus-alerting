@@ -422,8 +422,194 @@ describe('countRouteMatches', () => {
     }
   });
 
+  it('uses fresh values for each alert when siblings share labels across all operators', () => {
+    const route = attachRouteIds({
+      receiver: 'root',
+      routes: [
+        { receiver: 'api', matchers: ['service=~"(?i)api-[0-9]+"'], continue: true },
+        { receiver: 'not-worker', matchers: ['service!~"worker-[0-9]+"'], continue: true },
+        { receiver: 'empty', matchers: ['service!="blocked"', 'service=""'] },
+      ],
+    });
+    const alerts = ['API-1', 'worker-2', 'blocked', '', undefined, 'api-5'].map((service) =>
+      GettableAlertFactory.build({ labels: service === undefined ? {} : { service } })
+    );
+    const groups = [
+      AlertGroupFactory.build({ alerts: alerts.slice(0, 3) }),
+      AlertGroupFactory.build({
+        alerts: [
+          ...alerts.slice(3),
+          GettableAlertFactory.build({ fingerprint: alerts[0].fingerprint, labels: { service: 'worker-99' } }),
+        ],
+      }),
+    ];
+    expectEquivalent(route, groups);
+    const counts = countRouteMatches(route, groups);
+    expect(counts.get(route.routes![0].id)).toBe(2);
+    expect(counts.get(route.routes![1].id)).toBe(5);
+    expect(counts.get(route.routes![2].id)).toBe(2);
+    expect(counts.get(route.id)).toBe(1);
+  });
+
+  it('keeps an invalid negative regex false for missing labels and throws for present-empty labels', () => {
+    const route = attachRouteIds({
+      receiver: 'root',
+      routes: [{ receiver: 'invalid', matchers: ['service!~"["'] }],
+    });
+    const absent = AlertGroupFactory.build({ alerts: [GettableAlertFactory.build({ labels: {} })] });
+    const empty = AlertGroupFactory.build({ alerts: [GettableAlertFactory.build({ labels: { service: '' } })] });
+    expectEquivalent(route, [absent]);
+    expect(countRouteMatches(route, [absent])).toEqual(new Map([[route.id, 1]]));
+    expectEquivalent(route, [absent, empty]);
+    expect(() => countRouteMatches(route, [absent, empty])).toThrow();
+  });
+
+  it('does not evaluate matchers on siblings skipped by a non-continued match', () => {
+    const route = attachRouteIds({
+      receiver: 'root',
+      routes: [
+        { receiver: 'first', matchers: ['service="api"'] },
+        { receiver: 'skipped-invalid', matchers: ['service=~"["'] },
+      ],
+    });
+    const groups = [
+      AlertGroupFactory.build({ alerts: GettableAlertFactory.buildList(2, { labels: { service: 'api' } }) }),
+    ];
+    expectEquivalent(route, groups);
+    expect(countRouteMatches(route, groups)).toEqual(new Map([[route.routes![0].id, 2]]));
+  });
+
   it('returns no counts without a tree or alerts', () => {
     expect(countRouteMatches(undefined, [])).toEqual(new Map());
     expect(countRouteMatches(attachRouteIds({ receiver: 'default' }), [])).toEqual(new Map());
+  });
+});
+
+describe('wide regex routing semantics', () => {
+  function wideTree() {
+    return attachRouteIds({
+      receiver: 'root',
+      routes: Array.from({ length: 40 }, (_, index) => ({
+        receiver: `route-${index}`,
+        matchers: [`service=~"svc-${index}-[0-9]+"`],
+      })),
+    });
+  }
+
+  it.each(['constructor', 'toString', '__proto__'])('handles absent and own prototype-named labels: %s', (label) => {
+    const route = wideTree();
+    for (const [index, child] of route.routes!.entries()) {
+      child.matchers = [`${label}=~"svc-${index}-[0-9]+"`];
+    }
+    const labels: Record<string, string> = {};
+    Object.defineProperty(labels, label, { value: 'svc-39-9', enumerable: true });
+    expectEquivalent(route, [
+      AlertGroupFactory.build({
+        alerts: [
+          GettableAlertFactory.build({ fingerprint: 'absent', labels: {} }),
+          GettableAlertFactory.build({ fingerprint: 'own', labels }),
+        ],
+      }),
+    ]);
+  });
+
+  it('keeps sibling order, all conjuncts, continue, nesting, fallback, and fingerprint deduplication', () => {
+    const route = wideTree();
+    const children = route.routes!;
+    children[3].continue = true;
+    children[7].matchers = ['service=~"svc-3-[0-9]+"', 'team="platform"'];
+    children[7].continue = true;
+    children[7].routes = attachRouteIds({
+      receiver: 'nested-root',
+      routes: [{ receiver: 'nested', matchers: ['level="critical"'] }],
+    }).routes;
+    children[20].matchers = ['service=~"svc-3-[0-9]+"'];
+    const alerts = [
+      { service: 'svc-3-123', team: 'platform', level: 'critical' },
+      { service: 'svc-3-456', team: 'other' },
+      { service: 'svc-3-text', team: 'platform' },
+      { service: 'unknown' },
+      {},
+      { service: '' },
+      { service: 'svc-39-9' },
+    ].map((labels, index) => GettableAlertFactory.build({ fingerprint: `wide-${index}`, labels }));
+    const groups = [AlertGroupFactory.build({ alerts: [...alerts, alerts[0]] })];
+    expectEquivalent(route, groups);
+    expect([...countRouteMatches(route, groups).keys()]).toEqual([
+      children[3].id,
+      children[7].routes![0].id,
+      children[20].id,
+      route.id,
+      children[39].id,
+    ]);
+  });
+
+  it.each([
+    ['service=~"svc-0.*|other"', { service: 'other' }],
+    ['service=~"svc-0?"', { service: 'svc-' }],
+    ['service=~"(?i)svc-0.*"', { service: 'SVC-0-1' }],
+    ['service=~"(?m)svc-0.*"', { service: 'other\nsvc-0-1' }],
+    ['service!~"svc-0.*"', { service: 'other' }],
+    ['service=~".*"', {}],
+    ['other=~"svc-0.*"', { other: 'svc-0-1' }],
+    ['service=~"["', { service: 'svc-1-1' }],
+  ])('matches upstream for varied and invalid sibling regexes: %s', (matcher, labels) => {
+    const route = wideTree();
+    route.routes![0].matchers = [matcher];
+    expectEquivalent(route, [AlertGroupFactory.build({ alerts: [GettableAlertFactory.build({ labels })] })]);
+  });
+
+  it('preserves visited invalid diagnostics among overlapping siblings', () => {
+    const route = wideTree();
+    for (const child of route.routes!) {
+      child.matchers = ['service=~"shared-[0-9]+"'];
+    }
+    const groups = [
+      AlertGroupFactory.build({ alerts: [GettableAlertFactory.build({ labels: { service: 'shared-1' } })] }),
+    ];
+    expectEquivalent(route, groups);
+    route.routes![0].matchers = ['team="no"', 'service=~"["'];
+    expectEquivalent(route, groups);
+    route.routes![0].matchers = ['service=~"shared-[0-9]+"'];
+    route.routes![1].matchers = ['service=~"["'];
+    expectEquivalent(route, groups);
+  });
+
+  it('matches upstream on deterministic selective trees with collisions and varied regex tails', () => {
+    const suffixes = ['[0-9]+', '.*', '[ab]*', '.?', '[^x]+'];
+    const suffixValues = ['123', 'abc', '', 'x', 'a', '\n'];
+    let state = 97183;
+    const random = (max: number) => {
+      state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+      return (state >>> 8) % max;
+    };
+    for (let trial = 0; trial < 100; trial++) {
+      const route = attachRouteIds({
+        receiver: 'root',
+        routes: Array.from({ length: 48 }, (_, index) => ({
+          receiver: `route-${index}`,
+          object_matchers: [
+            ['service', '=~', `service-${Math.floor(index / 3)}-${suffixes[random(suffixes.length)]}`],
+            ['team', '!=', random(2) ? 'blocked' : 'other'],
+          ] satisfies ObjectMatcher[],
+          continue: random(3) !== 0,
+          routes: random(4) === 0 ? [{ receiver: 'nested', matchers: ['level="critical"'] }] : undefined,
+        })),
+      });
+      if (trial % 5 === 0) {
+        route.routes![3].id = route.routes![0].id;
+      }
+      const alerts = Array.from({ length: 40 }, (_, index) =>
+        GettableAlertFactory.build({
+          fingerprint: `alert-${index % 37}`,
+          labels: {
+            service: `service-${random(18)}-${suffixValues[random(suffixValues.length)]}`,
+            team: random(2) ? 'platform' : 'other',
+            level: random(2) ? 'critical' : 'warning',
+          },
+        })
+      );
+      expectEquivalent(route, [AlertGroupFactory.build({ alerts })]);
+    }
   });
 });

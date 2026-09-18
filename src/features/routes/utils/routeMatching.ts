@@ -6,7 +6,11 @@ export type RouteMatchingCounts = Map<string, number>;
 
 type CompiledMatcher = {
   label: string;
-  matches: (value: string) => boolean;
+  // Matchers for the same label share a slot in the per-alert cache.
+  labelIndex: number;
+  value: string;
+  regex: RegExp | null;
+  negate: boolean;
 };
 
 type InvalidMatcher = {
@@ -22,57 +26,67 @@ type CompiledRoute = {
   routes: CompiledRoute[];
 };
 
-function compileRoute(route: AlertmanagerRouteWithID): CompiledRoute {
+function compileRoute(route: AlertmanagerRouteWithID, labelIndices: Map<string, number>): CompiledRoute {
   const invalidMatchers: InvalidMatcher[] = [];
-  const matchers = normalizeMatchers(route).map((matcher) => compileMatcher(matcher, invalidMatchers));
+  const matchers = normalizeMatchers(route).map((matcher) => compileMatcher(matcher, invalidMatchers, labelIndices));
+  const routes = route.routes?.map((child) => compileRoute(child, labelIndices)) ?? [];
 
   return {
     continue: route.continue ?? false,
     id: route.id,
     ...(invalidMatchers.length > 0 ? { invalidMatchers } : {}),
     matchers,
-    routes: route.routes?.map(compileRoute) ?? [],
+    routes,
   };
 }
 
-function compileMatcher([label, operator, value]: ObjectMatcher, invalidMatchers: InvalidMatcher[]): CompiledMatcher {
-  if (operator === '=') {
-    return { label, matches: (labelValue) => labelValue === value };
+function compileMatcher(
+  [label, operator, value]: ObjectMatcher,
+  invalidMatchers: InvalidMatcher[],
+  labelIndices: Map<string, number>
+): CompiledMatcher {
+  let labelIndex = labelIndices.get(label);
+  if (labelIndex === undefined) {
+    labelIndex = labelIndices.size;
+    labelIndices.set(label, labelIndex);
   }
-  if (operator === '!=') {
-    return { label, matches: (labelValue) => labelValue !== value };
+  if (operator === '=' || operator === '!=') {
+    return { label, labelIndex, value, regex: null, negate: operator === '!=' };
   }
 
   try {
     const { cleaned, flags } = parseFlags(`^(?:${value})$`);
     const regex = new RegExp(cleaned, flags);
-    const matches = operator === '=~' ? matchesRegex(regex) : doesNotMatchRegex(regex);
-    return { label, matches };
+    return { label, labelIndex, value, regex, negate: operator === '!~' };
   } catch (error) {
     invalidMatchers.push({ error, label });
-    return { label, matches: () => false };
+    // Invalid matchers are always false, including !~, unless diagnostics below throw.
+    return { label, labelIndex, value, regex: /(?!)/, negate: false };
   }
 }
 
-function matchesRegex(regex: RegExp): (value: string) => boolean {
-  return (value) => {
-    regex.lastIndex = 0;
-    return regex.test(value);
-  };
-}
-
-function doesNotMatchRegex(regex: RegExp): (value: string) => boolean {
-  return (value) => {
-    regex.lastIndex = 0;
-    return !regex.test(value);
-  };
-}
-
-function routeMatches(route: CompiledRoute, labels: Record<string, string>): boolean {
-  let matches = true;
+function routeMatches(route: CompiledRoute, labels: Record<string, string>, cachedLabelValues: string[]): boolean {
+  let allMatchersMatch = true;
   for (const matcher of route.matchers) {
-    if (!matcher.matches(labels[matcher.label] || '')) {
-      matches = false;
+    // Read each label at most once for this alert, even if many siblings test it.
+    let value = cachedLabelValues[matcher.labelIndex];
+    if (value === undefined) {
+      value = labels[matcher.label] || '';
+      cachedLabelValues[matcher.labelIndex] = value;
+    }
+    let matched: boolean;
+    if (matcher.regex) {
+      // Global regexes retain state between calls; each alert needs a fresh match.
+      matcher.regex.lastIndex = 0;
+      matched = matcher.regex.test(value);
+    } else {
+      matched = value === matcher.value;
+    }
+    if (matcher.negate) {
+      matched = !matched;
+    }
+    if (!matched) {
+      allMatchersMatch = false;
       break;
     }
   }
@@ -87,29 +101,31 @@ function routeMatches(route: CompiledRoute, labels: Record<string, string>): boo
     }
   }
 
-  return matches;
+  return allMatchersMatch;
 }
 
-function countMatches(route: CompiledRoute, labels: Record<string, string>, counts: RouteMatchingCounts): boolean {
-  if (!routeMatches(route, labels)) {
-    return false;
-  }
-
+// The caller has already checked this route's matchers.
+function countMatchingRoute(
+  route: CompiledRoute,
+  labels: Record<string, string>,
+  counts: RouteMatchingCounts,
+  cachedLabelValues: string[]
+): void {
   let hasMatchingChild = false;
   for (const child of route.routes) {
-    if (countMatches(child, labels, counts)) {
-      hasMatchingChild = true;
-      if (!child.continue) {
-        break;
-      }
+    if (!routeMatches(child, labels, cachedLabelValues)) {
+      continue;
+    }
+    countMatchingRoute(child, labels, counts, cachedLabelValues);
+    hasMatchingChild = true;
+    if (!child.continue) {
+      break;
     }
   }
-
+  // A matching parent is a destination only when none of its children match.
   if (!hasMatchingChild) {
     counts.set(route.id, (counts.get(route.id) ?? 0) + 1);
   }
-
-  return true;
 }
 
 /** Count unique Alertmanager alert instances at their selected destination routes. */
@@ -122,7 +138,7 @@ export function countRouteMatches(
     return counts;
   }
 
-  const compiledTree = compileRoute(routeTree);
+  const compiledTree = compileRoute(routeTree, new Map());
   const seenFingerprints = new Set<string>();
 
   for (const group of alertGroups) {
@@ -131,7 +147,10 @@ export function countRouteMatches(
         continue;
       }
       seenFingerprints.add(alert.fingerprint);
-      countMatches(compiledTree, alert.labels, counts);
+      const cachedLabelValues: string[] = [];
+      if (routeMatches(compiledTree, alert.labels, cachedLabelValues)) {
+        countMatchingRoute(compiledTree, alert.labels, counts, cachedLabelValues);
+      }
     }
   }
 
