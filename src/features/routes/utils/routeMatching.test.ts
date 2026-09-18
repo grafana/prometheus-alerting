@@ -11,7 +11,14 @@ import { describe, expect, it } from 'vitest';
 
 import { AlertGroupFactory, GettableAlertFactory } from '../../alerts/mocks/alerts.fakes';
 import { attachRouteIds } from '../utils';
-import { countRouteMatches } from './routeMatchingTest.utils';
+import { countRouteMatches as countMatchedAlerts } from '../hooks/useRouteMatching';
+
+function countRouteMatches(
+  routeTree: AlertmanagerRouteWithID | undefined,
+  alertGroups: AlertGroup[]
+): Map<string, number> {
+  return countMatchedAlerts(matchAlertsToRoutes(routeTree, alertGroups));
+}
 
 type ReferenceRoute = Omit<GrafanaRouteWithID, 'routes'> & {
   continue: boolean;

@@ -7,8 +7,6 @@
     "test": "vitest --coverage",
     "test:ci": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui",
-    "bench:route-matching": "vitest bench --run --config vitest.bench.config.ts",
-    "bench:route-matching:json": "mkdir -p benchmark-results && vitest bench --run --config vitest.bench.config.ts --outputJson=benchmark-results/route-matching.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --cache .",
     "lint:fix": "pnpx lint -- --fix && prettier --write --list-different .",
