@@ -57,6 +57,8 @@ export function useInstancesFilter(alerts: PromAlert[]): UseInstancesFilterResul
 
   // Filter alerts based on current filter state
   const filteredAlerts = useMemo(() => {
+    const searchText = filterState.searchText.trim().toLowerCase();
+
     return alerts.filter((alert) => {
       // State filter
       if (filterState.stateFilter !== 'all' && alert.state !== filterState.stateFilter) {
@@ -64,15 +66,14 @@ export function useInstancesFilter(alerts: PromAlert[]): UseInstancesFilterResul
       }
 
       // Label search filter
-      if (filterState.searchText.trim()) {
-        const searchLower = filterState.searchText.trim().toLowerCase();
+      if (searchText) {
         const matchesLabel = Object.entries(alert.labels).some(([key, value]) => {
           const keyLower = key.toLowerCase();
           const valueLower = value.toLowerCase();
           return (
-            keyLower.includes(searchLower) ||
-            valueLower.includes(searchLower) ||
-            `${keyLower}=${valueLower}`.includes(searchLower)
+            keyLower.includes(searchText) ||
+            valueLower.includes(searchText) ||
+            `${keyLower}=${valueLower}`.includes(searchText)
           );
         });
         if (!matchesLabel) {

@@ -113,7 +113,7 @@ export function AlertRuleListItem({
   );
 
   const description = (
-    <>
+    <Stack direction="column" gap={0}>
       {summary && (
         <Text variant="bodySmall" color="secondary">
           {summary}
@@ -124,7 +124,7 @@ export function AlertRuleListItem({
           <Trans i18nKey="rules.list-item.error">Error:</Trans> {error}
         </Text>
       )}
-    </>
+    </Stack>
   );
 
   return (

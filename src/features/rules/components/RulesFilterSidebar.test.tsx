@@ -65,9 +65,22 @@ describe('RulesFilterSidebar', () => {
 
     await user.type(screen.getByTestId('rule-name-filter-input'), 'Error');
 
+    expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
     await waitFor(() => {
       expect(screen.getByTestId('location-search')).toHaveTextContent('?search=rule%3AError');
     });
+  });
+
+  it('applies discrete filters immediately without losing text waiting to be applied', async () => {
+    const user = userEvent.setup();
+    renderSidebar('');
+
+    await user.type(screen.getByTestId('rule-name-filter-input'), 'Error');
+    expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
+
+    await user.click(screen.getByRole('button', { name: 'Firing' }));
+
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?search=rule%3AError+state%3Afiring');
   });
 
   it('syncs with back and forward navigation and still accepts sidebar edits', async () => {
@@ -85,7 +98,9 @@ describe('RulesFilterSidebar', () => {
     expect(screen.getByTestId('location-search')).toHaveTextContent('?search=ErrorRate');
 
     await user.type(screen.getByTestId('namespace-filter-input'), 'dev');
-    expect(screen.getByTestId('location-search')).toHaveTextContent('?search=ErrorRate+namespace%3Adev');
+    await waitFor(() => {
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?search=ErrorRate+namespace%3Adev');
+    });
   });
 
   it('keeps applying filters after the search query changes outside the sidebar', async () => {

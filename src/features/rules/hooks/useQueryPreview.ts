@@ -34,6 +34,14 @@ export interface QueryPreviewState {
   hasRun: boolean;
 }
 
+const INITIAL_QUERY_PREVIEW_STATE: QueryPreviewState = {
+  results: [],
+  isLoading: false,
+  error: null,
+  resultType: null,
+  hasRun: false,
+};
+
 interface InstantExpressionQuery extends DataQuery {
   expr: string;
   instant: true;
@@ -122,22 +130,14 @@ function getResultType(frames: DataFrame[]): QueryPreviewResultType {
 }
 
 export function useQueryPreview(dataSourceUid: string) {
-  const [state, setState] = useState<QueryPreviewState>({
-    results: [],
-    isLoading: false,
-    error: null,
-    resultType: null,
-    hasRun: false,
-  });
+  const [state, setState] = useState<QueryPreviewState>(INITIAL_QUERY_PREVIEW_STATE);
 
   const runQuery = useCallback(
     async (expression: string) => {
       if (!expression.trim()) {
         setState({
-          results: [],
-          isLoading: false,
+          ...INITIAL_QUERY_PREVIEW_STATE,
           error: 'Expression is empty',
-          resultType: null,
           hasRun: true,
         });
         return;
@@ -169,10 +169,8 @@ export function useQueryPreview(dataSourceUid: string) {
         });
       } catch (error) {
         setState({
-          results: [],
-          isLoading: false,
+          ...INITIAL_QUERY_PREVIEW_STATE,
           error: extractErrorMessage(error),
-          resultType: null,
           hasRun: true,
         });
       }
@@ -181,13 +179,7 @@ export function useQueryPreview(dataSourceUid: string) {
   );
 
   const clearResults = useCallback(() => {
-    setState({
-      results: [],
-      isLoading: false,
-      error: null,
-      resultType: null,
-      hasRun: false,
-    });
+    setState(INITIAL_QUERY_PREVIEW_STATE);
   }, []);
 
   return {
