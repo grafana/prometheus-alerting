@@ -33,6 +33,14 @@
       rangeStrategy: 'pin',
     },
     {
+      // Hold Node on the 24.x LTS line. Renovate has no "LTS only" setting, and its LTS-aware
+      // `node` versioning doesn't apply to the `node:<major>-alpine` images in
+      // docker-compose.yaml. Widen this by hand when moving to the next LTS (26.x from
+      // 2026-10-28).
+      matchDepNames: ['node'],
+      allowedVersions: '^24',
+    },
+    {
       // Pin Docker Compose image tags exactly and add SHA256 digests
       // so images are pinned by content, not just by tag name.
       matchManagers: ['docker-compose'],

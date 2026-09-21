@@ -6,6 +6,9 @@ not_found_auto_install = false
 
 # Shared tools for both CI and local development
 # Dev-only tools (lefthook, trufflehog) are in mise.development.toml, loaded via .miserc.toml
+#
+# Node stays on the active LTS line: 24.x ("Krypton") until 26.x enters LTS on 2026-10-28.
+# Keep .nvmrc, `engines`, `packageManager`, bundle-size.yml and docker-compose.yaml in step.
 [tools]
-node = "24.18.0"
-pnpm = "11.17.0"
+node = "24.21.0"
+pnpm = "12.4.2"
