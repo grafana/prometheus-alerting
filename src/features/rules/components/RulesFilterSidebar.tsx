@@ -113,6 +113,7 @@ function FilterSidebarForm() {
     return subscribe({
       formState: { isDirty: true, values: true },
       callback: ({ isDirty, name, values }) => {
+        applyTextFilters.cancel();
         if (!isDirty) {
           return;
         }
@@ -122,7 +123,6 @@ function FilterSidebarForm() {
           return;
         }
 
-        applyTextFilters.cancel();
         applyFilters(values);
       },
     });
