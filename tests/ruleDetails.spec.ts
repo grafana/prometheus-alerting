@@ -10,7 +10,7 @@ import { RuleBuilder, TEST_DATASOURCE_UID, TEST_NAMESPACE } from './factories/ru
  */
 test.describe('RuleDetails Page - E2E', () => {
   test.describe('Alerting Rules', () => {
-    test('should display firing alerting rule details', async ({ ruleDetailsPage, page }) => {
+    test('should display firing alerting rule details', async ({ ruleDetailsPage }) => {
       const identifier = RuleBuilder.createHighErrorRateIdentifier();
 
       await ruleDetailsPage.goto(identifier);
@@ -30,7 +30,8 @@ test.describe('RuleDetails Page - E2E', () => {
       });
 
       // Verify Query tab shows the expression
-      await expect(page.getByText('vector(1) > 0')).toBeVisible();
+      await expect(ruleDetailsPage.queryExpression).toBeVisible();
+      await expect(ruleDetailsPage.queryExpression).toHaveText('vector(1) > 0');
 
       // Verify no Edit button (vanilla Prometheus has no Ruler API)
       expect(await ruleDetailsPage.hasEditButton()).toBe(false);
