@@ -113,6 +113,9 @@ describe('RulesFilterSidebar', () => {
       expect(screen.getByTestId('location-search')).toHaveTextContent('?search=namespace%3Aprod');
     });
 
+    await waitFor(() => {
+      expect(screen.getByTestId('search-query-input')).toHaveValue('namespace:prod');
+    });
     await user.clear(screen.getByTestId('search-query-input'));
     await user.type(screen.getByTestId('search-query-input'), 'ErrorRate');
     await user.keyboard('{Enter}');
