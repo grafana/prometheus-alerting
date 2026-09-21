@@ -1,0 +1,17 @@
+name: e2e-error-group
+interval: 10s
+rules:
+  # The regex "*" is not a valid regular expression, so every evaluation of this
+  # rule fails. Prometheus and Mimir then report the rule as health "err" with a
+  # lastError, which is what we want to look at in the rule list.
+  - alert: ErrorRule
+    expr: label_replace(vector(1), "dst", "$1", "src", "*")
+    labels:
+      severity: warning
+    annotations:
+      summary: Rule that always fails to evaluate
+
+  - record: test:error:rule
+    expr: label_replace(vector(1), "dst", "$1", "src", "*")
+    labels:
+      environment: test
