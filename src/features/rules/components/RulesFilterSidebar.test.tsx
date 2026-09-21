@@ -1,18 +1,15 @@
 import React from 'react';
+import { setDataSourceSrv } from '@grafana/runtime';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
+import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { TestMemoryRouter } from '../../../test/utils/test-wrapper';
 
 import { RulesFilter } from './RulesFilter';
 import { RulesFilterSidebar } from './RulesFilterSidebar';
-
-vi.mock('../hooks/useRuleFilterOptions', () => ({
-  useDataSourceOptions: () => [],
-  useLabelOptions: () => ({ labelOptions: [] }),
-}));
 
 function LocationSearch() {
   const { search } = useLocation();
@@ -39,6 +36,10 @@ function renderSidebar(initialSearch: string, previousSearch?: string) {
 }
 
 describe('RulesFilterSidebar', () => {
+  beforeEach(() => {
+    setDataSourceSrv(createMockDataSourceSrv());
+  });
+
   it('shows free text from the search query as the rule name without rewriting the URL', async () => {
     renderSidebar('?search=ErrorRate');
 

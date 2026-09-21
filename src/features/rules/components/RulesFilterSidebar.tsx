@@ -47,9 +47,12 @@ function advancedFiltersToRuleFilter(values: AdvancedFilters): RulesFilterType {
 
 const SIDEBAR_WIDTH = 250;
 const TEXT_FILTER_DEBOUNCE_MS = 500;
+const TEXT_FILTER_NAMES = new Set<string>(
+  ['ruleName', 'namespace', 'groupName'] satisfies Array<keyof AdvancedFilters>
+);
 
 function isTextFilter(name?: string): boolean {
-  return name === 'ruleName' || name === 'namespace' || name === 'groupName';
+  return name !== undefined && TEXT_FILTER_NAMES.has(name);
 }
 
 /**
