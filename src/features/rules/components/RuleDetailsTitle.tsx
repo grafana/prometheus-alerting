@@ -1,9 +1,21 @@
 import React from 'react';
+import { css } from '@emotion/css';
 import { t } from '@grafana/i18n';
 import { Stack, Text } from '@grafana/ui';
 import { StateText } from '@grafana/alerting/unstable';
 
+import { normalizeHealth, normalizeState } from '../../../types/rules';
+
 import { FederatedGroupBadge } from './FederatedGroupBadge';
+
+const nameStyle = css({
+  minWidth: 0,
+  overflowWrap: 'anywhere',
+  overflow: 'hidden',
+  display: '-webkit-box',
+  WebkitBoxOrient: 'vertical',
+  WebkitLineClamp: 2,
+});
 
 interface RuleDetailsTitleProps {
   name: string;
@@ -15,7 +27,8 @@ interface RuleDetailsTitleProps {
 }
 
 export function RuleDetailsTitle({ name, type, state, health, sourceTenants }: RuleDetailsTitleProps) {
-  const normalizedState = normalizeState(state);
+  // Preserve the details header's existing behavior for alert rules without a reported state.
+  const normalizedState = state ? normalizeState(state) : 'normal';
   const normalizedHealth = normalizeHealth(health);
 
   // Build accessible label for state/health badge
@@ -39,10 +52,12 @@ export function RuleDetailsTitle({ name, type, state, health, sourceTenants }: R
   };
 
   return (
-    <Stack direction="row" gap={1} alignItems="center">
-      <Text variant="h1" element="h1" truncate>
-        {name}
-      </Text>
+    <Stack direction="row" gap={1} alignItems="center" minWidth={0} wrap="wrap">
+      <div className={nameStyle}>
+        <Text variant="h1" element="h1" title={name}>
+          {name}
+        </Text>
+      </div>
       {type === 'alerting' && (
         <span aria-label={getStateLabel()}>
           <StateText type="alerting" state={normalizedState} health={normalizedHealth} />
@@ -62,26 +77,4 @@ export function RuleDetailsTitle({ name, type, state, health, sourceTenants }: R
       {sourceTenants && <FederatedGroupBadge sourceTenants={sourceTenants} />}
     </Stack>
   );
-}
-
-// Helper functions
-
-function normalizeState(state?: string): 'normal' | 'firing' | 'pending' | 'unknown' | 'recovering' {
-  if (!state || state === 'inactive') {
-    return 'normal';
-  }
-  if (['firing', 'pending', 'unknown', 'recovering'].includes(state)) {
-    return state as 'firing' | 'pending' | 'unknown' | 'recovering';
-  }
-  return 'unknown';
-}
-
-function normalizeHealth(health?: string): 'nodata' | 'error' | undefined {
-  if (!health) {
-    return undefined;
-  }
-  if (health === 'nodata' || health === 'error') {
-    return health;
-  }
-  return undefined;
 }

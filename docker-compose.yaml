@@ -140,7 +140,7 @@ services:
       - ./test-data/loki:/etc/loki:ro
     command:
       - '-config.file=/etc/loki/loki.yaml'
-      - '-target=all,ruler'
+      - '-target=all'
     depends_on:
       minio:
         condition: service_healthy

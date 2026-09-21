@@ -1,10 +1,11 @@
 import { css, cx } from '@emotion/css';
-import React, { useCallback, useEffect, useId, useRef } from 'react';
-import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
+import debounce from 'lodash/debounce';
+import React, { useEffect, useId } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
-import { Button, Icon, Input, MultiCombobox, Stack, useStyles2, useTheme2 } from '@grafana/ui';
+import { Button, Divider, Icon, Input, MultiCombobox, Stack, useStyles2, useTheme2 } from '@grafana/ui';
 
 import { useDataSourceOptions, useLabelOptions } from '../hooks/useRuleFilterOptions';
 import { useRulesFilter } from '../hooks/useRulesFilter';
@@ -19,16 +20,6 @@ interface AdvancedFilters {
   ruleState: string | null;
   ruleType: string | null;
 }
-
-const emptyAdvancedFilters: AdvancedFilters = {
-  dataSourceNames: [],
-  namespace: '',
-  groupName: '',
-  ruleName: '',
-  labels: [],
-  ruleState: null,
-  ruleType: null,
-};
 
 function filterStateToAdvancedFilters(filterState: RulesFilterType): AdvancedFilters {
   return {
@@ -55,10 +46,18 @@ function advancedFiltersToRuleFilter(values: AdvancedFilters): RulesFilterType {
 }
 
 const SIDEBAR_WIDTH = 250;
+const TEXT_FILTER_DEBOUNCE_MS = 500;
+const TEXT_FILTER_NAMES = new Set<string>(
+  ['ruleName', 'namespace', 'groupName'] satisfies Array<keyof AdvancedFilters>
+);
+
+function isTextFilter(name?: string): boolean {
+  return name !== undefined && TEXT_FILTER_NAMES.has(name);
+}
 
 /**
  * Persistent filter sidebar for the alert rule list.
- * All filters apply immediately on change.
+ * Text filters defer URL updates until typing pauses; discrete filters apply immediately.
  */
 export function RulesFilterSidebar() {
   const styles = useStyles2(getStyles);
@@ -80,7 +79,6 @@ export function RulesFilterSidebar() {
 
 function FilterSidebarForm() {
   const { filterState, updateFilters } = useRulesFilter();
-  const isApplyingRef = useRef(false);
 
   const dataSourceOptions = useDataSourceOptions();
   const { labelOptions } = useLabelOptions();
@@ -93,202 +91,182 @@ function FilterSidebarForm() {
   const groupId = useId();
   const dataSourceId = useId();
 
-  const defaultValues = filterStateToAdvancedFilters(filterState);
+  const { reset, control, register, subscribe } = useForm<AdvancedFilters>({
+    defaultValues: filterStateToAdvancedFilters(filterState),
+  });
 
-  const methods = useForm<AdvancedFilters>({ defaultValues });
-  const { reset, control, register } = methods;
-
-  // Sync form when filterState changes externally (e.g. search query typed in top bar)
-  useEffect(() => {
-    if (isApplyingRef.current) {
-      return;
-    }
-    reset(filterStateToAdvancedFilters(filterState));
-  }, [filterState, reset]);
-
-  // Watch all values and apply immediately on change
-  const values = useWatch({ control });
-
-  const applyFilters = useCallback(
-    (nextValues: Partial<AdvancedFilters>) => {
-      isApplyingRef.current = true;
-
-      const merged: AdvancedFilters = { ...emptyAdvancedFilters, ...nextValues };
-      const ruleFilter = advancedFiltersToRuleFilter(merged);
-      updateFilters(ruleFilter);
-
-      // Reset the flag after the next render cycle
-      setTimeout(() => {
-        isApplyingRef.current = false;
-      }, 0);
-    },
+  const applyFilters = React.useCallback(
+    (values: AdvancedFilters) => updateFilters(advancedFiltersToRuleFilter(values)),
     [updateFilters]
   );
+  const applyTextFilters = React.useMemo(() => debounce(applyFilters, TEXT_FILTER_DEBOUNCE_MS), [applyFilters]);
 
-  // Apply on every change of any field value
-  const prevValuesRef = useRef<Partial<AdvancedFilters>>(defaultValues);
+  // Sync the form with filters changed elsewhere, such as the search query typed in the top bar.
   useEffect(() => {
-    if (JSON.stringify(values) !== JSON.stringify(prevValuesRef.current)) {
-      prevValuesRef.current = values;
-      applyFilters(values);
-    }
-  }, [values, applyFilters]);
+    applyTextFilters.cancel();
+    reset(filterStateToAdvancedFilters(filterState));
+  }, [applyTextFilters, filterState, reset]);
+
+  // Text fields wait for typing to pause. Discrete controls apply immediately and include any text
+  // already entered, so changing one cannot discard a pending text edit.
+  useEffect(() => {
+    return subscribe({
+      formState: { isDirty: true, values: true },
+      callback: ({ isDirty, name, values }) => {
+        if (!isDirty) {
+          return;
+        }
+
+        if (isTextFilter(name)) {
+          applyTextFilters(values);
+          return;
+        }
+
+        applyTextFilters.cancel();
+        applyFilters(values);
+      },
+    });
+  }, [applyFilters, applyTextFilters, subscribe]);
+
+  useEffect(() => () => applyTextFilters.cancel(), [applyTextFilters]);
 
   return (
-    <FormProvider {...methods}>
-      <form>
-        <Stack direction="column" gap={2}>
-          <SidebarSection>
-            <SidebarField
-              htmlFor={ruleNameId}
-              label={<Trans i18nKey="alerting.rules-filter.rule-name-label">Rule name</Trans>}
-            >
-              <Input
-                id={ruleNameId}
-                {...register('ruleName')}
-                placeholder={t('alerting.rule-list.filter-sidebar.rule-name-placeholder', 'Filter by name...')}
-                data-testid="rule-name-filter-input"
-              />
-            </SidebarField>
+    <form>
+      <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1.5}>
+          <SidebarField
+            htmlFor={ruleNameId}
+            label={<Trans i18nKey="alerting.rules-filter.rule-name-label">Rule name</Trans>}
+          >
+            <Input
+              id={ruleNameId}
+              {...register('ruleName')}
+              placeholder={t('alerting.rule-list.filter-sidebar.rule-name-placeholder', 'Filter by name...')}
+              data-testid="rule-name-filter-input"
+            />
+          </SidebarField>
 
-            <SidebarField htmlFor={labelsId} label={<Trans i18nKey="alerting.rules-filter.labels-label">Labels</Trans>}>
-              <Controller
-                name="labels"
-                control={control}
-                render={({ field }) => (
-                  <MultiCombobox
-                    id={labelsId}
-                    options={labelOptions}
-                    value={field.value}
-                    onChange={(selections) => field.onChange(selections.map((s) => s.value))}
-                    placeholder={t('alerting.rules-filter.labels-placeholder', 'Select labels')}
-                  />
-                )}
-              />
-            </SidebarField>
+          <SidebarField htmlFor={labelsId} label={<Trans i18nKey="alerting.rules-filter.labels-label">Labels</Trans>}>
+            <Controller
+              name="labels"
+              control={control}
+              render={({ field }) => (
+                <MultiCombobox
+                  id={labelsId}
+                  options={labelOptions}
+                  value={field.value}
+                  onChange={(selections) => field.onChange(selections.map((s) => s.value))}
+                  placeholder={t('alerting.rules-filter.labels-placeholder', 'Select labels')}
+                />
+              )}
+            />
+          </SidebarField>
 
-            <SidebarField htmlFor={stateId} label={<Trans i18nKey="alerting.rules-filter.state-label">State</Trans>}>
-              <Controller
-                name="ruleState"
-                control={control}
-                render={({ field }) => (
-                  <ToggleButtonGroup<AdvancedFilters['ruleState']>
-                    id={stateId}
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={[
-                      { label: t('common.all', 'All'), value: null },
-                      {
-                        label: t('alerting.rules.state.firing', 'Firing'),
-                        value: 'firing',
-                        icon: 'exclamation-circle' as const,
-                        color: 'error' as const,
-                      },
-                      {
-                        label: t('alerting.rules.state.normal', 'Normal'),
-                        value: 'normal',
-                        icon: 'check-circle' as const,
-                        color: 'success' as const,
-                      },
-                      {
-                        label: t('alerting.rules.state.pending', 'Pending'),
-                        value: 'pending',
-                        icon: 'circle' as const,
-                        color: 'warning' as const,
-                      },
-                    ]}
-                  />
-                )}
-              />
-            </SidebarField>
+          <SidebarField htmlFor={stateId} label={<Trans i18nKey="alerting.rules-filter.state-label">State</Trans>}>
+            <Controller
+              name="ruleState"
+              control={control}
+              render={({ field }) => (
+                <ToggleButtonGroup<AdvancedFilters['ruleState']>
+                  id={stateId}
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { label: t('common.all', 'All'), value: null },
+                    {
+                      label: t('alerting.rules.state.firing', 'Firing'),
+                      value: 'firing',
+                      icon: 'exclamation-circle' as const,
+                      color: 'error' as const,
+                    },
+                    {
+                      label: t('alerting.rules.state.normal', 'Normal'),
+                      value: 'normal',
+                      icon: 'check-circle' as const,
+                      color: 'success' as const,
+                    },
+                    {
+                      label: t('alerting.rules.state.pending', 'Pending'),
+                      value: 'pending',
+                      icon: 'circle' as const,
+                      color: 'warning' as const,
+                    },
+                  ]}
+                />
+              )}
+            />
+          </SidebarField>
 
-            <SidebarField htmlFor={typeId} label={<Trans i18nKey="alerting.rules-filter.type-label">Type</Trans>}>
-              <Controller
-                name="ruleType"
-                control={control}
-                render={({ field }) => (
-                  <ToggleButtonGroup<AdvancedFilters['ruleType']>
-                    id={typeId}
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={[
-                      { label: t('common.all', 'All'), value: null },
-                      { label: t('alerting.rules.type.alert', 'Alert rule'), value: 'alerting' },
-                      { label: t('alerting.rules.type.recording', 'Recording rule'), value: 'recording' },
-                    ]}
-                  />
-                )}
-              />
-            </SidebarField>
-          </SidebarSection>
-
-          <SidebarDivider />
-
-          <SidebarSection>
-            <SidebarField
-              htmlFor={namespaceId}
-              label={<Trans i18nKey="alerting.rules-filter.namespace-label">Namespace</Trans>}
-            >
-              <Input
-                id={namespaceId}
-                {...register('namespace')}
-                placeholder={t('alerting.rule-list.filter-sidebar.namespace-placeholder', 'Filter by namespace...')}
-                data-testid="namespace-filter-input"
-              />
-            </SidebarField>
-
-            <SidebarField htmlFor={groupId} label={<Trans i18nKey="alerting.rules-filter.group-label">Group</Trans>}>
-              <Input
-                id={groupId}
-                {...register('groupName')}
-                placeholder={t('alerting.rule-list.filter-sidebar.group-placeholder', 'Filter by group...')}
-                data-testid="group-filter-input"
-              />
-            </SidebarField>
-          </SidebarSection>
-
-          <SidebarDivider />
-
-          <SidebarSection>
-            <SidebarField
-              htmlFor={dataSourceId}
-              label={<Trans i18nKey="alerting.rules-filter.data-source-label">Data source</Trans>}
-            >
-              <Controller
-                name="dataSourceNames"
-                control={control}
-                render={({ field }) => (
-                  <MultiCombobox
-                    id={dataSourceId}
-                    options={dataSourceOptions}
-                    value={field.value}
-                    onChange={(selections) => field.onChange(selections.map((s) => s.value))}
-                    placeholder={t('alerting.rules-filter.data-source-placeholder', 'Select data sources')}
-                  />
-                )}
-              />
-            </SidebarField>
-          </SidebarSection>
+          <SidebarField htmlFor={typeId} label={<Trans i18nKey="alerting.rules-filter.type-label">Type</Trans>}>
+            <Controller
+              name="ruleType"
+              control={control}
+              render={({ field }) => (
+                <ToggleButtonGroup<AdvancedFilters['ruleType']>
+                  id={typeId}
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { label: t('common.all', 'All'), value: null },
+                    { label: t('alerting.rules.type.alert', 'Alert rule'), value: 'alerting' },
+                    { label: t('alerting.rules.type.recording', 'Recording rule'), value: 'recording' },
+                  ]}
+                />
+              )}
+            />
+          </SidebarField>
         </Stack>
-      </form>
-    </FormProvider>
-  );
-}
 
-function SidebarSection({ children }: { children: React.ReactNode }) {
-  const styles = useStyles2(getStyles);
-  return (
-    <div className={styles.section}>
-      <Stack direction="column" gap={1.5}>
-        {children}
+        <Divider spacing={0} />
+
+        <Stack direction="column" gap={1.5}>
+          <SidebarField
+            htmlFor={namespaceId}
+            label={<Trans i18nKey="alerting.rules-filter.namespace-label">Namespace</Trans>}
+          >
+            <Input
+              id={namespaceId}
+              {...register('namespace')}
+              placeholder={t('alerting.rule-list.filter-sidebar.namespace-placeholder', 'Filter by namespace...')}
+              data-testid="namespace-filter-input"
+            />
+          </SidebarField>
+
+          <SidebarField htmlFor={groupId} label={<Trans i18nKey="alerting.rules-filter.group-label">Group</Trans>}>
+            <Input
+              id={groupId}
+              {...register('groupName')}
+              placeholder={t('alerting.rule-list.filter-sidebar.group-placeholder', 'Filter by group...')}
+              data-testid="group-filter-input"
+            />
+          </SidebarField>
+        </Stack>
+
+        <Divider spacing={0} />
+
+        <Stack direction="column" gap={1.5}>
+          <SidebarField
+            htmlFor={dataSourceId}
+            label={<Trans i18nKey="alerting.rules-filter.data-source-label">Data source</Trans>}
+          >
+            <Controller
+              name="dataSourceNames"
+              control={control}
+              render={({ field }) => (
+                <MultiCombobox
+                  id={dataSourceId}
+                  options={dataSourceOptions}
+                  value={field.value}
+                  onChange={(selections) => field.onChange(selections.map((s) => s.value))}
+                  placeholder={t('alerting.rules-filter.data-source-placeholder', 'Select data sources')}
+                />
+              )}
+            />
+          </SidebarField>
+        </Stack>
       </Stack>
-    </div>
+    </form>
   );
-}
-
-function SidebarDivider() {
-  const styles = useStyles2(getStyles);
-  return <div className={styles.divider} />;
 }
 
 function SidebarField({
@@ -376,15 +354,6 @@ function getStyles(theme: GrafanaTheme2) {
       flexShrink: 0,
       paddingRight: theme.spacing(2),
       paddingBottom: theme.spacing(2),
-    }),
-    section: css({
-      display: 'flex',
-      flexDirection: 'column',
-      gap: theme.spacing(1),
-    }),
-    divider: css({
-      borderTop: `1px solid ${theme.colors.border.weak}`,
-      flexShrink: 0,
     }),
     field: css({
       display: 'flex',

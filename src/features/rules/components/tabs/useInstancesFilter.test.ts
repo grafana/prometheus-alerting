@@ -85,6 +85,17 @@ describe('useInstancesFilter', () => {
     expect(result.current.filteredAlerts.every((a) => a.labels.severity === 'critical')).toBe(true);
   });
 
+  it('should filter by label key and value', () => {
+    const { result } = renderHook(() => useInstancesFilter(mockAlerts));
+
+    act(() => {
+      result.current.setSearchText('severity=critical');
+    });
+
+    expect(result.current.filteredAlerts).toHaveLength(2);
+    expect(result.current.filteredAlerts.every((alert) => alert.labels.severity === 'critical')).toBe(true);
+  });
+
   it('should filter by alertname value', () => {
     const { result } = renderHook(() => useInstancesFilter(mockAlerts));
 
