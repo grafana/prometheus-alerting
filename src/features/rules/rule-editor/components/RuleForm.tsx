@@ -14,20 +14,16 @@ import type { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { hashRulerRule } from '@grafana/external-rules/hashing';
 import { getRuleName } from '@grafana/external-rules/utils';
 
-import { rulerApi } from '../../../../api/rules/ruler.endpoints';
 import { rules as rulesNav } from '../../../../utils/navigation';
 import { RulesErrorAlert } from '../../components/RulesErrorAlert';
-
-const { useUpsertRuleGroupMutation } = rulerApi;
 
 import { RuleFormValues, RuleFormType } from '../types';
 import { defaultFormValuesForRuleType } from '../formDefaults';
 import { formValuesToRulerRuleDTO } from '../formTransform';
 import { isCloudAlertingRuleByType } from '../ruleTypeHelpers';
-import { useProduceNewRuleGroup } from '../hooks/useProduceNewRuleGroup';
+import { useSaveRuleToGroup } from '../hooks/useSaveRuleToGroup';
 import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import { createRuleFormSchema } from '../validation';
-import { addRuleAction, updateRuleAction } from '../ruleGroupReducer';
 
 import { RuleDefinitionSection } from './RuleDefinitionSection';
 import { CloudEvaluationBehavior } from './CloudEvaluationBehavior';
@@ -45,8 +41,7 @@ interface Props {
 export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }: Props) => {
   const styles = useStyles2(getStyles);
   const navigate = useNavigate();
-  const [upsertRuleGroup, { isLoading: isSaving }] = useUpsertRuleGroupMutation();
-  const [produceNewRuleGroup] = useProduceNewRuleGroup();
+  const [saveRuleToGroup, { isLoading: isSaving }] = useSaveRuleToGroup();
 
   // Initialize data source UID from existing rule identifier (when editing) or prefill (when cloning)
   const initialUid = existingRuleIdentifier?.uid ?? prefill?.dataSourceUid ?? null;
@@ -104,25 +99,13 @@ export const RuleForm = ({ ruleType, prefill, onCancel, existingRuleIdentifier }
       // Convert form values to RulerRuleDTO
       const ruleDTO: RulerRuleDTO = formValuesToRulerRuleDTO(values);
 
-      // Determine which action to use
-      const action = existingRuleIdentifier
-        ? updateRuleAction({ identifier: existingRuleIdentifier, rule: ruleDTO })
-        : addRuleAction({ rule: ruleDTO, groupName: values.group });
-
-      // Use the hook to safely fetch and update the rule group
-      const newRuleGroup = await produceNewRuleGroup(
-        currentDataSourceUid,
-        values.namespace,
-        values.group,
-        [action] // Pass actions array
+      // Where the rule should end up. When any of these three differ from the rule's current
+      // home this is a move, which the hook handles as an add followed by a delete.
+      await saveRuleToGroup(
+        { uid: currentDataSourceUid, namespace: values.namespace, groupName: values.group },
+        ruleDTO,
+        existingRuleIdentifier
       );
-
-      // Submit to API
-      await upsertRuleGroup({
-        dataSourceUid: currentDataSourceUid,
-        namespace: values.namespace,
-        payload: newRuleGroup,
-      }).unwrap();
 
       // Build the rule identifier for navigation
       const ruleIdentifier: CloudRuleIdentifier = {

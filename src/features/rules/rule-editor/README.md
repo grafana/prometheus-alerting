@@ -7,6 +7,7 @@ This directory contains the rule form functionality for creating and editing dat
 - ✅ Create new alerting rules
 - ✅ Create new recording rules
 - ✅ Edit existing rules
+- ✅ Move rules between groups and namespaces
 - ✅ Clone existing rules
 - ✅ Form validation with react-hook-form
 - ✅ PromQL/LogQL expression editor
@@ -32,6 +33,8 @@ rule-editor/
 ├── hooks/               # Custom hooks
 │   ├── useNamespacesAndGroups.ts     # Fetch namespaces/groups from Ruler API
 │   ├── useProduceNewRuleGroup.ts     # Safely update rule groups
+│   ├── useSaveRuleToGroup.ts         # Create, edit or move a rule
+│   ├── useDeleteRuleFromGroup.ts     # Remove a rule from its group
 │   └── useUnsavedChanges.ts          # Warn about unsaved changes
 ├── types.ts            # TypeScript types (RuleFormType, RuleFormValues)
 ├── formDefaults.ts     # Default form values
@@ -69,7 +72,8 @@ The `CloneRuleEditor` component fetches the rule to clone using `useRuleDetails`
 
 ## API Integration
 
-The form uses the `upsertRuleGroup` mutation from `src/api/rules/ruler.endpoints.ts` to save rules:
+The form saves through `useSaveRuleToGroup`, which wraps the `upsertRuleGroup` mutation from
+`src/api/rules/ruler.endpoints.ts`:
 
 ```typescript
 upsertRuleGroup({
@@ -78,6 +82,11 @@ upsertRuleGroup({
   payload: RulerRuleGroupDTO,
 });
 ```
+
+The Ruler API writes a whole group at a time and cannot move a rule between groups, so changing a
+rule's data source, namespace or group is done as two writes: the rule is added to its new group
+first, then removed from the old one. Doing it in that order means a failure in between leaves a
+duplicate the user can see and delete, rather than losing the rule.
 
 The mutation delegates to the data source's flavor (`src/api/rules/flavors/`), which for
 Prometheus-compatible sources POSTs the rule group as YAML through
@@ -138,15 +147,14 @@ for how other backends plug in.
 6. Add visualization for recording rule results
 7. Improve error handling and user feedback
 8. Add form autosave/draft functionality
-9. Support for moving rules between groups/namespaces
-10. Bulk operations (import/export)
+9. Bulk operations (import/export)
 
 ### Low Priority
 
-11. Enhanced validation rules
-12. Field-level help text and examples
-13. Keyboard shortcuts
-14. Form analytics
+10. Enhanced validation rules
+11. Field-level help text and examples
+12. Keyboard shortcuts
+13. Form analytics
 
 ## Dependencies
 
