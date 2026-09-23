@@ -10,10 +10,11 @@ export interface RulesFilter {
   ruleName?: string;
   ruleState?: string;
   ruleType?: string;
+  ruleHealth?: string;
   labels?: string[];
 }
 
-const FILTER_NAMES = ['datasource', 'namespace', 'group', 'rule', 'state', 'type', 'label'] as const;
+const FILTER_NAMES = ['datasource', 'namespace', 'group', 'rule', 'state', 'type', 'health', 'label'] as const;
 
 type RulesFilterName = (typeof FILTER_NAMES)[number];
 type FilterTokens = Record<RulesFilterName, string[]>;
@@ -21,6 +22,9 @@ type FilterTokens = Record<RulesFilterName, string[]>;
 const FILTER_NAME_SET = new Set<string>(FILTER_NAMES);
 const RULE_STATES = new Set(['firing', 'pending', 'inactive', 'normal', 'recovering', 'unknown']);
 const RULE_TYPES = new Set(['alerting', 'recording']);
+// Prometheus reports a failing rule as "err", which is what the details tab shows. Both spellings
+// are accepted and stored as "error", the spelling Grafana's own rule list uses.
+const RULE_HEALTHS = new Set(['ok', 'error', 'err', 'unknown']);
 
 interface FilterToken {
   kind: 'filter';
@@ -56,10 +60,17 @@ function isAllowedFilterValue(filterName: RulesFilterName, value: string): boole
   if (filterName === 'type') {
     return RULE_TYPES.has(normalizedValue);
   }
+  if (filterName === 'health') {
+    return RULE_HEALTHS.has(normalizedValue);
+  }
   return true;
 }
 
 function normalizeFilterValue(filterName: RulesFilterName, value: string): string {
+  if (filterName === 'health') {
+    const health = value.toLowerCase();
+    return health === 'err' ? 'error' : health;
+  }
   return filterName === 'state' || filterName === 'type' ? value.toLowerCase() : value;
 }
 
@@ -222,6 +233,7 @@ function buildFilterTokens(filter: RulesFilter): FilterTokens {
     rule: filter.ruleName ? [`rule:${formatValue(filter.ruleName)}`] : [],
     state: filter.ruleState ? [`state:${filter.ruleState}`] : [],
     type: filter.ruleType ? [`type:${filter.ruleType}`] : [],
+    health: filter.ruleHealth ? [`health:${filter.ruleHealth}`] : [],
     label: filter.labels?.map((value) => `label:${formatValue(value)}`) ?? [],
   };
 }
@@ -262,6 +274,9 @@ export function getSearchFilterFromQuery(query: string): RulesFilter {
         break;
       case 'type':
         filter.ruleType ??= token.value;
+        break;
+      case 'health':
+        filter.ruleHealth ??= token.value;
         break;
     }
   }

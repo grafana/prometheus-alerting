@@ -43,6 +43,7 @@ export function useFilteredRulesIteratorProvider() {
         ruleName: filterState.ruleName?.trim() || undefined,
         ruleState: filterState.ruleState?.trim() || undefined,
         ruleType: filterState.ruleType?.trim() || undefined,
+        ruleHealth: filterState.ruleHealth?.trim() || undefined,
         labels: filterState.labels || [],
       };
 

@@ -11,8 +11,8 @@ describe('getSearchFilterFromQuery', () => {
     ],
     [
       'unknown prefixes and invalid known values are free text',
-      'foo_namespace:bar type:request_rate state:not-real',
-      { ruleName: 'foo_namespace:bar type:request_rate state:not-real' },
+      'foo_namespace:bar type:request_rate state:not-real health:broken',
+      { ruleName: 'foo_namespace:bar type:request_rate state:not-real health:broken' },
     ],
     [
       'filter syntax inside a value is literal',
@@ -99,7 +99,7 @@ describe('getSearchFilterFromQuery', () => {
   it('recognizes every supported structured field', () => {
     expect(
       getSearchFilterFromQuery(
-        'datasource:main namespace:prod group:api rule:ErrorRate state:pending type:alerting label:team=platform'
+        'datasource:main namespace:prod group:api rule:ErrorRate state:pending type:alerting health:Error label:team=platform'
       )
     ).toEqual({
       dataSourceNames: ['main'],
@@ -108,6 +108,7 @@ describe('getSearchFilterFromQuery', () => {
       ruleName: 'ErrorRate',
       ruleState: 'pending',
       ruleType: 'alerting',
+      ruleHealth: 'error',
       labels: ['team=platform'],
     });
   });
@@ -123,6 +124,7 @@ describe('getSearchFilterFromQuery', () => {
     ['takes the next word as the value', 'namespace:  prod ErrorRate', { namespace: 'prod', ruleName: 'ErrorRate' }],
     ['takes a quoted next value', 'Namespace: "prod rules"', { namespace: 'prod rules' }],
     ['checks and lowercases a state value', 'state: FIRING', { ruleState: 'firing' }],
+    ['reads the Prometheus spelling of a health value', 'health: err', { ruleHealth: 'error' }],
     ['leaves an invalid state value as free text', 'state: bogus', { ruleName: 'bogus' }],
     ['does not take another filter as the value', 'rule: state:firing', { ruleState: 'firing' }],
   ])('space after a filter colon: %s', (_description, query, expected) => {
@@ -220,12 +222,13 @@ describe('applySearchFilterToQuery', () => {
       ruleName: 'Error:rate',
       ruleState: 'firing',
       ruleType: 'alerting',
+      ruleHealth: 'error',
       labels: ['team=platform', 'description=state:firing'],
     };
     const query = applySearchFilterToQuery('', filter);
 
     expect(query).toBe(
-      'datasource:main datasource:backup namespace:"prod rules" group:api-v2 rule:Error:rate state:firing type:alerting label:team=platform label:description=state:firing'
+      'datasource:main datasource:backup namespace:"prod rules" group:api-v2 rule:Error:rate state:firing type:alerting health:error label:team=platform label:description=state:firing'
     );
     expect(getSearchFilterFromQuery(query)).toEqual(filter);
   });

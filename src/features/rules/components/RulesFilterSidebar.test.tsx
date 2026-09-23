@@ -84,6 +84,15 @@ describe('RulesFilterSidebar', () => {
     expect(screen.getByTestId('location-search')).toHaveTextContent('?search=rule%3AError+state%3Afiring');
   });
 
+  it('writes the health filter to the URL', async () => {
+    const user = userEvent.setup();
+    renderSidebar('');
+
+    await user.click(screen.getByRole('button', { name: 'Error' }));
+
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?search=health%3Aerror');
+  });
+
   it('uses only the latest text edit after a trailing debounce', async () => {
     vi.useFakeTimers();
     renderSidebar('');

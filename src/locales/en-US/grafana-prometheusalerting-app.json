@@ -340,6 +340,10 @@
       "placeholder-give-your-alert-a-name": "Give your alert rule a name"
     },
     "rules": {
+      "health": {
+        "error": "Error",
+        "ok": "OK"
+      },
       "state": {
         "firing": "Firing",
         "normal": "Normal",
@@ -359,6 +363,7 @@
       "data-source-label": "Data source",
       "data-source-placeholder": "Select data sources",
       "group-label": "Group",
+      "health-label": "Health",
       "labels-label": "Labels",
       "labels-placeholder": "Select labels",
       "namespace-label": "Namespace",

@@ -30,6 +30,7 @@ interface RuleFilterOptions {
   ruleName?: string;
   ruleState?: string;
   ruleType?: string;
+  ruleHealth?: string;
   labels?: string[];
 }
 
@@ -38,7 +39,7 @@ interface RuleFilterOptions {
  */
 export function ruleFilter(rule: PromRuleDTO, filterState: RuleFilterOptions): boolean {
   const { name, labels = {}, type } = rule;
-  const { ruleName, ruleState, ruleType, labels: labelFilters = [] } = filterState;
+  const { ruleName, ruleState, ruleType, ruleHealth, labels: labelFilters = [] } = filterState;
 
   // Filter by rule name
   if (ruleName && !fuzzyMatches(name, ruleName)) {
@@ -59,6 +60,14 @@ export function ruleFilter(rule: PromRuleDTO, filterState: RuleFilterOptions): b
     const normalizedRuleState = rule.state === 'inactive' ? 'normal' : rule.state;
     const normalizedFilterState = ruleState === 'inactive' ? 'normal' : ruleState;
     if (normalizedRuleState !== normalizedFilterState) {
+      return false;
+    }
+  }
+
+  // Filter by rule health (applies to both alerting and recording rules). Prometheus reports a failing rule as "err".
+  if (ruleHealth) {
+    const health = rule.health.toLowerCase();
+    if ((health === 'err' ? 'error' : health) !== ruleHealth) {
       return false;
     }
   }

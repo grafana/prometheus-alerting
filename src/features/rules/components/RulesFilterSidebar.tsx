@@ -19,6 +19,7 @@ interface AdvancedFilters {
   labels: string[];
   ruleState: string | null;
   ruleType: string | null;
+  ruleHealth: string | null;
 }
 
 function filterStateToAdvancedFilters(filterState: RulesFilterType): AdvancedFilters {
@@ -30,6 +31,7 @@ function filterStateToAdvancedFilters(filterState: RulesFilterType): AdvancedFil
     labels: filterState.labels ?? [],
     ruleState: filterState.ruleState ?? null,
     ruleType: filterState.ruleType ?? null,
+    ruleHealth: filterState.ruleHealth ?? null,
   };
 }
 
@@ -41,15 +43,16 @@ function advancedFiltersToRuleFilter(values: AdvancedFilters): RulesFilterType {
     ruleName: values.ruleName || undefined,
     ruleState: values.ruleState ?? undefined,
     ruleType: values.ruleType ?? undefined,
+    ruleHealth: values.ruleHealth ?? undefined,
     labels: values.labels.length > 0 ? values.labels : undefined,
   };
 }
 
 const SIDEBAR_WIDTH = 250;
 const TEXT_FILTER_DEBOUNCE_MS = 500;
-const TEXT_FILTER_NAMES = new Set<string>(
-  ['ruleName', 'namespace', 'groupName'] satisfies Array<keyof AdvancedFilters>
-);
+const TEXT_FILTER_NAMES = new Set<string>(['ruleName', 'namespace', 'groupName'] satisfies Array<
+  keyof AdvancedFilters
+>);
 
 function isTextFilter(name?: string): boolean {
   return name !== undefined && TEXT_FILTER_NAMES.has(name);
@@ -87,6 +90,7 @@ function FilterSidebarForm() {
   const labelsId = useId();
   const stateId = useId();
   const typeId = useId();
+  const healthId = useId();
   const namespaceId = useId();
   const groupId = useId();
   const dataSourceId = useId();
@@ -210,6 +214,35 @@ function FilterSidebarForm() {
                     { label: t('common.all', 'All'), value: null },
                     { label: t('alerting.rules.type.alert', 'Alert rule'), value: 'alerting' },
                     { label: t('alerting.rules.type.recording', 'Recording rule'), value: 'recording' },
+                  ]}
+                />
+              )}
+            />
+          </SidebarField>
+
+          <SidebarField htmlFor={healthId} label={<Trans i18nKey="alerting.rules-filter.health-label">Health</Trans>}>
+            <Controller
+              name="ruleHealth"
+              control={control}
+              render={({ field }) => (
+                <ToggleButtonGroup<AdvancedFilters['ruleHealth']>
+                  id={healthId}
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { label: t('common.all', 'All'), value: null },
+                    {
+                      label: t('alerting.rules.health.ok', 'OK'),
+                      value: 'ok',
+                      icon: 'check-circle' as const,
+                      color: 'success' as const,
+                    },
+                    {
+                      label: t('alerting.rules.health.error', 'Error'),
+                      value: 'error',
+                      icon: 'times-circle' as const,
+                      color: 'error' as const,
+                    },
                   ]}
                 />
               )}
