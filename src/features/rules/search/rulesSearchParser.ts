@@ -39,10 +39,10 @@ interface EmptyFilterToken {
 
 type QueryToken = FilterToken | FreeTextToken | EmptyFilterToken;
 
-interface QueryLayoutItem {
-  filterName: RulesFilterName;
-  isFreeTextRule: boolean;
-}
+type QueryLayoutItem =
+  | { kind: 'filter'; filterName: RulesFilterName }
+  | { kind: 'free-text-rule' }
+  | { kind: 'free-text'; value: string };
 
 function isRulesFilterName(value: string): value is RulesFilterName {
   return FILTER_NAME_SET.has(value);
@@ -109,36 +109,57 @@ function readLexicalToken(query: string, start: number): LexicalToken {
   return { value, end: index, filterName };
 }
 
+function skipWhitespace(query: string, start: number): number {
+  let index = start;
+  while (index < query.length && /\s/.test(query[index])) {
+    index++;
+  }
+  return index;
+}
+
 /**
  * Tokenize only at whitespace boundaries. This prevents, for example,
  * `label:description=state:firing` from producing a state filter.
+ *
+ * A filter key followed by a space, such as `namespace: prod`, takes the next word as its value,
+ * unless that word is a filter of its own or isn't a valid value for the key.
  */
 function tokenizeQuery(query: string): QueryToken[] {
   const tokens: QueryToken[] = [];
-  let index = 0;
+  let index = skipWhitespace(query, 0);
 
   while (index < query.length) {
-    while (index < query.length && /\s/.test(query[index])) {
-      index++;
-    }
-    if (index === query.length) {
-      break;
-    }
+    const start = index;
+    const token = readLexicalToken(query, start);
+    index = skipWhitespace(query, token.end);
 
-    const token = readLexicalToken(query, index);
     if (!token.filterName) {
       tokens.push({ kind: 'free-text', value: token.value });
-    } else {
-      const value = token.value.slice(token.filterName.length + 1);
-      if (!value) {
-        tokens.push({ kind: 'empty-filter' });
-      } else if (isAllowedFilterValue(token.filterName, value)) {
-        tokens.push({ kind: 'filter', filterName: token.filterName, value: normalizeFilterValue(token.filterName, value) });
-      } else {
-        tokens.push({ kind: 'free-text', value: token.value });
+      continue;
+    }
+
+    let value = token.value.slice(token.filterName.length + 1);
+    // `namespace:""` ends in quotes rather than at the colon, so it stays an explicitly empty filter.
+    const endsAtColon = token.end === start + token.filterName.length + 1;
+    if (endsAtColon && index < query.length) {
+      const nextToken = readLexicalToken(query, index);
+      if (!nextToken.filterName && isAllowedFilterValue(token.filterName, nextToken.value)) {
+        value = nextToken.value;
+        index = skipWhitespace(query, nextToken.end);
       }
     }
-    index = token.end;
+
+    if (!value) {
+      tokens.push({ kind: 'empty-filter' });
+    } else if (isAllowedFilterValue(token.filterName, value)) {
+      tokens.push({
+        kind: 'filter',
+        filterName: token.filterName,
+        value: normalizeFilterValue(token.filterName, value),
+      });
+    } else {
+      tokens.push({ kind: 'free-text', value: token.value });
+    }
   }
 
   return tokens;
@@ -159,9 +180,16 @@ function buildQueryLayout(tokens: QueryToken[]): QueryLayoutItem[] {
 
   for (const token of tokens) {
     if (token.kind === 'filter') {
-      layout.push({ filterName: token.filterName, isFreeTextRule: false });
-    } else if (token.kind === 'free-text' && !hasStructuredRule && !addedFreeTextRule) {
-      layout.push({ filterName: 'rule', isFreeTextRule: true });
+      layout.push({ kind: 'filter', filterName: token.filterName });
+    } else if (token.kind !== 'free-text') {
+      continue;
+    } else if (hasStructuredRule) {
+      // A `rule:` filter means this text isn't used for filtering, but it's still what the user typed.
+      if (token.value) {
+        layout.push({ kind: 'free-text', value: token.value });
+      }
+    } else if (!addedFreeTextRule) {
+      layout.push({ kind: 'free-text-rule' });
       addedFreeTextRule = true;
     }
   }
@@ -173,8 +201,17 @@ function escapeQuotedValue(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
+// An empty value is quoted so that `datasource:""` can't pick up the next word as its value.
 function formatValue(value: string): string {
-  return /[\s"\\]/.test(value) ? `"${escapeQuotedValue(value)}"` : value;
+  return !value || /[\s"\\]/.test(value) ? `"${escapeQuotedValue(value)}"` : value;
+}
+
+/** Writes free text so it reads back as one piece of free text, quoting it if it would look like a filter. */
+function formatFreeText(value: string): string {
+  const tokens = tokenizeQuery(value);
+  const [token] = tokens;
+  const readsBackUnchanged = tokens.length === 1 && token.kind === 'free-text' && token.value === value;
+  return readsBackUnchanged ? value : `"${escapeQuotedValue(value)}"`;
 }
 
 function buildFilterTokens(filter: RulesFilter): FilterTokens {
@@ -240,18 +277,26 @@ export function getSearchFilterFromQuery(query: string): RulesFilter {
 
 /**
  * Convert a RulesFilter object back to a query, preserving each existing structured filter's
- * position. New filters are appended in the canonical filter order.
+ * position. New filters are appended in the canonical filter order. Text typed next to a `rule:`
+ * filter is kept as long as a rule name is still set; clearing the name clears it too.
  */
 export function applySearchFilterToQuery(query: string, filter: RulesFilter): string {
   const tokensByFilter = buildFilterTokens(filter);
   const parts: string[] = [];
 
-  for (const { filterName, isFreeTextRule } of buildQueryLayout(tokenizeQuery(query))) {
-    const token = tokensByFilter[filterName].shift();
+  for (const item of buildQueryLayout(tokenizeQuery(query))) {
+    if (item.kind === 'free-text') {
+      if (filter.ruleName) {
+        parts.push(formatFreeText(item.value));
+      }
+      continue;
+    }
+
+    const token = tokensByFilter[item.kind === 'filter' ? item.filterName : 'rule'].shift();
     if (!token) {
       continue;
     }
-    if (isFreeTextRule && filter.ruleName && canUseFreeTextRule(filter.ruleName)) {
+    if (item.kind === 'free-text-rule' && filter.ruleName && canUseFreeTextRule(filter.ruleName)) {
       parts.push(filter.ruleName);
     } else {
       parts.push(token);
