@@ -36,6 +36,11 @@ export function countAlertsByState(alerts: GettableAlert[]): AlertGroupCounts {
   return counts;
 }
 
+export function countAlertsInGroupsByState(groups: AlertGroup[]): AlertGroupCounts {
+  const alerts = deduplicateGroups(groups).flatMap(({ group }) => group.alerts);
+  return countAlertsByState(alerts);
+}
+
 export function alertMatchesFilters(
   alert: GettableAlert,
   allowedStates: Set<AlertStatus['state']>,
