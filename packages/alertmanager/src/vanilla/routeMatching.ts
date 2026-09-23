@@ -1,50 +1,148 @@
-import { findMatchingRoutes, type LabelMatcher, type RouteWithID as GrafanaRouteWithID } from '@grafana/alerting';
+import { parseFlags } from '@grafana/data';
+import type { RouteWithID } from './routes.utils';
 import type { AlertGroup, GettableAlert } from './api/types/common';
 import { normalizeMatchers, type ObjectMatcher } from './matchers.utils';
-import type { RouteWithID } from './routes.utils';
 
-/** The alert instances that ended up at each route, keyed by route ID. */
+/** Alert instances at each destination, in first-seen order. */
 export type RouteMatches = Map<string, GettableAlert[]>;
 
-/**
- * Alertmanager routes store matchers as strings, while findMatchingRoutes expects Grafana LabelMatcher objects.
- * This local recursive type describes the converted tree and works around the upstream recursive type's
- * incompatibility with TypeScript 6.
- */
-type MatchingRouteWithID = Omit<GrafanaRouteWithID, 'routes'> & {
-  continue: boolean;
-  matchers: LabelMatcher[];
-  routes: MatchingRouteWithID[];
+type CompiledMatcher = {
+  label: string;
+  // Matchers for the same label share a slot in the per-alert cache.
+  labelIndex: number;
+  value: string;
+  regex: RegExp | null;
+  negate: boolean;
 };
 
-function toMatchingRoute(route: RouteWithID): MatchingRouteWithID {
+type InvalidMatcher = {
+  error: unknown;
+  label: string;
+};
+
+type CompiledRoute = {
+  continue: boolean;
+  id: string;
+  invalidMatchers?: InvalidMatcher[];
+  matchers: CompiledMatcher[];
+  routes: CompiledRoute[];
+};
+
+function compileRoute(route: RouteWithID, labelIndices: Map<string, number>): CompiledRoute {
+  const invalidMatchers: InvalidMatcher[] = [];
+  const matchers = normalizeMatchers(route).map((matcher) => compileMatcher(matcher, invalidMatchers, labelIndices));
+  const routes = route.routes?.map((child) => compileRoute(child, labelIndices)) ?? [];
+
   return {
-    id: route.id,
     continue: route.continue ?? false,
-    matchers: normalizeMatchers(route).map(toLabelMatcher),
-    routes: route.routes?.map(toMatchingRoute) ?? [],
+    id: route.id,
+    ...(invalidMatchers.length > 0 ? { invalidMatchers } : {}),
+    matchers,
+    routes,
   };
 }
 
-function toLabelMatcher([label, type, value]: ObjectMatcher): LabelMatcher {
-  return { label, type, value };
+function compileMatcher(
+  [label, operator, value]: ObjectMatcher,
+  invalidMatchers: InvalidMatcher[],
+  labelIndices: Map<string, number>
+): CompiledMatcher {
+  let labelIndex = labelIndices.get(label);
+  if (labelIndex === undefined) {
+    labelIndex = labelIndices.size;
+    labelIndices.set(label, labelIndex);
+  }
+  if (operator === '=' || operator === '!=') {
+    return { label, labelIndex, value, regex: null, negate: operator === '!=' };
+  }
+
+  try {
+    const { cleaned, flags } = parseFlags(`^(?:${value})$`);
+    const regex = new RegExp(cleaned, flags);
+    return { label, labelIndex, value, regex, negate: operator === '!~' };
+  } catch (error) {
+    invalidMatchers.push({ error, label });
+    // Invalid matchers are always false, including !~, unless diagnostics below throw.
+    return { label, labelIndex, value, regex: /(?!)/, negate: false };
+  }
 }
 
-/**
- * Work out which alert instances end up at which routes.
- *
- * An instance can appear more than once in the Alertmanager response (the same alert shows up in
- * several groups), so instances are deduplicated by fingerprint and only counted at the first
- * group that carried them. One instance can still land on several routes, because a matching
- * route with `continue: true` lets its siblings match as well.
- */
+function routeMatches(route: CompiledRoute, labels: Record<string, string>, cachedLabelValues: string[]): boolean {
+  let allMatchersMatch = true;
+  for (const matcher of route.matchers) {
+    // Read each label at most once for this alert, even if many siblings test it.
+    let value = cachedLabelValues[matcher.labelIndex];
+    if (value === undefined) {
+      value = labels[matcher.label] || '';
+      cachedLabelValues[matcher.labelIndex] = value;
+    }
+    let matched: boolean;
+    if (matcher.regex) {
+      // Global regexes retain state between calls; each alert needs a fresh match.
+      matcher.regex.lastIndex = 0;
+      matched = matcher.regex.test(value);
+    } else {
+      matched = value === matcher.value;
+    }
+    if (matcher.negate) {
+      matched = !matched;
+    }
+    if (!matched) {
+      allMatchersMatch = false;
+      break;
+    }
+  }
+
+  // Upstream builds diagnostics after its boolean pass. That second pass throws for an invalid
+  // regex only when the named label exists, including matchers after an earlier failed conjunct.
+  if (route.invalidMatchers) {
+    for (const matcher of route.invalidMatchers) {
+      if (Object.prototype.propertyIsEnumerable.call(labels, matcher.label)) {
+        throw matcher.error;
+      }
+    }
+  }
+
+  return allMatchersMatch;
+}
+
+// The caller has already checked this route's matchers.
+function collectMatchingAlerts(
+  route: CompiledRoute,
+  alert: GettableAlert,
+  matches: RouteMatches,
+  cachedLabelValues: string[]
+): void {
+  let hasMatchingChild = false;
+  for (const child of route.routes) {
+    if (!routeMatches(child, alert.labels, cachedLabelValues)) {
+      continue;
+    }
+    collectMatchingAlerts(child, alert, matches, cachedLabelValues);
+    hasMatchingChild = true;
+    if (!child.continue) {
+      break;
+    }
+  }
+  // A matching parent is a destination only when none of its children match.
+  if (!hasMatchingChild) {
+    const alerts = matches.get(route.id);
+    if (alerts) {
+      alerts.push(alert);
+    } else {
+      matches.set(route.id, [alert]);
+    }
+  }
+}
+
+/** Match unique alert instances to their destinations, keeping the first occurrence of each fingerprint. */
 export function matchAlertsToRoutes(routeTree: RouteWithID | undefined, alertGroups: AlertGroup[]): RouteMatches {
   const matches: RouteMatches = new Map();
   if (!routeTree || alertGroups.length === 0) {
     return matches;
   }
 
-  const matchingTree = toMatchingRoute(routeTree);
+  const compiledTree = compileRoute(routeTree, new Map());
   const seenFingerprints = new Set<string>();
 
   for (const group of alertGroups) {
@@ -53,14 +151,9 @@ export function matchAlertsToRoutes(routeTree: RouteWithID | undefined, alertGro
         continue;
       }
       seenFingerprints.add(alert.fingerprint);
-
-      for (const match of findMatchingRoutes(matchingTree, Object.entries(alert.labels))) {
-        const matched = matches.get(match.route.id);
-        if (matched) {
-          matched.push(alert);
-        } else {
-          matches.set(match.route.id, [alert]);
-        }
+      const cachedLabelValues: string[] = [];
+      if (routeMatches(compiledTree, alert.labels, cachedLabelValues)) {
+        collectMatchingAlerts(compiledTree, alert, matches, cachedLabelValues);
       }
     }
   }
