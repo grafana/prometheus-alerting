@@ -1,41 +1,8 @@
 import { useMemo } from 'react';
 import { alertmanagerApi } from '../../../api/alertmanager/alertmanager.endpoints';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
+import { alertMatchesSilence } from '../utils/matchesSilenceMatcher';
 import type { GettableSilence, GettableAlert } from '@grafana/external-alertmanager/vanilla';
-
-/**
- * Checks if an alert matches a silence based on the silence's matchers.
- * This is used to filter alerts client-side when the API doesn't support
- * filtering by specific silence ID.
- */
-function alertMatchesSilence(alert: GettableAlert, silence: GettableSilence): boolean {
-  // Check if this specific silence is in the alert's silencedBy array
-  if (alert.status.silencedBy?.includes(silence.id)) {
-    return true;
-  }
-
-  // Fallback: Check if all matchers match the alert labels
-  return silence.matchers.every((matcher) => {
-    const labelValue = alert.labels[matcher.name];
-
-    if (labelValue === undefined) {
-      return false;
-    }
-
-    if (matcher.isRegex) {
-      try {
-        const regex = new RegExp(`^${matcher.value}$`);
-        const matches = regex.test(labelValue);
-        return matcher.isEqual !== false ? matches : !matches;
-      } catch {
-        return false;
-      }
-    }
-
-    const equals = labelValue === matcher.value;
-    return matcher.isEqual !== false ? equals : !equals;
-  });
-}
 
 interface UseAffectedAlertsResult {
   alerts: GettableAlert[];
