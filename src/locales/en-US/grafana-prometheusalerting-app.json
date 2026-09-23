@@ -71,7 +71,6 @@
       "rule-name": "Rule name"
     },
     "evaluation-interval": {
-      "exceeds-pending": "Interval ({{interval}}) exceeds the pending period ({{for}}) of some rules. This may cause alerts to fire immediately.",
       "invalid-format": "Invalid duration format. Use formats like 1m, 30s, 1h.",
       "placeholder": "e.g. 1m, 30s, 5m"
     },
@@ -186,15 +185,6 @@
       "view-aria-label": "View YAML for namespace {{namespace}}"
     },
     "query-preview": {
-      "error-title": "Query failed",
-      "loading": "Running query...",
-      "next-page": "Next page",
-      "no-data": "No data",
-      "page-counter": "{{start}} - {{end}} of {{total}}",
-      "previous-page": "Previous page",
-      "result-summary": "({{resultType}}, {{count}} results)",
-      "run-query": "Run query",
-      "series-label": "Series {{index}}",
       "title": "Query Preview"
     },
     "route": {
@@ -562,7 +552,6 @@
       "title": "New Inhibit Rule"
     },
     "drawer": {
-      "default-title": "Inhibit Rule",
       "details": "Inhibit Rule Details",
       "edit": {
         "cancel-button": "Cancel",
@@ -1653,6 +1642,14 @@
       "years-description": "Comma-separated list (e.g., 2024, 2025)",
       "years-label": "Years",
       "years-placeholder": "2024, 2025"
+    },
+    "in-use": {
+      "as-active": "active timing",
+      "as-mute": "mute timing",
+      "body": "Removing it would change when the routes below notify, so it has to be taken out of them first.",
+      "inherited-receiver": "a route that inherits its receiver",
+      "title": "This time interval is in use",
+      "tooltip": "Remove this time interval from the routes using it first"
     },
     "location-label": "Location",
     "months-label": "Months",
