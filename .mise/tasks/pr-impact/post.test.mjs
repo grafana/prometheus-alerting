@@ -9,7 +9,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { pickComments, ourOpenThreads } from './post.mjs';
+import { pickComments, ourOpenThreads, ourShowingReviews } from './post.mjs';
 
 /** A review thread as the GraphQL query returns it, with only what we read. */
 function thread({ id = 'PRRT_1', resolved = false, body = '<!-- pr-impact-spot -->', author = 'Bot', replies = 0 }) {
@@ -18,6 +18,11 @@ function thread({ id = 'PRRT_1', resolved = false, body = '<!-- pr-impact-spot -
     isResolved: resolved,
     comments: { totalCount: 1 + replies, nodes: [{ body, author: { __typename: author } }] },
   };
+}
+
+/** A review as the GraphQL query returns it, with only what we read. */
+function review({ id = 'PRR_1', minimized = false, body = '<!-- pr-impact -->', author = 'Bot' }) {
+  return { id, isMinimized: minimized, body, author: { __typename: author } };
 }
 
 /** A patch that adds the given line numbers, one hunk per line. */
@@ -138,4 +143,21 @@ test('a thread somebody replied to is left open', () => {
   // old code needed a special case for this. Resolving wouldn't lose anything,
   // but it would fold up a conversation somebody is still having.
   assert.deepEqual(ourOpenThreads([thread({ replies: 1 })], { onlyBot: true }), []);
+});
+
+test('our ratings that are still showing are the ones to hide', () => {
+  const reviews = [review({ id: 'PRR_1' }), review({ id: 'PRR_2' })];
+  assert.deepEqual(ourShowingReviews(reviews, { onlyBot: true }), ['PRR_1', 'PRR_2']);
+});
+
+test('a rating already hidden is left alone', () => {
+  // An earlier run did it, or somebody did it by hand. Either way, nothing left.
+  assert.deepEqual(ourShowingReviews([review({ minimized: true })], { onlyBot: true }), []);
+});
+
+test("somebody else's review is left alone, marker or not", () => {
+  const reviews = [review({ body: 'looks fine to me' }), review({ id: 'PRR_9', author: 'User' })];
+  assert.deepEqual(ourShowingReviews(reviews, { onlyBot: true }), []);
+  // Run by hand the poster is a person, so only the marker decides.
+  assert.deepEqual(ourShowingReviews(reviews, { onlyBot: false }), ['PRR_9']);
 });
