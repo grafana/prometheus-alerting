@@ -1,4 +1,4 @@
-import { PLUGIN_BASE_URL, ROUTES } from '../constants';
+import { ALERTMANAGER_QUERY_PARAM, PLUGIN_BASE_URL, ROUTES } from '../constants';
 import { DataSourceRuleIdentifier, stringifyIdentifier } from '@grafana/external-rules/identifiers';
 import { config } from '@grafana/runtime';
 import { urlUtil } from '@grafana/data';
@@ -138,6 +138,36 @@ export const silences = {
     }
     const params = new URLSearchParams({ silenceIds: silenceIds.join(',') });
     return `${PLUGIN_BASE_URL}/${ROUTES.Silences}?${params.toString()}`;
+  },
+};
+
+export const routes = {
+  /**
+   * Generate a link to the routes page of an Alertmanager, optionally opening the drawer for one
+   * route. Route IDs come from attachRouteIds and change whenever the route's content changes,
+   * so a link to a route that has since been edited just lands on the page.
+   */
+  listPageLink(alertmanagerUid: string, routeId?: string): string {
+    const params = new URLSearchParams({ [ALERTMANAGER_QUERY_PARAM]: alertmanagerUid });
+    if (routeId) {
+      params.set('routeId', routeId);
+    }
+    return `${PLUGIN_BASE_URL}/${ROUTES.Routes}?${params.toString()}`;
+  },
+};
+
+export const timeIntervals = {
+  /**
+   * Generate a link to the time intervals page of an Alertmanager, optionally opening the drawer
+   * for one interval. Time intervals are identified by their name, which is unique within an
+   * Alertmanager.
+   */
+  listPageLink(alertmanagerUid: string, name?: string): string {
+    const params = new URLSearchParams({ [ALERTMANAGER_QUERY_PARAM]: alertmanagerUid });
+    if (name) {
+      params.set('name', name);
+    }
+    return `${PLUGIN_BASE_URL}/${ROUTES.TimeIntervals}?${params.toString()}`;
   },
 };
 

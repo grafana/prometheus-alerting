@@ -1,8 +1,10 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import { useLocation } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 
 import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
+import type { Route } from '@grafana/external-alertmanager/vanilla';
 import { setDataSourceSrv } from '@grafana/runtime';
 
 import { AlertingPermission } from '../../../access-control/abilities';
@@ -13,7 +15,8 @@ import {
   setCurrentUserPermissions,
   setMockGrafanaDataSources,
 } from '../../../test/mocks/grafana-runtime';
-import { createTestWrapper } from '../../../test/utils/test-wrapper';
+import { createTestWrapper, TestMemoryRouter } from '../../../test/utils/test-wrapper';
+import { timeIntervals as timeIntervalsNav } from '../../../utils/navigation';
 import TimeIntervalsPage from './TimeIntervalsList';
 
 const timeIntervals = Array.from({ length: 41 }, (_, index) => ({
@@ -21,18 +24,35 @@ const timeIntervals = Array.from({ length: 41 }, (_, index) => ({
   time_intervals: [{ weekdays: ['monday'] }],
 }));
 
-function renderPage() {
+function CurrentSearch() {
+  return <div data-testid="current-search">{useLocation().search}</div>;
+}
+
+// The page is mounted at "/", so a link's path is dropped and only its query string kept
+function pathFor(name: string) {
+  return `/?${timeIntervalsNav.listPageLink(mockMimirAlertmanagerDs.uid, name).split('?')[1]}`;
+}
+
+function renderPage(route: Route = { receiver: 'default' }, path = '/') {
   const config: ParsedUserConfiguration = {
     template_files: {},
     alertmanager_config: {
-      route: { receiver: 'default' },
+      route,
       receivers: [{ name: 'default' }],
       time_intervals: timeIntervals,
     },
   };
   setMimirAlertmanagerConfig(config);
 
-  return render(<TimeIntervalsPage />, { wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid) });
+  const Wrapper = createTestWrapper(mockMimirAlertmanagerDs.uid);
+  return render(
+    <Wrapper>
+      <TestMemoryRouter initialEntries={[path]}>
+        <TimeIntervalsPage />
+        <CurrentSearch />
+      </TestMemoryRouter>
+    </Wrapper>
+  );
 }
 
 describe('TimeIntervalsPage', () => {
@@ -78,5 +98,52 @@ describe('TimeIntervalsPage', () => {
     await user.type(search, 'missing');
 
     await waitFor(() => expect(screen.getByText('No time intervals match your search.')).toBeInTheDocument());
+  });
+
+  it('shows on each card how many routes use the interval', async () => {
+    renderPage({
+      receiver: 'default',
+      mute_time_intervals: ['interval-1'],
+      routes: [{ receiver: 'pager', active_time_intervals: ['interval-1', 'interval-2'] }],
+    });
+
+    // Tests render the default (singular) text; the plural comes from the translation file
+    const card = async (name: string) => (await screen.findByRole('heading', { name })).parentElement!;
+
+    expect(await card('interval-1')).toHaveTextContent(/Used by 2 route/);
+    expect(await card('interval-2')).toHaveTextContent(/Used by 1 route/);
+    expect(await card('interval-3')).toHaveTextContent('No route uses this time interval');
+  });
+
+  it('opens the drawer for the interval named in the URL, even when it is not on the first page', async () => {
+    renderPage(undefined, pathFor('interval-41'));
+
+    const drawer = await screen.findByRole('dialog');
+    expect(within(drawer).getByText('interval-41')).toBeInTheDocument();
+    expect(screen.getByTestId('current-search')).toHaveTextContent('name=interval-41');
+  });
+
+  it('puts the viewed interval in the URL, and takes it out again when the drawer closes', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByRole('heading', { name: 'interval-1' });
+    await user.click(screen.getAllByRole('button', { name: 'View' })[0]);
+
+    const drawer = await screen.findByRole('dialog');
+    expect(screen.getByTestId('current-search')).toHaveTextContent('name=interval-1');
+    expect(screen.getByTestId('current-search')).toHaveTextContent(`alertmanager=${mockMimirAlertmanagerDs.uid}`);
+
+    await user.click(within(drawer).getByRole('button', { name: 'Close' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByTestId('current-search')).toBeEmptyDOMElement();
+  });
+
+  it('opens nothing for a name that no longer matches an interval', async () => {
+    renderPage(undefined, pathFor('renamed-since'));
+
+    await waitFor(() => expect(screen.getByTestId('current-search')).toBeEmptyDOMElement());
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

@@ -3,8 +3,11 @@ import { remove } from 'lodash';
 
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 
-import { removeTimeIntervalFromRoute, renameTimeInterval } from './utils/muteTimings.utils';
-import { initialAlertmanagerConfiguration } from '@grafana/external-alertmanager/mimir';
+import {
+  initialAlertmanagerConfiguration,
+  removeTimeIntervalFromRoute,
+  renameTimeInterval,
+} from '@grafana/external-alertmanager/mimir';
 
 export const addTimeInterval = createAction<{ interval: TimeInterval }>('muteTiming/add');
 export const updateTimeInterval = createAction<{

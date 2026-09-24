@@ -1208,6 +1208,7 @@
     }
   },
   "routes": {
+    "active-timings-label": "Active timings",
     "add": {
       "error": "Failed to add route",
       "success": "Successfully added route"
@@ -1279,6 +1280,7 @@
     "group-interval-label": "Group interval",
     "group-wait-label": "Group wait",
     "matchers-label": "Matchers",
+    "mute-timings-label": "Mute timings",
     "new-route": "New route",
     "no": "No",
     "no-routes-message": "No routing configuration is available in the Alertmanager.",
@@ -1289,6 +1291,7 @@
     "root-route-desc": "This is the root route. All alerts will be processed through this route and its children.",
     "root-route-title": "Root Route",
     "route-label": "Route",
+    "time-intervals-label": "Time intervals",
     "update": {
       "error": "Failed to update route",
       "success": "Successfully updated route"
@@ -1645,11 +1648,11 @@
       "years-placeholder": "2024, 2025"
     },
     "in-use": {
-      "as-active": "active timing",
-      "as-mute": "mute timing",
-      "body": "Removing it would change when the routes below notify, so it has to be taken out of them first.",
-      "inherited-receiver": "a route that inherits its receiver",
-      "title": "This time interval is in use",
+      "as-active": "Active timing",
+      "as-mute": "Mute timing",
+      "heading": "Used by routes",
+      "inherited-receiver": "A route that inherits its receiver",
+      "none": "No route uses this time interval",
       "tooltip": "Remove this time interval from the routes using it first"
     },
     "location-label": "Location",
@@ -1661,6 +1664,10 @@
     "no-time-intervals-message": "No time intervals are configured in the Alertmanager.",
     "page-subtitle": "Define time windows for muting or activating notifications",
     "resource-label": "time intervals",
+    "route-count_one": "Used by {{count}} route",
+    "route-count_other": "Used by {{count}} routes",
+    "schedule-or": "or",
+    "schedule-title": "Schedule",
     "search-label": "Search time intervals by name",
     "search-placeholder": "Search time intervals",
     "times-label": "Times",
