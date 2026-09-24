@@ -67,10 +67,11 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
               required: t('alerting.rule-name-input.message.rule-name-is-required', 'Rule name is required.'),
             })}
             autoFocus
-            placeholder={t(
-              'alerting.rule-name-input.placeholder-give-your-alert-a-name',
-              'Give your alert rule a name'
-            )}
+            placeholder={
+              isRecording
+                ? t('alerting.rule-name-input.placeholder-recording', 'Give your recording rule a name')
+                : t('alerting.rule-name-input.placeholder-give-your-alert-a-name', 'Give your alert rule a name')
+            }
           />
         </Field>
 
