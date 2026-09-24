@@ -327,7 +327,8 @@
       "message": {
         "rule-name-is-required": "Rule name is required."
       },
-      "placeholder-give-your-alert-a-name": "Give your alert rule a name"
+      "placeholder-give-your-alert-a-name": "Give your alert rule a name",
+      "placeholder-recording": "Give your recording rule a name"
     },
     "rules": {
       "health": {
