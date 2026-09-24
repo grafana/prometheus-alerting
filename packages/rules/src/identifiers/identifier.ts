@@ -41,3 +41,15 @@ export interface RuleGroupIdentifier {
   namespaceName: string;
   groupName: string;
 }
+
+/** Where a rule lives: which data source, namespace and group hold it. */
+export type RuleLocation = Pick<DataSourceRuleIdentifier, 'uid' | 'namespace' | 'groupName'>;
+
+/**
+ * Copies just the location fields off anything that has them, dropping the rest (a rule
+ * identifier also carries the rule name and hash). Listing every field here means TypeScript
+ * complains when a new one is added to RuleLocation, so it can not be forgotten.
+ */
+export function toRuleLocation({ uid, namespace, groupName }: DataSourceRuleIdentifier): RuleLocation {
+  return { uid, namespace, groupName };
+}

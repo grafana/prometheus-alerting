@@ -1,5 +1,12 @@
+import { isEqual } from 'lodash';
+
 import type { RulerRuleDTO } from '@grafana/external-rules/vanilla';
-import type { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
+import {
+  type CloudRuleIdentifier,
+  type DataSourceRuleIdentifier,
+  type RuleLocation,
+  toRuleLocation,
+} from '@grafana/external-rules/identifiers';
 
 import { rulerApi } from '../../../../api/rules/ruler.endpoints';
 import { mergeRequestStates } from '../../../../utils/requestState';
@@ -10,21 +17,20 @@ import { useProduceNewRuleGroup } from './useProduceNewRuleGroup';
 
 const { useUpsertRuleGroupMutation } = rulerApi;
 
-/** Where a rule lives: which data source, namespace and group hold it. */
-export interface RuleLocation {
-  uid: string;
-  namespace: string;
-  groupName: string;
-}
-
-export interface SaveRuleToGroupResult {
-  /** True when the rule was written to a different group than the one it came from. */
-  moved: boolean;
-}
+export type SaveRuleToGroupResult =
+  | {
+      moved: false;
+      location: RuleLocation;
+    }
+  | {
+      moved: true;
+      from: RuleLocation;
+      to: RuleLocation;
+    };
 
 /** Whether two locations point at the same group in the same namespace on the same data source. */
-export function isSameRuleLocation(a: RuleLocation, b: RuleLocation): boolean {
-  return a.uid === b.uid && a.namespace === b.namespace && a.groupName === b.groupName;
+export function isSameRuleLocation(existing: DataSourceRuleIdentifier, target: RuleLocation): boolean {
+  return isEqual(toRuleLocation(existing), target);
 }
 
 /**
@@ -72,7 +78,7 @@ export function useSaveRuleToGroup() {
     }).unwrap();
 
     if (!movingFrom) {
-      return { moved: false };
+      return { moved: false, location: target };
     }
 
     // The new copy is written first on purpose. If this second write fails the rule exists in
@@ -80,7 +86,7 @@ export function useSaveRuleToGroup() {
     // would lose the rule altogether.
     await deleteRuleFromGroup(movingFrom);
 
-    return { moved: true };
+    return { moved: true, from: toRuleLocation(movingFrom), to: target };
   };
 
   return [saveRuleToGroup, requestState] as const;

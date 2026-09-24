@@ -76,16 +76,17 @@ function renderSaveRuleToGroup() {
 const at = (namespace: string, groupName: string) => ({ uid: DATA_SOURCE_UID, namespace, groupName });
 
 describe('isSameRuleLocation', () => {
-  const here = at(NAMESPACE, GROUP_NAME);
+  // A full rule identifier, which also carries the rule name and hash on top of its location
+  const existing = identifierFor(movedRule);
 
-  it('matches a location against itself', () => {
-    expect(isSameRuleLocation(here, at(NAMESPACE, GROUP_NAME))).toBe(true);
+  it('matches when the rule stays in the same group', () => {
+    expect(isSameRuleLocation(existing, at(NAMESPACE, GROUP_NAME))).toBe(true);
   });
 
   it('tells apart a different group, namespace or data source', () => {
-    expect(isSameRuleLocation(here, at(NAMESPACE, OTHER_GROUP))).toBe(false);
-    expect(isSameRuleLocation(here, at(OTHER_NAMESPACE, GROUP_NAME))).toBe(false);
-    expect(isSameRuleLocation(here, { ...here, uid: 'other-uid' })).toBe(false);
+    expect(isSameRuleLocation(existing, at(NAMESPACE, OTHER_GROUP))).toBe(false);
+    expect(isSameRuleLocation(existing, at(OTHER_NAMESPACE, GROUP_NAME))).toBe(false);
+    expect(isSameRuleLocation(existing, { ...at(NAMESPACE, GROUP_NAME), uid: 'other-uid' })).toBe(false);
   });
 });
 
@@ -108,7 +109,10 @@ describe('useSaveRuleToGroup', () => {
     const result = renderSaveRuleToGroup();
 
     await act(async () => {
-      await expect(result.current[0](at(NAMESPACE, GROUP_NAME), newRule)).resolves.toEqual({ moved: false });
+      await expect(result.current[0](at(NAMESPACE, GROUP_NAME), newRule)).resolves.toEqual({
+        moved: false,
+        location: at(NAMESPACE, GROUP_NAME),
+      });
     });
 
     expect(upserts).toEqual([
@@ -129,6 +133,7 @@ describe('useSaveRuleToGroup', () => {
     await act(async () => {
       await expect(result.current[0](at(NAMESPACE, GROUP_NAME), edited, identifierFor(movedRule))).resolves.toEqual({
         moved: false,
+        location: at(NAMESPACE, GROUP_NAME),
       });
     });
 
@@ -152,7 +157,7 @@ describe('useSaveRuleToGroup', () => {
 
     await act(async () => {
       await expect(result.current[0](at(NAMESPACE, OTHER_GROUP), movedRule, identifierFor(movedRule))).resolves.toEqual(
-        { moved: true }
+        { moved: true, from: at(NAMESPACE, GROUP_NAME), to: at(NAMESPACE, OTHER_GROUP) }
       );
     });
 
@@ -181,7 +186,7 @@ describe('useSaveRuleToGroup', () => {
     await act(async () => {
       await expect(
         result.current[0](at(OTHER_NAMESPACE, GROUP_NAME), movedRule, identifierFor(movedRule))
-      ).resolves.toEqual({ moved: true });
+      ).resolves.toEqual({ moved: true, from: at(NAMESPACE, GROUP_NAME), to: at(OTHER_NAMESPACE, GROUP_NAME) });
     });
 
     expect(upserts).toEqual([
@@ -200,7 +205,7 @@ describe('useSaveRuleToGroup', () => {
 
     await act(async () => {
       await expect(result.current[0](at(NAMESPACE, OTHER_GROUP), movedRule, identifierFor(movedRule))).resolves.toEqual(
-        { moved: true }
+        { moved: true, from: at(NAMESPACE, GROUP_NAME), to: at(NAMESPACE, OTHER_GROUP) }
       );
     });
 
@@ -224,7 +229,7 @@ describe('useSaveRuleToGroup', () => {
 
     await act(async () => {
       await expect(result.current[0](at(NAMESPACE, OTHER_GROUP), movedRule, identifierFor(movedRule))).resolves.toEqual(
-        { moved: true }
+        { moved: true, from: at(NAMESPACE, GROUP_NAME), to: at(NAMESPACE, OTHER_GROUP) }
       );
     });
 
