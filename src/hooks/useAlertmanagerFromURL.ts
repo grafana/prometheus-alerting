@@ -1,4 +1,4 @@
-import { useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 
 import { ALERTMANAGER_QUERY_PARAM } from '../constants';
 import { selectDataSourceUID } from '../store/datasourceSlice';
@@ -12,9 +12,11 @@ import { useURLSearchParams } from './useURLSearchParams';
  * Selects the Alertmanager a link names in `?alertmanager=`, so a link from Grafana (or from a colleague)
  * opens the Alertmanager it was about rather than whichever one this browser tab picked last.
  *
- * The param is taken out of the URL once it's been applied. From then on the picker is in charge, and a
- * param left behind would keep naming the old Alertmanager after somebody switched away from it. A value
- * that doesn't match any Alertmanager is left alone and ignored.
+ * The URL only decides when a new value shows up in it. After that:
+ * - the param stays while it matches the selected Alertmanager, so the address bar can be shared as it is;
+ * - a data source name is swapped for its UID;
+ * - it's dropped when it doesn't match any Alertmanager, or when somebody picks another one in the picker,
+ *   instead of switching them straight back.
  *
  * Returns true while the switch is still happening, so callers can hold off rendering a page that would
  * otherwise load, and briefly show, the previous Alertmanager's data.
@@ -25,22 +27,37 @@ export function useAlertmanagerFromURL(): boolean {
   const selectAlertmanager = useSelectAlertmanager();
   const [searchParams, updateSearchParams] = useURLSearchParams();
 
-  const requestedUID = findAlertmanagerUIDForQueryParam(
-    searchParams.get(ALERTMANAGER_QUERY_PARAM),
-    availableAlertmanagers
-  );
+  const paramValue = searchParams.get(ALERTMANAGER_QUERY_PARAM);
+  const requestedUID = findAlertmanagerUIDForQueryParam(paramValue, availableAlertmanagers);
+
+  // When a new value shows up in the URL, remember which Alertmanager it wants us to switch to. This is
+  // worked out while rendering, rather than in an effect, so the page never renders against the old one.
+  const [lastSeenValue, setLastSeenValue] = useState<string | null>(null);
+  const [pendingUID, setPendingUID] = useState<string | undefined>(undefined);
+  if (paramValue !== lastSeenValue) {
+    setLastSeenValue(paramValue);
+    setPendingUID(requestedUID !== selectedUID ? requestedUID : undefined);
+  } else if (pendingUID !== undefined && pendingUID === selectedUID) {
+    setPendingUID(undefined);
+  }
 
   // A layout effect so the switch lands before the browser paints anything.
   useLayoutEffect(() => {
-    if (requestedUID === undefined) {
-      return;
+    if (pendingUID !== undefined) {
+      selectAlertmanager(pendingUID);
     }
+  }, [pendingUID, selectAlertmanager]);
 
-    if (requestedUID !== selectedUID) {
-      selectAlertmanager(requestedUID);
+  // Once the switch is done, the param should name the selected Alertmanager by UID, or not be there at
+  // all. A plain effect rather than a layout one: on the first render the router doesn't listen for URL
+  // changes until its own layout effect has run, which is after ours.
+  const wantedValue = requestedUID === selectedUID ? requestedUID : undefined;
+  const needsTidying = Boolean(paramValue) && pendingUID === undefined && paramValue !== wantedValue;
+  useEffect(() => {
+    if (needsTidying) {
+      updateSearchParams({ [ALERTMANAGER_QUERY_PARAM]: wantedValue });
     }
-    updateSearchParams({ [ALERTMANAGER_QUERY_PARAM]: undefined });
-  }, [requestedUID, selectedUID, selectAlertmanager, updateSearchParams]);
+  }, [needsTidying, wantedValue, updateSearchParams]);
 
-  return requestedUID !== undefined && requestedUID !== selectedUID;
+  return pendingUID !== undefined;
 }
