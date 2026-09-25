@@ -82,6 +82,8 @@ describe('TimeIntervalDrawerView delete guard', () => {
     setMimirAlertmanagerConfig(configWithRoute({ receiver: 'default' }));
     renderDrawerView();
 
+    // Until the routes have loaded there is no telling whether any of them use it
+    expectRemoveBlocked();
     await waitFor(() => expect(screen.getByText('No route uses this time interval')).toBeInTheDocument());
     expect(ui.removeButton.get()).not.toHaveAttribute('aria-disabled', 'true');
   });
@@ -102,7 +104,8 @@ describe('TimeIntervalDrawerView delete guard', () => {
     );
     renderDrawerView();
 
-    await waitFor(() => expectRemoveBlocked());
+    await screen.findByText('Used by routes');
+    expectRemoveBlocked();
     expect(dependentRoutes()).toEqual([
       ['Mute timing', 'team=ops'],
       ['Active timing', 'team=ops'],
@@ -113,7 +116,8 @@ describe('TimeIntervalDrawerView delete guard', () => {
     setMimirAlertmanagerConfig(configWithRoute({ receiver: 'default', mute_time_intervals: ['business-hours'] }));
     renderDrawerView();
 
-    await waitFor(() => expectRemoveBlocked());
+    await screen.findByText('Used by routes');
+    expectRemoveBlocked();
     expect(dependentRoutes()).toEqual([['Mute timing', 'default']]);
   });
 
@@ -122,7 +126,8 @@ describe('TimeIntervalDrawerView delete guard', () => {
     setMimirAlertmanagerConfig(configWithRoute({ receiver: 'default', mute_time_intervals: ['business-hours'] }));
     renderDrawerView();
 
-    await waitFor(() => expectRemoveBlocked());
+    await screen.findByText('Used by routes');
+    expectRemoveBlocked();
     await user.click(ui.removeButton.get());
 
     expect(ui.confirmModal.query()).not.toBeInTheDocument();
@@ -136,7 +141,8 @@ describe('TimeIntervalDrawerView delete guard', () => {
     setMimirAlertmanagerConfig(configWithRoute(route));
     renderDrawerView();
 
-    await waitFor(() => expectRemoveBlocked());
+    await screen.findByText('Used by routes');
+    expectRemoveBlocked();
     expect(dependentRoutes()).toEqual([['Active timing', 'pager']]);
 
     const childRouteId = attachRouteIds(route).routes![0].id;
@@ -155,7 +161,8 @@ describe('TimeIntervalDrawerView delete guard', () => {
     );
     renderDrawerView();
 
-    await waitFor(() => expectRemoveBlocked());
+    await screen.findByText('Used by routes');
+    expectRemoveBlocked();
     expect(dependentRoutes()).toEqual([['Mute timing', 'A route that inherits its receiver']]);
   });
 
@@ -165,7 +172,6 @@ describe('TimeIntervalDrawerView delete guard', () => {
     );
     renderDrawerView();
 
-    await waitFor(() => expect(ui.removeButton.get()).toBeEnabled());
-    expect(ui.removeButton.get()).not.toHaveAttribute('aria-disabled', 'true');
+    await waitFor(() => expect(ui.removeButton.get()).not.toHaveAttribute('aria-disabled', 'true'));
   });
 });

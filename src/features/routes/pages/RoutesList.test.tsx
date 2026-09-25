@@ -118,6 +118,19 @@ describe('RoutesPage routeId parameter', () => {
     expect(ui.currentSearch()).toBeEmptyDOMElement();
   });
 
+  it('keeps the route in the URL while its receiver is open, so "Back to route" returns to it', async () => {
+    const user = userEvent.setup();
+    renderRoutes(pathFor(childRouteId));
+
+    const drawer = await screen.findByRole('dialog');
+    await user.click(within(drawer).getByRole('link', { name: 'pager' }));
+    expect(ui.currentSearch()).toHaveTextContent(`routeId=${childRouteId}`);
+
+    await user.click(await screen.findByRole('button', { name: 'Back to route' }));
+    expect(screen.queryByRole('button', { name: 'Back to route' })).not.toBeInTheDocument();
+    expect(within(screen.getByRole('dialog')).getByText('severity=critical')).toBeInTheDocument();
+  });
+
   it('opens nothing for an ID that no longer matches a route', async () => {
     renderRoutes(pathFor('0-stale'));
 

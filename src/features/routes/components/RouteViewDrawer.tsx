@@ -72,7 +72,18 @@ function RouteDetails({ route, onReceiverClick }: RouteDetailsProps) {
       {route.receiver && (
         <Section title={t('routes.receiver-label', 'Receiver')}>
           {onReceiverClick ? (
-            <TextLink color="link" onClick={() => route.receiver && onReceiverClick(route.receiver)} href="#">
+            <TextLink
+              color="link"
+              href="#"
+              onClick={(event) => {
+                // TextLink is a router link, and following "#" would drop the ?routeId= this drawer
+                // is opened from, so "Back to route" would have nothing to go back to
+                event.preventDefault();
+                if (route.receiver) {
+                  onReceiverClick(route.receiver);
+                }
+              }}
+            >
               {route.receiver}
             </TextLink>
           ) : (

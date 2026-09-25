@@ -1652,6 +1652,7 @@
       "as-mute": "Mute timing",
       "heading": "Used by routes",
       "inherited-receiver": "A route that inherits its receiver",
+      "loading-tooltip": "Checking which routes use this time interval",
       "none": "No route uses this time interval",
       "tooltip": "Remove this time interval from the routes using it first"
     },

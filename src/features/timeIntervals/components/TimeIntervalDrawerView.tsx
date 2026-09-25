@@ -92,6 +92,9 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
   const { getUses, isSuccess: hasLoadedRoutes } = useTimeIntervalUses();
   const uses = getUses(timeInterval.name);
   const isInUse = uses.length > 0;
+  // Until the routes have loaded (or if they fail to), there's no telling whether any of them
+  // use this interval, so don't offer the delete yet
+  const canRemove = hasLoadedRoutes && !isInUse;
 
   const handleRemove = () => {
     setIsConfirmModalOpen(true);
@@ -137,11 +140,13 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
             <Button
               variant="destructive"
               onClick={handleRemove}
-              disabled={isDeleting || isInUse}
+              disabled={isDeleting || !canRemove}
               tooltip={
-                isInUse
-                  ? t('time-intervals.in-use.tooltip', 'Remove this time interval from the routes using it first')
-                  : undefined
+                !hasLoadedRoutes
+                  ? t('time-intervals.in-use.loading-tooltip', 'Checking which routes use this time interval')
+                  : isInUse
+                    ? t('time-intervals.in-use.tooltip', 'Remove this time interval from the routes using it first')
+                    : undefined
               }
             >
               {t('time-intervals.drawer.remove', 'Remove')}
