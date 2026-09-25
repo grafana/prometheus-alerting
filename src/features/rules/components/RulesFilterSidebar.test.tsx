@@ -288,10 +288,12 @@ describe('RulesFilterSidebar', () => {
     });
     await user.type(screen.getByTestId('search-query-input'), 'ErrorRate');
     await user.keyboard('{Enter}');
+    // Wait on the URL: the namespace field is already empty from the clear above, so waiting on it
+    // wouldn't tell us the Enter has been applied yet
     await waitFor(() => {
-      expect(screen.getByTestId('namespace-filter-input')).toHaveValue('');
+      expect(screen.getByTestId('location-search')).toHaveTextContent('?search=ErrorRate');
     });
-    expect(screen.getByTestId('location-search')).toHaveTextContent('?search=ErrorRate');
+    expect(screen.getByTestId('namespace-filter-input')).toHaveValue('');
 
     await user.type(screen.getByTestId('namespace-filter-input'), 'prod');
     await waitFor(() => {
