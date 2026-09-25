@@ -1,4 +1,5 @@
-import { convertDataSourcesToComboboxOptions } from './utils.alertmanager';
+import { convertDataSourcesToComboboxOptions, findAlertmanagerUIDForQueryParam } from './utils.alertmanager';
+import { mockAlertmanagerDs, mockMimirAlertmanagerDs } from '../test/fixtures/datasources';
 import type { AlertmanagerDataSourceSettings } from 'types/datasources';
 
 function makeDs(overrides: Partial<AlertmanagerDataSourceSettings> = {}): AlertmanagerDataSourceSettings {
@@ -43,5 +44,34 @@ describe('convertDataSourcesToComboboxOptions', () => {
     expect(result).toHaveLength(2);
     expect(result[1].value).toBe('uid-2');
     expect(result[1].description).toBe('mimir');
+  });
+});
+
+describe('findAlertmanagerUIDForQueryParam', () => {
+  const alertmanagers = [mockAlertmanagerDs, mockMimirAlertmanagerDs];
+
+  it('matches on UID, which is what Grafana redirect links carry', () => {
+    expect(findAlertmanagerUIDForQueryParam(mockMimirAlertmanagerDs.uid, alertmanagers)).toBe(
+      mockMimirAlertmanagerDs.uid
+    );
+  });
+
+  it('falls back to the name, which is what Grafana puts in its own alerting links', () => {
+    expect(findAlertmanagerUIDForQueryParam(mockMimirAlertmanagerDs.name, alertmanagers)).toBe(
+      mockMimirAlertmanagerDs.uid
+    );
+  });
+
+  it('prefers a UID match over a data source whose name is that same string', () => {
+    const namedLikeAUID = { ...mockAlertmanagerDs, uid: 'other-uid', name: mockMimirAlertmanagerDs.uid };
+
+    expect(
+      findAlertmanagerUIDForQueryParam(mockMimirAlertmanagerDs.uid, [namedLikeAUID, mockMimirAlertmanagerDs])
+    ).toBe(mockMimirAlertmanagerDs.uid);
+  });
+
+  it('returns undefined for a missing or unknown value', () => {
+    expect(findAlertmanagerUIDForQueryParam(null, alertmanagers)).toBeUndefined();
+    expect(findAlertmanagerUIDForQueryParam('does-not-exist', alertmanagers)).toBeUndefined();
   });
 });
