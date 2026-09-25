@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.6.1](https://github.com/grafana/prometheus-alerting/compare/v1.6.0...v1.6.1) (2026-09-25)
+
+
+### 🐛 Bug Fixes
+
+* **alertmanager:** open the Alertmanager named in ?alertmanager= ([#321](https://github.com/grafana/prometheus-alerting/issues/321)) ([c651caa](https://github.com/grafana/prometheus-alerting/commit/c651caa567c9eec9b982effc97ce28973ab2ecda))
+* **rules:** move a rule when its group or namespace changes ([#314](https://github.com/grafana/prometheus-alerting/issues/314)) ([03e2cc7](https://github.com/grafana/prometheus-alerting/commit/03e2cc7f23922f7c379305eac999bba1260a39bf))
+* **time-intervals:** don't delete a time interval routes still use ([#315](https://github.com/grafana/prometheus-alerting/issues/315)) ([33fcd5d](https://github.com/grafana/prometheus-alerting/commit/33fcd5db32c43aecd173b45041803fd57bdbefd9))
+
+
+### 📝 Documentation
+
+* **rules:** trim the rule editor README and fix the recording rule placeholder ([#320](https://github.com/grafana/prometheus-alerting/issues/320)) ([822128f](https://github.com/grafana/prometheus-alerting/commit/822128f9aac03a815b9e23cee100f27cdb945185))
+
+
+### 🔧 Chores
+
+* **dev:** split docker-compose services into included files ([#317](https://github.com/grafana/prometheus-alerting/issues/317)) ([fd0d068](https://github.com/grafana/prometheus-alerting/commit/fd0d0687fcd8ee8145e338d923ab839fb6740b5b))
+
 ## [1.6.0](https://github.com/grafana/prometheus-alerting/compare/v1.5.0...v1.6.0) (2026-09-23)
 
 
