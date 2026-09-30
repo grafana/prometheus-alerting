@@ -9,6 +9,7 @@ import { beforeEach, vi } from 'vitest';
 import { server } from '../../../test';
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper, TestMemoryRouter } from '../../../test/utils/test-wrapper';
+import { FRONTED_GROUPED_PAGE_SIZE } from '../../../utils/paginationLimits';
 
 import { PaginatedDataSourceLoader } from './PaginatedDataSourceLoader';
 import { DataSourcesLoadingBar, DataSourcesStatusField } from './components/DataSourcesStatus';
@@ -162,6 +163,60 @@ describe('PaginatedDataSourceLoader with a data source that has no rules', () =>
     await waitFor(() => expect(rulesRequest).toHaveBeenCalled());
     await waitFor(() => expect(screen.queryByRole('status', { name: 'Loading rules' })).not.toBeInTheDocument());
     expect(screen.queryByRole('heading', { name: 'Mimir' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /hidden$/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('PaginatedDataSourceLoader with a later page that fails', () => {
+  beforeEach(() => {
+    setDataSourceSrv(createMockDataSourceSrv());
+    server.use(
+      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, ({ request }) => {
+        if (new URL(request.url).searchParams.has('group_next_token')) {
+          return HttpResponse.json({ status: 'error', error: 'upstream timed out' }, { status: 502 });
+        }
+
+        return HttpResponse.json({
+          status: 'success',
+          data: {
+            // A full page, so the next page is only asked for once the user clicks "Show more"
+            groups: Array.from({ length: FRONTED_GROUPED_PAGE_SIZE }, (_, index) => ({
+              name: `group-${index}`,
+              file: namespace,
+              interval: 60,
+              rules: [],
+            })),
+            groupNextToken: 'page-2',
+          },
+        });
+      })
+    );
+  });
+
+  it('keeps the data source in the list with its error, and does not count it as hidden', async () => {
+    const StoreWrapper = createTestWrapper(dataSourceUid);
+
+    render(
+      <StoreWrapper>
+        <TestMemoryRouter>
+          <DataSourceErrorsProvider>
+            <PaginatedDataSourceLoader
+              rulesSourceIdentifier={rulesSourceIdentifier}
+              application="mimir"
+              rulerApiEnabled={false}
+            />
+            <DataSourcesLoadingBar />
+            <DataSourcesStatusField />
+          </DataSourceErrorsProvider>
+        </TestMemoryRouter>
+      </StoreWrapper>
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Show more…' }));
+
+    expect(await screen.findByRole('button', { name: 'Error' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: namespace })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('status', { name: 'Loading rules' })).not.toBeInTheDocument());
     expect(screen.queryByRole('button', { name: /hidden$/ })).not.toBeInTheDocument();
   });
 });

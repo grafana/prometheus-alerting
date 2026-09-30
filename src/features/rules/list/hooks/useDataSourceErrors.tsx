@@ -1,6 +1,4 @@
-import React, { PropsWithChildren, createContext, useContext, useEffect, useMemo, useReducer } from 'react';
-
-import { isEmpty } from 'lodash';
+import React, { PropsWithChildren, createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { t } from '@grafana/i18n';
 
@@ -24,8 +22,8 @@ interface DataSourceErrorsContextValue {
   /** Data sources that are still loading their rules */
   loadingUids: string[];
   reportError: (error: DataSourceRulesError) => void;
-  clearError: (uid: string) => void;
-  clearErrors: () => void;
+  /** Pass a `kind` to only clear that kind of report, e.g. clear an error but keep a "no rules" report */
+  clearError: (uid: string, kind?: DataSourceRulesError['kind']) => void;
   startLoading: (uid: string) => void;
   stopLoading: (uid: string) => void;
 }
@@ -34,8 +32,7 @@ type DataSourceErrorsState = Record<string, DataSourceRulesError>;
 
 type DataSourceErrorsAction =
   | { type: 'report'; error: DataSourceRulesError }
-  | { type: 'clear'; uid: string }
-  | { type: 'clear-all' };
+  | { type: 'clear'; uid: string; kind?: DataSourceRulesError['kind'] };
 
 export function dataSourceErrorsReducer(
   state: DataSourceErrorsState,
@@ -57,15 +54,14 @@ export function dataSourceErrorsReducer(
       return { ...state, [error.uid]: error };
     }
     case 'clear': {
-      if (!(action.uid in state)) {
+      const reported = state[action.uid];
+      if (!reported || (action.kind && reported.kind !== action.kind)) {
         return state;
       }
       const next = { ...state };
       delete next[action.uid];
       return next;
     }
-    case 'clear-all':
-      return isEmpty(state) ? state : {};
   }
 }
 
@@ -110,7 +106,6 @@ const DataSourceErrorsContext = createContext<DataSourceErrorsContextValue>({
   loadingUids: [],
   reportError: noop,
   clearError: noop,
-  clearErrors: noop,
   startLoading: noop,
   stopLoading: noop,
 });
@@ -118,6 +113,11 @@ const DataSourceErrorsContext = createContext<DataSourceErrorsContextValue>({
 /**
  * Collects errors and empty data sources from the rule list, so we can hide those data sources from
  * the list itself and report them in a single place instead.
+ *
+ * A report stays after the component that made it goes away. Switching between the grouped and the
+ * filtered view unmounts every loader, and the hidden count should not drop to zero and climb back
+ * while the other view loads the same data sources again. A report is only cleared once we know the
+ * data source is fine, see `useReportDataSourceError` and `useReportHealthyDataSource`.
  */
 export function DataSourceErrorsProvider({ children }: PropsWithChildren) {
   const [errorsByUid, dispatch] = useReducer(dataSourceErrorsReducer, {});
@@ -128,8 +128,7 @@ export function DataSourceErrorsProvider({ children }: PropsWithChildren) {
   const actions = useMemo(
     () => ({
       reportError: (error: DataSourceRulesError) => dispatch({ type: 'report', error }),
-      clearError: (uid: string) => dispatch({ type: 'clear', uid }),
-      clearErrors: () => dispatch({ type: 'clear-all' }),
+      clearError: (uid: string, kind?: DataSourceRulesError['kind']) => dispatch({ type: 'clear', uid, kind }),
       startLoading: (uid: string) => dispatchLoading({ type: 'start', uid }),
       stopLoading: (uid: string) => dispatchLoading({ type: 'stop', uid }),
     }),
@@ -153,8 +152,9 @@ export function toDataSourceRulesError(uid: string, name: string, error: unknown
 }
 
 /**
- * Reports an error for a single data source for as long as the error is present and the component
- * is mounted. Pass a falsy error to report nothing.
+ * Reports an error for a single data source. The report is cleared when the error goes away while this
+ * component is still mounted (e.g. a retry went through), but not when the component unmounts.
+ * Pass a falsy error to report nothing.
  */
 export function useReportDataSourceError(uid: string, name: string, error: unknown) {
   const { reportError, clearError } = useDataSourceErrors();
@@ -163,37 +163,56 @@ export function useReportDataSourceError(uid: string, name: string, error: unkno
   // error itself would re-trigger the reporting for every error that is recreated on each render
   const reported = error ? toDataSourceRulesError(uid, name, error) : undefined;
   const { description, details } = reported ?? {};
+  const reportedUid = useRef<string>(undefined);
 
   useEffect(() => {
-    if (!description) {
-      return;
+    if (description) {
+      reportError({ uid, name, kind: 'error', description, details });
+      reportedUid.current = uid;
+    } else if (reportedUid.current) {
+      clearError(reportedUid.current, 'error');
+      reportedUid.current = undefined;
     }
-
-    reportError({ uid, name, kind: 'error', description, details });
-    return () => clearError(uid);
   }, [uid, name, description, details, reportError, clearError]);
 }
 
 /**
- * Reports a data source that has no rules at all, for as long as it stays empty and the component
- * is mounted.
+ * Reports a data source that has no rules at all. Like `useReportDataSourceError`, the report is
+ * cleared when the data source stops being empty while this component is mounted, not on unmount.
  */
 export function useReportEmptyDataSource(uid: string, name: string, isEmpty: boolean) {
   const { reportError, clearError } = useDataSourceErrors();
 
-  useEffect(() => {
-    if (!isEmpty) {
-      return;
-    }
+  const reportedUid = useRef<string>(undefined);
 
-    reportError({
-      uid,
-      name,
-      kind: 'empty',
-      description: t('alerting.rule-list.datasource-errors.no-rules', 'This data source has no rules.'),
-    });
-    return () => clearError(uid);
+  useEffect(() => {
+    if (isEmpty) {
+      reportError({
+        uid,
+        name,
+        kind: 'empty',
+        description: t('alerting.rule-list.datasource-errors.no-rules', 'This data source has no rules.'),
+      });
+      reportedUid.current = uid;
+    } else if (reportedUid.current) {
+      clearError(reportedUid.current, 'empty');
+      reportedUid.current = undefined;
+    }
   }, [uid, name, isEmpty, reportError, clearError]);
+}
+
+/**
+ * Clears whatever was reported for a data source once it has served rules without an error – the only
+ * way a report made by a view that has since gone away gets cleared.
+ */
+export function useReportHealthyDataSource(uid: string, isHealthy: boolean) {
+  const { clearError } = useDataSourceErrors();
+
+  useEffect(() => {
+    if (isHealthy) {
+      clearError(uid);
+    }
+  }, [uid, isHealthy, clearError]);
 }
 
 /** Marks a data source as loading for as long as `isLoading` is true and the component is mounted. */

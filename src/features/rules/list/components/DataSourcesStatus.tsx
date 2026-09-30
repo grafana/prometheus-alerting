@@ -38,6 +38,12 @@ export const LOADING_BAR_HIDE_DELAY_MS = 500;
 export const LOADING_STATUS_SHOW_DELAY_MS = 300;
 
 /**
+ * The longest the hidden count waits for every data source on the first load. After that we show what we
+ * know so far, so one slow data source does not hold back what the others already told us.
+ */
+export const HIDDEN_COUNT_MAX_WAIT_MS = 300;
+
+/**
  * A loading bar at the top of the rule list, shown while any data source is still loading its rules.
  */
 export function DataSourcesLoadingBar() {
@@ -105,16 +111,20 @@ export function DataSourcesStatusField() {
 
 /**
  * Yellow "N hidden" text for next to the data source filter label, that opens the drawer listing the
- * hidden data sources. Only shows once loading has settled, so the count does not climb on screen.
+ * hidden data sources. Only shows once loading has settled, so the count does not climb on screen – unless
+ * a data source takes longer than `HIDDEN_COUNT_MAX_WAIT_MS`, then it shows what we know so far.
+ * After that it stays up while loading again (e.g. after switching views), since reported data sources
+ * are kept until they load fine – it would only drop out and come back with the same count.
  */
 export function HiddenDataSourcesLink() {
   const { errors, loadingUids } = useDataSourceErrors();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const isLoading = useDelayedHide(loadingUids.length > 0, LOADING_BAR_HIDE_DELAY_MS);
+  const hasSettled = useHasSettled(isLoading, HIDDEN_COUNT_MAX_WAIT_MS);
   const summary = useHiddenSummary();
   const styles = useStyles2(getStyles);
 
-  if (isLoading || errors.length === 0) {
+  if ((isLoading && !hasSettled) || errors.length === 0) {
     return null;
   }
 
@@ -129,6 +139,26 @@ export function HiddenDataSourcesLink() {
       {isDrawerOpen && <HiddenDataSourcesDrawer onClose={() => setIsDrawerOpen(false)} />}
     </>
   );
+}
+
+/**
+ * Turns true the first time loading finishes, or once it has taken longer than `maxWaitMs`, and stays
+ * true after that.
+ */
+function useHasSettled(isLoading: boolean, maxWaitMs: number): boolean {
+  const [hasStarted, setHasStarted] = useState(isLoading);
+  const [hasSettled, setHasSettled] = useState(false);
+  const hasWaitedLongEnough = useDelayedShow(isLoading, maxWaitMs);
+
+  if (isLoading && !hasStarted) {
+    setHasStarted(true);
+  }
+
+  if (!hasSettled && ((!isLoading && hasStarted) || hasWaitedLongEnough)) {
+    setHasSettled(true);
+  }
+
+  return hasSettled;
 }
 
 /** "N data sources reported errors · N data sources have no rules", leaving out a kind with none. */

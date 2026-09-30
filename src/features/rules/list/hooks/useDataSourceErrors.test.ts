@@ -60,14 +60,13 @@ describe('dataSourceErrorsReducer', () => {
     expect(dataSourceErrorsReducer(state, { type: 'clear', uid: 'unknown' })).toBe(state);
   });
 
-  it('clears every data source', () => {
-    expect(dataSourceErrorsReducer(bothReported(), { type: 'clear-all' })).toEqual({});
-  });
+  it('only clears a report of the given kind', () => {
+    const state = bothReported();
 
-  it('keeps an already empty state when clearing', () => {
-    const empty = {};
-
-    expect(dataSourceErrorsReducer(empty, { type: 'clear-all' })).toBe(empty);
+    expect(dataSourceErrorsReducer(state, { type: 'clear', uid: 'prom', kind: 'empty' })).toBe(state);
+    expect(dataSourceErrorsReducer(state, { type: 'clear', uid: 'prom', kind: 'error' })).toEqual({
+      mimir: mimirError,
+    });
   });
 });
 

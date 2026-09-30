@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
 
+import { differenceBy, every, isEmpty } from 'lodash';
+
 import { Trans, t } from '@grafana/i18n';
 import { EmptyState, Stack } from '@grafana/ui';
 
@@ -30,12 +32,9 @@ export function GroupedView({ groupFilter, namespaceFilter, dataSourceFilter }: 
   }, [allExternalRuleSources, dataSourceFilter]);
 
   // Data sources that reported errors or have no rules render nothing – tell the user why the list is empty
-  const hiddenUids = new Set(errors.map((error) => error.uid));
-
-  const allSourcesHidden =
-    externalRuleSources.length > 0 && externalRuleSources.every((ruleSource) => hiddenUids.has(ruleSource.uid));
-  const allSourcesFailed = errors.every((error) => error.kind === 'error');
-  const allSourcesEmpty = errors.every((error) => error.kind === 'empty');
+  const allSourcesHidden = !isEmpty(externalRuleSources) && isEmpty(differenceBy(externalRuleSources, errors, 'uid'));
+  const allSourcesFailed = every(errors, { kind: 'error' });
+  const allSourcesEmpty = every(errors, { kind: 'empty' });
 
   return (
     <Stack direction="column" gap={1}>

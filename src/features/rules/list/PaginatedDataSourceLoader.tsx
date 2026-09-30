@@ -22,6 +22,7 @@ import {
   useReportDataSourceError,
   useReportDataSourceLoading,
   useReportEmptyDataSource,
+  useReportHealthyDataSource,
 } from './hooks/useDataSourceErrors';
 import { toIndividualRuleGroups, usePrometheusGroupsGenerator } from './hooks/prometheusGroupsGenerator';
 import { useLazyLoadPrometheusGroups } from './hooks/useLazyLoadPrometheusGroups';
@@ -108,14 +109,19 @@ function PaginatedGroupsLoader({
   const groupsByNamespace = useMemo(() => groupBy(groups, 'file'), [groups]);
 
   // Data sources that failed are reported in the sidebar. When we managed to load some groups
-  // before failing we keep the section around, together with its inline error indicator.
-  useReportDataSourceError(uid, name, error);
+  // before failing we keep the section around with its inline error indicator instead, so we don't
+  // report it – it is not hidden, and a later page failing is often a one-off.
+  useReportDataSourceError(uid, name, isEmpty(groups) ? error : undefined);
 
   // A data source without any rules is hidden and reported next to the errors. With filters active an
   // empty result only means nothing matched, which is not worth reporting. We wait for the last page
   // (`hasMoreGroups`) because the first render happens before the first request has even started.
   const isEmptyDataSource = !hasFilters && !error && isEmpty(groups) && !hasMoreGroups;
   useReportEmptyDataSource(uid, name, isEmptyDataSource);
+
+  // Groups coming in prove the data source works, even if a later page failed. This clears what an
+  // earlier view reported.
+  useReportHealthyDataSource(uid, !isEmpty(groups));
 
   // Also loading before the first request has started, so the loading indicator does not blink off
   // between feature discovery finishing and the first page of groups coming in

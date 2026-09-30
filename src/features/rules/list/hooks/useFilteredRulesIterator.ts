@@ -72,8 +72,12 @@ export function useFilteredRulesIteratorProvider() {
             // A failing data source should not fail the entire search, we skip its results and
             // report the error so it can be surfaced to the user
             catchError((error: unknown) => {
-              const { uid, name } = dataSourceIdentifier;
-              reportError(toDataSourceRulesError(uid, name, error));
+              // Stopping the search makes every data source that is still loading throw, that is not
+              // something wrong with the data source
+              if (!abortController.signal.aborted) {
+                const { uid, name } = dataSourceIdentifier;
+                reportError(toDataSourceRulesError(uid, name, error));
+              }
               return empty();
             })
           );

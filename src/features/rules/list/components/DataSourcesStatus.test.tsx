@@ -7,11 +7,13 @@ import {
   useReportDataSourceError,
   useReportDataSourceLoading,
   useReportEmptyDataSource,
+  useReportHealthyDataSource,
 } from '../hooks/useDataSourceErrors';
 
 import {
   DataSourcesLoadingBar,
   DataSourcesStatusField,
+  HIDDEN_COUNT_MAX_WAIT_MS,
   HiddenDataSourcesLink,
   LOADING_BAR_HIDE_DELAY_MS,
   LOADING_STATUS_SHOW_DELAY_MS,
@@ -28,6 +30,11 @@ function ErrorReporter({ uid, name, error }: { uid: string; name: string; error?
 
 function EmptyReporter({ uid, name }: { uid: string; name: string }) {
   useReportEmptyDataSource(uid, name, true);
+  return null;
+}
+
+function HealthyReporter({ uid }: { uid: string }) {
+  useReportHealthyDataSource(uid, true);
   return null;
 }
 
@@ -90,6 +97,24 @@ describe('DataSourcesStatusField', () => {
 
     expect(screen.queryByText('Cannot load rules for this data source')).not.toBeInTheDocument();
     expect(screen.getAllByText(/HTTP 502 Bad Gateway/)).toHaveLength(1);
+  });
+
+  it('keeps reporting an error after its component goes away, until the data source loads fine', () => {
+    const { rerender } = renderFooter(<ErrorReporter uid="prom" name="Prometheus" error={fetchError} />);
+    const renderWith = (children?: React.ReactNode) =>
+      rerender(
+        <DataSourceErrorsProvider>
+          {children}
+          <DataSourcesLoadingBar />
+          <DataSourcesStatusField />
+        </DataSourceErrorsProvider>
+      );
+
+    renderWith();
+    expect(screen.getByRole('button', { name: '1 hidden' })).toBeInTheDocument();
+
+    renderWith(<HealthyReporter uid="prom" />);
+    expect(screen.queryByRole('button', { name: /hidden$/ })).not.toBeInTheDocument();
   });
 
   it('stops reporting an error once it is resolved', () => {
@@ -255,6 +280,46 @@ describe('DataSourcesStatusField', () => {
       await userEvent.click(screen.getByRole('button', { name: '1 hidden' }));
 
       expect(screen.getByRole('dialog')).toHaveTextContent('connection refused');
+    });
+
+    it('keeps the count up while loading again, e.g. after switching views', () => {
+      vi.useFakeTimers();
+      const { rerender } = renderLink(<ErrorReporter uid="prom" name="Prometheus" error={fetchError} />);
+      const renderWith = (children: React.ReactNode) =>
+        rerender(
+          <DataSourceErrorsProvider>
+            {children}
+            <HiddenDataSourcesLink />
+          </DataSourceErrorsProvider>
+        );
+
+      // First load: the count waits until nothing is loading any more
+      renderWith(<LoadingReporter uid="prom" />);
+      expect(screen.queryByRole('button', { name: /hidden$/ })).not.toBeInTheDocument();
+
+      renderWith(<LoadingReporter uid="prom" isLoading={false} />);
+      act(() => vi.advanceTimersByTime(LOADING_BAR_HIDE_DELAY_MS));
+      expect(screen.getByRole('button', { name: '1 hidden' })).toBeInTheDocument();
+
+      // Loading again keeps the count that is already known
+      renderWith(<LoadingReporter uid="prom" />);
+      expect(screen.getByRole('button', { name: '1 hidden' })).toBeInTheDocument();
+      vi.useRealTimers();
+    });
+
+    it('does not let a slow data source hold back the count for the others', () => {
+      vi.useFakeTimers();
+      renderLink(
+        <>
+          <LoadingReporter uid="slow" />
+          <ErrorReporter uid="prom" name="Prometheus" error={fetchError} />
+        </>
+      );
+      expect(screen.queryByRole('button', { name: /hidden$/ })).not.toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(HIDDEN_COUNT_MAX_WAIT_MS));
+      expect(screen.getByRole('button', { name: '1 hidden' })).toBeInTheDocument();
+      vi.useRealTimers();
     });
 
     it('waits for loading to settle before showing a count', () => {
