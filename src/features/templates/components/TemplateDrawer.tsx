@@ -1,8 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { t, Trans } from '@grafana/i18n';
-import { AppEvents } from '@grafana/data';
-import { getAppEvents } from '@grafana/runtime';
-import { Stack, Text, CodeEditor, Button, ConfirmModal, Alert } from '@grafana/ui';
+import { Stack, Text, CodeEditor, Button, ConfirmModal } from '@grafana/ui';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { Template } from '../hooks/useTemplates';
 import { TemplateEditForm, TemplateFormValues } from './TemplateEditForm';
@@ -12,8 +10,11 @@ import {
   updateNotificationTemplateAction,
   deleteNotificationTemplateAction,
 } from '../../../reducers/alertmanager/templates';
-import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
-import { extractErrorMessage } from '../../../utils/errors';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
+import { useAppNotifications } from '../../../hooks/useAppNotifications';
+import { MutationError } from '../../../access-control/components/MutationError';
+import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 
 export enum DrawerMode {
   View = 'view',
@@ -39,12 +40,12 @@ export function TemplateDrawer({
   const [mode, setMode] = useState<DrawerMode>(initialMode);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [produceNewConfig, { error: configError, isLoading }] = useProduceNewAlertmanagerConfiguration();
-  const hasConfigurationAPI = useHasConfigurationAPI();
+  const canEdit = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
+  const { success: notifySuccess, error: notifyError } = useAppNotifications();
 
   const isViewMode = mode === DrawerMode.View;
   const isEditMode = mode === DrawerMode.Edit;
   const isAddMode = mode === DrawerMode.Add;
-  const canEdit = hasConfigurationAPI;
 
   const handleEdit = useCallback(() => {
     setMode(DrawerMode.Edit);
@@ -63,33 +64,24 @@ export function TemplateDrawer({
       try {
         if (isAddMode) {
           await produceNewConfig(addNotificationTemplateAction({ template: values }));
-          getAppEvents().publish({
-            type: AppEvents.alertSuccess.name,
-            payload: [t('templates.create.success', 'Template created successfully')],
-          });
+          notifySuccess(t('templates.create.success', 'Template created successfully'));
         } else if (isEditMode && template) {
           await produceNewConfig(updateNotificationTemplateAction({ name: template.name, template: values }));
-          getAppEvents().publish({
-            type: AppEvents.alertSuccess.name,
-            payload: [t('templates.update.success', 'Template updated successfully')],
-          });
+          notifySuccess(t('templates.update.success', 'Template updated successfully'));
         }
         onSaved?.();
         onClose();
       } catch (err) {
-        const errorMessage = extractErrorMessage(err);
-        getAppEvents().publish({
-          type: AppEvents.alertError.name,
-          payload: [
-            isAddMode
-              ? t('templates.create.error', 'Failed to create template')
-              : t('templates.update.error', 'Failed to update template'),
-            errorMessage,
-          ],
+        const feedback = getMutationErrorFeedback(err, {
+          fallbackTitle: isAddMode
+            ? t('templates.create.error', 'Failed to create template')
+            : t('templates.update.error', 'Failed to update template'),
+          resource: t('templates.resource-label', 'templates'),
         });
+        notifyError(feedback.title, feedback.description);
       }
     },
-    [isAddMode, isEditMode, template, produceNewConfig, onSaved, onClose]
+    [isAddMode, isEditMode, template, produceNewConfig, notifySuccess, notifyError, onSaved, onClose]
   );
 
   const handleDelete = useCallback(async () => {
@@ -98,21 +90,18 @@ export function TemplateDrawer({
     }
     try {
       await produceNewConfig(deleteNotificationTemplateAction({ name: template.name }));
-      getAppEvents().publish({
-        type: AppEvents.alertSuccess.name,
-        payload: [t('templates.delete.success', 'Template deleted successfully')],
-      });
+      notifySuccess(t('templates.delete.success', 'Template deleted successfully'));
       onSaved?.();
       onClose();
     } catch (err) {
-      const errorMessage = extractErrorMessage(err);
-      getAppEvents().publish({
-        type: AppEvents.alertError.name,
-        payload: [t('templates.delete.error', 'Failed to delete template'), errorMessage],
+      const feedback = getMutationErrorFeedback(err, {
+        fallbackTitle: t('templates.delete.error', 'Failed to delete template'),
+        resource: t('templates.resource-label', 'templates'),
       });
+      notifyError(feedback.title, feedback.description);
     }
     setShowDeleteConfirm(false);
-  }, [template, produceNewConfig, onSaved, onClose]);
+  }, [template, produceNewConfig, notifySuccess, notifyError, onSaved, onClose]);
 
   // Don't render if no template and not in add mode
   if (!template && !isAddMode) {
@@ -191,13 +180,11 @@ export function TemplateDrawer({
         footer={getFooter()}
       >
         <Stack direction="column" gap={2}>
-          {Boolean(configError) && (
-            <Alert title={t('templates.error-title', 'Error')} severity="error">
-              {String(
-                configError instanceof Error ? configError.message : t('templates.error-message', 'An error occurred')
-              )}
-            </Alert>
-          )}
+          <MutationError
+            error={configError}
+            fallbackTitle={t('templates.error-title', 'Error')}
+            resource={t('templates.resource-label', 'templates')}
+          />
 
           {/* View mode */}
           {isViewMode && template && (
@@ -231,9 +218,9 @@ export function TemplateDrawer({
           )}
 
           {/* Edit/Add mode */}
-          {(isEditMode || isAddMode) && (
+          {canEdit && (isEditMode || isAddMode) && (
             <TemplateEditForm
-              template={isEditMode ? template ?? undefined : undefined}
+              template={isEditMode ? (template ?? undefined) : undefined}
               existingTemplateNames={existingTemplateNames}
               onSave={handleSave}
               onCancel={handleCancelEdit}

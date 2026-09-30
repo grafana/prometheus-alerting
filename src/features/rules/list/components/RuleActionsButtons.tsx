@@ -3,8 +3,9 @@ import React from 'react';
 import { Trans } from '@grafana/i18n';
 import { LinkButton, Stack } from '@grafana/ui';
 
-import { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla';
+import { PromRuleDTO, RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { CloudRuleIdentifier, DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
+import { isFederatedRulerGroup } from '@grafana/external-rules/utils';
 
 import { DataSourceRuleGroupIdentifier } from '../../../../types/rules';
 import { fromRuleAndGroup, fromRulerRuleAndGroup } from '../../../../utils/rule-id';
@@ -17,11 +18,12 @@ interface Props {
   rule?: RulerRuleDTO; // The editable rule from Ruler API (undefined if Ruler API not supported)
   promRule: PromRuleDTO; // The read-only rule from Prometheus API
   groupIdentifier: DataSourceRuleGroupIdentifier;
+  /** The rule's ruler group, if known. The edit form has no field for source_tenants, so a federated group's rules are not ours to edit. */
+  rulerGroup?: RulerRuleGroupDTO | null;
   /** Deleting requires the Ruler API, so it always works on a Cloud (ruler) identifier */
   onDelete: (identifier: CloudRuleIdentifier) => void;
   onDuplicate: (identifier: DataSourceRuleIdentifier) => void;
   onSilence?: (identifier: DataSourceRuleIdentifier, ruleName: string) => void;
-  onExport?: (rule: RulerRuleDTO) => void;
   compact?: boolean;
 }
 
@@ -29,16 +31,17 @@ export function RuleActionsButtons({
   rule,
   promRule,
   groupIdentifier,
+  rulerGroup,
   onDelete,
   onDuplicate,
   onSilence,
-  onExport,
   compact = false,
 }: Props) {
   // Use Cloud Rule Identifier (cri) if we have a ruler rule, otherwise Prometheus Rule Identifier (pri)
   const identifier = rule ? fromRulerRuleAndGroup(rule, groupIdentifier) : fromRuleAndGroup(promRule, groupIdentifier);
   const scopedAbilities = useScopedAbilities(identifier.uid);
-  const canUpdateRules = isAbilityAllowed(scopedAbilities[AlertingAction.UpdateRule]);
+  const isFederated = rulerGroup ? isFederatedRulerGroup(rulerGroup) : false;
+  const canUpdateRules = isAbilityAllowed(scopedAbilities[AlertingAction.UpdateRule]) && !isFederated;
 
   const buttonSize = compact ? 'sm' : 'md';
 
@@ -58,7 +61,6 @@ export function RuleActionsButtons({
           onDelete={onDelete}
           onDuplicate={onDuplicate}
           onSilence={onSilence}
-          onExport={onExport}
           buttonSize={buttonSize}
         />
       </Stack>
@@ -74,7 +76,6 @@ export function RuleActionsButtons({
       onDelete={onDelete}
       onDuplicate={onDuplicate}
       onSilence={onSilence}
-      onExport={onExport}
       buttonSize={buttonSize}
     />
   );

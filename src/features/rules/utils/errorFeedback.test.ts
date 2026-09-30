@@ -67,4 +67,21 @@ describe('getRulesErrorFeedback', () => {
 
     expect(feedback).toMatchObject({ description: 'Data source with uid "abc" not found', details: undefined });
   });
+
+  it('returns the ruler response verbatim, without stripping or splitting anything', () => {
+    const message =
+      '10:13: group "g", rule 1, "a": invalid recording rule name: a, 14:9: group "g", rule 2, "b": invalid label name: b';
+
+    expect(getRulesErrorFeedback({ status: 400, data: message }).description).toBe(message);
+  });
+
+  it('trims surrounding whitespace but leaves the message otherwise untouched', () => {
+    const feedback = getRulesErrorFeedback({ status: 400, data: '  ruler API is not enabled  \n' });
+
+    expect(feedback.description).toBe('ruler API is not enabled');
+  });
+
+  it('falls back to an unknown-error message when there is nothing to show', () => {
+    expect(getRulesErrorFeedback(new Error('')).description).toBe('An unknown error occurred');
+  });
 });

@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 
 import { t } from '@grafana/i18n';
-import { Checkbox, Counter, Input, MultiCombobox, Stack } from '@grafana/ui';
+import { Checkbox, Counter, Field, Input, MultiCombobox, Stack } from '@grafana/ui';
 import type { AlertGroup } from '@grafana/external-alertmanager/vanilla';
 
 import type { AlertsFiltersState, AlertsFiltersActions } from '../hooks/useAlertsFilters';
-import { countAlertsByState } from '../utils/alerts.utils';
+import { countAlertsInGroupsByState } from '../utils/alerts.utils';
 
 interface AlertsFiltersProps {
   filters: AlertsFiltersState;
@@ -19,24 +19,25 @@ export function AlertsFilters({ filters, actions, alertGroups }: AlertsFiltersPr
     value: name,
   }));
 
-  // Count across all alerts, optionally scoped to the selected receivers
+  // Count across all alerts, optionally scoped to the selected receivers.
   const counts = useMemo(() => {
     const groups =
       filters.receivers.length > 0
         ? alertGroups.filter((g) => filters.receivers.includes(g.receiver.name))
         : alertGroups;
-    const allAlerts = groups.flatMap((g) => g.alerts);
-    return countAlertsByState(allAlerts);
+    return countAlertsInGroupsByState(groups);
   }, [alertGroups, filters.receivers]);
 
   return (
     <Stack direction="row" gap={2} alignItems="center">
-      <Input
-        width={32}
-        value={filters.labelInput}
-        onChange={(e) => actions.setLabelInput(e.currentTarget.value)}
-        placeholder={t('alerts.filters.label-placeholder', 'Filter by labels, e.g. foo=bar, env=~prod.*')}
-      />
+      <Field noMargin invalid={!!filters.labelInputError} error={filters.labelInputError}>
+        <Input
+          width={32}
+          value={filters.labelInput}
+          onChange={(e) => actions.setLabelInput(e.currentTarget.value)}
+          placeholder={t('alerts.filters.label-placeholder', 'Filter by labels, e.g. foo=bar, env=~prod.*')}
+        />
+      </Field>
       <MultiCombobox
         width={24}
         options={receiverOptions}

@@ -1,118 +1,55 @@
-import { InhibitRule, Matcher, Route } from './api/types/common';
+import { Matcher, Route } from './api/types/common';
 import { TupleToUnion } from 'type-fest';
 
-const matcherOperators = ['=~', '!~', '!=', '='] as const;
-export type MatcherOperator = TupleToUnion<typeof matcherOperators>;
+const matcherOperatorTokens = ['=~', '!~', '!=', '='] as const;
+const commaUnlessQuoted = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/;
+const reservedMatcherCharacters = /[{}!=~,\\"'`\s]+/;
 
+export type MatcherOperator = TupleToUnion<typeof matcherOperatorTokens>;
+
+export const matcherOperators = {
+  equals: '=',
+  notEquals: '!=',
+  matchesRegex: '=~',
+  doesNotMatchRegex: '!~',
+} as const satisfies Record<string, MatcherOperator>;
+
+/** A matcher tuple whose name and value are semantic (decoded) strings. */
 export type ObjectMatcher = [name: string, operator: MatcherOperator, value: string];
+
+/**
+ * Shared UI row shape for Alertmanager matcher editors.
+ *
+ * Syntax ownership is feature-specific: route rows preserve their legacy
+ * textual matcher tokens, while inhibition rows contain semantic strings.
+ */
+export interface MatcherFieldValue {
+  name: string;
+  value: string;
+  operator: MatcherOperator;
+}
+
+export const emptyMatcherFieldValue: MatcherFieldValue = {
+  name: '',
+  value: '',
+  operator: matcherOperators.equals,
+};
 
 /**
  * We need to deal with multiple (deprecated) properties such as "match" and "match_re"
  * this function will normalize all of the different ways to define matchers in to a single one.
  */
-export const normalizeMatchers = (route: Route): ObjectMatcher[] => {
-  let routeMatchers: ObjectMatcher[] = [];
+export function normalizeMatchers(route: Route): ObjectMatcher[] {
+  const currentMatchers = (route.matchers ?? []).flatMap(parseObjectMatcherExpression);
+  const deprecatedRegexMatchers = Object.entries(route.match_re ?? {}).map(
+    ([name, value]): ObjectMatcher => [name, '=~', value]
+  );
+  const deprecatedEqualityMatchers = Object.entries(route.match ?? {}).map(
+    ([name, value]): ObjectMatcher => [name, '=', value]
+  );
 
-  if (route.matchers) {
-    route.matchers.forEach((matcher) => {
-      const parsedMatchers = parseMatcherToArray(matcher).map(matcherToObjectMatcher);
-      routeMatchers = routeMatchers.concat(parsedMatchers);
-    });
-  }
-
-  if (route.match_re) {
-    Object.entries(route.match_re).forEach(([label, value]) => {
-      routeMatchers.push([label, '=~', value]);
-    });
-  }
-
-  if (route.match) {
-    Object.entries(route.match).forEach(([label, value]) => {
-      routeMatchers.push([label, '=', value]);
-    });
-  }
-
-  return routeMatchers;
-};
-
-/**
- * Normalized inhibit rule with matchers converted to ObjectMatcher arrays
- * and deprecated properties omitted
- */
-export type NormalizedInhibitRule = Omit<
-  InhibitRule,
-  'source_matchers' | 'target_matchers' | 'source_match' | 'source_match_re' | 'target_match' | 'target_match_re'
-> & {
-  source_matchers: ObjectMatcher[];
-  target_matchers: ObjectMatcher[];
-};
-
-/**
- * Normalizes the matchers in an inhibit rule from string arrays to ObjectMatcher arrays.
- * This function handles both current and deprecated properties:
- * - source_matchers / target_matchers (current)
- * - source_match / source_match_re (deprecated)
- * - target_match / target_match_re (deprecated)
- *
- * The deprecated properties are normalized into the new format and then omitted from the result.
- */
-export const normalizeInhibitRuleMatchers = (inhibitRule: InhibitRule): NormalizedInhibitRule => {
-  const sourceMatchers: ObjectMatcher[] = [];
-  const targetMatchers: ObjectMatcher[] = [];
-
-  // Parse source_matchers (current property)
-  if (inhibitRule.source_matchers) {
-    inhibitRule.source_matchers.forEach((matcher) => {
-      const parsedMatchers = parseMatcherToArray(matcher).map(matcherToObjectMatcher);
-      sourceMatchers.push(...parsedMatchers);
-    });
-  }
-
-  // Parse source_match_re (deprecated)
-  if (inhibitRule.source_match_re) {
-    Object.entries(inhibitRule.source_match_re).forEach(([label, value]) => {
-      sourceMatchers.push([label, '=~', value]);
-    });
-  }
-
-  // Parse source_match (deprecated)
-  if (inhibitRule.source_match) {
-    Object.entries(inhibitRule.source_match).forEach(([label, value]) => {
-      sourceMatchers.push([label, '=', value]);
-    });
-  }
-
-  // Parse target_matchers (current property)
-  if (inhibitRule.target_matchers) {
-    inhibitRule.target_matchers.forEach((matcher) => {
-      const parsedMatchers = parseMatcherToArray(matcher).map(matcherToObjectMatcher);
-      targetMatchers.push(...parsedMatchers);
-    });
-  }
-
-  // Parse target_match_re (deprecated)
-  if (inhibitRule.target_match_re) {
-    Object.entries(inhibitRule.target_match_re).forEach(([label, value]) => {
-      targetMatchers.push([label, '=~', value]);
-    });
-  }
-
-  // Parse target_match (deprecated)
-  if (inhibitRule.target_match) {
-    Object.entries(inhibitRule.target_match).forEach(([label, value]) => {
-      targetMatchers.push([label, '=', value]);
-    });
-  }
-
-  // Omit deprecated properties from the result
-  const { source_match, source_match_re, target_match, target_match_re, ...restOfRule } = inhibitRule;
-
-  return {
-    ...restOfRule,
-    source_matchers: sourceMatchers,
-    target_matchers: targetMatchers,
-  };
-};
+  return [...currentMatchers, ...deprecatedRegexMatchers, ...deprecatedEqualityMatchers];
+}
 
 export function matcherToObjectMatcher(matcher: Matcher): ObjectMatcher {
   const operator = matcherToOperator(matcher);
@@ -169,7 +106,7 @@ export function parseMatcher(matcher: string): Matcher {
     );
   }
 
-  const operatorsFound = matcherOperators
+  const operatorsFound = matcherOperatorTokens
     .map((op): [MatcherOperator, number] => [op, matcher.indexOf(op)])
     .filter(([_, idx]) => idx > -1)
     .sort((a, b) => a[1] - b[1]);
@@ -179,7 +116,7 @@ export function parseMatcher(matcher: string): Matcher {
   }
   const [operator, idx] = operatorsFound[0];
   const name = matcher.slice(0, idx).trim();
-  const value = matcher.slice(idx + operator.length);
+  const value = matcher.slice(idx + operator.length).trim();
   if (!name) {
     throw new Error(`Invalid matcher: ${matcher}`);
   }
@@ -198,12 +135,7 @@ export function parseMatcher(matcher: string): Matcher {
  * @throws
  */
 export function parsePromQLStyleMatcherLoose(matcher: string): Matcher[] {
-  // split by `,` but not when it's used as a label value
-  const commaUnlessQuoted = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/;
-  const parts = matcher.replace(/^\{/, '').replace(/\}$/, '').trim().split(commaUnlessQuoted);
-
-  return parts
-    .filter((part) => part.trim().length > 0) // Filter out empty strings before parsing
+  return splitMatcherExpression(matcher)
     .flatMap(parseMatcher)
     .map((matcher) => ({
       ...matcher,
@@ -244,4 +176,40 @@ export function stringifyObjectMatcher([name, operator, value]: ObjectMatcher) {
   // Unquoted value can be an empty string which we want to display as ""
   const unquotedValue = unquoteWithUnescape(value) || '""';
   return `${unquotedName} ${operator} ${unquotedValue}`;
+}
+
+function splitMatcherExpression(expression: string): string[] {
+  return expression
+    .replace(/^\{/, '')
+    .replace(/\}$/, '')
+    .trim()
+    .split(commaUnlessQuoted)
+    .filter((part) => part.trim().length > 0);
+}
+
+/** Parses matcher syntax into semantic tuples using Grafana core's operator and list rules. */
+export function parseObjectMatcherExpression(expression: string): ObjectMatcher[] {
+  return splitMatcherExpression(expression).map((part): ObjectMatcher => {
+    const [name, operator, value] = matcherToObjectMatcher(parseMatcher(part));
+    return [unquoteWithUnescape(name), operator, unquoteWithUnescape(value)];
+  });
+}
+
+/** Encodes a semantic matcher tuple using Grafana core's matcher quoting rules. */
+export function encodeObjectMatcher([name, operator, value]: ObjectMatcher): string {
+  return `${quoteMatcherTokenIfRequired(name)}${operator}${quoteMatcherToken(value)}`;
+}
+
+function quoteMatcherTokenIfRequired(input: string): string {
+  return reservedMatcherCharacters.test(input) ? quoteMatcherToken(input) : input;
+}
+
+function quoteMatcherToken(input: string): string {
+  const escaped = input.replace(/[\\"\n]/g, (character) => (character === '\n' ? '\\n' : `\\${character}`));
+  return `"${escaped}"`;
+}
+
+/** Formats a semantic matcher tuple for UI display. */
+export function formatObjectMatcherForDisplay([name, operator, value]: ObjectMatcher): string {
+  return `${name} ${operator} ${value || '""'}`;
 }

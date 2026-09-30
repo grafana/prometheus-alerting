@@ -7,6 +7,11 @@
   minimumReleaseAge: '3 days',
   prCreation: 'not-pending',
   internalChecksFilter: 'strict',
+  'docker-compose': {
+    // Renovate only looks for files named like compose*.yaml by default. The service files
+    // pulled in by docker-compose.yaml live in .config/compose/ under their own names, so add those.
+    managerFilePatterns: ['/^\\.config/compose/[^/]+\\.ya?ml$/'],
+  },
   packageRules: [
     {
       // `config:best-practices` (via the grafana base preset) pulls in
@@ -31,6 +36,14 @@
       // Pin the Node and pnpm runtimes exactly, sourced from mise.toml.
       matchManagers: ['mise'],
       rangeStrategy: 'pin',
+    },
+    {
+      // Hold Node on the 24.x LTS line. Renovate has no "LTS only" setting, and its LTS-aware
+      // `node` versioning doesn't apply to the `node:<major>-alpine` images in
+      // .config/compose/*.yaml. Widen this by hand when moving to the next LTS (26.x from
+      // 2026-10-28).
+      matchDepNames: ['node'],
+      allowedVersions: '^24',
     },
     {
       // Pin Docker Compose image tags exactly and add SHA256 digests

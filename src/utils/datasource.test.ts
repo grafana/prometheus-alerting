@@ -1,11 +1,11 @@
-import { setDataSourceSrv } from '@grafana/runtime';
+import { config, setDataSourceSrv } from '@grafana/runtime';
 
 import {
   BuiltInDataSourceInstanceSettingsFactory,
   DataSourceInstanceSettingsFactory,
 } from '../test/fixtures/datasources';
 
-import { getExternalRulesSources, getRulesApiPluginType } from './datasource';
+import { getExternalRulesSources, isDataSourceManagingAlerts } from './datasource';
 
 function setupSrv(list: ReturnType<typeof DataSourceInstanceSettingsFactory.buildList>) {
   setDataSourceSrv({
@@ -15,24 +15,6 @@ function setupSrv(list: ReturnType<typeof DataSourceInstanceSettingsFactory.buil
     reload: () => Promise.resolve(),
   } as any);
 }
-
-describe('getRulesApiPluginType', () => {
-  it('returns the configured Prometheus or Loki plugin type', () => {
-    const prometheus = DataSourceInstanceSettingsFactory.build({ uid: 'prom-1', type: 'prometheus' });
-    const loki = DataSourceInstanceSettingsFactory.build({ uid: 'loki-1', type: 'loki' });
-    setupSrv([prometheus, loki]);
-
-    expect(getRulesApiPluginType(prometheus.uid)).toBe('prometheus');
-    expect(getRulesApiPluginType(loki.uid)).toBe('loki');
-  });
-
-  it('throws for an unsupported datasource type', () => {
-    const graphite = DataSourceInstanceSettingsFactory.build({ uid: 'graphite-1', type: 'graphite' });
-    setupSrv([graphite]);
-
-    expect(() => getRulesApiPluginType(graphite.uid)).toThrow('Unsupported rules datasource type: graphite');
-  });
-});
 
 describe('getExternalRulesSources', () => {
   it('returns prometheus and loki data sources', () => {
@@ -86,5 +68,49 @@ describe('getExternalRulesSources', () => {
     const result = getExternalRulesSources();
 
     expect(result).toEqual([]);
+  });
+  it('excludes data sources an admin has taken out of the alerting UI', () => {
+    const managed = DataSourceInstanceSettingsFactory.build({
+      uid: 'prom-1',
+      name: 'Managed',
+      type: 'prometheus',
+      jsonData: { manageAlerts: true },
+    });
+    const notManaged = DataSourceInstanceSettingsFactory.build({
+      uid: 'prom-2',
+      name: 'Not managed',
+      type: 'prometheus',
+      jsonData: { manageAlerts: false },
+    });
+    setupSrv([managed, notManaged]);
+
+    expect(getExternalRulesSources().map((source) => source.name)).toEqual(['Managed']);
+  });
+});
+
+describe('isDataSourceManagingAlerts', () => {
+  const originalDefault = config.defaultDatasourceManageAlertsUiToggle;
+
+  afterEach(() => {
+    setDefaultToggle(originalDefault);
+  });
+
+  function setDefaultToggle(value: boolean) {
+    // The runtime config is a plain object at runtime; there is no setter for a single field
+    Object.assign(config, { defaultDatasourceManageAlertsUiToggle: value });
+  }
+
+  it.each([true, false])('uses the data source setting when it is set to %s', (manageAlerts) => {
+    setDefaultToggle(!manageAlerts);
+    const dataSource = DataSourceInstanceSettingsFactory.build({ jsonData: { manageAlerts } });
+
+    expect(isDataSourceManagingAlerts(dataSource)).toBe(manageAlerts);
+  });
+
+  it.each([true, false])('falls back to the Grafana-wide default (%s) when the setting is unset', (defaultToggle) => {
+    setDefaultToggle(defaultToggle);
+    const dataSource = DataSourceInstanceSettingsFactory.build({ jsonData: {} });
+
+    expect(isDataSourceManagingAlerts(dataSource)).toBe(defaultToggle);
   });
 });

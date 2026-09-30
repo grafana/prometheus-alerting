@@ -7,8 +7,9 @@ import { AlertLabels, StateIcon } from '@grafana/alerting/unstable';
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans } from '@grafana/i18n';
 import { Icon, Stack, Text, TextLink, Tooltip, useStyles2 } from '@grafana/ui';
+import type { RulesSourceApplication } from '@grafana/external-rules/ruler';
 
-import { normalizeHealth, normalizeState, RulesSourceApplication } from '../../../../types/rules';
+import { normalizeHealth, normalizeState } from '../../../../types/rules';
 import { labelsSize } from '../../../../utils/labels';
 
 import { ListItem } from './ListItem';
@@ -56,7 +57,11 @@ export function AlertRuleListItem({
   const normalizedState = normalizeState(state);
   const normalizedHealth = normalizeHealth(health);
 
-  const metadata: ReactNode[] = [];
+  const metadata: ReactNode[] = [
+    <Text color="secondary" variant="bodySmall" key="type">
+      <Trans i18nKey="alerting.rules.type.alert">Alert rule</Trans>
+    </Text>,
+  ];
 
   // Add location if needed
   if (showLocation && namespace && group) {
@@ -108,7 +113,7 @@ export function AlertRuleListItem({
   );
 
   const description = (
-    <>
+    <Stack direction="column" gap={0}>
       {summary && (
         <Text variant="bodySmall" color="secondary">
           {summary}
@@ -119,7 +124,7 @@ export function AlertRuleListItem({
           <Trans i18nKey="rules.list-item.error">Error:</Trans> {error}
         </Text>
       )}
-    </>
+    </Stack>
   );
 
   return (
@@ -150,7 +155,11 @@ export function RecordingRuleListItem({
 }: RecordingRuleListItemProps) {
   const normalizedHealth = normalizeHealth(health);
 
-  const metadata: ReactNode[] = [];
+  const metadata: ReactNode[] = [
+    <Text color="secondary" variant="bodySmall" key="type">
+      <Trans i18nKey="alerting.rules.type.recording">Recording rule</Trans>
+    </Text>,
+  ];
 
   // Add location if needed
   if (showLocation && namespace && group) {

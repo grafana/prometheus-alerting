@@ -91,9 +91,12 @@ const mockCurrentUser = {
 
 let originalDatasources: typeof config.datasources;
 
-/** Restore the standard datasource configuration used by most unit tests. */
-export function setMockGrafanaDataSources() {
-  (config as any).datasources = mockDatasourcesConfig;
+/**
+ * Restore the standard datasource configuration used by most unit tests. Pass overrides to add or
+ * replace individual data sources, keyed by UID.
+ */
+export function setMockGrafanaDataSources(overrides: typeof mockDatasourcesConfig = {}) {
+  (config as any).datasources = { ...mockDatasourcesConfig, ...overrides };
 }
 
 /**
@@ -106,6 +109,11 @@ export function setupGrafanaRuntimeMocks() {
   // Apply mocks
   setMockGrafanaDataSources();
   setCurrentUser(mockCurrentUser);
+
+  // Grafana ships this as true (datasources.default_manage_alerts_ui_toggle), so data sources that
+  // never set `manageAlerts` are managed from the alerting UI. Without it the runtime config would
+  // report `undefined` here and every such data source would look opted out.
+  (config as any).defaultDatasourceManageAlertsUiToggle = true;
 }
 
 /**

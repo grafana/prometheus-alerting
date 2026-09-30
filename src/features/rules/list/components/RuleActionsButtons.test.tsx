@@ -1,12 +1,9 @@
 import React from 'react';
 
-import { BackendSrv, setBackendSrv } from '@grafana/runtime';
 import { reloadDataSourceInstanceSettings } from '@grafana/runtime/unstable';
-import { MockBackendSrv } from '@grafana/api-clients';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { firstValueFrom } from 'rxjs';
 
 import { AlertingPermission } from '../../../../access-control/abilities';
 import { DataSourceInstanceSettingsFactory } from '../../../../test/fixtures/datasources';
@@ -28,12 +25,6 @@ const prometheusDataSource = DataSourceInstanceSettingsFactory.build({
   type: 'prometheus',
 });
 
-class MockBackendSrvWithGet extends MockBackendSrv {
-  async get<T>(url: string): Promise<T> {
-    return (await firstValueFrom(this.fetch<T>({ url }))).data;
-  }
-}
-
 async function loadDataSourceSettings() {
   server.use(
     http.get('/api/frontend/settings', () =>
@@ -47,7 +38,6 @@ async function loadDataSourceSettings() {
     )
   );
 
-  setBackendSrv(new MockBackendSrvWithGet() as BackendSrv);
   // discoverDataSourceFeatures calls getDataSourceInstanceSettings(), whose cache is otherwise empty in tests.
   await reloadDataSourceInstanceSettings();
 }
@@ -152,6 +142,7 @@ describe('RuleActionsButtons', () => {
 
     expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Export' })).not.toBeInTheDocument();
     expect(screen.getByRole('menu').children).toHaveLength(5);
   });
 });

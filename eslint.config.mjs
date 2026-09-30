@@ -34,8 +34,6 @@ export default defineConfig([
       'playwright/.auth/',
       '**/.idea',
       '**/.eslintcache',
-      // Internal packages have their own tsconfig
-      'packages/**',
     ],
   },
   {
@@ -55,6 +53,9 @@ export default defineConfig([
       '**/test/**/*.tsx',
       '**/*FormSchema.ts',
       '**/*Schema.ts',
+      // Internal packages hold schemas and codecs, never rendered text, and are deliberately
+      // framework-free -- they cannot depend on @grafana/i18n.
+      'packages/**/*.{ts,tsx}',
     ],
     rules: {
       '@grafana/i18n/no-untranslated-strings': 'off',
@@ -89,6 +90,33 @@ export default defineConfig([
     },
   },
   ...baseConfig,
+  {
+    // Internal packages are behaviour, not UI, and they are where third-party rules-source flavors
+    // live (see docs/adr/0001-rules-source-flavors.md). They must stay independently testable: no
+    // reaching back into the app, and no Grafana/React runtime. Without this the package boundary
+    // is only a convention.
+    name: 'grafana/package-boundaries',
+    files: ['packages/*/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['src/*', 'src/**', '**/../src/*', '**/../src/**'],
+              message:
+                'Internal packages must not import from the app. Depend on the contract in @grafana/external-rules/ruler instead, and let the app wire the pieces together.',
+            },
+            {
+              group: ['@grafana/ui', '@grafana/runtime', 'react', 'react-dom', 'react-redux', '@reduxjs/toolkit'],
+              message:
+                'Internal packages must stay framework-free so they can be tested without a Grafana or React runtime. Take what you need as an argument (e.g. RulerTransport) instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     name: 'test-data/rules-provisioner-console',
     files: ['test-data/**/*.mjs'],

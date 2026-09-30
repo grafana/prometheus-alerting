@@ -1,5 +1,4 @@
-import { Route } from '@grafana/external-alertmanager/vanilla';
-import { RouteWithID, addUniqueIdentifierToRoute } from '@grafana/external-alertmanager/mimir';
+import { Route, RouteWithID, addUniqueIdentifierToRoute } from '@grafana/external-alertmanager/vanilla';
 
 /**
  * Recursively defaults fields whose presence/absence would otherwise change the
@@ -22,4 +21,8 @@ function normalizeRoute(route: Route): Route {
  */
 export function attachRouteIds(route: Route): RouteWithID {
   return addUniqueIdentifierToRoute(normalizeRoute(route));
+}
+
+export function isRootRoute(route: RouteWithID, rootRoute?: RouteWithID): boolean {
+  return route.id === rootRoute?.id;
 }

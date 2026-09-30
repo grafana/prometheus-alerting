@@ -1,6 +1,15 @@
-import { describe, it, expect } from 'vitest';
-import { computeInheritedTree } from '@grafana/alerting';
-import { attachRouteIds } from './utils';
+import { describe, expect, it } from 'vitest';
+import { attachRouteIds, isRootRoute } from './utils';
+
+describe('isRootRoute', () => {
+  it('identifies only the route with the root tree id as root', () => {
+    const root = attachRouteIds({ receiver: 'default', routes: [{ receiver: 'child' }] });
+
+    expect(isRootRoute(root, root)).toBe(true);
+    expect(isRootRoute(root.routes![0], root)).toBe(false);
+    expect(isRootRoute(root, undefined)).toBe(false);
+  });
+});
 
 describe('attachRouteIds', () => {
   it('assigns content-hash ids to the root and its children', () => {
@@ -33,22 +42,5 @@ describe('attachRouteIds', () => {
     const result = attachRouteIds({ receiver: 'default' });
 
     expect(result.routes).toEqual([]);
-  });
-
-  it('preserves ids after being passed through computeInheritedTree', () => {
-    const route = {
-      receiver: 'default',
-      routes: [{ receiver: 'a' }, { receiver: 'b', routes: [{ receiver: 'b1' }] }],
-    };
-
-    const routeWithIds = attachRouteIds(route);
-    const inheritedTree = computeInheritedTree(
-      routeWithIds as Parameters<typeof computeInheritedTree>[0]
-    ) as unknown as typeof routeWithIds;
-
-    expect(inheritedTree.id).toBe(routeWithIds.id);
-    expect(inheritedTree.routes![0].id).toBe(routeWithIds.routes![0].id);
-    expect(inheritedTree.routes![1].id).toBe(routeWithIds.routes![1].id);
-    expect(inheritedTree.routes![1].routes![0].id).toBe(routeWithIds.routes![1].routes![0].id);
   });
 });

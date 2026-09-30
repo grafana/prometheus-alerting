@@ -10,6 +10,11 @@ interface MimirRulerDataSource {
   uid: string;
   name: string;
   tenantId: string;
+  /**
+   * "Manage alerts via Alerting UI". Defaults to true, as the provisioned test data sources do.
+   * Pass false to create a data source the alerting UI is meant to leave alone.
+   */
+  manageAlerts?: boolean;
 }
 
 interface LokiRulerDataSource {
@@ -58,7 +63,12 @@ export async function createMimirAlertmanagerDataSource({
 }
 
 /** Create a Mimir Prometheus datasource whose Ruler API requests use the given tenant header. */
-export async function createMimirRulerDataSource({ uid, name, tenantId }: MimirRulerDataSource): Promise<void> {
+export async function createMimirRulerDataSource({
+  uid,
+  name,
+  tenantId,
+  manageAlerts = true,
+}: MimirRulerDataSource): Promise<void> {
   const response = await fetch(`${GRAFANA_URL}/api/datasources`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -70,7 +80,7 @@ export async function createMimirRulerDataSource({ uid, name, tenantId }: MimirR
       url: 'http://mimir:9009/prometheus',
       isDefault: false,
       jsonData: {
-        manageAlerts: true,
+        manageAlerts,
         prometheusType: 'Mimir',
         prometheusVersion: '2.40.0',
         implementation: 'mimir',

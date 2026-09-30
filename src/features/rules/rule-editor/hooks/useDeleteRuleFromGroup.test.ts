@@ -87,7 +87,9 @@ describe('useDeleteRuleFromGroup', () => {
     const result = renderDeleteRuleFromGroup();
     const [deleteRuleFromGroup] = result.current;
 
-    await expect(deleteRuleFromGroup(identifierFor(secondRule))).resolves.toEqual({ groupDeleted: false });
+    await act(async () => {
+      await expect(deleteRuleFromGroup(identifierFor(secondRule))).resolves.toEqual({ groupDeleted: false });
+    });
 
     // The group is rewritten without the deleted rule, and the group itself survives
     expect(upserts).toEqual([{ name: GROUP_NAME, interval: '1m', rules: [firstRule] }]);
@@ -101,6 +103,32 @@ describe('useDeleteRuleFromGroup', () => {
     ]);
   });
 
+  it('keeps the group settings the plugin has no form field for', async () => {
+    // A federated Mimir group. Editing any rule in it used to strip source_tenants and friends,
+    // so the group silently stopped reading the other tenants' data.
+    const federatedGroup = {
+      name: GROUP_NAME,
+      interval: '1m',
+      limit: 10,
+      query_offset: '2m',
+      source_tenants: ['tenant-a', 'tenant-b'],
+      align_evaluation_time_on_interval: true,
+      rules: [firstRule, secondRule],
+    };
+
+    setMockNamespaces({ [NAMESPACE]: [federatedGroup] });
+    const { upserts } = captureRulerWrites();
+
+    const result = renderDeleteRuleFromGroup();
+    const [deleteRuleFromGroup] = result.current;
+
+    await act(async () => {
+      await expect(deleteRuleFromGroup(identifierFor(secondRule))).resolves.toEqual({ groupDeleted: false });
+    });
+
+    expect(upserts).toEqual([{ ...federatedGroup, rules: [firstRule] }]);
+  });
+
   it('deletes the group when the deleted rule was the last one', async () => {
     setMockNamespaces({
       [NAMESPACE]: [{ name: GROUP_NAME, interval: '1m', rules: [firstRule] }],
@@ -110,7 +138,9 @@ describe('useDeleteRuleFromGroup', () => {
     const result = renderDeleteRuleFromGroup();
     const [deleteRuleFromGroup] = result.current;
 
-    await expect(deleteRuleFromGroup(identifierFor(firstRule))).resolves.toEqual({ groupDeleted: true });
+    await act(async () => {
+      await expect(deleteRuleFromGroup(identifierFor(firstRule))).resolves.toEqual({ groupDeleted: true });
+    });
 
     expect(deletes).toEqual([GROUP_NAME]);
     expect(upserts).toEqual([]);
@@ -129,7 +159,9 @@ describe('useDeleteRuleFromGroup', () => {
     const result = renderDeleteRuleFromGroup();
     const [deleteRuleFromGroup] = result.current;
 
-    await expect(deleteRuleFromGroup(identifierFor(recordingRule))).resolves.toEqual({ groupDeleted: false });
+    await act(async () => {
+      await expect(deleteRuleFromGroup(identifierFor(recordingRule))).resolves.toEqual({ groupDeleted: false });
+    });
 
     expect(upserts).toEqual([{ name: GROUP_NAME, interval: '1m', rules: [firstRule] }]);
     expect(deletes).toEqual([]);
@@ -149,7 +181,9 @@ describe('useDeleteRuleFromGroup', () => {
     const result = renderDeleteRuleFromGroup();
     const [deleteRuleFromGroup] = result.current;
 
-    await expect(deleteRuleFromGroup(identifierFor(duplicate))).resolves.toEqual({ groupDeleted: false });
+    await act(async () => {
+      await expect(deleteRuleFromGroup(identifierFor(duplicate))).resolves.toEqual({ groupDeleted: false });
+    });
 
     expect(upserts).toEqual([{ name: GROUP_NAME, interval: '1m', rules: [original] }]);
     expect(deletes).toEqual([]);
@@ -179,7 +213,9 @@ describe('useDeleteRuleFromGroup', () => {
     const result = renderDeleteRuleFromGroup();
     const [deleteRuleFromGroup] = result.current;
 
-    await expect(deleteRuleFromGroup(identifierFor(secondRule))).rejects.toThrow();
+    await act(async () => {
+      await expect(deleteRuleFromGroup(identifierFor(secondRule))).rejects.toThrow();
+    });
 
     expect(upserts).toEqual([]);
     expect(deletes).toEqual([]);

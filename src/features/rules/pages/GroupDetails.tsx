@@ -9,7 +9,7 @@ import { Alert, LoadingPlaceholder, Stack } from '@grafana/ui';
 
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
-import { rulerApi } from '../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../api/rules/ruler.endpoints';
 import type { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
@@ -164,13 +164,19 @@ function GroupDetails() {
   return (
     <PluginPage
       pageNav={pageNav}
-      renderTitle={(title) => <GroupDetailsTitle name={title} />}
+      renderTitle={(title) => <GroupDetailsTitle name={title} sourceTenants={rulerGroup?.source_tenants} />}
       subTitle={t('alerting.group-details.subtitle', 'View alert and recording rules in this evaluation group')}
       info={[
         { label: t('alerting.group-details.namespace', 'Namespace'), value: namespace },
         { label: t('alerting.group-details.interval', 'Interval'), value: groupInterval },
       ]}
-      actions={<GroupDetailsActions editLink={editPageLink} dataSourceUid={dataSourceUid} />}
+      actions={
+        <GroupDetailsActions
+          editLink={editPageLink}
+          dataSourceUid={dataSourceUid}
+          rulerGroup={rulerGroup ?? undefined}
+        />
+      }
     >
       <Stack direction="column" gap={2}>
         {/* Consistency check warning */}

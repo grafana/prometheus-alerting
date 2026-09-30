@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { isFetchError } from '@grafana/runtime';
 
-import { extractErrorMessage } from '../../utils/errors';
+import { toRtkQueryError } from '../../utils/errors';
 
 import { DataSourceFeatures, discoverDataSourceFeatures } from './featureDiscovery';
 
@@ -37,15 +37,11 @@ interface RulesRequestContext {
 export function toFeatureDiscoveryError(error: unknown): FetchBaseQueryError & RulesRequestContext {
   if (isFetchError(error)) {
     return {
-      status: error.status,
-      data: error.data,
+      ...toRtkQueryError(error),
       statusText: error.statusText,
       url: error.config?.url,
     };
   }
 
-  return {
-    status: 'CUSTOM_ERROR',
-    error: extractErrorMessage(error),
-  };
+  return toRtkQueryError(error);
 }

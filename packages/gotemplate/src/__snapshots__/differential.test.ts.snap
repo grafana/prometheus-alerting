@@ -1,0 +1,46 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parser agrees with Go about what is broken > misses only the known set of Go checks 1`] = `
+[
+  "lex-comment-ends-early#wrapped: Go says "comment ends before closing delimiter"",
+  "lex-comment-ends-early: Go says "comment ends before closing delimiter"",
+  "num-bad-letters#wrapped: Go says "bad number syntax: "12a""",
+  "num-bad-letters: Go says "bad number syntax: "12a""",
+  "num-bad-two-dots#wrapped: Go says "unexpected ".3" in operand"",
+  "num-bad-two-dots: Go says "unexpected ".3" in operand"",
+  "ok-var-two-decl#wrapped: Go says "too many declarations in command"",
+  "ok-var-two-decl: Go says "too many declarations in command"",
+  "parse-define-inside-if#wrapped: Go says "unexpected <define> in command"",
+  "parse-define-inside-if: Go says "unexpected <define> in command"",
+  "parse-dot-after-term#wrapped: Go says "unexpected . after term "\\"string\\"""",
+  "parse-dot-after-term: Go says "unexpected . after term "\\"string\\"""",
+  "parse-non-executable-stage-string#wrapped: Go says "non executable command in pipeline stage 2"",
+  "parse-non-executable-stage-string: Go says "non executable command in pipeline stage 2"",
+  "parse-three-decls#wrapped: Go says "too many declarations in command"",
+  "parse-three-decls: Go says "too many declarations in command"",
+  "parse-two-decls-in-if#wrapped: Go says "too many declarations in if"",
+  "parse-two-decls-in-if: Go says "too many declarations in if"",
+  "sem-range-var-out-of-scope#wrapped: Go says "undefined variable "$a""",
+  "sem-range-var-out-of-scope: Go says "undefined variable "$a""",
+  "sem-undefined-variable#wrapped: Go says "undefined variable "$nope""",
+  "sem-undefined-variable-field#wrapped: Go says "undefined variable "$nope""",
+  "sem-undefined-variable-field: Go says "undefined variable "$nope""",
+  "sem-undefined-variable-in-pipeline#wrapped: Go says "undefined variable "$nope""",
+  "sem-undefined-variable-in-pipeline: Go says "undefined variable "$nope""",
+  "sem-undefined-variable: Go says "undefined variable "$nope""",
+  "sem-unknown-function#wrapped: Go says "function "nosuchfunc" not defined"",
+  "sem-unknown-function-in-pipeline#wrapped: Go says "function "nosuchfunc" not defined"",
+  "sem-unknown-function-in-pipeline: Go says "function "nosuchfunc" not defined"",
+  "sem-unknown-function-nested#wrapped: Go says "function "nosuchfunc" not defined"",
+  "sem-unknown-function-nested: Go says "function "nosuchfunc" not defined"",
+  "sem-unknown-function-sprig-not-in-am#wrapped: Go says "function "upper" not defined"",
+  "sem-unknown-function-sprig-not-in-am: Go says "function "upper" not defined"",
+  "sem-unknown-function-typo#wrapped: Go says "function "toUppercase" not defined"",
+  "sem-unknown-function-typo: Go says "function "toUppercase" not defined"",
+  "sem-unknown-function: Go says "function "nosuchfunc" not defined"",
+  "sem-variable-out-of-scope#wrapped: Go says "undefined variable "$x""",
+  "sem-variable-out-of-scope: Go says "undefined variable "$x""",
+]
+`;
+
+exports[`parser agrees with Go about what is broken > points at the same line as Go, apart from the known cases 1`] = `[]`;

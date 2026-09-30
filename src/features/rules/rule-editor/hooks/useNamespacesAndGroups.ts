@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { skipToken } from '@reduxjs/toolkit/query';
 
 import { useDiscoverFeaturesQuery } from '../../../../api/rules/featureDiscovery.endpoints';
-import { rulerApi, RulerRulesConfigDTO } from '../../../../api/rules/mimir.endpoints';
+import { rulerApi, RulerRulesConfigDTO } from '../../../../api/rules/ruler.endpoints';
 
 const { useLazyGetAllRulesQuery } = rulerApi;
 

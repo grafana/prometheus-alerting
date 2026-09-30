@@ -1,10 +1,11 @@
 import React from 'react';
 import { setDataSourceSrv } from '@grafana/runtime';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
 
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
+import { TestMemoryRouter } from '../../../test/utils/test-wrapper';
 
 import GroupDetails from './GroupDetails';
 
@@ -90,9 +91,9 @@ vi.mock('../../../api/rules/featureDiscovery.endpoints', async () => {
   };
 });
 
-vi.mock('../../../api/rules/mimir.endpoints', async () => {
-  const actual = await vi.importActual<typeof import('../../../api/rules/mimir.endpoints')>(
-    '../../../api/rules/mimir.endpoints'
+vi.mock('../../../api/rules/ruler.endpoints', async () => {
+  const actual = await vi.importActual<typeof import('../../../api/rules/ruler.endpoints')>(
+    '../../../api/rules/ruler.endpoints'
   );
   return {
     ...actual,
@@ -105,11 +106,11 @@ vi.mock('../../../api/rules/mimir.endpoints', async () => {
 
 function renderGroupDetails(path = '/groups/prometheus-1/my-namespace/my-group') {
   return render(
-    <MemoryRouter initialEntries={[path]}>
+    <TestMemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path="/groups/:dataSourceUid/:namespace/:groupName" element={<GroupDetails />} />
       </Routes>
-    </MemoryRouter>
+    </TestMemoryRouter>
   );
 }
 

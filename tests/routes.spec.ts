@@ -87,6 +87,47 @@ test.describe('Routes', () => {
       await routesListPage.gotoWithAlertmanager(mimirAlertmanager.uid);
     });
 
+    test('attributes instances to matching continued routes and unmatched instances to the root', async ({
+      routesListPage,
+      mimirAlertmanager,
+    }) => {
+      await mimirAlertmanager.seedConfig(`template_files: {}
+alertmanager_config: |
+  route:
+    receiver: default
+    routes:
+      - receiver: critical
+        matchers:
+          - severity = critical
+        continue: true
+      - receiver: platform
+        matchers:
+          - team = platform
+  receivers:
+    - name: default
+    - name: critical
+    - name: platform
+`);
+      await routesListPage.gotoWithAlertmanager(mimirAlertmanager.uid);
+      await expect(routesListPage.childRoutes).toHaveCount(2);
+
+      await mimirAlertmanager.postAlerts([
+        { labels: { alertname: 'CriticalPlatform', severity: 'critical', team: 'platform' } },
+        { labels: { alertname: 'CriticalBackend', severity: 'critical', team: 'backend' } },
+        { labels: { alertname: 'WarningBackend', severity: 'warning', team: 'backend' } },
+      ]);
+      await routesListPage.page.reload();
+      await routesListPage.waitForLoad();
+
+      await expect.soft(routesListPage.matchingInstances(routesListPage.rootRoute)).toContainText(/^1\s*instance/);
+      await expect
+        .soft(routesListPage.matchingInstances(routesListPage.getChildRoute('critical')))
+        .toContainText(/^2\s*instance/);
+      await expect
+        .soft(routesListPage.matchingInstances(routesListPage.getChildRoute('platform')))
+        .toContainText(/^1\s*instance/);
+    });
+
     test('adds a child route from the root', async ({ routesListPage }) => {
       await routesListPage.startAddChildRouteFromRoot();
       await routesListPage.addMatcher({ label: 'severity', value: 'warning' });
@@ -95,6 +136,16 @@ test.describe('Routes', () => {
 
       await expect(routesListPage.routeDrawer).toBeHidden();
       await expect(routesListPage.getChildRoute(/severity\s*=\s*warning/)).toBeVisible();
+    });
+
+    test('adds a child route with a non-default matcher operator', async ({ routesListPage }) => {
+      await routesListPage.startAddChildRouteFromRoot();
+      await routesListPage.addMatcher({ label: 'severity', operator: '!=', value: 'warning' });
+      await routesListPage.selectReceiver('empty-default-receiver');
+      await routesListPage.submitSave();
+
+      await expect(routesListPage.routeDrawer).toBeHidden();
+      await expect(routesListPage.getChildRoute(/severity\s*!=\s*warning/)).toBeVisible();
     });
 
     test('edits a route', async ({ routesListPage }) => {
@@ -119,6 +170,35 @@ test.describe('Routes', () => {
       await expect(
         routesListPage.routeDrawer.getByText(drawerMatcherText('severity', 'critical')).first()
       ).toBeVisible();
+    });
+
+    /**
+     * Regression test for durations being rejected in the browser build. The duration fields only
+     * render while "Override general timings" is on, so every other route test saves without ever
+     * running the validator — which is how a validator that rejected *every* duration shipped
+     * green. Unit tests can't cover this: they don't compile down to the target that breaks it.
+     */
+    test('saves a route with timings', async ({ routesListPage }) => {
+      await routesListPage.startAddChildRouteFromRoot();
+      await routesListPage.addMatcher({ label: 'severity', value: 'warning' });
+      await routesListPage.selectReceiver('empty-default-receiver');
+      await routesListPage.setTimings({ groupWait: '10s', groupInterval: '1m', repeatInterval: '1h' });
+      await routesListPage.submitSave();
+
+      await expect(routesListPage.routeDrawer).toBeHidden();
+      const route = routesListPage.getChildRoute(/severity\s*=\s*warning/);
+      await expect(route).toBeVisible();
+
+      // ...and they survive a round trip through the Alertmanager configuration.
+      await routesListPage.openChildRoute(/severity\s*=\s*warning/);
+      await routesListPage.startEdit();
+      await expect(routesListPage.groupWaitInput).toHaveValue('10s');
+      await expect(routesListPage.groupIntervalInput).toHaveValue('1m');
+      await expect(routesListPage.repeatIntervalInput).toHaveValue('1h');
+
+      // Re-saving an untouched form must not be rejected either.
+      await routesListPage.submitSave();
+      await expect(routesListPage.routeDrawer).toBeHidden();
     });
 
     test('deletes a route via the card menu', async ({ routesListPage }) => {

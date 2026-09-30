@@ -93,6 +93,27 @@ export function stringifyFetchError(error: ErrorLike): string {
   return 'Unknown error occurred';
 }
 
+/**
+ * Converts a thrown error into the shape RTK Query's `queryFn` must return.
+ *
+ * HTTP status and body are preserved for fetch errors, so status-sensitive callers keep working
+ * — {@link isNotFoundError} and {@link isForbiddenError} both match the result. Anything else
+ * becomes a `CUSTOM_ERROR` carrying the extracted message.
+ */
+export function toRtkQueryError(error: unknown): FetchBaseQueryError {
+  if (isFetchError(error)) {
+    return {
+      status: error.status,
+      data: error.data,
+    };
+  }
+
+  return {
+    status: 'CUSTOM_ERROR',
+    error: extractErrorMessage(error),
+  };
+}
+
 /** Returns true for Grafana or RTK Query fetch errors with a 404 status. */
 export function isNotFoundError(error: unknown): boolean {
   return isFetchError(error) && error.status === 404;

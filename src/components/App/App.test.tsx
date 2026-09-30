@@ -1,12 +1,15 @@
 import React, { Suspense } from 'react';
-import { MemoryRouter } from 'react-router-dom';
 import { AppRootProps, PluginType } from '@grafana/data';
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 
+import { config, setDataSourceSrv } from '@grafana/runtime';
+
 import App from './App';
 import { testIds } from '../testIds';
-import { createTestWrapper } from '../../test/utils/test-wrapper';
+import { createTestWrapper, TestMemoryRouter } from '../../test/utils/test-wrapper';
+import { createMockDataSourceSrv, setMockGrafanaDataSources } from '../../test/mocks/grafana-runtime';
+import { ROUTES } from '../../constants';
 
 vi.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
   AlertmanagerPicker: () => <div data-testid="alertmanager-picker" />,
@@ -19,6 +22,8 @@ describe('Components/App', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    setMockGrafanaDataSources();
+    setDataSourceSrv(createMockDataSourceSrv());
 
     props = {
       basename: 'a/sample-app',
@@ -35,17 +40,21 @@ describe('Components/App', () => {
     } as unknown as AppRootProps;
   });
 
-  test('renders the alerts page by default', async () => {
+  function renderApp(initialEntry = '/') {
     const Wrapper = createTestWrapper();
-    render(
+    return render(
       <Wrapper>
-        <MemoryRouter>
+        <TestMemoryRouter initialEntries={[initialEntry]}>
           <Suspense fallback={null}>
             <App {...props} />
           </Suspense>
-        </MemoryRouter>
+        </TestMemoryRouter>
       </Wrapper>
     );
+  }
+
+  test('renders the alerts page by default', async () => {
+    renderApp();
 
     // Application is lazy loaded, so we need to wait for the component to render
     await waitFor(
@@ -54,5 +63,41 @@ describe('Components/App', () => {
       },
       { timeout: 2000 }
     );
+  });
+
+  test('renders an empty state instead of crashing when no Alertmanager is configured', async () => {
+    (config as any).datasources = {};
+
+    renderApp(`/${ROUTES.Alerts}`);
+
+    await waitFor(() => {
+      expect(screen.getByTestId(testIds.noAlertmanager.container)).toBeInTheDocument();
+    });
+    expect(screen.getByText('No Alertmanager data sources configured')).toBeInTheDocument();
+  });
+
+  test('lands on the rules page instead of alerts when only rules data sources are configured', async () => {
+    (config as any).datasources = {};
+
+    renderApp();
+
+    // Landing on alerts would only show the "no Alertmanager" empty state, so we redirect to rules.
+    await waitFor(() => {
+      expect(screen.queryByTestId(testIds.noAlertmanager.container)).not.toBeInTheDocument();
+    });
+    expect(screen.queryByTestId(testIds.alerts.container)).not.toBeInTheDocument();
+  });
+
+  test('lands on alerts when neither an Alertmanager nor a rules data source is configured', async () => {
+    (config as any).datasources = {};
+    const dataSourceSrv = createMockDataSourceSrv();
+    setDataSourceSrv({ ...dataSourceSrv, getList: () => [] } as never);
+
+    renderApp();
+
+    // Redirecting to rules would only show a second empty state – the Alertmanager page explains more.
+    await waitFor(() => {
+      expect(screen.getByTestId(testIds.noAlertmanager.container)).toBeInTheDocument();
+    });
   });
 });

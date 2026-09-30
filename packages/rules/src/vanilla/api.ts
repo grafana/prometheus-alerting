@@ -88,9 +88,28 @@ export type RulerAlertingRuleDTO = z.infer<typeof RulerAlertingRuleDTOSchema>;
 export const RulerRuleDTOSchema = z.union([RulerAlertingRuleDTOSchema, RulerRecordingRuleDTOSchema]);
 export type RulerRuleDTO = z.infer<typeof RulerRuleDTOSchema>;
 
+/**
+ * A rule group as the Ruler API returns it, and as we write it back.
+ *
+ * ⚠️ Anything missing here is dropped: a group is read, edited, and POSTed whole, and this schema
+ * decides what survives the read. Beyond Prometheus' own `name`, `interval`, `limit` and
+ * `query_offset`, that means the Mimir-specific group settings -- losing `source_tenants` turns a
+ * cross-tenant federated group into a single-tenant one, and its rules then evaluate against the
+ * wrong data.
+ */
 export const RulerRuleGroupDTOSchema = z.object({
   name: z.string(),
   interval: z.string().optional(),
+  /** Maximum number of alerts or series a single rule in this group may produce. */
+  limit: z.number().optional(),
+  /** How far back to shift the evaluation query, e.g. to wait for late samples. */
+  query_offset: z.string().optional(),
+  /** Mimir's older name for `query_offset`, still accepted by the Ruler. */
+  evaluation_delay: z.string().optional(),
+  /** Mimir: tenants whose data this group's rules read, making the group federated. */
+  source_tenants: z.array(z.string()).optional(),
+  /** Mimir: evaluate on interval boundaries rather than at an arbitrary offset. */
+  align_evaluation_time_on_interval: z.boolean().optional(),
   rules: z.array(RulerRuleDTOSchema),
 });
 export type RulerRuleGroupDTO = z.infer<typeof RulerRuleGroupDTOSchema>;

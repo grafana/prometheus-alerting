@@ -21,12 +21,16 @@ import {
 } from '@grafana/ui';
 import { attachSkeleton } from '@grafana/ui/unstable';
 
-import { normalizeMatchers, ObjectMatcher, stringifyObjectMatcher } from '@grafana/external-alertmanager/vanilla';
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
-import { MetaText } from 'features/rules/list/components/MetaText';
-import MoreButton from 'features/rules/list/components/MoreButton';
+import {
+  normalizeMatchers,
+  ObjectMatcher,
+  RouteWithID,
+  stringifyObjectMatcher,
+} from '@grafana/external-alertmanager/vanilla';
+import { getRouteMatchCount, type RouteMatchingCounts } from '../hooks/useRouteMatching';
+import { MetaText } from '../../rules/list/components/MetaText';
+import MoreButton from '../../rules/list/components/MoreButton';
 import { AlertLabel } from '@grafana/alerting';
-import { RouteMatchingCounts, getRouteMatchCount } from '../hooks/useRouteMatching';
 import { InsertPosition } from '../types';
 
 const ROUTES_PER_PAGE = 20;

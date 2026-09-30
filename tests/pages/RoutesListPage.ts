@@ -1,12 +1,13 @@
 import { Locator, expect } from '@playwright/test';
+import type { MatcherOperator } from '@grafana/external-alertmanager/vanilla';
 import { AlertmanagerPage } from './AlertmanagerPage';
-import { MatcherOperator } from '../../src/features/routes/types';
+import { matcherOperatorOptionNames } from './matcherOperatorOptionNames';
 
 /**
  * Page object for the Routes / notification tree view (`/routes`).
  *
  * Read: vanilla `test-alertmanager` (root + 5 seeded child routes, read-only — no Add button).
- * Write: Mimir `test-mimir-alertmanager` (add/edit/delete; gated by Alertmanager capability
+ * Write: a fixture-created Mimir Alertmanager (add/edit/delete; gated by Alertmanager capability
  * and route abilities). See `src/access-control/abilities.routes.ts`.
  *
  * Clicking a route opens `RouteDrawer`; clicking its receiver link opens `ReceiverDrawer`, which
@@ -97,6 +98,11 @@ export class RoutesListPage extends AlertmanagerPage {
     return this.childRoutes.filter({ hasText: text });
   }
 
+  /** The instance count metadata rendered on a route card. */
+  matchingInstances(route: Locator): Locator {
+    return route.getByTestId('matching-instances');
+  }
+
   /** Open a route's drawer by clicking its card. */
   async openRoute(routeLocator: Locator) {
     await routeLocator.click();
@@ -181,9 +187,27 @@ export class RoutesListPage extends AlertmanagerPage {
     await this.matcherLabelInput(index).fill(params.label);
     if (params.operator !== undefined) {
       await this.matcherOperatorCombobox(index).click();
-      await this.page.getByRole('option', { name: params.operator, exact: true }).click();
+      await this.page.getByRole('option', { name: matcherOperatorOptionNames[params.operator], exact: true }).click();
     }
     await this.matcherValueInput(index).fill(params.value);
+  }
+
+  /**
+   * Turn on "Override general timings" and fill the three duration fields. Saving a route with
+   * timings runs them through the duration validator, which a route without timings never
+   * exercises — the fields only render while the toggle is on.
+   */
+  async setTimings(params: { groupWait: string; groupInterval: string; repeatInterval: string }) {
+    // Grafana's `Switch` stacks a `<label>` on top of the visually-hidden `<input>`, so the input
+    // is never "actionable" per Playwright's overlap check — the label always intercepts. Force
+    // it, the same way the receiver form's checkboxes do; the browser still forwards the click to
+    // the input via the enclosing label.
+    if (!(await this.overrideTimingsToggle.isChecked())) {
+      await this.overrideTimingsToggle.click({ force: true });
+    }
+    await this.groupWaitInput.fill(params.groupWait);
+    await this.groupIntervalInput.fill(params.groupInterval);
+    await this.repeatIntervalInput.fill(params.repeatInterval);
   }
 
   async selectReceiver(name: string) {

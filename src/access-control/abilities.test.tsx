@@ -1,6 +1,3 @@
-import { firstValueFrom } from 'rxjs';
-import { MockBackendSrv } from '@grafana/api-clients';
-import { BackendSrv, setBackendSrv } from '@grafana/runtime';
 import { reloadDataSourceInstanceSettings } from '@grafana/runtime/unstable';
 import { renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
@@ -10,12 +7,7 @@ import { server } from '../test/server';
 import { setCurrentUserPermissions } from '../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../test/utils/test-wrapper';
 
-import {
-  AlertingAction,
-  AlertingPermission,
-  useScopedAbilities,
-  useUnscopedAbilities,
-} from './abilities';
+import { AlertingAction, AlertingPermission, makeAbility, useScopedAbilities, useUnscopedAbilities } from './abilities';
 
 const buildInfoUrl = '/api/datasources/proxy/uid/:uid/api/v1/status/buildinfo';
 const mimirDataSource = DataSourceInstanceSettingsFactory.build({
@@ -28,15 +20,6 @@ const prometheusDataSource = DataSourceInstanceSettingsFactory.build({
   name: 'Prometheus',
   type: 'prometheus',
 });
-
-class MockBackendSrvWithGet extends MockBackendSrv {
-  // MockBackendSrv intentionally implements only fetch(), while the public
-  // datasource-settings reload API calls get(). Delegate that one setup call
-  // to the unchanged fetch implementation so MSW handles the HTTP response.
-  async get<T>(url: string): Promise<T> {
-    return (await firstValueFrom(this.fetch<T>({ url }))).data;
-  }
-}
 
 async function loadDataSourceSettings() {
   server.use(
@@ -51,7 +34,6 @@ async function loadDataSourceSettings() {
     )
   );
 
-  setBackendSrv(new MockBackendSrvWithGet() as BackendSrv);
   await reloadDataSourceInstanceSettings();
 }
 
@@ -182,6 +164,35 @@ describe('useScopedAbilities', () => {
         cause: 'INSUFFICIENT_PERMISSIONS',
         anyOfPermissions: [AlertingPermission.NotificationsWrite],
       },
+    });
+  });
+});
+
+describe('makeAbility', () => {
+  beforeEach(() => {
+    setCurrentUserPermissions(AlertingPermission.NotificationsWrite);
+  });
+
+  it('grants when the permission is held and the capability is there', () => {
+    expect(makeAbility({ permission: AlertingPermission.NotificationsWrite, supported: true })).toEqual({
+      granted: true,
+    });
+  });
+
+  it('denies an Alertmanager with no configuration API', () => {
+    expect(makeAbility({ permission: AlertingPermission.NotificationsWrite, supported: false })).toEqual({
+      granted: false,
+      cause: 'NOT_SUPPORTED',
+    });
+  });
+
+  it('reports a missing permission before checking capabilities', () => {
+    setCurrentUserPermissions();
+
+    expect(makeAbility({ permission: AlertingPermission.NotificationsWrite, supported: false })).toEqual({
+      granted: false,
+      cause: 'INSUFFICIENT_PERMISSIONS',
+      anyOfPermissions: [AlertingPermission.NotificationsWrite],
     });
   });
 });

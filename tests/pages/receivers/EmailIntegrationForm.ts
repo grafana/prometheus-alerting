@@ -7,6 +7,7 @@ export interface EmailFormParams {
   hello?: string;
   authUsername?: string;
   authPassword?: string;
+  authSecret?: string;
   requireTls?: boolean;
   html?: string;
   text?: string;
@@ -29,11 +30,13 @@ export class EmailIntegrationForm {
   readonly helloInput: Locator;
   readonly authUsernameInput: Locator;
   readonly authPasswordInput: Locator;
+  readonly authSecretInput: Locator;
   readonly requireTlsCheckbox: Locator;
   readonly htmlInput: Locator;
   readonly textInput: Locator;
   readonly tlsServerNameInput: Locator;
   readonly tlsSkipVerifyCheckbox: Locator;
+  readonly addHeaderButton: Locator;
 
   constructor(scope: Locator) {
     this.toInput = scope.getByLabel('To', { exact: true });
@@ -42,11 +45,19 @@ export class EmailIntegrationForm {
     this.helloInput = scope.getByLabel('Hello', { exact: true });
     this.authUsernameInput = scope.getByLabel('Username', { exact: true });
     this.authPasswordInput = scope.getByLabel('Password', { exact: true });
+    this.authSecretInput = scope.getByLabel('Secret', { exact: true });
     this.requireTlsCheckbox = scope.getByLabel('Require TLS', { exact: true });
     this.htmlInput = scope.getByLabel('Email HTML body', { exact: true });
     this.textInput = scope.getByLabel('Email text body', { exact: true });
-    this.tlsServerNameInput = scope.getByLabel('Server name', { exact: true });
-    this.tlsSkipVerifyCheckbox = scope.getByLabel('Skip verify', { exact: true });
+    this.tlsServerNameInput = scope.getByLabel('TLS server name', { exact: true });
+    this.tlsSkipVerifyCheckbox = scope.getByLabel('Skip TLS certificate verification', { exact: true });
+    this.addHeaderButton = scope.getByRole('button', { name: 'Add header', exact: true });
+  }
+
+  async addHeader(key: string, value: string) {
+    await this.addHeaderButton.click();
+    await this.addHeaderButton.locator('xpath=preceding::input[@aria-label="Header key"][1]').fill(key);
+    await this.addHeaderButton.locator('xpath=preceding::input[@aria-label="Header value"][1]').fill(value);
   }
 
   /** Fill any subset of the email's top-level and `tls_config` fields. */
@@ -57,6 +68,7 @@ export class EmailIntegrationForm {
     hello,
     authUsername,
     authPassword,
+    authSecret,
     requireTls,
     html,
     text,
@@ -80,6 +92,9 @@ export class EmailIntegrationForm {
     }
     if (authPassword !== undefined) {
       await this.authPasswordInput.fill(authPassword);
+    }
+    if (authSecret !== undefined) {
+      await this.authSecretInput.fill(authSecret);
     }
     if (requireTls) {
       // Grafana's `Checkbox` renders a decorative `<span>` checkmark stacked (z-index) above the

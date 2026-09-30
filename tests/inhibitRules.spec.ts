@@ -62,41 +62,63 @@ test.describe('Inhibit Rules', () => {
       await expect(inhibitRulesPage.emptyStateMessage).toBeVisible();
       await expect(inhibitRulesPage.addButton).toBeVisible();
       await inhibitRulesPage.addButton.click();
-      await expect(inhibitRulesPage.sourceMatchersInput).toBeVisible();
+      await expect(inhibitRulesPage.sourceMatchers).toBeVisible();
     });
 
     test('creates an inhibit rule', async ({ inhibitRulesPage }) => {
       await inhibitRulesPage.openCreateDrawer();
       await inhibitRulesPage.fillForm({
-        source: 'alertname = TestAlert',
-        target: 'severity = warning',
+        source: [
+          { label: 'alertname', value: 'TestAlert' },
+          { label: 'team', operator: '=~', value: 'platform.*' },
+        ],
+        target: [{ label: 'severity', value: 'warning' }],
         equal: 'job',
       });
       await inhibitRulesPage.submitCreate();
 
       await expect(inhibitRulesPage.table.getByText(/alertname\s*=\s*TestAlert/i)).toBeVisible();
+      await expect(inhibitRulesPage.table.getByText(/team\s*=~\s*platform\.\*/i)).toBeVisible();
       await expect(inhibitRulesPage.table.getByText(/severity\s*=\s*warning/i)).toBeVisible();
       await inhibitRulesPage.expectRuleCount(1);
     });
 
     test('edits an inhibit rule', async ({ inhibitRulesPage }) => {
       await inhibitRulesPage.openCreateDrawer();
-      await inhibitRulesPage.fillForm({ source: 'alertname = EditMe', target: 'severity = warning' });
+      await inhibitRulesPage.fillForm({
+        source: [{ label: 'alertname', value: 'EditMe' }],
+        target: [{ label: 'severity', value: 'warning' }],
+      });
       await inhibitRulesPage.submitCreate();
       await expect(inhibitRulesPage.table.getByText(/alertname\s*=\s*EditMe/i)).toBeVisible();
 
       await inhibitRulesPage.openRuleByText(/alertname\s*=\s*EditMe/i);
       await inhibitRulesPage.startEdit();
-      await inhibitRulesPage.fillForm({ target: 'severity = info' });
+      await inhibitRulesPage.fillForm({
+        target: [
+          { label: 'severity', operator: '!=', value: 'warning' },
+          { label: 'team', operator: '=~', value: 'platform.*' },
+        ],
+      });
+      await inhibitRulesPage.submitUpdate();
+      await expect(inhibitRulesPage.table.getByText(/team\s*=~\s*platform\.\*/i)).toBeVisible();
+
+      await inhibitRulesPage.openRuleByText(/alertname\s*=\s*EditMe/i);
+      await inhibitRulesPage.startEdit();
+      await inhibitRulesPage.fillForm({ target: [{ label: 'severity', operator: '=', value: 'info' }] });
       await inhibitRulesPage.submitUpdate();
 
       await expect(inhibitRulesPage.table.getByText(/severity\s*=\s*info/i)).toBeVisible();
+      await expect(inhibitRulesPage.table.getByText(/team\s*=~\s*platform\.\*/i)).toBeHidden();
       await inhibitRulesPage.expectRuleCount(1);
     });
 
     test('deletes an inhibit rule', async ({ inhibitRulesPage }) => {
       await inhibitRulesPage.openCreateDrawer();
-      await inhibitRulesPage.fillForm({ source: 'alertname = DeleteMe', target: 'severity = warning' });
+      await inhibitRulesPage.fillForm({
+        source: [{ label: 'alertname', value: 'DeleteMe' }],
+        target: [{ label: 'severity', value: 'warning' }],
+      });
       await inhibitRulesPage.submitCreate();
       await expect(inhibitRulesPage.table.getByText(/alertname\s*=\s*DeleteMe/i)).toBeVisible();
 
@@ -110,8 +132,8 @@ test.describe('Inhibit Rules', () => {
       await inhibitRulesPage.openCreateDrawer();
       await inhibitRulesPage.submitCreate();
 
-      await expect(inhibitRulesPage.page.getByText(/at least one source matcher is required/i)).toBeVisible();
-      await expect(inhibitRulesPage.page.getByText(/at least one target matcher is required/i)).toBeVisible();
+      await expect(inhibitRulesPage.sourceMatchers.getByText('Required')).toBeVisible();
+      await expect(inhibitRulesPage.targetMatchers.getByText('Required')).toBeVisible();
     });
   });
 });

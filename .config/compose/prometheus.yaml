@@ -1,0 +1,15 @@
+# Vanilla Prometheus, used as the read-only "Test Prometheus" data source.
+services:
+  prometheus:
+    image: quay.io/prometheus/prometheus:v3.0.0@sha256:3b9b2a15d376334da8c286d995777d3b9315aa666d2311170ada6059a517b74f
+    container_name: prometheus-test
+    ports:
+      - '9090:9090'
+    volumes:
+      - ../../test-data/prometheus:/etc/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'

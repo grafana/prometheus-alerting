@@ -7,9 +7,16 @@ import dataSourceReducer from './datasourceSlice';
 import { alertmanagerApi } from '../api/alertmanager/alertmanager.endpoints';
 import { featureDiscoveryApi } from '../api/rules/featureDiscovery.endpoints';
 import { prometheusApi } from '../api/rules/prometheus.endpoints';
-import { rulerApi } from '../api/rules/mimir.endpoints';
+import { rulerApi } from '../api/rules/ruler.endpoints';
 
-export const createStore = (initialDataSourceUID: string) => {
+/**
+ * Create the plugin store, optionally preselecting an Alertmanager data source.
+ *
+ * When `initialDataSourceUID` is omitted the `dataSource` slice is left to its own initial state
+ * rather than being preloaded with a placeholder – the slice stays the single owner of what
+ * "nothing selected" looks like.
+ */
+export const createStore = (initialDataSourceUID?: string) => {
   const store = configureStore({
     reducer: {
       dataSource: dataSourceReducer,
@@ -25,11 +32,7 @@ export const createStore = (initialDataSourceUID: string) => {
         featureDiscoveryApi.middleware,
         rulerApi.middleware
       ),
-    preloadedState: {
-      dataSource: {
-        selectedUID: initialDataSourceUID,
-      },
-    },
+    preloadedState: initialDataSourceUID ? { dataSource: { selectedUID: initialDataSourceUID } } : undefined,
   });
 
   setupListeners(store.dispatch);
@@ -38,9 +41,13 @@ export const createStore = (initialDataSourceUID: string) => {
 };
 
 /**
- * Get initial data source UID from sessionStorage or default to first available
+ * Get initial data source UID from sessionStorage or default to first available.
+ *
+ * Returns `undefined` when no Alertmanager data sources are configured – this must never throw
+ * because it runs at module evaluation time and would take the entire plugin down with it. The UI
+ * detects the missing data source and renders a dedicated page instead.
  */
-function getInitialDataSourceUID(): string {
+function getInitialDataSourceUID(): string | undefined {
   const availableAlertmanagers = Object.values(config.datasources).filter((ds) => ds.type === 'alertmanager');
 
   // Try to get the stored UID from sessionStorage
@@ -59,8 +66,8 @@ function getInitialDataSourceUID(): string {
     return firstAlertmanager.uid;
   }
 
-  // Fallback to default if no alertmanagers are configured
-  throw new Error('no available Alertmanagers');
+  // No Alertmanagers configured – the UI will show a "no Alertmanager configured" page.
+  return undefined;
 }
 
 /**

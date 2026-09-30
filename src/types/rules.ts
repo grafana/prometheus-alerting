@@ -7,10 +7,6 @@ export type { PromRuleGroupDTO, PromRuleDTO };
 export type Health = 'nodata' | 'error';
 export type State = 'normal' | 'firing' | 'pending' | 'unknown' | 'recovering';
 
-export type RulesSourceApplication = 'prometheus' | 'mimir' | 'cortex' | 'loki';
-
-export type RulesPluginType = 'prometheus' | 'loki';
-
 export interface PromBuildInfoResponse {
   status: string;
   data: {
@@ -28,54 +24,6 @@ export interface PromBuildInfoResponse {
       federated_rules?: string;
     };
   };
-}
-
-export interface DataSourceFeatures {
-  application: RulesSourceApplication;
-  rulerApiEnabled: boolean;
-}
-
-/**
- * Returns the API path for reading runtime rule state.
- *
- * Loki exposes its Prometheus-compatible runtime rules endpoint at a different
- * path from Prometheus, Mimir, and Cortex. Loki's Ruler CRUD API uses the
- * separate /api/prom/rules path and returns YAML.
- */
-export function getPrometheusRulesApiBasePath(pluginType: RulesPluginType): string {
-  return pluginType === 'loki' ? 'prometheus/api/v1/rules' : 'api/v1/rules';
-}
-
-/**
- * Returns the ruler API base path for the given application type.
- * Used to build URLs like /api/datasources/proxy/uid/{uid}/{rulerApiPath}/{namespace}/{group}
- */
-export function getRulerApiBasePath(application: RulesSourceApplication): string {
-  switch (application) {
-    case 'loki':
-      return 'api/prom/rules';
-    case 'mimir':
-    case 'cortex':
-    case 'prometheus':
-    default:
-      return 'config/v1/rules';
-  }
-}
-
-/**
- * Returns the instant query API path for the given application type.
- * Used to build URLs like /api/datasources/proxy/uid/{uid}/{queryApiPath}
- */
-export function getQueryApiPath(application: RulesSourceApplication): string {
-  switch (application) {
-    case 'loki':
-      return 'loki/api/v1/query';
-    case 'mimir':
-    case 'cortex':
-    case 'prometheus':
-    default:
-      return 'api/v1/query';
-  }
 }
 
 export interface DataSourceRulesSourceIdentifier {

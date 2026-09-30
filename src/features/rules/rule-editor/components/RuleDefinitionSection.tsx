@@ -1,12 +1,10 @@
 import React from 'react';
-import { skipToken } from '@reduxjs/toolkit/query';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 
 import { DataSourceInstanceSettings } from '@grafana/data';
 import { t } from '@grafana/i18n';
 import { Field, Input, Stack, Alert } from '@grafana/ui';
 
-import { useDiscoverFeaturesQuery } from '../../../../api/rules/featureDiscovery.endpoints';
 import { QueryPreviewPanel } from '../../components/QueryPreviewPanel';
 import { RuleFormValues } from '../types';
 import { RuleEditorSection } from './RuleEditorSection';
@@ -33,8 +31,6 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
   });
 
   const isRecording = isCloudRecordingRuleByType(type);
-
-  const { data: dsFeatures } = useDiscoverFeaturesQuery(dataSourceUid ? { uid: dataSourceUid } : skipToken);
 
   return (
     <RuleEditorSection
@@ -71,10 +67,11 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
               required: t('alerting.rule-name-input.message.rule-name-is-required', 'Rule name is required.'),
             })}
             autoFocus
-            placeholder={t(
-              'alerting.rule-name-input.placeholder-give-your-alert-a-name',
-              'Give your alert rule a name'
-            )}
+            placeholder={
+              isRecording
+                ? t('alerting.rule-name-input.placeholder-recording', 'Give your recording rule a name')
+                : t('alerting.rule-name-input.placeholder-give-your-alert-a-name', 'Give your alert rule a name')
+            }
           />
         </Field>
 
@@ -145,13 +142,7 @@ export const RuleDefinitionSection = ({ onChangeCloudDatasource }: RuleDefinitio
 
         {/* Query Preview */}
         {dataSourceUid && expression && (
-          <QueryPreviewPanel
-            dataSourceUid={dataSourceUid}
-            expression={expression}
-            application={dsFeatures?.application}
-            collapsible
-            defaultCollapsed
-          />
+          <QueryPreviewPanel dataSourceUid={dataSourceUid} expression={expression} collapsible defaultCollapsed />
         )}
       </Stack>
     </RuleEditorSection>

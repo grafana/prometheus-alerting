@@ -11,7 +11,8 @@ export class RuleDetailsPage {
   readonly stateBadge: Locator; // Note: matches both state and health badges
   readonly loadingPlaceholder: Locator;
   readonly errorAlert: Locator;
-  readonly notFoundAlert: Locator;
+  readonly notFoundMessage: Locator;
+  readonly backToRulesLink: Locator;
 
   // Action buttons
   readonly editButton: Locator;
@@ -38,7 +39,10 @@ export class RuleDetailsPage {
     // Loading and error states
     this.loadingPlaceholder = pageContent.getByText(/loading rule details/i);
     this.errorAlert = pageContent.getByRole('alert').filter({ hasText: /error loading rule/i });
-    this.notFoundAlert = pageContent.getByRole('alert').filter({ hasText: /rule not found/i });
+    // The not-found state is an EmptyState, so match its message rather than the page title –
+    // the title says "Rule not found" too.
+    this.notFoundMessage = pageContent.getByText(/the requested rule could not be found/i);
+    this.backToRulesLink = pageContent.getByRole('link', { name: /back to rules/i });
 
     // Action buttons
     this.editButton = pageContent.getByRole('link', { name: /edit/i });
@@ -50,7 +54,7 @@ export class RuleDetailsPage {
     this.detailsTab = pageContent.getByRole('tab', { name: /details/i });
 
     // Tab content
-    this.queryExpression = pageContent.getByText(/^up == 0|^sum\(up\)/);
+    this.queryExpression = pageContent.locator('pre');
     this.instancesTable = pageContent.locator('table');
     this.detailsTable = pageContent.locator('dl, div[role="definition"]');
   }
@@ -83,6 +87,15 @@ export class RuleDetailsPage {
   }
 
   /**
+   * Navigate to a rule details URL that isn't built from a real identifier – for URLs that have
+   * been truncated or hand-edited.
+   */
+  async gotoRawIdentifier(ruleIdentifier: string): Promise<void> {
+    const baseUrl = this.page.url().match(/^https?:\/\/[^/]+/)?.[0] || 'http://localhost:3000';
+    await this.page.goto(`${baseUrl}/a/grafana-prometheusalerting-app/rules/${ruleIdentifier}`);
+  }
+
+  /**
    * Switch to a specific tab
    */
   async switchToTab(tabName: 'query' | 'instances' | 'details'): Promise<void> {
@@ -102,13 +115,7 @@ export class RuleDetailsPage {
    */
   async getQueryExpression(): Promise<string> {
     await this.switchToTab('query');
-    // Look for the query in a code block or pre element within page content
-    const pageContent = this.page.locator('#pageContent');
-    const queryElement = pageContent
-      .locator('pre, code')
-      .filter({ hasText: /==|sum|rate/ })
-      .first();
-    return await queryElement.innerText();
+    return await this.queryExpression.innerText();
   }
 
   /**
@@ -290,7 +297,7 @@ export class RuleDetailsPage {
    * Check if page shows not found state
    */
   async isNotFound(): Promise<boolean> {
-    return await this.notFoundAlert.isVisible();
+    return await this.notFoundMessage.isVisible();
   }
 
   /**

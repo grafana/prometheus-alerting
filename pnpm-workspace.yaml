@@ -6,30 +6,29 @@ verifyDepsBeforeRun: install
 minimumReleaseAge: 4320 # 3 days, in minutes
 minimumReleaseAgeExclude:
   - '@grafana/*'
+  # Renovate security update: js-yaml@4.3.1 || 4.3.2
+  - js-yaml@4.3.1 || 4.3.2
+  # Renovate security update: vitest@4.1.11
+  - vitest@4.1.11
 
 overrides:
+  # i18next 25.x prints a console ad for its paid Locize product on every init (which
+  # @grafana/i18n triggers lazily and without opting out) - 26.x dropped the ad entirely.
+  'i18next': '^26.0.0'
   'js-cookie': '>=3.0.6'
-  'dompurify': '>=3.3.2'
+  'dompurify': '>=3.4.13'
   'uuid': '>=11.1.1'
   '@types/react': '18.3.29'
   '@types/react-dom': '18.3.7'
   '@opentelemetry/core@<2.8.0': ^2.8.0
-  react-router@>=6.7.0 <6.30.4: ^6.30.4
-  # brace-expansion backports every advisory fix to each major line, so pin each line to its own
-  # patched release rather than lifting the whole tree to 5.x. brace-expansion 5 switched to a named
-  # export, so forcing it onto minimatch 3 breaks it ("expand is not a function"), which in turn
-  # forced minimatch to 10 — and minimatch 10's CJS build has no default export, which broke
-  # fork-ts-checker-webpack-plugin's default import. Pinning per-line keeps every consumer on the
-  # export shape it expects with no patched dependency needed.
-  'brace-expansion@<1.1.18': '^1.1.18'
-  'brace-expansion@>=2 <2.1.4': '^2.1.4'
-  'brace-expansion@>=3 <3.0.6': '^3.0.6'
-  'brace-expansion@>=4 <5.0.9': '>=5.0.9'
-  # Transitive-only advisories, all reached through build/dev tooling:
-  'fast-uri': '^3.1.5' # GHSA via copy-webpack-plugin>schema-utils; stay on 3.x, schema-utils wants ^3
-  'ip-address': '>=10.3.1' # 3 advisories via @grafana/sign-plugin>proxy-agent>socks
-  'postcss': '>=8.5.23' # via @vitejs/plugin-react>vite
-  'undici': '^7.29.0' # 4 advisories via i18next-parser>cheerio; pinned to 7.x, cheerio wants ^7
+  react-router@>=6.7.0 <6.30.6: ^6.30.6
+  react-router-dom@>=6.30.2 <6.30.6: ^6.30.6
+  react-router-dom-v5-compat@>=6.30.2 <6.30.6: ^6.30.6
+  # Transitive-only advisory, reached through test tooling. faker never patched the 9.x line, so
+  # this crosses a major. @grafana/alerting only pulls faker in for its mock factories, and those
+  # stick to APIs that 10.x kept (helpers.arrayElement, number.int, string.alphanumeric and
+  # friends) - not helpers.fake, which is the one the advisory is about.
+  '@faker-js/faker': '^10.5.0'
 
 registries:
   '@jsr': https://npm.jsr.io

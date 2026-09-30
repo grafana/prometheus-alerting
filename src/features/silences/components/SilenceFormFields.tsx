@@ -16,6 +16,7 @@ import { t } from '@grafana/i18n';
 import { config } from '@grafana/runtime';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { SilenceFormSchema, type SilenceFormData } from '../utils/silenceFormSchema';
+import { formatDateTimeLocal } from '../utils/silences.utils';
 
 interface MatcherFormData {
   name: string;
@@ -55,15 +56,6 @@ export function SilenceFormFields({
   // Get current time and 1 hour from now as defaults
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-
-  const formatDateTimeLocal = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
 
   const {
     control,

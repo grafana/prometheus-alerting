@@ -3,9 +3,9 @@ import { Combobox, InlineField, type ComboboxOption } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { useAvailableAlertmanagers } from '../../hooks/useAvailableAlertmanager';
 import { convertDataSourcesToComboboxOptions } from '../../utils/utils.alertmanager';
-import { STORAGE_KEYS } from '../../constants';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { selectDataSourceUID, setDataSourceUID } from '../../store/datasourceSlice';
+import { useSelectAlertmanager } from '../../hooks/useSelectAlertmanager';
+import { useAppSelector } from '../../store/hooks';
+import { selectDataSourceUID } from '../../store/datasourceSlice';
 
 interface AlertmanagerPickerProps {
   /**
@@ -20,7 +20,7 @@ interface AlertmanagerPickerProps {
 }
 
 export function AlertmanagerPicker({ label, alwaysShow = false }: AlertmanagerPickerProps) {
-  const dispatch = useAppDispatch();
+  const selectAlertmanager = useSelectAlertmanager();
   const dataSourceUID = useAppSelector(selectDataSourceUID);
 
   const alertmanagers = useAvailableAlertmanagers();
@@ -31,8 +31,7 @@ export function AlertmanagerPicker({ label, alwaysShow = false }: AlertmanagerPi
   }, [alertmanagerOptions, dataSourceUID]);
 
   const handleAlertmanagerChange = (option: ComboboxOption<string>) => {
-    sessionStorage.setItem(STORAGE_KEYS.SELECTED_ALERTMANAGER_UID, option.value);
-    dispatch(setDataSourceUID(option.value));
+    selectAlertmanager(option.value);
   };
 
   const shouldShow = alwaysShow || alertmanagerOptions.length > 1;

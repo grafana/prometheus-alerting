@@ -1,10 +1,11 @@
 import { css } from '@emotion/css';
 import React, { useMemo, useState } from 'react';
-import { SubmitHandler, useForm, useWatch } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 
 import { AppEvents, GrafanaTheme2 } from '@grafana/data';
 import { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
+import { isFederatedRulerGroup } from '@grafana/external-rules/utils';
 import { Trans, t } from '@grafana/i18n';
 import { getAppEvents, locationService, PluginPage } from '@grafana/runtime';
 import {
@@ -20,17 +21,16 @@ import {
 } from '@grafana/ui';
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
-import { rulerApi } from '../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../api/rules/ruler.endpoints';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
 const { useGetRuleGroupQuery, useDeleteRuleGroupMutation, useUpsertRuleGroupMutation } = rulerApi;
 import { useReturnTo } from '../../../hooks/useReturnTo';
-import { extractErrorMessage } from '../../../utils/errors';
 import { groups } from '../../../utils/navigation';
 import { AlertingAction, isAbilityAllowed, useScopedAbilities } from '../../../access-control/abilities';
 
 import { DraggableRulesTable, SwapOperation, applySwaps } from '../components/DraggableRulesTable';
-import { EvaluationIntervalInput } from '../components/EvaluationIntervalInput';
+import { EvaluationIntervalInput, validateInterval } from '../components/EvaluationIntervalInput';
 import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { useWaitForGroupConsistency } from '../hooks/useGroupConsistencyCheck';
 import { useInvalidatePromRules } from '../hooks/useInvalidatePromRules';
@@ -137,6 +137,22 @@ function GroupEditPage() {
     );
   }
 
+  // A federated group's source_tenants decide which tenants its rules read, and this form has no
+  // field for them, so saving through it would quietly turn the group single-tenant. The group
+  // details page hides its Edit button, but this page has its own URL.
+  if (isFederatedRulerGroup(rulerGroup)) {
+    return (
+      <PluginPage pageNav={pageNav}>
+        <Alert severity="info" title={t('alerting.group-edit.group-federated', 'This group is federated')}>
+          <Trans i18nKey="alerting.group-edit.group-federated-description">
+            Federated rule groups read data from several tenants, which this editor cannot express. Edit the group
+            through the Ruler API instead.
+          </Trans>
+        </Alert>
+      </PluginPage>
+    );
+  }
+
   return (
     <PluginPage pageNav={pageNav}>
       <GroupEditForm
@@ -170,7 +186,8 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
 
   const [swapOperations, setSwapOperations] = useState<SwapOperation[]>([]);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  // The last failure, kept raw so the alert can decide how to present it
+  const [submitError, setSubmitError] = useState<unknown>(null);
   const [isWaitingForConsistency, setIsWaitingForConsistency] = useState(false);
 
   const defaultInterval = rulerGroup.interval ?? '1m';
@@ -178,7 +195,6 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
   const {
     register,
     handleSubmit,
-    setValue,
     control,
     formState: { errors, dirtyFields, isSubmitting },
   } = useForm<GroupEditFormData>({
@@ -219,8 +235,12 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
       // Apply rule reordering
       const reorderedRules = hasSwaps ? applySwaps(rulerGroup.rules, swapOperations) : rulerGroup.rules;
 
-      // Create the new rule group payload
+      // Create the new rule group payload.
+      // Spread the group we fetched first: this form edits the name, the interval and the rule
+      // order, and everything else on the group -- source_tenants, limit, query_offset and the
+      // rest -- has to survive a save untouched.
       const newGroupPayload = {
+        ...rulerGroup,
         name: data.name,
         interval: data.interval,
         rules: reorderedRules,
@@ -259,7 +279,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
       }
     } catch (error) {
       setIsWaitingForConsistency(false);
-      setSubmitError(extractErrorMessage(error));
+      setSubmitError(error);
     }
   };
 
@@ -294,7 +314,7 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
       locationService.push(`${PLUGIN_BASE_URL}/${ROUTES.Rules}`);
     } catch (error) {
       setIsWaitingForConsistency(false);
-      setSubmitError(error instanceof Error ? error.message : String(error));
+      setSubmitError(error);
     }
   };
 
@@ -303,10 +323,11 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)}>
-        {submitError && (
-          <Alert severity="error" title={t('alerting.group-edit.submit-error', 'Failed to save changes')}>
-            {submitError}
-          </Alert>
+        {submitError !== null && (
+          <RulesErrorAlert
+            error={submitError}
+            title={t('alerting.group-edit.submit-error', 'Failed to save changes')}
+          />
         )}
 
         <Field
@@ -348,9 +369,13 @@ function GroupEditForm({ dataSourceUid, originalNamespace, originalGroupName, ru
           className={styles.field}
           htmlFor="interval"
         >
-          <EvaluationIntervalInput
-            value={currentInterval}
-            onChange={(value) => setValue('interval', value, { shouldValidate: true, shouldDirty: true })}
+          <Controller
+            name="interval"
+            control={control}
+            rules={{ validate: validateInterval }}
+            render={({ field: { value, onChange, onBlur } }) => (
+              <EvaluationIntervalInput value={value} onChange={onChange} onBlur={onBlur} />
+            )}
           />
         </Field>
 

@@ -5,8 +5,8 @@ import { css } from '@emotion/css';
 import { GrafanaTheme2 } from '@grafana/data';
 import { t, Trans } from '@grafana/i18n';
 import { Button, IconButton, LinkButton, Stack, Text, Toggletip, useStyles2 } from '@grafana/ui';
+import type { RulesSourceApplication } from '@grafana/external-rules/ruler';
 
-import { RulesSourceApplication } from '../../../../types/rules';
 import { getRulesErrorFeedback } from '../../utils/errorFeedback';
 
 import { DataSourceIcon } from './DataSourceIcon';
@@ -51,7 +51,10 @@ export const DataSourceSection = ({
                   aria-label={t('rules.datasource-section.collapse', 'Collapse')}
                   disabled={Boolean(error)}
                 />
-                {application && <DataSourceIcon application={application} />}
+                {/* Always rendered: with no application (e.g. feature discovery failed) it falls
+                    back to the data source's own plugin logo rather than dropping the icon, which
+                    would make a failing data source hard to pick out of a list. */}
+                <DataSourceIcon application={application} dataSourceUid={uid} />
 
                 <Text variant="body" weight="bold" element="h2" id={`datasource-${String(uid)}-heading`}>
                   {name}

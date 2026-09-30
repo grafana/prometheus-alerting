@@ -8,15 +8,15 @@ import { Alert } from '@grafana/ui';
 
 import { useDiscoverFeaturesQuery } from '../../../api/rules/featureDiscovery.endpoints';
 import { prometheusApi } from '../../../api/rules/prometheus.endpoints';
-import { rulerApi } from '../../../api/rules/mimir.endpoints';
-import { DataSourceRuleGroupIdentifier, RulesSourceApplication } from '../../../types/rules';
+import { rulerApi } from '../../../api/rules/ruler.endpoints';
+import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 
 const { useGetRuleGroupQuery } = rulerApi;
 import { hashRule } from '@grafana/external-rules/hashing';
 import { createRulePositionHash, getMatchingRulerRule } from '@grafana/external-rules/matching';
+import type { RulesSourceApplication } from '@grafana/external-rules/ruler';
 import type { PromRuleGroupDTO, PromRuleDTO } from '@grafana/external-rules/vanilla';
 
-import { RuleExporter } from '../export';
 import { RulesErrorAlert } from '../components/RulesErrorAlert';
 import { DataSourceRuleListItem } from './DataSourceRuleListItem';
 import { RuleActionsButtons } from './components/RuleActionsButtons';
@@ -46,8 +46,7 @@ export function DataSourceGroupLoader({
   const { namespace, groupName } = groupIdentifier;
   const namespaceName = namespace.name;
 
-  const { handleDuplicate, handleSilence, handleDelete, handleExport, deleteModal, exportingRule, closeExportDrawer } =
-    useRuleActions();
+  const { handleDuplicate, handleSilence, handleDelete, deleteModal } = useRuleActions();
 
   // Fetch Prometheus rules
   const {
@@ -136,10 +135,10 @@ export function DataSourceGroupLoader({
               rule={rulerRule}
               promRule={rule}
               groupIdentifier={groupIdentifier}
+              rulerGroup={rulerRuleGroup}
               onDelete={handleDelete}
               onDuplicate={handleDuplicate}
               onSilence={handleSilence}
-              onExport={handleExport}
               compact
             />
           );
@@ -157,7 +156,6 @@ export function DataSourceGroupLoader({
           );
         })}
         {deleteModal}
-        {exportingRule && <RuleExporter rule={exportingRule} onClose={closeExportDrawer} />}
       </>
     );
   }

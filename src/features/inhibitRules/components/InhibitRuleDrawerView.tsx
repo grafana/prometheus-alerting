@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { t } from '@grafana/i18n';
-import { Alert, Button, ConfirmModal, Stack, Text } from '@grafana/ui';
-import { type NormalizedInhibitRule, stringifyObjectMatcher } from '@grafana/external-alertmanager/vanilla';
 import { AlertLabel } from '@grafana/alerting';
+import { type NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
+import { Alert, Button, ConfirmModal, Stack, Text } from '@grafana/ui';
 import { Section } from '../../../components/KeyValueList/Section';
 import { KeyValuePair } from '../../../components/KeyValueList/KeyValueList';
+import { MutationError } from '../../../access-control/components/MutationError';
+import { MatcherLabels } from './MatcherLabels';
 
 interface InhibitRuleDetailsProps {
   inhibitRule: NormalizedInhibitRule;
@@ -22,11 +24,7 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
           label={t('inhibit-rules.drawer.source-matchers', 'Source Matchers')}
           value={
             hasSourceMatchers && inhibitRule.source_matchers ? (
-              <Stack direction="row" gap={0.5} wrap="wrap">
-                {inhibitRule.source_matchers.map((matcher, idx) => (
-                  <AlertLabel key={`source-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
-                ))}
-              </Stack>
+              <MatcherLabels matchers={inhibitRule.source_matchers} />
             ) : (
               <Text color="secondary">{t('inhibit-rules.drawer.none', 'None')}</Text>
             )
@@ -37,11 +35,7 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
           label={t('inhibit-rules.drawer.target-matchers', 'Target Matchers')}
           value={
             hasTargetMatchers && inhibitRule.target_matchers ? (
-              <Stack direction="row" gap={0.5} wrap="wrap">
-                {inhibitRule.target_matchers.map((matcher, idx) => (
-                  <AlertLabel key={`target-${idx}`} value={stringifyObjectMatcher(matcher)} colorBy="value" />
-                ))}
-              </Stack>
+              <MatcherLabels matchers={inhibitRule.target_matchers} />
             ) : (
               <Text color="secondary">{t('inhibit-rules.drawer.none', 'None')}</Text>
             )
@@ -73,32 +67,17 @@ function InhibitRuleDetails({ inhibitRule }: InhibitRuleDetailsProps) {
 
 interface InhibitRuleDrawerViewProps {
   inhibitRule: NormalizedInhibitRule;
-  inhibitRuleIndex: number;
-  onEdit: () => void;
-  onClose: () => void;
-  onDelete: () => void;
-  isDeleting: boolean;
   deleteError: unknown;
 }
 
-export function InhibitRuleDrawerView({
-  inhibitRule,
-  onEdit,
-  onDelete,
-  isDeleting,
-  deleteError,
-}: InhibitRuleDrawerViewProps) {
+export function InhibitRuleDrawerView({ inhibitRule, deleteError }: InhibitRuleDrawerViewProps) {
   return (
     <>
-      {Boolean(deleteError) && (
-        <Alert title={t('inhibit-rules.error-deleting-title', 'Error deleting inhibit rule')} severity="error">
-          {String(
-            deleteError instanceof Error
-              ? deleteError.message
-              : t('inhibit-rules.error-deleting-message', 'Failed to delete inhibit rule')
-          )}
-        </Alert>
-      )}
+      <MutationError
+        error={deleteError}
+        fallbackTitle={t('inhibit-rules.error-deleting-title', 'Error deleting inhibit rule')}
+        resource={t('inhibit-rules.resource-label', 'inhibit rules')}
+      />
 
       <InhibitRuleDetails inhibitRule={inhibitRule} />
     </>
@@ -139,7 +118,7 @@ export function InhibitRuleDrawerViewFooter({ onEdit, onDelete, isDeleting }: In
           onDelete();
         }}
         onDismiss={() => setIsConfirmModalOpen(false)}
-        confirmButtonVariant="destructive"
+        confirmVariant="destructive"
       />
     </>
   );

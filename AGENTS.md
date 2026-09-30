@@ -31,7 +31,8 @@ pnpm e2e          # Run E2E tests with Playwright (requires pnpm server first)
 - Framework: Playwright with `@grafana/plugin-e2e` (Grafana's plugin testing library)
 - Test location: `tests/` directory (`*.spec.ts` files)
 - Configuration: `playwright.config.ts`
-- Test environment: Grafana runs in Docker via `docker-compose.yaml`
+- Test environment: Grafana runs in Docker via `docker-compose.yaml`, which pulls in the backing
+  services from `.config/compose/` (one file per system: Prometheus, Alertmanager, MinIO, Mimir, Loki)
 - Two-stage flow: Auth project authenticates first, then test project runs with saved session
 - Custom fixtures in `tests/fixtures.ts` provide `appConfigPage` and `gotoPage` helpers
 - CI integration: Tests run against multiple Grafana versions, reports published to GitHub Pages
@@ -51,7 +52,7 @@ pnpm e2e          # Run E2E tests with Playwright (requires pnpm server first)
 
 **Provisioned Data Sources:**
 
-Three data sources are auto-provisioned via `provisioning/datasources/test-datasources.yaml`:
+These data sources are auto-provisioned via `provisioning/datasources/test-datasources.yaml`:
 
 1. **Test Prometheus** (`test-prometheus`)
    - Type: `prometheus`
@@ -74,6 +75,32 @@ Three data sources are auto-provisioned via `provisioning/datasources/test-datas
    - Supports Ruler API for rule CRUD operations
    - Editable data source
    - Use case: Testing rule creation, editing, cloning, and Mimir-specific features
+
+4. **Test Loki** (`test-loki`)
+   - Type: `loki`
+   - URL: `http://loki:3100`
+   - Supports Ruler API for Loki rule CRUD operations
+   - Editable data source
+   - Use case: Testing Loki rule creation and editing
+
+5. **Test Mimir Alertmanager** (`test-mimir-alertmanager`)
+   - Type: `alertmanager`
+   - Implementation: `mimir`
+   - URL: `http://mimir:9009` (tenant `anonymous` via the `X-Scope-OrgID` header)
+   - Editable data source, and unlike vanilla Alertmanager its configuration can be written from the UI
+   - Use case: Creating and editing routes, receivers, templates, time intervals, inhibit rules and silences
+
+**Mimir Alertmanager Test Data:**
+
+- Mimir starts every tenant without an Alertmanager configuration, and its config API answers
+  `404 alertmanager storage object not found` until something is posted. The plugin reads that 404 as
+  "Mimir is still starting up" and keeps retrying, so the pages would hang on a loading skeleton.
+- The `mimir-alertmanager-provisioner` container posts `test-data/mimir/alertmanager/alertmanager.yml`
+  (plus any templates in `test-data/mimir/alertmanager/templates/`) to the `anonymous` tenant on startup.
+- It skips the upload if the tenant already has a configuration, so restarting the container won't
+  overwrite changes made from the UI.
+- E2E tests don't use this data source; they create their own per-test tenant and data source
+  (see the `mimirAlertmanager` fixture in `tests/fixtures/alertmanager.ts`).
 
 **Mimir Test Data:**
 
@@ -104,6 +131,16 @@ pnpm i18n-extract # Extract translation strings after adding t() or <Trans />
 - Never use `any` and prefer `unknown` unless it can't be avoided
 - Try to use `satisfies` instead of `any`
 - Run `pnpm typecheck` to verify types
+
+### Imports
+
+- No barrel files. Do not add an `index.ts` that only re-exports from its neighbours, and do not
+  add re-exports to one that already exists. Import from the file that defines the thing:
+  `features/alertmanagerConfig/components/AlertmanagerConfiguration`, not
+  `features/alertmanagerConfig`. A barrel hides where code lives, makes a rename look like a
+  bigger change than it is, and pulls in modules nobody asked for.
+- The `index.ts` files under `packages/*/src/*/` are the workspace packages' declared entry points
+  (`@grafana/external-alertmanager/mimir` and friends), so they are not covered by this.
 
 ### Linting and Formatting
 

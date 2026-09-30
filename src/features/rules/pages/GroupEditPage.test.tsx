@@ -1,0 +1,190 @@
+import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
+import yaml from 'js-yaml';
+import { Route, Routes } from 'react-router-dom';
+
+import { setDataSourceSrv } from '@grafana/runtime';
+import { reloadDataSourceInstanceSettings } from '@grafana/runtime/unstable';
+import type { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
+
+import { server } from '../../../test';
+import { DataSourceInstanceSettingsFactory } from '../../../test/fixtures/datasources';
+import { AlertingPermission } from '../../../access-control/abilities';
+import { setMockNamespaces } from '../../../test/handlers/ruler';
+import { createMockDataSourceSrv, setCurrentUserPermissions } from '../../../test/mocks/grafana-runtime';
+import { createTestWrapper, TestMemoryRouter } from '../../../test/utils/test-wrapper';
+
+import GroupEditPage from './GroupEditPage';
+
+const DATA_SOURCE_UID = 'test-mimir-uid';
+const NAMESPACE = 'test-namespace';
+const GROUP_NAME = 'test-group';
+
+/** A Mimir group whose settings mostly have no field in the edit form. */
+const tunedGroup: RulerRuleGroupDTO = {
+  name: GROUP_NAME,
+  interval: '1m',
+  limit: 10,
+  query_offset: '2m',
+  align_evaluation_time_on_interval: true,
+  rules: [{ alert: 'HighErrorRate', expr: 'up == 0', for: '5m' }],
+};
+
+/** `source_tenants` is what makes a group federated, and federated groups are not editable here. */
+const federatedGroup: RulerRuleGroupDTO = { ...tunedGroup, source_tenants: ['tenant-a', 'tenant-b'] };
+
+const mimirDataSource = DataSourceInstanceSettingsFactory.build({
+  uid: DATA_SOURCE_UID,
+  name: 'Test Mimir',
+  type: 'prometheus',
+});
+
+/**
+ * Makes the data source resolvable and reports a Mimir with the Ruler API enabled, which is what
+ * gates the edit form on.
+ */
+async function loadDataSource() {
+  server.use(
+    http.get('/api/frontend/settings', () =>
+      HttpResponse.json({
+        datasources: { [mimirDataSource.uid]: mimirDataSource },
+        defaultDatasource: mimirDataSource.name,
+      })
+    ),
+    http.get('/api/datasources/proxy/uid/:uid/api/v1/status/buildinfo', () =>
+      HttpResponse.json({
+        status: 'success',
+        data: { version: '2.9.3', features: { ruler_config_api: 'true' } },
+      })
+    )
+  );
+
+  // Feature discovery reads the runtime's data source settings cache, which is otherwise empty in
+  // tests. Fill it before setting the mock DataSourceSrv: with a srv in place, a reload delegates
+  // to `srv.reload()` and the cache stays empty. The Ruler URL builder needs the srv as well.
+  await reloadDataSourceInstanceSettings();
+  setDataSourceSrv(createMockDataSourceSrv());
+}
+
+/** Records the group definitions written to the Ruler API while a test runs */
+function captureRulerWrites() {
+  const upserts: RulerRuleGroupDTO[] = [];
+
+  server.use(
+    http.post(`/api/datasources/proxy/uid/:dataSourceUid/config/v1/rules/:namespace`, async ({ request }) => {
+      upserts.push(yaml.load(await request.text()) as RulerRuleGroupDTO);
+      return HttpResponse.json({ status: 'success', data: null });
+    })
+  );
+
+  return upserts;
+}
+
+function renderGroupEditPage() {
+  const Wrapper = createTestWrapper(DATA_SOURCE_UID);
+
+  render(
+    <Wrapper>
+      <TestMemoryRouter initialEntries={[`/groups/${DATA_SOURCE_UID}/${NAMESPACE}/${GROUP_NAME}/edit`]}>
+        <Routes>
+          <Route path="/groups/:dataSourceUid/:namespace/:groupName/edit" element={<GroupEditPage />} />
+        </Routes>
+      </TestMemoryRouter>
+    </Wrapper>
+  );
+}
+
+describe('GroupEditPage', () => {
+  beforeEach(async () => {
+    setMockNamespaces({ [NAMESPACE]: [tunedGroup] });
+    setCurrentUserPermissions(AlertingPermission.RulesRead, AlertingPermission.RulesWrite);
+    await loadDataSource();
+  });
+
+  it('keeps the group settings the form has no field for when saving', async () => {
+    const upserts = captureRulerWrites();
+    const user = userEvent.setup();
+
+    renderGroupEditPage();
+
+    const intervalInput = await screen.findByRole('textbox', { name: /Evaluation interval/i });
+    await user.clear(intervalInput);
+    await user.type(intervalInput, '5m');
+    await user.click(screen.getByRole('button', { name: /Save/i }));
+
+    // The payload used to be rebuilt from name, interval and rules alone, so a group edit
+    // de-federated the group and dropped its limit and query offset
+    await waitFor(() => expect(upserts).toHaveLength(1));
+    expect(upserts[0]).toEqual({ ...tunedGroup, interval: '5m' });
+  });
+
+  it('shows an inline error and blocks saving an invalid evaluation interval', async () => {
+    const upserts = captureRulerWrites();
+    const user = userEvent.setup();
+
+    renderGroupEditPage();
+
+    const intervalInput = await screen.findByRole('textbox', { name: /Evaluation interval/i });
+    await user.clear(intervalInput);
+    await user.type(intervalInput, 'bogus99');
+    await user.tab(); // blur the field
+
+    expect(await screen.findByText('Invalid duration format. Use formats like 1m, 30s, 1h.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Save/i }));
+
+    expect(upserts).toHaveLength(0);
+  });
+
+  it('clears an interval error when a valid quick interval is selected and saves that value', async () => {
+    const upserts = captureRulerWrites();
+    const user = userEvent.setup();
+
+    renderGroupEditPage();
+
+    const intervalInput = await screen.findByRole('textbox', { name: /Evaluation interval/i });
+    await user.clear(intervalInput);
+    await user.type(intervalInput, 'bogus99');
+    await user.tab();
+
+    const intervalError = await screen.findByText('Invalid duration format. Use formats like 1m, 30s, 1h.');
+    await user.click(screen.getByRole('button', { name: '5m' }));
+
+    expect(intervalInput).toHaveValue('5m');
+    await waitFor(() => expect(intervalError).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: /Save/i }));
+
+    await waitFor(() => expect(upserts).toHaveLength(1));
+    expect(upserts[0]).toEqual({ ...tunedGroup, interval: '5m' });
+  });
+
+  it('allows saving a group whose evaluation interval exceeds a rule pending period', async () => {
+    const longIntervalGroup = { ...tunedGroup, interval: '10m' };
+    setMockNamespaces({ [NAMESPACE]: [longIntervalGroup] });
+    const upserts = captureRulerWrites();
+    const user = userEvent.setup();
+
+    renderGroupEditPage();
+
+    const groupNameInput = await screen.findByRole('textbox', { name: /Evaluation group name/i });
+    await user.clear(groupNameInput);
+    await user.type(groupNameInput, 'renamed-group');
+    await user.click(screen.getByRole('button', { name: /Save/i }));
+
+    await waitFor(() => expect(upserts).toHaveLength(1));
+    expect(upserts[0]).toEqual({ ...longIntervalGroup, name: 'renamed-group' });
+  });
+
+  it('offers no form for a federated group', async () => {
+    setMockNamespaces({ [NAMESPACE]: [federatedGroup] });
+
+    renderGroupEditPage();
+
+    // Its source_tenants decide which tenants the rules read, and this form cannot express that
+    expect(await screen.findByRole('status', { name: 'This group is federated' })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /Evaluation interval/i })).not.toBeInTheDocument();
+  });
+});

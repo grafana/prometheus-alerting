@@ -3,7 +3,7 @@
 # All inputs are documented in the workflow file itself:
 # https://github.com/grafana/plugin-ci-workflows/blob/main/.github/workflows/cd.yml
 
-name: Plugins - CD
+name: Publish
 run-name: Deploy ${{ inputs.branch }} to ${{ inputs.environment }} by @${{ github.actor }}
 
 on:
@@ -30,7 +30,7 @@ permissions: {}
 
 jobs:
   cd:
-    name: CD
+    name: Publish to catalog
     uses: grafana/plugin-ci-workflows/.github/workflows/cd.yml@ci-cd-workflows/v10.1.0
     permissions:
       contents: write
@@ -46,7 +46,8 @@ jobs:
       # - 'universal': on-prem + cloud (default)
       # - 'grafana_cloud': cloud only, hidden for on-prem users
       scopes: universal
-      publish-to-catalog-as-pending: true # Plugin will be hidden from catalog but available for provisioning
+      # Only release tags like v1.6.1 may deploy to prod. Deploying main to prod is blocked.
+      release-reference-regex: '^v\d+\.\d+\.\d+$'
       # This will trigger the Argo Workflow to update your plugin version in Grafana Cloud via deployment_tools
       # grafana-cloud-deployment-type: provisioned
       # Trigger Argo Workflow only when deploying from main branch (do not deploy PRs to the whole cluster)

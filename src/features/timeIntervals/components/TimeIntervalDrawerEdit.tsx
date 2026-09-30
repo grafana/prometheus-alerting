@@ -2,7 +2,7 @@ import React from 'react';
 import { t } from '@grafana/i18n';
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 import { useUpdateTimeInterval } from '../hooks/useTimeIntervals';
-import { TimeIntervalFormFields, type TimeIntervalFormData } from './TimeIntervalFormFields';
+import { TimeIntervalFormFields } from './TimeIntervalFormFields';
 
 interface TimeIntervalDrawerEditProps {
   timeInterval: TimeInterval;
@@ -13,26 +13,7 @@ interface TimeIntervalDrawerEditProps {
 export function TimeIntervalDrawerEdit({ timeInterval, onCancel, onSuccess }: TimeIntervalDrawerEditProps) {
   const [updateTimeInterval, { isLoading: isUpdating, error: updateError }] = useUpdateTimeInterval();
 
-  const handleSave = async (data: TimeIntervalFormData) => {
-    const updatedTimeInterval = {
-      name: data.name,
-      time_intervals: [
-        {
-          times: [
-            {
-              start_time: data.startTime,
-              end_time: data.endTime,
-            },
-          ],
-          weekdays: data.weekdays ? data.weekdays.split(',').map((d) => d.trim()) : undefined,
-          days_of_month: data.daysOfMonth ? data.daysOfMonth.split(',').map((d) => d.trim()) : undefined,
-          months: data.months ? data.months.split(',').map((m) => m.trim()) : undefined,
-          years: data.years ? data.years.split(',').map((y) => y.trim()) : undefined,
-          location: data.location || undefined,
-        },
-      ],
-    };
-
+  const handleSave = async (updatedTimeInterval: TimeInterval) => {
     try {
       await updateTimeInterval(updatedTimeInterval, timeInterval.name);
       onSuccess();

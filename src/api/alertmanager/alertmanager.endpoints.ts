@@ -23,21 +23,31 @@ import {
   PostSilencesApiResponse,
   PostSilencesApiResponseSchema,
 } from '@grafana/external-alertmanager/vanilla';
-import {
-  ParsedUserConfiguration,
-  TransformedStatusToParsedUserConfiguration,
-} from '@grafana/external-alertmanager/mimir';
-
 import { getDataSourceSrv } from '@grafana/runtime';
 import { AlertManagerDataSourceJsonData } from 'types/datasources';
-import { WithDataSourceInformation, TransformedAlertmanagerStatusApiResponseTransform } from './alertmanager.types';
+import { buildDatasourceProxyPath } from '../utils/proxyPath';
+import {
+  AlertmanagerStatusToReadOnlyConfiguration,
+  ReadOnlyAlertmanagerConfiguration,
+  WithDataSourceInformation,
+} from './alertmanager.types';
 
-function createAlertmanagerPath(dataSourceUID: string, path: `/${string}`) {
+/**
+ * `staticPath` must be a literal path made up of segments we control (e.g. `/v2/silence`) —
+ * it gets split on `/` and each piece encoded individually. Any response-derived value (e.g.
+ * a silence ID) must be passed via `dynamicSegments` instead of being spliced into
+ * `staticPath`: splitting a string that already contains an attacker-controlled `/` would
+ * treat their traversal sequences as path separators again, defeating the encoding.
+ */
+function createAlertmanagerPath(dataSourceUID: string, staticPath: `/${string}`, ...dynamicSegments: string[]) {
   const dsSettings = getDataSourceSrv().getInstanceSettings(dataSourceUID);
   const jsonData = dsSettings?.jsonData as AlertManagerDataSourceJsonData;
   const implementation = jsonData?.implementation ?? 'prometheus';
 
-  return implementation === 'mimir' ? `/${dataSourceUID}/alertmanager/api${path}` : `/${dataSourceUID}/api${path}`;
+  const prefixSegments = implementation === 'mimir' ? ['alertmanager', 'api'] : ['api'];
+  const staticSegments = staticPath.split('/').filter(Boolean);
+
+  return buildDatasourceProxyPath(dataSourceUID, ...prefixSegments, ...staticSegments, ...dynamicSegments);
 }
 
 // Base API for Prometheus/vanilla Alertmanager
@@ -62,16 +72,12 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
       }),
       providesTags: ['Configuration'],
     }),
-    getConfiguration: build.query<ParsedUserConfiguration, WithDataSourceInformation<GetStatusApiArg>>({
+    getConfiguration: build.query<ReadOnlyAlertmanagerConfiguration, WithDataSourceInformation<GetStatusApiArg>>({
       query: ({ dataSourceUID }) => ({
         url: createAlertmanagerPath(dataSourceUID, `/v2/status`),
       }),
-      transformResponse: (response: AlertmanagerStatus): ParsedUserConfiguration => {
-        // First, transform the status response to get the parsed config
-        const transformedStatus = TransformedAlertmanagerStatusApiResponseTransform.parse(response);
-        // Then use the codec to convert to ParsedUserConfiguration (Mimir format)
-        return TransformedStatusToParsedUserConfiguration.decode(transformedStatus);
-      },
+      transformResponse: (response: AlertmanagerStatus): ReadOnlyAlertmanagerConfiguration =>
+        AlertmanagerStatusToReadOnlyConfiguration.parse(response),
       providesTags: ['Configuration'],
     }),
     getSilences: build.query<GetSilencesApiResponse, WithDataSourceInformation<GetSilencesApiArg>>({
@@ -97,7 +103,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
     }),
     getSilence: build.query<GetSilenceApiResponse, WithDataSourceInformation<GetSilenceApiArg>>({
       query: ({ dataSourceUID, silenceId }) => ({
-        url: createAlertmanagerPath(dataSourceUID, `/v2/silence/${silenceId}`),
+        url: createAlertmanagerPath(dataSourceUID, `/v2/silence`, silenceId),
         dataSourceUID,
       }),
       providesTags: ['Silences'],
@@ -105,7 +111,7 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
     }),
     deleteSilence: build.mutation<DeleteSilenceApiResponse, WithDataSourceInformation<DeleteSilenceApiArg>>({
       query: ({ dataSourceUID, silenceId }) => ({
-        url: createAlertmanagerPath(dataSourceUID, `/v2/silence/${silenceId}`),
+        url: createAlertmanagerPath(dataSourceUID, `/v2/silence`, silenceId),
         method: 'DELETE',
         dataSourceUID,
       }),
@@ -125,9 +131,10 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         dataSourceUID,
       }),
       providesTags: ['Alerts'],
-      // Cast needed: zod v4 vendors its own Standard Schema types rather than depending on
-      // @standard-schema/spec, causing a module identity mismatch with RTK Query. Safe at runtime.
-      // See: https://github.com/colinhacks/zod/issues/4938
+      // Cast needed: `webhook_configs.timeout` accepts a bare number the way Alertmanager's YAML
+      // does, but always hands back a string, so what these schemas accept is not the same as what
+      // they return. RTK Query only takes a schema where the two match, which this one cannot be.
+      // Validation itself works fine, so the cast only papers over the type and is safe at runtime.
       responseSchema: GetAlertsApiResponseSchema as unknown as StandardSchemaV1<GetAlertsApiResponse>,
     }),
     postAlerts: build.mutation<PostAlertsApiResponse, WithDataSourceInformation<PostAlertsApiArg>>({
@@ -153,9 +160,10 @@ export const alertmanagerApi = baseAlertmanagerApi.injectEndpoints({
         dataSourceUID,
       }),
       providesTags: ['AlertGroups'],
-      // Cast needed: zod v4 vendors its own Standard Schema types rather than depending on
-      // @standard-schema/spec, causing a module identity mismatch with RTK Query. Safe at runtime.
-      // See: https://github.com/colinhacks/zod/issues/4938
+      // Cast needed: `webhook_configs.timeout` accepts a bare number the way Alertmanager's YAML
+      // does, but always hands back a string, so what these schemas accept is not the same as what
+      // they return. RTK Query only takes a schema where the two match, which this one cannot be.
+      // Validation itself works fine, so the cast only papers over the type and is safe at runtime.
       responseSchema: GetAlertGroupsApiResponseSchema as unknown as StandardSchemaV1<GetAlertGroupsApiResponse>,
     }),
   }),

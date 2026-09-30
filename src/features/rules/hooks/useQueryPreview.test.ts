@@ -1,198 +1,34 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { renderHook } from '@testing-library/react';
+import { CoreApp } from '@grafana/data';
+import { SceneRefreshPicker } from '@grafana/scenes';
+import { describe, expect, it } from 'vitest';
 
 import { useQueryPreview } from './useQueryPreview';
 
-// Mock getBackendSrv
-const mockPost = vi.fn();
-
-vi.mock('@grafana/runtime', () => ({
-  getBackendSrv: () => ({ post: mockPost }),
-}));
-
 describe('useQueryPreview', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  it('provides a range query for automatic execution and the standard refresh controls', () => {
+    const { result, rerender } = renderHook(() => useQueryPreview('prometheus', 'up'));
+    const scene = result.current;
+    expect(scene.state.$data?.state).toMatchObject({
+      datasource: { uid: 'prometheus' },
+      queries: [{ refId: 'A', expr: 'up', instant: false, range: true, queryType: 'range' }],
+    });
+    expect(scene.enrichDataRequest()).toEqual({ app: CoreApp.UnifiedAlerting });
+    expect(scene.state.controls?.some((control) => control instanceof SceneRefreshPicker)).toBe(true);
+    rerender();
+    expect(result.current).toBe(scene);
   });
 
-  it('should initialize with default state', () => {
-    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
-
-    expect(result.current.results).toEqual([]);
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.error).toBeNull();
-    expect(result.current.resultType).toBeNull();
-    expect(result.current.hasRun).toBe(false);
-  });
-
-  it('should set error for empty expression', async () => {
-    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
-
-    await act(async () => {
-      await result.current.runQuery('   ');
+  it('updates the preview when the expression or datasource changes and skips blank expressions', () => {
+    const { result, rerender } = renderHook(({ uid, expr }) => useQueryPreview(uid, expr), {
+      initialProps: { uid: 'prometheus', expr: 'up' },
     });
-
-    expect(result.current.error).toBe('Expression is empty');
-    expect(result.current.hasRun).toBe(true);
-    expect(mockPost).not.toHaveBeenCalled();
-  });
-
-  it('should execute query and parse vector results', async () => {
-    const mockResponse = {
-      status: 'success',
-      data: {
-        resultType: 'vector',
-        result: [
-          {
-            metric: { job: 'prometheus', instance: 'localhost:9090' },
-            value: [1234567890, '1'],
-          },
-          {
-            metric: { job: 'grafana', instance: 'localhost:3000' },
-            value: [1234567890, '42'],
-          },
-        ],
-      },
-    };
-
-    mockPost.mockResolvedValue(mockResponse);
-
-    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
-
-    await act(async () => {
-      await result.current.runQuery('up');
+    rerender({ uid: 'loki', expr: 'sum(rate({job="grafana"}[5m]))' });
+    expect(result.current.state.$data?.state).toMatchObject({
+      datasource: { uid: 'loki' },
+      queries: [{ expr: 'sum(rate({job="grafana"}[5m]))', queryType: 'range' }],
     });
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.results).toHaveLength(2);
-    expect(result.current.results[0]).toEqual({
-      labels: { job: 'prometheus', instance: 'localhost:9090' },
-      value: '1',
-      timestamp: 1234567890,
-    });
-    expect(result.current.resultType).toBe('vector');
-    expect(result.current.hasRun).toBe(true);
-    expect(result.current.error).toBeNull();
-  });
-
-  it('should handle empty results', async () => {
-    const mockResponse = {
-      status: 'success',
-      data: {
-        resultType: 'vector',
-        result: [],
-      },
-    };
-
-    mockPost.mockResolvedValue(mockResponse);
-
-    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
-
-    await act(async () => {
-      await result.current.runQuery('nonexistent_metric');
-    });
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.results).toHaveLength(0);
-    expect(result.current.hasRun).toBe(true);
-    expect(result.current.error).toBeNull();
-  });
-
-  it('should handle API error response', async () => {
-    const mockResponse = {
-      status: 'error',
-      error: 'invalid query syntax',
-    };
-
-    mockPost.mockResolvedValue(mockResponse);
-
-    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
-
-    await act(async () => {
-      await result.current.runQuery('invalid{');
-    });
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.error).toBe('invalid query syntax');
-    expect(result.current.hasRun).toBe(true);
-  });
-
-  it('should handle network error', async () => {
-    mockPost.mockRejectedValue(new Error('Network error'));
-
-    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
-
-    await act(async () => {
-      await result.current.runQuery('up');
-    });
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.error).toBe('Network error');
-    expect(result.current.hasRun).toBe(true);
-  });
-
-  it('should clear results', async () => {
-    const mockResponse = {
-      status: 'success',
-      data: {
-        resultType: 'vector',
-        result: [{ metric: { job: 'test' }, value: [123, '1'] }],
-      },
-    };
-
-    mockPost.mockResolvedValue(mockResponse);
-
-    const { result } = renderHook(() => useQueryPreview('test-ds-uid'));
-
-    // Run a query first
-    await act(async () => {
-      await result.current.runQuery('up');
-    });
-
-    await waitFor(() => {
-      expect(result.current.results).toHaveLength(1);
-    });
-
-    // Clear results
-    act(() => {
-      result.current.clearResults();
-    });
-
-    expect(result.current.results).toEqual([]);
-    expect(result.current.hasRun).toBe(false);
-    expect(result.current.error).toBeNull();
-  });
-
-  it('should send form-encoded data to Prometheus API', async () => {
-    mockPost.mockResolvedValue({
-      status: 'success',
-      data: { resultType: 'vector', result: [] },
-    });
-
-    const { result } = renderHook(() => useQueryPreview('my-ds-uid'));
-
-    await act(async () => {
-      await result.current.runQuery('up{job="test"}');
-    });
-
-    expect(mockPost).toHaveBeenCalledWith(
-      '/api/datasources/proxy/uid/my-ds-uid/api/v1/query',
-      expect.stringContaining('query=up%7Bjob%3D%22test%22%7D'),
-      expect.objectContaining({
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      })
-    );
+    rerender({ uid: 'loki', expr: '  ' });
+    expect(result.current.state.$data?.state).toMatchObject({ queries: [] });
   });
 });

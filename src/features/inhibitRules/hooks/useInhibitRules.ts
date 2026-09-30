@@ -14,7 +14,7 @@ import {
  * Uses the getConfiguration endpoint which returns ParsedUserConfiguration.
  * Dynamically selects the correct API endpoint based on the data source implementation.
  *
- * The hook normalizes matchers from string arrays to ObjectMatcher arrays.
+ * Textual matcher syntax is decoded into ObjectMatcher arrays; deprecated matcher maps already contain semantic values.
  */
 export function useInhibitRules() {
   const { uid: dataSourceUID, settings } = useAlertmanager();

@@ -25,6 +25,7 @@ export function useRulesFilter() {
       !!filterState.ruleName ||
       !!filterState.ruleState ||
       !!filterState.ruleType ||
+      !!filterState.ruleHealth ||
       (filterState.labels && filterState.labels.length > 0)
     );
   }, [filterState]);

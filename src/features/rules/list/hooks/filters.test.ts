@@ -131,6 +131,20 @@ describe('filters', () => {
       });
     });
 
+    describe('ruleHealth filter', () => {
+      it('should match a failing rule reported as "err" when filtering by error', () => {
+        const failingRule = { ...createRecordingRule('test:metric:sum'), health: 'err' };
+        expect(ruleFilter(failingRule, { ruleHealth: 'error' })).toBe(true);
+        expect(ruleFilter(failingRule, { ruleHealth: 'ok' })).toBe(false);
+      });
+
+      it('should match healthy rules by ok', () => {
+        const healthyRule = createAlertingRule('TestAlert');
+        expect(ruleFilter(healthyRule, { ruleHealth: 'ok' })).toBe(true);
+        expect(ruleFilter(healthyRule, { ruleHealth: 'error' })).toBe(false);
+      });
+    });
+
     describe('labels filter', () => {
       it('should filter by label equality', () => {
         const rule = createAlertingRule('TestAlert', 'firing', { severity: 'critical', team: 'platform' });
@@ -147,6 +161,21 @@ describe('filters', () => {
       it('should return true when rule has no labels but label filter is empty', () => {
         const rule = createAlertingRule('TestAlert');
         expect(ruleFilter(rule, { labels: [] })).toBe(true);
+      });
+
+      it('should exclude the rule when the label filter is unparseable, rather than showing everything', () => {
+        const rule = createAlertingRule('TestAlert', 'firing', { severity: 'critical' });
+        expect(ruleFilter(rule, { labels: ['=critical'] })).toBe(false);
+      });
+
+      it('should exclude the rule when any label filter token is unparseable, even alongside a matching one', () => {
+        const rule = createAlertingRule('TestAlert', 'firing', { severity: 'critical' });
+        expect(ruleFilter(rule, { labels: ['severity=critical', '=warning'] })).toBe(false);
+      });
+
+      it.each(['team=~[', 'team!~['])('should exclude the rule when a regex label filter is invalid: %s', (filter) => {
+        const rule = createAlertingRule('TestAlert', 'firing', { team: 'frontend' });
+        expect(ruleFilter(rule, { labels: [filter] })).toBe(false);
       });
     });
 

@@ -2,15 +2,14 @@ import { Action } from '@reduxjs/toolkit';
 import reduceReducers from 'reduce-reducers';
 import { defaultsDeep } from 'lodash';
 
-import { getAlertmanagerConfigMutationAbility } from '../access-control/abilities.alertmanager';
-import { PermissionDeniedError, UnsupportedOperationError } from '../access-control/errors';
+import { assertAlertmanagerConfigMutationAllowed } from '../access-control/assertAlertmanagerConfigMutationAllowed';
 import { timeIntervalsReducer } from '../reducers/alertmanager/timeIntervals';
 import { routesReducer } from '../reducers/alertmanager/routes';
 import { notificationTemplatesReducer } from '../reducers/alertmanager/templates';
 import { receiversReducer } from '../reducers/alertmanager/receivers';
 import { inhibitRulesReducer } from '../reducers/alertmanager/inhibitRules';
 import { useAlertmanager } from './useAlertmanager';
-import { useHasConfigurationAPI } from './useHasConfigurationAPI';
+import { useAlertmanagerConfigMutationAbility } from './useAlertmanagerConfigMutationAbility';
 import { mergeRequestStates } from '../utils/requestState';
 import { mimirAlertmanagerApi } from '../api/alertmanager/mimir.endpoints';
 import {
@@ -19,12 +18,6 @@ import {
 } from '@grafana/external-alertmanager/mimir';
 
 const ERR_NO_ACTIVE_AM = new Error('no active Alertmanager');
-const ERR_INSUFFICIENT_PERMISSIONS = new PermissionDeniedError(
-  'Missing permission to update the Alertmanager configuration'
-);
-const ERR_CONFIGURATION_API_NOT_SUPPORTED = new UnsupportedOperationError(
-  'The selected Alertmanager does not support configuration updates'
-);
 
 const { getUserConfiguration, updateUserConfiguration } = mimirAlertmanagerApi.endpoints;
 
@@ -50,7 +43,7 @@ export function useProduceNewAlertmanagerConfiguration() {
   const [updateAlertManagerConfiguration, updateAlertmanagerState] = updateUserConfiguration.useMutation();
 
   const newConfigurationState = mergeRequestStates(fetchAlertmanagerState, updateAlertmanagerState);
-  const configurationMutationAbility = getAlertmanagerConfigMutationAbility(useHasConfigurationAPI());
+  const configurationMutationAbility = useAlertmanagerConfigMutationAbility();
 
   if (!dataSourceUID) {
     throw ERR_NO_ACTIVE_AM;
@@ -65,14 +58,7 @@ export function useProduceNewAlertmanagerConfiguration() {
    * └────────────────────────────┘  └───────────────┘  └───────────────────┘
    */
   const produceNewAlertmanagerConfiguration = async (action: Action) => {
-    if (!configurationMutationAbility.granted) {
-      switch (configurationMutationAbility.cause) {
-        case 'INSUFFICIENT_PERMISSIONS':
-          throw ERR_INSUFFICIENT_PERMISSIONS;
-        case 'NOT_SUPPORTED':
-          throw ERR_CONFIGURATION_API_NOT_SUPPORTED;
-      }
-    }
+    assertAlertmanagerConfigMutationAllowed(configurationMutationAbility);
 
     // Fetch the current configuration (already in ParsedUserConfiguration format)
     const currentConfig = await fetchAlertmanagerConfiguration({ dataSourceUID }).unwrap();

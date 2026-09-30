@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
+  encodeObjectMatcher,
+  formatObjectMatcherForDisplay,
   isPromQLStyleMatcher,
   matcherToObjectMatcher,
-  normalizeInhibitRuleMatchers,
   normalizeMatchers,
   parseMatcherToArray,
   parseMatcher,
+  parseObjectMatcherExpression,
   parsePromQLStyleMatcher,
   parsePromQLStyleMatcherLoose,
   parsePromQLStyleMatcherLooseSafe,
@@ -41,6 +43,15 @@ describe('parseMatcher', () => {
 
   it('parses !~ operator', () => {
     expect(parseMatcher('foo!~bar')).toEqual({ name: 'foo', value: 'bar', isRegex: true, isEqual: false });
+  });
+
+  it('trims syntax whitespace around names and values', () => {
+    expect(parseMatcher(' foo = " keep me " ')).toEqual({
+      name: 'foo',
+      value: '" keep me "',
+      isRegex: false,
+      isEqual: true,
+    });
   });
 
   it('throws for PromQL-style input', () => {
@@ -116,6 +127,67 @@ describe('matcherToObjectMatcher', () => {
   });
 });
 
+describe('normalizeMatchers semantic parsing', () => {
+  it('decodes modern matcher syntax for every operator', () => {
+    expect(
+      normalizeMatchers({
+        matchers: [' severity = "critical" ', 'team != "ops"', 'service =~ "api.*"', 'zone !~ "dev.*"'],
+      })
+    ).toEqual([
+      ['severity', '=', 'critical'],
+      ['team', '!=', 'ops'],
+      ['service', '=~', 'api.*'],
+      ['zone', '!~', 'dev.*'],
+    ]);
+  });
+
+  it('unquotes values using the shared matcher semantics', () => {
+    expect(
+      normalizeMatchers({
+        matchers: [
+          'empty = ""',
+          'spaces = " keep me "',
+          'quoted = "\\"critical\\""',
+          'newline = "line\\nnext"',
+          'literal = "line\\\\nnext"',
+          'path = "C:\\\\alerts"',
+        ],
+      })
+    ).toEqual([
+      ['empty', '=', ''],
+      ['spaces', '=', ' keep me '],
+      ['quoted', '=', '"critical"'],
+      ['newline', '=', 'line\\nnext'],
+      ['literal', '=', 'line\\nnext'],
+      ['path', '=', 'C:\\alerts'],
+    ]);
+  });
+
+  it('handles braced matchers and commas without double decoding', () => {
+    expect(normalizeMatchers({ matchers: ['{service="api,worker",message="\\"critical\\""}'] })).toEqual([
+      ['service', '=', 'api,worker'],
+      ['message', '=', '"critical"'],
+    ]);
+  });
+
+  it('preserves legacy map values verbatim', () => {
+    expect(
+      normalizeMatchers({
+        match: { quoted: '"literal"', whitespace: ' keep me ' },
+        match_re: { path: 'C:\\alerts' },
+      })
+    ).toEqual([
+      ['path', '=~', 'C:\\alerts'],
+      ['quoted', '=', '"literal"'],
+      ['whitespace', '=', ' keep me '],
+    ]);
+  });
+
+  it('throws for malformed modern matchers', () => {
+    expect(() => normalizeMatchers({ matchers: ['invalid'] })).toThrow('Invalid matcher');
+  });
+});
+
 describe('normalizeMatchers', () => {
   it('normalizes matchers array', () => {
     const result = normalizeMatchers({ receiver: 'r', matchers: ['foo=bar'] });
@@ -134,34 +206,6 @@ describe('normalizeMatchers', () => {
 
   it('returns empty array with no matchers', () => {
     expect(normalizeMatchers({ receiver: 'r' })).toEqual([]);
-  });
-});
-
-describe('normalizeInhibitRuleMatchers', () => {
-  it('normalizes source and target matchers', () => {
-    const result = normalizeInhibitRuleMatchers({
-      source_matchers: ['foo=bar'],
-      target_matchers: ['baz!=qux'],
-    });
-    expect(result.source_matchers).toEqual([['foo', '=', 'bar']]);
-    expect(result.target_matchers).toEqual([['baz', '!=', 'qux']]);
-  });
-
-  it('normalizes deprecated source_match and target_match', () => {
-    const result = normalizeInhibitRuleMatchers({
-      source_match: { foo: 'bar' },
-      target_match_re: { baz: 'qux' },
-    });
-    expect(result.source_matchers).toEqual([['foo', '=', 'bar']]);
-    expect(result.target_matchers).toEqual([['baz', '=~', 'qux']]);
-    expect(result).not.toHaveProperty('source_match');
-    expect(result).not.toHaveProperty('target_match_re');
-  });
-
-  it('handles empty rule', () => {
-    const result = normalizeInhibitRuleMatchers({});
-    expect(result.source_matchers).toEqual([]);
-    expect(result.target_matchers).toEqual([]);
   });
 });
 
@@ -227,5 +271,52 @@ describe('stringifyObjectMatcher', () => {
   it('uses "" for empty value', () => {
     const m: ObjectMatcher = ['foo', '=', ''];
     expect(stringifyObjectMatcher(m)).toBe('foo = ""');
+  });
+});
+
+describe('parseObjectMatcherExpression', () => {
+  it('parses all core-supported operators', () => {
+    expect(parseObjectMatcherExpression('a=one,b!=two,c=~three,d!~four')).toEqual<ObjectMatcher[]>([
+      ['a', '=', 'one'],
+      ['b', '!=', 'two'],
+      ['c', '=~', 'three'],
+      ['d', '!~', 'four'],
+    ]);
+  });
+
+  it('parses quoted names, values, commas in values, and surrounding syntax whitespace', () => {
+    expect(parseObjectMatcherExpression('{ "team name" = "ops,platform", region = "us" }')).toEqual<ObjectMatcher[]>([
+      ['team name', '=', 'ops,platform'],
+      ['region', '=', 'us'],
+    ]);
+  });
+
+  it('supports empty quoted and unquoted values and ordinary Unicode', () => {
+    expect(parseObjectMatcherExpression('quoted="",unquoted=,service="日本語 🚨"')).toEqual<ObjectMatcher[]>([
+      ['quoted', '=', ''],
+      ['unquoted', '=', ''],
+      ['service', '=', '日本語 🚨'],
+    ]);
+  });
+});
+
+describe('encodeObjectMatcher', () => {
+  it.each<{ matcher: ObjectMatcher }>([
+    { matcher: ['message', '=', String.raw`a\nb`] },
+    { matcher: ['team name', '=~', '日本語 "primary"'] },
+    { matcher: ['empty', '!~', ''] },
+  ])('round-trips the semantic tuple $matcher', ({ matcher }) => {
+    expect(parseObjectMatcherExpression(encodeObjectMatcher(matcher))).toEqual([matcher]);
+  });
+
+  it('uses core quoting semantics for reserved names and preserves ordinary Unicode names', () => {
+    expect(encodeObjectMatcher(['team name', '=', 'ops'])).toBe('"team name"="ops"');
+    expect(encodeObjectMatcher(['🚨', '=', 'active'])).toBe('🚨="active"');
+  });
+});
+
+describe('formatObjectMatcherForDisplay', () => {
+  it('displays semantic values without applying legacy lexical unquoting', () => {
+    expect(formatObjectMatcherForDisplay(['team', '=', '"ops"'])).toBe('team = "ops"');
   });
 });

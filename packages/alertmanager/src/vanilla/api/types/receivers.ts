@@ -5,19 +5,41 @@
 
 import { z } from 'zod';
 
+/**
+ * Alertmanager reads YAML with a reader that happily turns a bare number or boolean into a string,
+ * so `timeout: 0`, `priority: 1` and `agent_id: 1` are all valid config even though the Go field is
+ * a string. Plain `z.string()` refuses those, and because we parse the whole configuration in one
+ * go, a single unquoted number anywhere would stop the user opening any of it.
+ *
+ * This accepts what Alertmanager accepts and hands back the string the rest of the app expects.
+ * Values that are already strings come through untouched.
+ */
+const yamlString = () =>
+  z.codec(z.union([z.string(), z.number(), z.boolean()]), z.string(), {
+    decode: (value) => String(value),
+    // Going back out it is already a string, and this schema is also used to write the config, so
+    // the trip has to work in both directions.
+    encode: (value) => value,
+  });
+
 // HTTP Config schemas (reusable across all receiver types)
 // Based on: https://prometheus.io/docs/alerting/0.22/configuration/#http_config
 
-export const TLSConfigSchema = z.object({
+export const TLSConfigSchema = z.looseObject({
+  ca: z.string().optional(),
+  cert: z.string().optional(),
+  key: z.string().optional(),
   ca_file: z.string().optional(),
   cert_file: z.string().optional(),
   key_file: z.string().optional(),
   server_name: z.string().optional(),
   insecure_skip_verify: z.boolean().optional(),
+  min_version: z.string().optional(),
+  max_version: z.string().optional(),
 });
 
 export const BasicAuthConfigSchema = z
-  .object({
+  .looseObject({
     username: z.string().optional(),
     password: z.string().optional(),
     password_file: z.string().optional(),
@@ -33,7 +55,7 @@ export const BasicAuthConfigSchema = z
   });
 
 export const AuthorizationConfigSchema = z
-  .object({
+  .looseObject({
     type: z.string().optional(),
     credentials: z.string().optional(),
     credentials_file: z.string().optional(),
@@ -49,7 +71,7 @@ export const AuthorizationConfigSchema = z
   });
 
 export const OAuth2ConfigSchema = z
-  .object({
+  .looseObject({
     client_id: z.string(),
     client_secret: z.string().optional(),
     client_secret_file: z.string().optional(),
@@ -68,21 +90,43 @@ export const OAuth2ConfigSchema = z
   });
 
 export const HTTPConfigSchema = z
-  .object({
+  .looseObject({
     basic_auth: BasicAuthConfigSchema.optional(),
     authorization: AuthorizationConfigSchema.optional(),
+    bearer_token: z.string().optional(),
+    bearer_token_file: z.string().optional(),
     oauth2: OAuth2ConfigSchema.optional(),
     proxy_url: z.string().optional(),
+    no_proxy: z.string().optional(),
+    proxy_from_environment: z.boolean().optional(),
+    proxy_connect_header: z.record(z.string(), z.array(z.string())).optional(),
     follow_redirects: z.boolean().optional(),
+    enable_http2: z.boolean().optional(),
+    http_headers: z.record(z.string(), z.unknown()).optional(),
     tls_config: TLSConfigSchema.optional(),
   })
   .superRefine((data, ctx) => {
-    const authMethods = [data.basic_auth, data.authorization, data.oauth2].filter(Boolean);
+    const hasBearerToken = [data.bearer_token, data.bearer_token_file].some(
+      (credential) => credential !== undefined && credential !== ''
+    );
+    const authMethods = [data.basic_auth, data.authorization, data.oauth2, hasBearerToken].filter(Boolean);
     if (authMethods.length > 1) {
       ctx.addIssue({
         code: 'custom',
-        message: 'basic_auth, authorization, and oauth2 are mutually exclusive',
+        message: 'basic_auth, authorization, bearer_token, and oauth2 are mutually exclusive',
         path: ['basic_auth'],
+      });
+    }
+    if (
+      data.bearer_token !== undefined &&
+      data.bearer_token !== '' &&
+      data.bearer_token_file !== undefined &&
+      data.bearer_token_file !== ''
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'bearer_token and bearer_token_file are mutually exclusive',
+        path: ['bearer_token'],
       });
     }
   });
@@ -90,7 +134,7 @@ export const HTTPConfigSchema = z
 // Zod schemas for individual receiver configuration types
 
 export const EmailConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     to: z.string().optional(),
     from: z.string().optional(),
@@ -118,13 +162,13 @@ export const EmailConfigSchema = z
     }
   });
 
-export const SlackFieldConfigSchema = z.object({
+export const SlackFieldConfigSchema = z.looseObject({
   title: z.string().optional(),
   value: z.string().optional(),
   short: z.boolean().optional(),
 });
 
-export const SlackActionConfigSchema = z.object({
+export const SlackActionConfigSchema = z.looseObject({
   type: z.string().optional(),
   text: z.string().optional(),
   url: z.string().optional(),
@@ -132,7 +176,7 @@ export const SlackActionConfigSchema = z.object({
   name: z.string().optional(),
   value: z.string().optional(),
   confirm: z
-    .object({
+    .looseObject({
       title: z.string().optional(),
       text: z.string().optional(),
       ok_text: z.string().optional(),
@@ -142,7 +186,7 @@ export const SlackActionConfigSchema = z.object({
 });
 
 export const SlackConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     api_url: z.string().optional(),
     api_url_file: z.string().optional(),
@@ -177,19 +221,19 @@ export const SlackConfigSchema = z
     }
   });
 
-export const PagerdutyLinkConfigSchema = z.object({
+export const PagerdutyLinkConfigSchema = z.looseObject({
   href: z.string().optional(),
   text: z.string().optional(),
 });
 
-export const PagerdutyImageConfigSchema = z.object({
+export const PagerdutyImageConfigSchema = z.looseObject({
   src: z.string().optional(),
   href: z.string().optional(),
   alt: z.string().optional(),
 });
 
 export const PagerdutyConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     routing_key: z.string().optional(),
     routing_key_file: z.string().optional(),
@@ -227,12 +271,12 @@ export const PagerdutyConfigSchema = z
   });
 
 export const WebhookConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     url: z.string().optional(),
     url_file: z.string().optional(),
     max_alerts: z.number().optional(),
-    timeout: z.string().optional(),
+    timeout: yamlString().optional(),
     http_config: HTTPConfigSchema.optional(),
   })
   .superRefine((data, ctx) => {
@@ -245,7 +289,7 @@ export const WebhookConfigSchema = z
     }
   });
 
-export const OpsGenieResponderConfigSchema = z.object({
+export const OpsGenieResponderConfigSchema = z.looseObject({
   id: z.string().optional(),
   name: z.string().optional(),
   username: z.string().optional(),
@@ -253,7 +297,7 @@ export const OpsGenieResponderConfigSchema = z.object({
 });
 
 export const OpsGenieConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     api_key: z.string().optional(),
     api_key_file: z.string().optional(),
@@ -265,7 +309,7 @@ export const OpsGenieConfigSchema = z
     responders: z.array(OpsGenieResponderConfigSchema).optional(),
     tags: z.string().optional(),
     note: z.string().optional(),
-    priority: z.string().optional(),
+    priority: yamlString().optional(),
     entity: z.string().optional(),
     actions: z.string().optional(),
     update_alerts: z.boolean().optional(),
@@ -281,11 +325,11 @@ export const OpsGenieConfigSchema = z
     }
   });
 
-export const WechatConfigSchema = z.object({
+export const WechatConfigSchema = z.looseObject({
   send_resolved: z.boolean().optional(),
   api_url: z.string().optional(),
   corp_id: z.string().optional(),
-  agent_id: z.string().optional(),
+  agent_id: yamlString().optional(),
   api_secret: z.string().optional(),
   to_user: z.string().optional(),
   to_party: z.string().optional(),
@@ -296,7 +340,7 @@ export const WechatConfigSchema = z.object({
 });
 
 export const PushoverConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     user_key: z.string().optional(),
     user_key_file: z.string().optional(),
@@ -308,10 +352,10 @@ export const PushoverConfigSchema = z
     url_title: z.string().optional(),
     device: z.string().optional(),
     sound: z.string().optional(),
-    priority: z.string().optional(),
-    retry: z.string().optional(),
-    expire: z.string().optional(),
-    ttl: z.string().optional(),
+    priority: yamlString().optional(),
+    retry: yamlString().optional(),
+    expire: yamlString().optional(),
+    ttl: yamlString().optional(),
     html: z.boolean().optional(),
     monospace: z.boolean().optional(),
     http_config: HTTPConfigSchema.optional(),
@@ -334,7 +378,7 @@ export const PushoverConfigSchema = z
   });
 
 export const VictorOpsConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     api_key: z.string().optional(),
     api_key_file: z.string().optional(),
@@ -358,7 +402,7 @@ export const VictorOpsConfigSchema = z
   });
 
 export const SigV4ConfigSchema = z
-  .object({
+  .looseObject({
     region: z.string().optional(),
     access_key: z.string().optional(),
     secret_key: z.string().optional(),
@@ -377,7 +421,7 @@ export const SigV4ConfigSchema = z
     }
   });
 
-export const SNSConfigSchema = z.object({
+export const SNSConfigSchema = z.looseObject({
   send_resolved: z.boolean().optional(),
   api_url: z.string().optional(),
   sigv4: SigV4ConfigSchema.optional(),
@@ -391,7 +435,7 @@ export const SNSConfigSchema = z.object({
 });
 
 export const TelegramConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     api_url: z.string().optional(),
     bot_token: z.string().optional(),
@@ -414,7 +458,7 @@ export const TelegramConfigSchema = z
   });
 
 export const DiscordConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     webhook_url: z.string().optional(),
     webhook_url_file: z.string().optional(),
@@ -435,7 +479,7 @@ export const DiscordConfigSchema = z
     }
   });
 
-export const WebexConfigSchema = z.object({
+export const WebexConfigSchema = z.looseObject({
   send_resolved: z.boolean().optional(),
   api_url: z.string().optional(),
   room_id: z.string().optional(),
@@ -444,7 +488,7 @@ export const WebexConfigSchema = z.object({
 });
 
 export const MSTeamsConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     webhook_url: z.string().optional(),
     webhook_url_file: z.string().optional(),
@@ -464,7 +508,7 @@ export const MSTeamsConfigSchema = z
   });
 
 export const MSTeamsV2ConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     webhook_url: z.string().optional(),
     webhook_url_file: z.string().optional(),
@@ -482,7 +526,7 @@ export const MSTeamsV2ConfigSchema = z
     }
   });
 
-export const JiraConfigSchema = z.object({
+export const JiraConfigSchema = z.looseObject({
   send_resolved: z.boolean().optional(),
   api_url: z.string().optional(),
   api_type: z.string().optional(),
@@ -490,23 +534,23 @@ export const JiraConfigSchema = z.object({
   summary: z.string().optional(),
   description: z.string().optional(),
   labels: z.array(z.string()).optional(),
-  priority: z.string().optional(),
+  priority: yamlString().optional(),
   issue_type: z.string().optional(),
   resolve_transition: z.string().optional(),
   reopen_transition: z.string().optional(),
   wont_fix_resolution: z.string().optional(),
-  reopen_duration: z.string().optional(),
+  reopen_duration: yamlString().optional(),
   fields: z.record(z.string(), z.string()).optional(),
   http_config: HTTPConfigSchema.optional(),
 });
 
-export const RocketchatFieldConfigSchema = z.object({
+export const RocketchatFieldConfigSchema = z.looseObject({
   title: z.string().optional(),
   value: z.string().optional(),
   short: z.boolean().optional(),
 });
 
-export const RocketchatActionConfigSchema = z.object({
+export const RocketchatActionConfigSchema = z.looseObject({
   type: z.string().optional(),
   text: z.string().optional(),
   url: z.string().optional(),
@@ -515,7 +559,7 @@ export const RocketchatActionConfigSchema = z.object({
 });
 
 export const RocketchatConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     api_url: z.string().optional(),
     channel: z.string().optional(),
@@ -554,15 +598,19 @@ export const RocketchatConfigSchema = z
     }
   });
 
+export const MattermostConfigSchema = z.looseObject({
+  send_resolved: z.boolean().optional(),
+});
+
 export const IncidentioConfigSchema = z
-  .object({
+  .looseObject({
     send_resolved: z.boolean().optional(),
     url: z.string().optional(),
     url_file: z.string().optional(),
     alert_source_token: z.string().optional(),
     alert_source_token_file: z.string().optional(),
     max_alerts: z.number().optional(),
-    timeout: z.string().optional(),
+    timeout: yamlString().optional(),
     http_config: HTTPConfigSchema.optional(),
   })
   .superRefine((data, ctx) => {
@@ -583,7 +631,7 @@ export const IncidentioConfigSchema = z
   });
 
 // Receiver schema
-export const ReceiverSchema = z.object({
+export const ReceiverSchema = z.looseObject({
   name: z.string(),
   email_configs: z.array(EmailConfigSchema).optional(),
   slack_configs: z.array(SlackConfigSchema).optional(),
@@ -602,6 +650,7 @@ export const ReceiverSchema = z.object({
   jira_configs: z.array(JiraConfigSchema).optional(),
   rocketchat_configs: z.array(RocketchatConfigSchema).optional(),
   incidentio_configs: z.array(IncidentioConfigSchema).optional(),
+  mattermost_configs: z.array(MattermostConfigSchema).optional(),
 });
 
 // Export inferred types
@@ -635,6 +684,7 @@ export type RocketchatFieldConfig = z.infer<typeof RocketchatFieldConfigSchema>;
 export type RocketchatActionConfig = z.infer<typeof RocketchatActionConfigSchema>;
 export type RocketchatConfig = z.infer<typeof RocketchatConfigSchema>;
 export type IncidentioConfig = z.infer<typeof IncidentioConfigSchema>;
+export type MattermostConfig = z.infer<typeof MattermostConfigSchema>;
 export type Receiver = z.infer<typeof ReceiverSchema>;
 
 // Type guard functions for receiver discrimination
@@ -717,6 +767,12 @@ export function hasIncidentioConfigs(
   return Array.isArray(receiver.incidentio_configs) && receiver.incidentio_configs.length > 0;
 }
 
+export function hasMattermostConfigs(
+  receiver: Receiver
+): receiver is Receiver & { mattermost_configs: MattermostConfig[] } {
+  return Array.isArray(receiver.mattermost_configs) && receiver.mattermost_configs.length > 0;
+}
+
 // Helper function to get all configured receiver types for a receiver
 export function getReceiverTypes(receiver: Receiver): string[] {
   const types: string[] = [];
@@ -770,6 +826,9 @@ export function getReceiverTypes(receiver: Receiver): string[] {
   }
   if (hasIncidentioConfigs(receiver)) {
     types.push('incidentio');
+  }
+  if (hasMattermostConfigs(receiver)) {
+    types.push('mattermost');
   }
   return types;
 }

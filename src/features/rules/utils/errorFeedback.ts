@@ -40,12 +40,13 @@ function describeError(error: unknown): string {
     const description = extractErrorCause(error) ?? extractErrorMessage(error);
 
     if (isNonEmptyString(description)) {
-      return description;
+      return description.trim();
     }
   }
 
   // Proxied failures frequently come back without a body at all, the status line is all we have
-  return httpStatusLine(error) || extractErrorMessage(error);
+  const fallback = httpStatusLine(error) || extractErrorMessage(error).trim();
+  return fallback || t('alerting.rules-error.unknown', 'An unknown error occurred');
 }
 
 /** The underlying cause, as reported next to the generic message by Grafana and Prometheus alike. */

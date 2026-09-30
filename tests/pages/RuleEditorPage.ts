@@ -25,6 +25,7 @@ export class RuleEditorPage {
   // Step 2: Evaluation
   readonly pendingPeriodInput: Locator;
   readonly pendingPeriodUnitSelect: Locator;
+  readonly keepFiringForInput: Locator;
   readonly namespaceCombobox: Locator;
   readonly groupCombobox: Locator;
 
@@ -66,6 +67,7 @@ export class RuleEditorPage {
     // Pending period - look for the spinbutton near "Pending period" text
     this.pendingPeriodInput = this.pageContent.getByRole('spinbutton').first();
     this.pendingPeriodUnitSelect = this.pageContent.getByRole('combobox').nth(1); // Second combobox (first is data source)
+    this.keepFiringForInput = this.pageContent.locator('#keep-firing-for');
     this.namespaceCombobox = this.pageContent.getByRole('combobox', { name: /namespace/i });
     this.groupCombobox = this.pageContent.getByRole('combobox', { name: /group/i });
 
@@ -239,6 +241,22 @@ export class RuleEditorPage {
     const unitOption = this.page.getByRole('option', { name: unit });
     await unitOption.waitFor({ state: 'visible', timeout: 2000 });
     await unitOption.click();
+  }
+
+  /**
+   * Set "Keep firing for". A free-text duration, so compound values like "1h30m" are fine.
+   * Pass an empty string to clear it, which removes keep_firing_for from the rule.
+   */
+  async setKeepFiringFor(duration: string): Promise<void> {
+    await this.keepFiringForInput.fill(duration);
+    await this.keepFiringForInput.blur();
+  }
+
+  /**
+   * Read the current "Keep firing for" value
+   */
+  async getKeepFiringFor(): Promise<string> {
+    return await this.keepFiringForInput.inputValue();
   }
 
   /**

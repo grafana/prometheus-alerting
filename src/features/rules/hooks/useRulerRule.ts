@@ -3,7 +3,7 @@ import { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';
 import { RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { matchRulerRuleById } from '@grafana/external-rules/matching';
 
-import { rulerApi } from '../../../api/rules/mimir.endpoints';
+import { rulerApi } from '../../../api/rules/ruler.endpoints';
 
 const { useGetRuleGroupQuery } = rulerApi;
 

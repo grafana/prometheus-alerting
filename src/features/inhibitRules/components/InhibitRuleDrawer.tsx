@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { t } from '@grafana/i18n';
-import { Stack, Text } from '@grafana/ui';
-import { type NormalizedInhibitRule, stringifyObjectMatcher } from '@grafana/external-alertmanager/vanilla';
+import { type NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { InhibitRuleDrawerView, InhibitRuleDrawerViewFooter } from './InhibitRuleDrawerView';
 import { InhibitRuleDrawerEdit } from './InhibitRuleDrawerEdit';
-import { useHasConfigurationAPI } from '../../../hooks/useHasConfigurationAPI';
 import { useDeleteInhibitRule } from '../hooks/useInhibitRules';
+import { isAbilityAllowed } from '../../../access-control/abilities';
+import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 
 interface InhibitRuleDrawerProps {
   inhibitRule: NormalizedInhibitRule | null;
@@ -16,7 +16,7 @@ interface InhibitRuleDrawerProps {
 
 export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: InhibitRuleDrawerProps) {
   const [isEditMode, setIsEditMode] = useState(false);
-  const hasConfigurationAPI = useHasConfigurationAPI();
+  const canMutateInhibitRules = isAbilityAllowed(useAlertmanagerConfigMutationAbility());
   const [deleteInhibitRule, { isLoading: isDeleting, error: deleteError }] = useDeleteInhibitRule();
 
   if (!inhibitRule || inhibitRuleIndex === null) {
@@ -28,27 +28,13 @@ export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: In
     onClose();
   };
 
-  const getTitle = () => {
-    if (inhibitRule.source_matchers && inhibitRule.source_matchers.length > 0) {
-      return stringifyObjectMatcher(inhibitRule.source_matchers[0]);
-    }
-    return t('inhibit-rules.drawer.default-title', 'Inhibit Rule');
-  };
-
   return (
     <DrawerWithFooter
-      title={
-        <Stack direction="column" gap={0}>
-          <Text variant="bodySmall" color="secondary">
-            {t('inhibit-rules.drawer.title', 'Inhibit Rule')}
-          </Text>
-          <Text variant="h2">{getTitle()}</Text>
-        </Stack>
-      }
+      title={t('inhibit-rules.drawer.title', 'Inhibit Rule')}
       onClose={onClose}
-      size="sm"
+      size="md"
       footer={
-        !isEditMode && hasConfigurationAPI ? (
+        !isEditMode && canMutateInhibitRules ? (
           <InhibitRuleDrawerViewFooter
             onEdit={() => setIsEditMode(true)}
             onDelete={handleDelete}
@@ -68,15 +54,7 @@ export function InhibitRuleDrawer({ inhibitRule, inhibitRuleIndex, onClose }: In
           }}
         />
       ) : (
-        <InhibitRuleDrawerView
-          inhibitRule={inhibitRule}
-          inhibitRuleIndex={inhibitRuleIndex}
-          onEdit={() => setIsEditMode(true)}
-          onClose={onClose}
-          onDelete={handleDelete}
-          isDeleting={isDeleting}
-          deleteError={deleteError}
-        />
+        <InhibitRuleDrawerView inhibitRule={inhibitRule} deleteError={deleteError} />
       )}
     </DrawerWithFooter>
   );

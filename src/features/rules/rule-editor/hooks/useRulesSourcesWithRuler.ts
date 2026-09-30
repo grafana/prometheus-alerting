@@ -4,7 +4,8 @@ import { DataSourceInstanceSettings } from '@grafana/data';
 import { getDataSourceSrv } from '@grafana/runtime';
 
 import { useLazyDiscoverFeaturesQuery } from '../../../../api/rules/featureDiscovery.endpoints';
-import { isSupportedExternalRulesSourceType } from '../datasourceValidation';
+import { isSupportedRulesSourceType } from '../../../../api/rules/flavors/registry';
+import { isDataSourceManagingAlerts } from '../../../../utils/datasource';
 
 /**
  * Hook to get all data sources that support the Ruler API
@@ -22,9 +23,14 @@ export function useRulesSourcesWithRuler(): {
     const loadDataSources = async () => {
       setIsLoading(true);
 
-      // Get all Prometheus-compatible data sources
+      // Get all Prometheus-compatible data sources the alerting UI is allowed to manage. Data
+      // sources with "Manage alerts via Alerting UI" off are skipped here rather than probed:
+      // feature discovery is a request per data source, and on a large install most of them are
+      // ones an admin already said to leave alone.
       const allDataSources = getDataSourceSrv().getList();
-      const rulesSources = allDataSources.filter((ds) => isSupportedExternalRulesSourceType(ds.type));
+      const rulesSources = allDataSources
+        .filter((ds) => isSupportedRulesSourceType(ds.type))
+        .filter(isDataSourceManagingAlerts);
 
       // Check each data source for Ruler API support
       const sourcesWithRuler: DataSourceInstanceSettings[] = [];

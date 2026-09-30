@@ -1,0 +1,46 @@
+name: Bundle size
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  compare:
+    name: Compare against base
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+
+      - name: Install mise tools
+        uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
+        with:
+          # Pin mise itself. Without this the action asks mise.jdx.dev/VERSION for
+          # "latest", which has pointed at releases that were not on GitHub yet and
+          # 404'd the download. Pinning also means the binary that installs our
+          # verified tools is itself a known one, checked against sha256 below.
+          # Bump both together — the hash is of the extracted linux-x64 binary.
+          version: 2026.9.1
+          sha256: c98423c8470d6dc416d9f7036d0646d8ef5ae92ad9186907f8fcc84cbe7db4ea
+          install: true
+          cache: false
+          cache_save: false
+        env:
+          MISE_ENV: ci # Skip loading mise.local.toml (dev-only tools)
+
+      - uses: grafana/plugin-actions/bundle-size@main # zizmor: ignore[unpinned-uses] provided by grafana
+        with:
+          node-version: "24.21"

@@ -8,6 +8,10 @@ export interface SlackFormParams {
   username?: string;
   title?: string;
   text?: string;
+  authorizationCredentials?: string;
+  basicAuthUsername?: string;
+  proxyUrl?: string;
+  proxyFromEnvironment?: boolean;
 }
 
 /**
@@ -29,6 +33,10 @@ export class SlackIntegrationForm {
   readonly usernameInput: Locator;
   readonly titleInput: Locator;
   readonly textInput: Locator;
+  readonly authorizationCredentialsInput: Locator;
+  readonly basicAuthUsernameInput: Locator;
+  readonly proxyUrlInput: Locator;
+  readonly proxyFromEnvironmentCheckbox: Locator;
 
   constructor(scope: Locator) {
     this.apiUrlInput = scope.getByLabel('Webhook URL', { exact: true });
@@ -38,10 +46,26 @@ export class SlackIntegrationForm {
     this.usernameInput = scope.getByLabel('Username', { exact: true }).first();
     this.titleInput = scope.getByLabel('Title', { exact: true });
     this.textInput = scope.getByLabel('Message body', { exact: true });
+    this.authorizationCredentialsInput = scope.getByLabel('Authorization credentials', { exact: true });
+    this.basicAuthUsernameInput = scope.getByLabel('Basic authentication username', { exact: true });
+    this.proxyUrlInput = scope.getByLabel('Proxy URL', { exact: true });
+    this.proxyFromEnvironmentCheckbox = scope.getByLabel('Proxy from environment', { exact: true });
   }
 
   /** Fill any subset of the Slack integration's fields. */
-  async fill({ apiUrl, channel, iconEmoji, iconUrl, username, title, text }: SlackFormParams) {
+  async fill({
+    apiUrl,
+    channel,
+    iconEmoji,
+    iconUrl,
+    username,
+    title,
+    text,
+    authorizationCredentials,
+    basicAuthUsername,
+    proxyUrl,
+    proxyFromEnvironment,
+  }: SlackFormParams) {
     if (apiUrl !== undefined) {
       await this.apiUrlInput.fill(apiUrl);
     }
@@ -62,6 +86,18 @@ export class SlackIntegrationForm {
     }
     if (text !== undefined) {
       await this.textInput.fill(text);
+    }
+    if (authorizationCredentials !== undefined) {
+      await this.authorizationCredentialsInput.fill(authorizationCredentials);
+    }
+    if (basicAuthUsername !== undefined) {
+      await this.basicAuthUsernameInput.fill(basicAuthUsername);
+    }
+    if (proxyUrl !== undefined) {
+      await this.proxyUrlInput.fill(proxyUrl);
+    }
+    if (proxyFromEnvironment !== undefined) {
+      await this.proxyFromEnvironmentCheckbox.setChecked(proxyFromEnvironment, { force: true });
     }
   }
 }

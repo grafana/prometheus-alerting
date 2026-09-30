@@ -1,47 +1,36 @@
 import { css } from '@emotion/css';
 import React, { useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { produce } from 'immer';
 
 import { GrafanaTheme2 } from '@grafana/data';
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
 import { Trans, t } from '@grafana/i18n';
-import {
-  Badge,
-  Button,
-  Combobox,
-  ComboboxOption,
-  Field,
-  IconButton,
-  Input,
-  MultiCombobox,
-  Stack,
-  Switch,
-  useStyles2,
-} from '@grafana/ui';
+import { Badge, Button, ComboboxOption, Field, Input, MultiCombobox, Stack, Switch, useStyles2 } from '@grafana/ui';
 
-import { FormAmRoute, MatcherOperator, commonGroupByOptions, emptyArrayFieldMatcher } from '../types';
+import { useTimeIntervals } from '../../timeIntervals/hooks/useTimeIntervals';
+import { MatcherFieldArray, MatcherOperatorSelect } from '../../../components/MatcherFieldArray';
+import { emptyMatcherFieldValue, RouteWithID } from '@grafana/external-alertmanager/vanilla';
+import { FormAmRoute, commonGroupByOptions } from '../types';
 import { amRouteToFormAmRoute, isValidPromDuration } from '../utils/routeTransform';
+import { invalidDurationMessage } from '../../../utils/time.utils';
 import { ReceiverSelector } from './ReceiverSelector';
-
-const matcherOperatorOptions: Array<ComboboxOption<MatcherOperator>> = [
-  { label: '=', value: MatcherOperator.equal },
-  { label: '!=', value: MatcherOperator.notEqual },
-  { label: '=~', value: MatcherOperator.regex },
-  { label: '!~', value: MatcherOperator.notRegex },
-];
+import { RouteTimingSummary } from './RouteTimingSummary';
 
 export interface RouteEditFormProps {
   route: RouteWithID;
   onSubmit: (values: Partial<FormAmRoute>) => void;
   onCancel: () => void;
+  isRoot?: boolean;
   isSubmitting?: boolean;
 }
 
-export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false }: RouteEditFormProps) {
+export function RouteEditForm({ route, onSubmit, onCancel, isRoot = false, isSubmitting = false }: RouteEditFormProps) {
   const styles = useStyles2(getStyles);
   const [groupByOptions, setGroupByOptions] = useState<Array<ComboboxOption<string>>>(
     (route.group_by ?? []).map((g) => ({ label: g, value: g }))
   );
+  const { timeIntervals } = useTimeIntervals();
+  const timeIntervalOptions = timeIntervals.map(({ name }) => ({ label: name, value: name }));
 
   const formAmRoute = amRouteToFormAmRoute(route);
 
@@ -54,16 +43,24 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
     defaultValues: formAmRoute,
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'object_matchers',
-  });
-
+  const matcherFields = useFieldArray({ control, name: 'object_matchers' });
   const overrideGrouping = useWatch({ control, name: 'overrideGrouping' });
   const overrideTimings = useWatch({ control, name: 'overrideTimings' });
+  const muteTimeIntervalNames = useWatch({ control, name: 'muteTimeIntervals' }) ?? [];
+  const activeTimeIntervalNames = useWatch({ control, name: 'activeTimeIntervals' }) ?? [];
+  const intervalsByName = new Map(timeIntervals.map((interval) => [interval.name, interval]));
+  const muteTimeIntervals = muteTimeIntervalNames.flatMap((name) => intervalsByName.get(name) ?? []);
+  const activeTimeIntervals = activeTimeIntervalNames.flatMap((name) => intervalsByName.get(name) ?? []);
 
   const handleFormSubmit = (values: FormAmRoute) => {
-    onSubmit(values);
+    const submittedValues = produce<Partial<FormAmRoute>>(values, (draft) => {
+      if (isRoot) {
+        delete draft.muteTimeIntervals;
+        delete draft.activeTimeIntervals;
+      }
+    });
+
+    onSubmit(submittedValues);
   };
 
   return (
@@ -76,7 +73,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
             <Trans i18nKey="routes.edit.matching-labels">Matching labels</Trans>
           </div>
 
-          {fields.length === 0 && (
+          {matcherFields.fields.length === 0 && (
             <Badge
               color="orange"
               className={styles.noMatchersWarning}
@@ -88,73 +85,32 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
             />
           )}
 
-          {fields.length > 0 && (
-            <div className={styles.matchersContainer}>
-              {fields.map((field, index) => (
-                <Stack direction="row" key={field.id} alignItems="center" gap={1}>
-                  <Field
-                    label={t('routes.edit.label', 'Label')}
-                    invalid={!!errors.object_matchers?.[index]?.name}
-                    error={errors.object_matchers?.[index]?.name?.message}
-                  >
-                    <Input
-                      {...register(`object_matchers.${index}.name`, {
-                        required: t('routes.edit.field-required', 'Required'),
-                      })}
-                      placeholder={t('routes.edit.label-placeholder', 'label')}
-                    />
-                  </Field>
-
-                  <Field label={t('routes.edit.operator', 'Operator')}>
-                    <Controller
-                      render={({ field: { onChange, value } }) => {
-                        const selectedOption = matcherOperatorOptions.find((opt) => opt.value === value);
-                        return (
-                          <Combobox
-                            value={selectedOption}
-                            options={matcherOperatorOptions}
-                            onChange={(option) => onChange(option?.value)}
-                            width={12}
-                          />
-                        );
-                      }}
-                      control={control}
-                      name={`object_matchers.${index}.operator`}
-                    />
-                  </Field>
-
-                  <Field
-                    label={t('routes.edit.value', 'Value')}
-                    invalid={!!errors.object_matchers?.[index]?.value}
-                    error={errors.object_matchers?.[index]?.value?.message}
-                  >
-                    <Input
-                      {...register(`object_matchers.${index}.value`)}
-                      placeholder={t('routes.edit.value-placeholder', 'value')}
-                    />
-                  </Field>
-
-                  <IconButton
-                    tooltip={t('routes.edit.remove-matcher', 'Remove matcher')}
-                    name="trash-alt"
-                    onClick={() => remove(index)}
-                    aria-label={t('routes.edit.remove-matcher', 'Remove matcher')}
-                  />
-                </Stack>
-              ))}
-            </div>
-          )}
-
-          <Button
-            className={styles.addMatcherBtn}
-            icon="plus"
-            onClick={() => append(emptyArrayFieldMatcher)}
-            variant="secondary"
-            type="button"
-            size="sm"
-          >
-            <Trans i18nKey="routes.edit.add-matcher">Add matcher</Trans>
-          </Button>
+          <MatcherFieldArray
+            rows={matcherFields.fields.map((field, index) => ({
+              id: field.id,
+              labelInput: register(`object_matchers.${index}.name`, {
+                required: t('matcher-field-array.required', 'Required'),
+              }),
+              operatorControl: (
+                <Controller
+                  control={control}
+                  name={`object_matchers.${index}.operator`}
+                  render={({ field: { onChange, value } }) => (
+                    <MatcherOperatorSelect value={value} onChange={onChange} />
+                  )}
+                />
+              ),
+              valueInput: register(`object_matchers.${index}.value`),
+              labelError: errors.object_matchers?.[index]?.name?.message,
+              valueError: errors.object_matchers?.[index]?.value?.message,
+            }))}
+            onAdd={() => matcherFields.append(emptyMatcherFieldValue)}
+            onRemove={matcherFields.remove}
+            labels={{
+              addMatcher: t('routes.edit.add-matcher', 'Add matcher'),
+              removeMatcher: t('routes.edit.remove-matcher', 'Remove matcher'),
+            }}
+          />
         </div>
 
         {/* Receiver */}
@@ -243,8 +199,7 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
             >
               <Input
                 {...register('groupWaitValue', {
-                  validate: (v) =>
-                    !v || isValidPromDuration(v) || t('routes.edit.invalid-duration', 'Invalid duration format'),
+                  validate: (v) => !v || isValidPromDuration(v) || invalidDurationMessage(),
                 })}
                 placeholder={t('routes.edit.group-wait-placeholder', '30s')}
               />
@@ -254,15 +209,14 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
               label={t('routes.edit.group-interval', 'Group interval')}
               description={t(
                 'routes.edit.group-interval-description',
-                'How long to wait before sending notifications about new alerts in a group'
+                'How long between checks for changes in a group, after the first notification'
               )}
               invalid={!!errors.groupIntervalValue}
               error={errors.groupIntervalValue?.message}
             >
               <Input
                 {...register('groupIntervalValue', {
-                  validate: (v) =>
-                    !v || isValidPromDuration(v) || t('routes.edit.invalid-duration', 'Invalid duration format'),
+                  validate: (v) => !v || isValidPromDuration(v) || invalidDurationMessage(),
                 })}
                 placeholder={t('routes.edit.group-interval-placeholder', '5m')}
               />
@@ -272,15 +226,14 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
               label={t('routes.edit.repeat-interval', 'Repeat interval')}
               description={t(
                 'routes.edit.repeat-interval-description',
-                'Minimum time between repeated notifications for the same alert'
+                'How long before an unchanged group is sent again. Rounded up to the next group interval.'
               )}
               invalid={!!errors.repeatIntervalValue}
               error={errors.repeatIntervalValue?.message}
             >
               <Input
                 {...register('repeatIntervalValue', {
-                  validate: (v) =>
-                    !v || isValidPromDuration(v) || t('routes.edit.invalid-duration', 'Invalid duration format'),
+                  validate: (v) => !v || isValidPromDuration(v) || invalidDurationMessage(),
                 })}
                 placeholder={t('routes.edit.repeat-interval-placeholder', '4h')}
               />
@@ -288,26 +241,57 @@ export function RouteEditForm({ route, onSubmit, onCancel, isSubmitting = false 
           </>
         )}
 
-        {/* Mute Timings */}
-        <Field
-          label={t('routes.edit.mute-timings', 'Mute timings')}
-          description={t('routes.edit.mute-timings-description', 'Mute notifications during specific time intervals')}
-        >
-          <Controller
-            render={({ field: { onChange, onBlur, value } }) => (
-              <MultiCombobox
-                value={value ?? []}
-                createCustomValue
-                onChange={(selected) => onChange(selected.map((v) => v.value))}
-                onBlur={onBlur}
-                options={[]}
-                placeholder={t('routes.edit.mute-timings-placeholder', 'Select or type mute timing names')}
+        {!isRoot && (
+          <>
+            {/* Mute Timings */}
+            <Field
+              label={t('routes.edit.mute-timings', 'Mute timings')}
+              description={t(
+                'routes.edit.mute-timings-description',
+                'Notifications are not sent while any selected interval matches.'
+              )}
+            >
+              <Controller
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <MultiCombobox
+                    value={value ?? []}
+                    onChange={(selected) => onChange(selected.map((v) => v.value))}
+                    onBlur={onBlur}
+                    options={timeIntervalOptions}
+                    placeholder={t('routes.edit.mute-timings-placeholder', 'Select mute timings')}
+                  />
+                )}
+                control={control}
+                name="muteTimeIntervals"
               />
-            )}
-            control={control}
-            name="muteTimeIntervals"
-          />
-        </Field>
+            </Field>
+
+            {/* Active Timings */}
+            <Field
+              label={t('routes.edit.active-timings', 'Active timings')}
+              description={t(
+                'routes.edit.active-timings-description',
+                'Notifications are sent only while at least one selected interval matches.'
+              )}
+            >
+              <Controller
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <MultiCombobox
+                    value={value ?? []}
+                    onChange={(selected) => onChange(selected.map((v) => v.value))}
+                    onBlur={onBlur}
+                    options={timeIntervalOptions}
+                    placeholder={t('routes.edit.active-timings-placeholder', 'Select active timings')}
+                  />
+                )}
+                control={control}
+                name="activeTimeIntervals"
+              />
+            </Field>
+
+            <RouteTimingSummary muteTimeIntervals={muteTimeIntervals} activeTimeIntervals={activeTimeIntervals} />
+          </>
+        )}
 
         <Stack direction="row" gap={2}>
           <Button type="submit" disabled={isSubmitting} icon={isSubmitting ? 'spinner' : undefined}>
@@ -327,18 +311,8 @@ const getStyles = (theme: GrafanaTheme2) => ({
     fontWeight: theme.typography.fontWeightMedium,
     marginBottom: theme.spacing(1),
   }),
-  matchersContainer: css({
-    backgroundColor: theme.colors.background.secondary,
-    padding: theme.spacing(1.5, 2),
-    paddingBottom: 0,
-    marginBottom: theme.spacing(1),
-    borderRadius: theme.shape.radius.default,
-  }),
   noMatchersWarning: css({
     padding: theme.spacing(1, 2),
     marginBottom: theme.spacing(1),
-  }),
-  addMatcherBtn: css({
-    marginBottom: theme.spacing(2),
   }),
 });

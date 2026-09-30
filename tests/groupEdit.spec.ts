@@ -1,6 +1,6 @@
 import { getRuleName } from '@grafana/external-rules/utils';
 import { expect, test } from './fixtures/ruler';
-import { getMimirRuleGroup } from './api/mimir';
+import { getMimirRuleGroup, postMimirRuleGroup } from './api/mimir';
 import { TEST_DATASOURCE_UID, TEST_NAMESPACE } from './factories/rules';
 
 test.describe('Group Edit', () => {
@@ -46,13 +46,67 @@ test.describe('Group Edit', () => {
     await groupEditPage.saveButton.click();
     await expect
       .poll(async () => {
-        const persistedGroup = await getMimirRuleGroup(
-          mimirRuler.tenantId,
-          mimirRuler.namespace,
-          mimirRuler.groupName
-        );
+        const persistedGroup = await getMimirRuleGroup(mimirRuler.tenantId, mimirRuler.namespace, mimirRuler.groupName);
         return persistedGroup?.rules.map(getRuleName);
       })
       .toEqual(['TestCloneRule', 'test:recording:rule', 'TestEditRule']);
+  });
+
+  test('keeps the group settings the form has no field for', async ({ groupEditPage, mimirRuler, mimirGroup }) => {
+    const groupName = mimirGroup('tuned');
+    await postMimirRuleGroup(
+      mimirRuler.tenantId,
+      mimirRuler.namespace,
+      `name: ${groupName}
+interval: 1m
+limit: 10
+query_offset: 2m
+align_evaluation_time_on_interval: true
+rules:
+  - alert: TunedRule
+    expr: up == 0
+    for: 5m
+`
+    );
+
+    await groupEditPage.goto(mimirRuler.uid, mimirRuler.namespace, groupName);
+    await groupEditPage.waitForLoad();
+    await groupEditPage.pageContent.getByRole('button', { name: '30s', exact: true }).click();
+    await groupEditPage.saveButton.click();
+
+    // The payload used to be rebuilt from name, interval and rules alone, so a group edit dropped
+    // the group's limit and query offset
+    await expect
+      .poll(async () => getMimirRuleGroup(mimirRuler.tenantId, mimirRuler.namespace, groupName))
+      .toMatchObject({
+        interval: '30s',
+        limit: 10,
+        query_offset: '2m',
+        align_evaluation_time_on_interval: true,
+      });
+  });
+
+  test('offers no form for a federated group', async ({ groupEditPage, mimirRuler, mimirGroup, page }) => {
+    const groupName = mimirGroup('federated');
+    await postMimirRuleGroup(
+      mimirRuler.tenantId,
+      mimirRuler.namespace,
+      `name: ${groupName}
+interval: 1m
+source_tenants: [tenant-a, tenant-b]
+rules:
+  - alert: FederatedRule
+    expr: up == 0
+    for: 5m
+`
+    );
+
+    await groupEditPage.goto(mimirRuler.uid, mimirRuler.namespace, groupName);
+
+    // source_tenants decides which tenants the rules read, and this form cannot express that --
+    // saving through it would quietly turn the group single-tenant
+    await expect(page.getByRole('status', { name: 'This group is federated' })).toBeVisible();
+    await expect(groupEditPage.intervalInput).toHaveCount(0);
+    await expect(groupEditPage.saveButton).toHaveCount(0);
   });
 });

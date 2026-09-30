@@ -1,0 +1,223 @@
+# Rates how much impact a PR has, labels it `impact:*`, explains the rating in a
+# review, and leaves inline comments on the places a reviewer should read first.
+#
+# However many times it runs, a PR ends up showing one rating and one round of
+# comments. Each run posts a review whose body is the rating and whose comments
+# are the round, then hides the earlier reviews as outdated and resolves the
+# threads under them. Hiding a review does not touch its comments, so both halves
+# are needed. Each run rates the whole diff again, which is why the comments are
+# a round and not a running list.
+#
+# The parts worth reading are not in this file:
+#
+#   .github/prompts/pr-impact.md      what Claude is asked, as prose
+#   .mise/tasks/pr-impact/floor.mjs   the deterministic rules that run first
+#   .mise/tasks/pr-impact/parse.mjs   turning Claude's answer into a rating
+#   .mise/tasks/pr-impact/post.mjs    the labelling and commenting
+#
+# `mise run pr-impact:check` runs the unit tests for the posting rules, offline.
+#
+# Those are mise file tasks, so `mise run pr-impact <number>` rates a real PR
+# locally and prints what it would post, which is how to iterate on the prompt.
+# The steps below invoke them with node. They import nothing but Node builtins,
+# so the runner's own Node is enough and there is no toolchain step to install,
+# cache, or have go down on us.
+#
+# The scripts come from the base branch while this file comes from the PR, so a
+# PR cannot rewrite the rules it is about to be judged by. The two can disagree
+# — a base branch without the tasks has nothing to run — and the job fails in
+# that case rather than skipping, which only happens if the tasks leave main.
+#
+# Today this only labels and comments — it gates nothing. The intent is that a
+# later change lets the bot approve PRs at the safe end of the scale, so authors
+# don't wait on a reviewer for a typo fix. Rating on four tiers rather than a
+# yes/no keeps that decision adjustable: start by auto-approving only
+# `impact:trivial`, and move the line if the ratings hold up.
+#
+# Two things have to be sorted out before any of that:
+#
+#   1. This repo requires code owner review. A GitHub App approval satisfies a
+#      plain approval count but can never satisfy CODEOWNERS, so reconciling
+#      those two is a prerequisite, and a call for whoever owns the ruleset.
+#   2. The approving step must NOT live in a PR-triggered workflow. On a
+#      pull_request event GitHub runs the workflow file from the PR's own branch,
+#      and the token broker binds the workflow path and event rather than the
+#      file contents, so anyone with push access could edit this file and mint
+#      their own approval. The approval belongs in a scheduled sweep that always
+#      runs the copy on main.
+#
+# Design borrowed from grafana/plugin-actions' renovate-approve.yml. The
+# Anthropic side authenticates with workload identity federation — see the note
+# on that step.
+#
+# Claude never holds a token that can write. It reads the diff, which is
+# untrusted input, and hands back a rating plus a list of file/line/reason
+# triples; the post job checks those against the real diff and posts them.
+
+name: PR impact
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions: {}
+
+concurrency:
+  group: pr-impact-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  CLAUDE_MODEL: claude-sonnet-5
+  CLAUDE_EFFORT: medium
+
+jobs:
+  judge:
+    name: Rate impact
+    # Drafts aren't asking for review yet. Fork PRs get a read-only token so we
+    # couldn't label them anyway, and Renovate has its own gate.
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'renovate[bot]' &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    # Without this the default is six hours.
+    timeout-minutes: 15
+    # Read-only on purpose. id-token is what mints the OIDC token that
+    # authenticates the job to the Anthropic API.
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write
+    outputs:
+      tier: ${{ steps.parse.outputs.tier }}
+      spots: ${{ steps.parse.outputs.spots }}
+      summary: ${{ steps.parse.outputs.summary }}
+      model: ${{ steps.parse.outputs.model }}
+      took: ${{ steps.parse.outputs.took }}
+      truncated: ${{ steps.prompt.outputs.truncated }}
+    steps:
+      # The base branch, not the PR head: Claude reads the repository's own code
+      # to judge what the change touches, and gets the diff through `gh pr diff`.
+      # It also means the prompt and the scripts come from main, so a PR cannot
+      # rewrite the rules it is about to be judged by.
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: Build the prompt
+        id: prompt
+        run: node .mise/tasks/pr-impact/prompt.mjs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+
+      # Workload identity federation rather than a static key in Vault: the
+      # action swaps the OIDC token GitHub issues this job for a short-lived
+      # Anthropic access token, so there is no ANTHROPIC_API_KEY to create,
+      # store, or rotate, and nothing here is a credential.
+      #
+      # The four IDs come from Actions variables rather than being written out
+      # here. They are identifiers rather than credentials — on their own they
+      # authenticate nobody, since the exchange also needs an OIDC token that
+      # only Actions runs in this repository can mint — so this is not about
+      # keeping a secret. It is that git history is permanent: an identifier
+      # committed once stays committed, and rotating it later does not take the
+      # old value back.
+      #
+      # What they do need is integrity, and a variable is a settings edit rather
+      # than a reviewed diff. They are set through terraform for that reason, so
+      # repointing one at a different service account still takes a review.
+      #
+      # They name a federation rule created for this repository, whose subject
+      # condition has to admit the OIDC subject a pull_request run gets
+      # (repo:grafana/prometheus-alerting:pull_request), not just main. An
+      # org-wide rule pinned to main — the kind that keeps the renovate gate's
+      # approving token safe from a branch edit — cannot match a PR-triggered
+      # run, which is why this repo has its own.
+      #
+      # Setting anthropic_api_key alongside these would silently win and
+      # federation would never be used, so it is gone.
+      - name: Ask Claude
+        id: claude
+        uses: anthropics/claude-code-action@ef8bb1e43bf303cff727a1dd0b8837029fe982a2 # v1.0.215
+        with:
+          anthropic_federation_rule_id: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          anthropic_organization_id: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          anthropic_service_account_id: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          anthropic_workspace_id: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+          # The read-only workflow token. Claude reads untrusted input, so it
+          # must never hold something that can write.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: ${{ steps.prompt.outputs.text }}
+          claude_args: |
+            --model "${{ env.CLAUDE_MODEL }}"
+            --effort "${{ env.CLAUDE_EFFORT }}"
+            --max-turns 30
+            --allowedTools "Read,Grep,Glob"
+
+      - name: Read the rating
+        id: parse
+        run: node .mise/tasks/pr-impact/parse.mjs
+        env:
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+          # Only used if the transcript does not name the model itself.
+          CLAUDE_MODEL: ${{ env.CLAUDE_MODEL }}
+
+  post:
+    name: Post rating
+    needs: judge
+    runs-on: ubuntu-latest
+    permissions:
+      # Two separate things need contents here.
+      #
+      # The checkout below needs to read the repository at all. A job's
+      # permissions block replaces the defaults rather than adding to them, so
+      # leaving contents out sets it to none, and checkout fails with
+      # `Repository not found` — which is how a private repository reports being
+      # denied, not a missing repository.
+      #
+      # And it is write rather than read because resolving a review thread needs
+      # it. With only pull-requests write, the resolve is refused with
+      # `Resource not accessible by integration`, which is what happened on PR
+      # 305: eleven runs in a row posted their comments and failed to fold away
+      # the round before, leaving 26 stale threads open. GitHub does not document
+      # this anywhere; it is what the 403s came down to.
+      #
+      # Nothing in this job pushes anything. It labels, comments, and resolves —
+      # and the code it runs comes from the base branch, sparse-checked-out
+      # above, so a PR cannot change what this job does with the token it holds.
+      # What a PR does control is this file, since a pull_request run takes the
+      # workflow from the PR's own branch. CODEOWNERS covers it (`* @grafana/
+      # alerting-squad`), so widening this job still takes a squad review.
+      contents: write
+      pull-requests: write
+      # Creating a label (as opposed to putting one on a PR) counts as an issues
+      # write.
+      issues: write
+    steps:
+      # This job reads the tasks and nothing else, so don't pay for the rest of
+      # the repository.
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.base.ref }}
+          sparse-checkout: .mise/tasks/pr-impact
+
+      - run: node .mise/tasks/pr-impact/post.mjs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          TIER: ${{ needs.judge.outputs.tier }}
+          SPOTS: ${{ needs.judge.outputs.spots }}
+          SUMMARY: ${{ needs.judge.outputs.summary }}
+          MODEL: ${{ needs.judge.outputs.model }}
+          TOOK: ${{ needs.judge.outputs.took }}
+          TRUNCATED: ${{ needs.judge.outputs.truncated }}
+          EFFORT: ${{ env.CLAUDE_EFFORT }}

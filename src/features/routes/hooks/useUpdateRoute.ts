@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
+import { RouteWithID } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 
 import { useAppNotifications } from '../../../hooks/useAppNotifications';
@@ -8,7 +8,7 @@ import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduc
 import { updateRouteAction } from '../../../reducers/alertmanager/routes';
 import { FormAmRoute } from '../types';
 import { formAmRouteToAmRoute } from '../utils/routeTransform';
-import { getRouteMutationErrorFeedback } from '../utils/errorFeedback';
+import { getMutationErrorFeedback } from '../../../access-control/mutationErrorFeedback';
 import { useRoutes } from './useRoutes';
 
 interface UseUpdateRouteResult {
@@ -37,7 +37,10 @@ export function useUpdateRoute(): UseUpdateRouteResult {
 
         return true;
       } catch (err) {
-        const feedback = getRouteMutationErrorFeedback(err, t('routes.update.error', 'Failed to update route'));
+        const feedback = getMutationErrorFeedback(err, {
+          fallbackTitle: t('routes.update.error', 'Failed to update route'),
+          resource: t('routes.resource-label', 'routes'),
+        });
         notifyError(feedback.title, feedback.description);
 
         return false;

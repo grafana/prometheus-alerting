@@ -162,6 +162,15 @@ test.describe('Rules List Filtering - Integration', () => {
     expect(ruleCount).toBeGreaterThan(0);
   });
 
+  test('should use free text as a rule name substring filter', async ({ rulesListPage }) => {
+    await rulesListPage.search('ErrorRate');
+
+    await expect(rulesListPage.ruleNameInput).toHaveValue('ErrorRate');
+    await expect(rulesListPage.getRuleRows('HighErrorRate').first()).toBeVisible();
+    await expect(rulesListPage.getRuleRows('test:request_rate:sum')).toHaveCount(0);
+    expect(await rulesListPage.getSearchQueryFromUrl()).toBe('ErrorRate');
+  });
+
   test('should show "no rules found" when filter matches nothing', async ({ rulesListPage }) => {
     await rulesListPage.filterByNamespace('nonexistent-namespace-xyz123');
     await expect(rulesListPage.page.getByText(/no matching rules found/i)).toBeVisible();
@@ -224,5 +233,25 @@ test.describe('Duplicate Rule Name Disambiguation', () => {
     const rows = await rulesListPage.getRuleRowObjects('DuplicatePositionRule');
     const editHrefs = await Promise.all(rows.map((row) => row.getEditHref()));
     expect(editHrefs).toHaveLength(3);
+  });
+});
+
+test.describe('Data source visibility', () => {
+  test('leaves out data sources that are not managed from the alerting UI', async ({
+    rulesListPage,
+    page,
+    mimirRuler,
+    unmanagedRuler,
+  }) => {
+    // Both datasources exist by the time the page loads, so the list is the thing under test
+    await rulesListPage.goto();
+    await rulesListPage.waitForLoad();
+
+    await rulesListPage.dataSourceCombobox.click();
+
+    await expect(page.getByRole('option', { name: mimirRuler.name })).toBeVisible();
+    // "Manage alerts via Alerting UI" is off on this one, so the plugin should not offer it --
+    // nor probe it for Ruler support
+    await expect(page.getByRole('option', { name: unmanagedRuler.name })).toHaveCount(0);
   });
 });

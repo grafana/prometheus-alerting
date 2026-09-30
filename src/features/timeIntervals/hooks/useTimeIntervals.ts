@@ -4,6 +4,7 @@ import { mimirAlertmanagerApi } from '../../../api/alertmanager/mimir.endpoints'
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { useProduceNewAlertmanagerConfiguration } from '../../../hooks/useProduceNewAlertmanagerConfiguration';
 import { addTimeInterval, updateTimeInterval, deleteTimeInterval } from '../../../reducers/alertmanager/timeIntervals';
+import { mergeTimeIntervals } from '../utils/timeIntervals';
 
 /**
  * Hook to fetch time intervals from Alertmanager configuration.
@@ -35,9 +36,11 @@ export function useTimeIntervals() {
 
   const queryResult = implementation === 'mimir' ? mimirQueryResult : vanillaQueryResult;
 
+  const alertmanagerConfig = queryResult.data?.alertmanager_config;
+
   return {
     ...queryResult,
-    timeIntervals: queryResult.data?.alertmanager_config?.time_intervals ?? [],
+    timeIntervals: mergeTimeIntervals(alertmanagerConfig?.time_intervals, alertmanagerConfig?.mute_time_intervals),
   };
 }
 

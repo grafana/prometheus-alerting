@@ -2,12 +2,11 @@ import React from 'react';
 import { css } from '@emotion/css';
 import { GrafanaTheme2 } from '@grafana/data';
 import { useStyles2, LinkButton, Stack, Text } from '@grafana/ui';
-import { getDataSourceSrv } from '@grafana/runtime';
+import { useDataSourceInstanceSettings } from '@grafana/runtime/unstable';
 import { RawQuery } from '@grafana/plugin-ui';
 import { Trans } from '@grafana/i18n';
 import { promqlGrammar, lokiGrammar } from '../../utils/prismGrammars';
 import { createExploreLink } from '../../../../utils/navigation';
-import { RulesSourceApplication } from '../../../../types/rules';
 import { QueryPreviewPanel } from '../QueryPreviewPanel';
 
 interface Props {
@@ -18,10 +17,9 @@ interface Props {
 export function QueryTab({ query, dataSourceUid }: Props) {
   const styles = useStyles2(getStyles);
 
-  // Get datasource type to determine language
-  const dsSettings = getDataSourceSrv().getInstanceSettings(dataSourceUid);
+  const { settings: dsSettings } = useDataSourceInstanceSettings(dataSourceUid);
+
   const dataSourceType = dsSettings?.type ?? 'prometheus';
-  const application: RulesSourceApplication = dataSourceType === 'loki' ? 'loki' : 'prometheus';
 
   const language =
     dataSourceType === 'loki' ? { grammar: lokiGrammar, name: 'logql' } : { grammar: promqlGrammar, name: 'promql' };
@@ -29,7 +27,7 @@ export function QueryTab({ query, dataSourceUid }: Props) {
   const exploreLink = createExploreLink(dataSourceUid, query, dataSourceType);
 
   return (
-    <div className={styles.wrapper}>
+    <Stack direction="column" gap={0} minWidth={0}>
       <div className={styles.header}>
         <Stack gap={1} alignItems="center">
           {dsSettings?.meta.info.logos.small && (
@@ -51,16 +49,12 @@ export function QueryTab({ query, dataSourceUid }: Props) {
       <pre className={styles.codeBlock}>
         <RawQuery query={query} language={language} />
       </pre>
-      <QueryPreviewPanel dataSourceUid={dataSourceUid} expression={query} application={application} />
-    </div>
+      <QueryPreviewPanel dataSourceUid={dataSourceUid} expression={query} />
+    </Stack>
   );
 }
 
 const getStyles = (theme: GrafanaTheme2) => ({
-  wrapper: css({
-    display: 'flex',
-    flexDirection: 'column',
-  }),
   header: css({
     display: 'flex',
     justifyContent: 'space-between',
@@ -82,5 +76,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
     border: `1px solid ${theme.colors.border.medium}`,
     borderTop: 'none',
     borderRadius: `0 0 ${theme.shape.radius.default} ${theme.shape.radius.default}`,
+    overflowWrap: 'anywhere',
+    whiteSpace: 'pre-wrap',
   }),
 });
