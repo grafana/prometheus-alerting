@@ -9,9 +9,9 @@ import { useDataSourceErrors } from '../list/hooks/useDataSourceErrors';
  * Hook to get data source options for the filter
  * Uses name as value for user-friendly URLs (datasource:mimir-cloud instead of datasource:abc123)
  *
- * Data sources that reported an error are hidden from the rule list, so filtering by them would
- * only ever yield an empty list – they are dropped from the options. Ones that are already
- * selected stay in the list, so they can still be deselected.
+ * Data sources that reported an error or have no rules are hidden from the rule list, so filtering
+ * by them would only ever yield an empty list – they are dropped from the options. Ones that are
+ * already selected stay in the list, so they can still be deselected.
  *
  * @param selectedNames Names of the data sources currently selected in the filter
  */
@@ -20,10 +20,11 @@ export function useDataSourceOptions(selectedNames: string[] = []): Array<Combob
   const { errors } = useDataSourceErrors();
 
   const options = useMemo(() => {
-    const failingUids = new Set(errors.map((error) => error.uid));
+    // Both the failing and the empty data sources, the report holds both kinds
+    const hiddenUids = new Set(errors.map((error) => error.uid));
 
     return dataSources
-      .filter((ds) => !failingUids.has(ds.uid) || selectedNames.includes(ds.name))
+      .filter((ds) => !hiddenUids.has(ds.uid) || selectedNames.includes(ds.name))
       .map((ds) => ({
         label: ds.name,
         value: ds.name, // Use name for user-friendly search queries

@@ -299,12 +299,22 @@
     },
     "rule-list": {
       "datasource-errors": {
+        "button_one": "{{count}} hidden",
+        "button_other": "{{count}} hidden",
         "configure": "Configure",
-        "drawer-subtitle": "These data sources are hidden from the rule list because their rules could not be loaded.",
-        "drawer-title": "Data source errors",
-        "summary_one": "{{count}} data sources reported errors",
+        "drawer-subtitle": "These data sources are hidden from the rule list because their rules could not be loaded, or because they have no rules.",
+        "drawer-title": "Hidden data sources",
+        "no-rules": "This data source has no rules.",
+        "section-empty": "No rules",
+        "section-failed": "Could not load rules",
+        "summary_one": "{{count}} data source reported errors",
         "summary_other": "{{count}} data sources reported errors",
-        "view-details": "View details"
+        "summary-empty_one": "{{count}} data source has no rules",
+        "summary-empty_other": "{{count}} data sources have no rules"
+      },
+      "datasource-status": {
+        "label": "Data sources",
+        "loading": "Loading rules"
       },
       "filter-sidebar": {
         "group-placeholder": "Filter by group...",
@@ -320,8 +330,11 @@
         "results-with-cancellation": "Search cancelled – found {{numberOfRules}} rules"
       },
       "grouped-view": {
+        "all-sources-empty": "None of the data sources have any rules.",
+        "all-sources-empty-title": "No rules found",
         "all-sources-failed": "All data sources reported errors.",
-        "all-sources-failed-title": "No rules could be loaded"
+        "all-sources-failed-title": "No rules could be loaded",
+        "all-sources-hidden": "Every data source either reported errors or has no rules."
       },
       "new-alerting-rule": "New alerting rule",
       "new-recording-rule": "New recording rule",
@@ -375,8 +388,7 @@
       "type-label": "Type"
     },
     "rules-filter-sidebar": {
-      "aria-label": "Filter rules",
-      "clear-filters": "Clear filters"
+      "aria-label": "Filter rules"
     }
   },
   "alertmanager": {

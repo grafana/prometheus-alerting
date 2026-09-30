@@ -13,6 +13,9 @@ export interface RulesErrorFeedback {
   details?: string;
 }
 
+/** Goes between the parts of `RulesErrorFeedback.details`, e.g. "HTTP 502 Bad Gateway · api/v1/rules" */
+export const DETAILS_SEPARATOR = ' · ';
+
 /** Returns consistent user-facing feedback for datasource-backed rule requests. */
 export function getRulesErrorFeedback(error: unknown): RulesErrorFeedback {
   const details = describeRequest(error);
@@ -67,7 +70,7 @@ function describeRequest(error: unknown): string | undefined {
 
   const parts = [httpStatusLine(error), getRequestUrl(error)];
 
-  return parts.filter(isNonEmptyString).join(' · ') || undefined;
+  return parts.filter(isNonEmptyString).join(DETAILS_SEPARATOR) || undefined;
 }
 
 function httpStatusLine(error: unknown): string | undefined {
@@ -77,7 +80,12 @@ function httpStatusLine(error: unknown): string | undefined {
 
   const { status } = error;
 
-  // Non-HTTP failures use a status string, e.g. FETCH_ERROR or PARSING_ERROR
+  // Non-HTTP failures use a status string, e.g. FETCH_ERROR or PARSING_ERROR. Leave out CUSTOM_ERROR,
+  // it is the label we give anything that was not an HTTP error, and says nothing about what went wrong
+  if (status === 'CUSTOM_ERROR') {
+    return undefined;
+  }
+
   if (isNonEmptyString(status)) {
     return status;
   }

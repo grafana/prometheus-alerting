@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { setDataSourceSrv } from '@grafana/runtime';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, vi } from 'vitest';
@@ -11,6 +11,8 @@ import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper, TestMemoryRouter } from '../../../test/utils/test-wrapper';
 
 import { PaginatedDataSourceLoader } from './PaginatedDataSourceLoader';
+import { DataSourcesLoadingBar, DataSourcesStatusField } from './components/DataSourcesStatus';
+import { DataSourceErrorsProvider } from './hooks/useDataSourceErrors';
 
 vi.mock('@grafana/ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@grafana/ui')>();
@@ -100,5 +102,66 @@ describe('PaginatedDataSourceLoader namespace YAML action', () => {
 
     expect(await screen.findByRole('heading', { name: namespace })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /View YAML for namespace/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('PaginatedDataSourceLoader with a data source that has no rules', () => {
+  beforeEach(() => {
+    setDataSourceSrv(createMockDataSourceSrv());
+    server.use(
+      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, () =>
+        HttpResponse.json({ status: 'success', data: { groups: [] } })
+      )
+    );
+  });
+
+  function renderWithReport(filters: { groupFilter?: string } = {}) {
+    const StoreWrapper = createTestWrapper(dataSourceUid);
+
+    return render(
+      <StoreWrapper>
+        <TestMemoryRouter>
+          <DataSourceErrorsProvider>
+            <PaginatedDataSourceLoader
+              rulesSourceIdentifier={rulesSourceIdentifier}
+              application="mimir"
+              rulerApiEnabled={false}
+              hideOnEmpty={Boolean(filters.groupFilter)}
+              {...filters}
+            />
+            <DataSourcesLoadingBar />
+            <DataSourcesStatusField />
+          </DataSourceErrorsProvider>
+        </TestMemoryRouter>
+      </StoreWrapper>
+    );
+  }
+
+  it('hides the data source and reports it as having no rules', async () => {
+    renderWithReport();
+
+    // Translations are not loaded in tests, so the plural form falls back to the default value
+    const button = await screen.findByRole('button', { name: '1 hidden' });
+    expect(screen.queryByRole('heading', { name: 'Mimir' })).not.toBeInTheDocument();
+
+    await userEvent.click(button);
+    expect(screen.getByRole('dialog')).toHaveTextContent('This data source has no rules.');
+  });
+
+  it('does not report the data source when filters are active, an empty result only means nothing matched', async () => {
+    const rulesRequest = vi.fn();
+    server.use(
+      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, () => {
+        rulesRequest();
+        return HttpResponse.json({ status: 'success', data: { groups: [] } });
+      })
+    );
+
+    renderWithReport({ groupFilter: 'does-not-exist' });
+
+    await waitFor(() => expect(rulesRequest).toHaveBeenCalled());
+    await waitFor(() => expect(screen.queryByRole('status', { name: 'Loading rules' })).not.toBeInTheDocument());
+    expect(screen.queryByRole('heading', { name: 'Mimir' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /hidden$/ })).not.toBeInTheDocument();
   });
 });

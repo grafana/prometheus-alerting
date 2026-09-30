@@ -14,6 +14,7 @@ import { AlertingAction, isAbilityAllowed, useUnscopedAbilities } from '../../..
 import { useRulesFilter } from '../hooks/useRulesFilter';
 import { FilterView } from '../list/FilterView';
 import { GroupedView } from '../list/GroupedView';
+import { DataSourcesLoadingBar } from '../list/components/DataSourcesStatus';
 import { DataSourceErrorsProvider } from '../list/hooks/useDataSourceErrors';
 
 type ViewMode = 'grouped' | 'list';
@@ -77,8 +78,8 @@ function RulesPage() {
   }
 
   return (
-    <PluginPage subTitle={t('rules.page-subtitle', 'Manage and monitor alert rules from your data sources')}>
-      <DataSourceErrorsProvider>
+    <DataSourceErrorsProvider>
+      <PluginPage subTitle={t('rules.page-subtitle', 'Manage and monitor alert rules from your data sources')}>
         <div data-testid={testIds.rules.container}>
           <Stack direction="column" gap={2}>
             {/* Search and view controls */}
@@ -100,21 +101,24 @@ function RulesPage() {
             <div style={{ display: 'flex', gap: '16px', minHeight: 0 }}>
               <RulesFilterSidebar />
               <div style={{ flex: 1, minWidth: 0 }}>
-                {effectiveViewMode === 'grouped' ? (
-                  <GroupedView
-                    groupFilter={deferredFilterSnapshot.filterState.groupName}
-                    namespaceFilter={deferredFilterSnapshot.filterState.namespace}
-                    dataSourceFilter={deferredFilterSnapshot.filterState.dataSourceNames}
-                  />
-                ) : (
-                  <FilterView filterState={deferredFilterSnapshot.filterState} />
-                )}
+                <Stack direction="column" gap={1}>
+                  <DataSourcesLoadingBar />
+                  {effectiveViewMode === 'grouped' ? (
+                    <GroupedView
+                      groupFilter={deferredFilterSnapshot.filterState.groupName}
+                      namespaceFilter={deferredFilterSnapshot.filterState.namespace}
+                      dataSourceFilter={deferredFilterSnapshot.filterState.dataSourceNames}
+                    />
+                  ) : (
+                    <FilterView filterState={deferredFilterSnapshot.filterState} />
+                  )}
+                </Stack>
               </div>
             </div>
           </Stack>
         </div>
-      </DataSourceErrorsProvider>
-    </PluginPage>
+      </PluginPage>
+    </DataSourceErrorsProvider>
   );
 }
 

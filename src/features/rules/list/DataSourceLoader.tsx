@@ -7,7 +7,7 @@ import { DataSourceRulesSourceIdentifier } from '../../../types/datasources';
 import { DataSourceSection } from './components/DataSourceSection';
 import { DataSourceErrorBoundary } from './components/DataSourceErrorBoundary';
 import { PaginatedDataSourceLoader } from './PaginatedDataSourceLoader';
-import { useReportDataSourceError } from './hooks/useDataSourceErrors';
+import { useReportDataSourceError, useReportDataSourceLoading } from './hooks/useDataSourceErrors';
 
 interface DataSourceLoaderProps {
   rulesSourceIdentifier: DataSourceRulesSourceIdentifier;
@@ -31,6 +31,7 @@ export function DataSourceLoader({
   // Data sources we cannot talk to are hidden from the list and reported in the sidebar instead
   const discoveryError = error ?? (!isLoading && !features ? 'Unable to discover data source features' : undefined);
   useReportDataSourceError(uid, name, discoveryError);
+  useReportDataSourceLoading(uid, isLoading);
 
   if (isLoading) {
     // While loading, show skeleton only if not hiding on empty

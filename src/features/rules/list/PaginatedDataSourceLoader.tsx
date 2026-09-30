@@ -18,7 +18,11 @@ import { ListSection } from './components/ListSection';
 import { LoadMoreButton } from './components/LoadMoreButton';
 import { NoRulesFound } from './components/NoRulesFound';
 import { groupFilter as groupFilterFn } from './hooks/filters';
-import { useReportDataSourceError } from './hooks/useDataSourceErrors';
+import {
+  useReportDataSourceError,
+  useReportDataSourceLoading,
+  useReportEmptyDataSource,
+} from './hooks/useDataSourceErrors';
 import { toIndividualRuleGroups, usePrometheusGroupsGenerator } from './hooks/prometheusGroupsGenerator';
 import { useLazyLoadPrometheusGroups } from './hooks/useLazyLoadPrometheusGroups';
 
@@ -107,7 +111,18 @@ function PaginatedGroupsLoader({
   // before failing we keep the section around, together with its inline error indicator.
   useReportDataSourceError(uid, name, error);
 
-  if (error && isEmpty(groups)) {
+  // A data source without any rules is hidden and reported next to the errors. With filters active an
+  // empty result only means nothing matched, which is not worth reporting. We wait for the last page
+  // (`hasMoreGroups`) because the first render happens before the first request has even started.
+  const isEmptyDataSource = !hasFilters && !error && isEmpty(groups) && !hasMoreGroups;
+  useReportEmptyDataSource(uid, name, isEmptyDataSource);
+
+  // Also loading before the first request has started, so the loading indicator does not blink off
+  // between feature discovery finishing and the first page of groups coming in
+  const isLoadingFirstPage = !error && isEmpty(groups) && hasMoreGroups;
+  useReportDataSourceLoading(uid, isLoading || isLoadingFirstPage);
+
+  if ((error && isEmpty(groups)) || isEmptyDataSource) {
     return null;
   }
 

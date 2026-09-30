@@ -1,14 +1,16 @@
-import { DataSourceRulesError, dataSourceErrorsReducer } from './useDataSourceErrors';
+import { DataSourceRulesError, dataSourceErrorsReducer, loadingReducer } from './useDataSourceErrors';
 
 const promError: DataSourceRulesError = {
   uid: 'prom',
   name: 'Prometheus',
+  kind: 'error',
   description: 'Bad Gateway',
 };
 
 const mimirError: DataSourceRulesError = {
   uid: 'mimir',
   name: 'Mimir',
+  kind: 'error',
   description: 'Not allowed',
 };
 
@@ -41,6 +43,13 @@ describe('dataSourceErrorsReducer', () => {
     expect(next.prom.details).toBe('HTTP 502 Bad Gateway');
   });
 
+  it('replaces an error when the data source turns out to be empty instead', () => {
+    const state = dataSourceErrorsReducer({}, { type: 'report', error: promError });
+    const next = dataSourceErrorsReducer(state, { type: 'report', error: { ...promError, kind: 'empty' } });
+
+    expect(next.prom.kind).toBe('empty');
+  });
+
   it('clears a single data source', () => {
     expect(dataSourceErrorsReducer(bothReported(), { type: 'clear', uid: 'prom' })).toEqual({ mimir: mimirError });
   });
@@ -59,5 +68,21 @@ describe('dataSourceErrorsReducer', () => {
     const empty = {};
 
     expect(dataSourceErrorsReducer(empty, { type: 'clear-all' })).toBe(empty);
+  });
+});
+
+describe('loadingReducer', () => {
+  it('keeps a data source loading until every component that started loading it has stopped', () => {
+    const twice = loadingReducer(loadingReducer({}, { type: 'start', uid: 'prom' }), { type: 'start', uid: 'prom' });
+    const once = loadingReducer(twice, { type: 'stop', uid: 'prom' });
+
+    expect(once).toEqual({ prom: 1 });
+    expect(loadingReducer(once, { type: 'stop', uid: 'prom' })).toEqual({});
+  });
+
+  it('keeps the same state when stopping a data source that is not loading', () => {
+    const empty = {};
+
+    expect(loadingReducer(empty, { type: 'stop', uid: 'prom' })).toBe(empty);
   });
 });

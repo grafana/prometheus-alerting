@@ -9,7 +9,7 @@ import { server } from '../../../test';
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 
-import { DataSourceErrorsFooter } from './components/DataSourceErrorsStatus';
+import { DataSourcesLoadingBar, DataSourcesStatusField } from './components/DataSourcesStatus';
 import { DataSourceLoader } from './DataSourceLoader';
 import { DataSourceErrorsProvider } from './hooks/useDataSourceErrors';
 
@@ -35,12 +35,13 @@ describe('DataSourceLoader', () => {
     render(
       <DataSourceErrorsProvider>
         <DataSourceLoader rulesSourceIdentifier={{ uid: LOKI_UID, name: 'Test Loki', ruleSourceType: 'datasource' }} />
-        <DataSourceErrorsFooter />
+        <DataSourcesLoadingBar />
+        <DataSourcesStatusField />
       </DataSourceErrorsProvider>,
       { wrapper: createTestWrapper(LOKI_UID) }
     );
 
-    expect(await screen.findByText(/1 data sources? reported errors/)).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: '1 hidden' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Test Loki' })).not.toBeInTheDocument();
   });
 });

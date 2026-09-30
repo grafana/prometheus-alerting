@@ -6,7 +6,6 @@ import { EmptyState, Stack } from '@grafana/ui';
 import { getExternalRulesSources } from '../../../utils/datasource';
 
 import { DataSourceLoader } from './DataSourceLoader';
-import { DataSourceErrorsFooter } from './components/DataSourceErrorsStatus';
 import { useDataSourceErrors } from './hooks/useDataSourceErrors';
 
 interface GroupedViewProps {
@@ -30,10 +29,13 @@ export function GroupedView({ groupFilter, namespaceFilter, dataSourceFilter }: 
     return allExternalRuleSources.filter((ds) => dataSourceFilter.includes(ds.name));
   }, [allExternalRuleSources, dataSourceFilter]);
 
-  // Data sources reporting errors render nothing – tell the user why the list is empty
-  const erroredUids = new Set(errors.map((error) => error.uid));
-  const allSourcesFailed =
-    externalRuleSources.length > 0 && externalRuleSources.every((ruleSource) => erroredUids.has(ruleSource.uid));
+  // Data sources that reported errors or have no rules render nothing – tell the user why the list is empty
+  const hiddenUids = new Set(errors.map((error) => error.uid));
+
+  const allSourcesHidden =
+    externalRuleSources.length > 0 && externalRuleSources.every((ruleSource) => hiddenUids.has(ruleSource.uid));
+  const allSourcesFailed = errors.every((error) => error.kind === 'error');
+  const allSourcesEmpty = errors.every((error) => error.kind === 'empty');
 
   return (
     <Stack direction="column" gap={1}>
@@ -50,15 +52,32 @@ export function GroupedView({ groupFilter, namespaceFilter, dataSourceFilter }: 
           );
         })}
       </Stack>
-      {allSourcesFailed && (
+      {allSourcesHidden && (
         <EmptyState
           variant="not-found"
-          message={t('alerting.rule-list.grouped-view.all-sources-failed-title', 'No rules could be loaded')}
+          message={
+            allSourcesEmpty
+              ? t('alerting.rule-list.grouped-view.all-sources-empty-title', 'No rules found')
+              : t('alerting.rule-list.grouped-view.all-sources-failed-title', 'No rules could be loaded')
+          }
         >
-          <Trans i18nKey="alerting.rule-list.grouped-view.all-sources-failed">All data sources reported errors.</Trans>
+          {allSourcesFailed && (
+            <Trans i18nKey="alerting.rule-list.grouped-view.all-sources-failed">
+              All data sources reported errors.
+            </Trans>
+          )}
+          {allSourcesEmpty && (
+            <Trans i18nKey="alerting.rule-list.grouped-view.all-sources-empty">
+              None of the data sources have any rules.
+            </Trans>
+          )}
+          {!allSourcesFailed && !allSourcesEmpty && (
+            <Trans i18nKey="alerting.rule-list.grouped-view.all-sources-hidden">
+              Every data source either reported errors or has no rules.
+            </Trans>
+          )}
         </EmptyState>
       )}
-      <DataSourceErrorsFooter />
     </Stack>
   );
 }

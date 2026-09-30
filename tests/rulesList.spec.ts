@@ -17,10 +17,6 @@ test.describe('Rules List Filtering - E2E', () => {
     test('should render the filter sidebar landmark', async ({ rulesListPage }) => {
       await expect(rulesListPage.sidebar).toBeVisible();
     });
-
-    test('clear filters button is disabled when no filters are active', async ({ rulesListPage }) => {
-      await expect(rulesListPage.clearFiltersButton).toBeDisabled();
-    });
   });
 
   test.describe('Search Input', () => {
@@ -111,10 +107,10 @@ test.describe('Rules List Filtering - E2E', () => {
       expect(searchQuery).toBe('');
     });
 
-    test('clear button becomes enabled once a filter is applied', async ({ rulesListPage }) => {
-      await expect(rulesListPage.clearFiltersButton).toBeDisabled();
+    test('clear button only shows once a filter is applied', async ({ rulesListPage }) => {
+      await expect(rulesListPage.clearSearchButton).not.toBeVisible();
       await rulesListPage.filterByNamespace('foo');
-      await expect(rulesListPage.clearFiltersButton).toBeEnabled();
+      await expect(rulesListPage.clearSearchButton).toBeVisible();
     });
   });
 

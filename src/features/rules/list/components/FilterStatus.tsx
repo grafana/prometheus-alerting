@@ -3,10 +3,6 @@ import React from 'react';
 import { Trans, t } from '@grafana/i18n';
 import { Button, Card, Text } from '@grafana/ui';
 
-import { useDataSourceErrors } from '../hooks/useDataSourceErrors';
-
-import { DataSourceErrorsStatus } from './DataSourceErrorsStatus';
-
 export type FilterProgressState = 'searching' | 'done' | 'aborted';
 
 interface FilterStatusProps {
@@ -16,8 +12,6 @@ interface FilterStatusProps {
 }
 
 export function FilterStatus({ state, numberOfRules, onCancel }: FilterStatusProps) {
-  const { errors } = useDataSourceErrors();
-
   return (
     <Card>
       <Card.Heading>
@@ -42,11 +36,6 @@ export function FilterStatus({ state, numberOfRules, onCancel }: FilterStatusPro
           )}
         </Text>
       </Card.Heading>
-      {errors.length > 0 && (
-        <Card.Description>
-          <DataSourceErrorsStatus />
-        </Card.Description>
-      )}
       {state === 'searching' && (
         <Card.Actions>
           <Button variant="secondary" size="sm" onClick={() => onCancel()}>

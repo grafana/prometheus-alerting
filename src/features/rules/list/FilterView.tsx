@@ -13,7 +13,6 @@ import { hashRule } from '@grafana/external-rules/hashing';
 import { RulesFilter } from '../search/rulesSearchParser';
 
 import { DataSourceRuleLoader } from './DataSourceRuleLoader';
-import { DataSourceErrorsFooter } from './components/DataSourceErrorsStatus';
 import { FilterProgressState, FilterStatus } from './components/FilterStatus';
 import { SkeletonListItem } from './components/ListItem';
 import { LoadMoreHelper } from './components/LoadMoreHelper';
@@ -136,17 +135,14 @@ function FilterViewResults({ filterState }: FilterViewProps) {
   /* If we don't have any rules and have exhausted all sources, show a EmptyState */
   if (noRulesFound && doneSearching) {
     return (
-      <Stack direction="column" gap={1}>
-        <EmptyState
-          variant="not-found"
-          message={t('alerting.rule-list.filter-view.no-rules-found-title', 'No matching rules found')}
-        >
-          <Trans i18nKey="alerting.rule-list.filter-view.no-rules-found">
-            No alert or recording rules matched your current set of filters.
-          </Trans>
-        </EmptyState>
-        <DataSourceErrorsFooter />
-      </Stack>
+      <EmptyState
+        variant="not-found"
+        message={t('alerting.rule-list.filter-view.no-rules-found-title', 'No matching rules found')}
+      >
+        <Trans i18nKey="alerting.rule-list.filter-view.no-rules-found">
+          No alert or recording rules matched your current set of filters.
+        </Trans>
+      </EmptyState>
     );
   }
 

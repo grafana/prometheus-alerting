@@ -62,6 +62,18 @@ describe('getRulesErrorFeedback', () => {
     expect(feedback).toMatchObject({ description: 'Failed to fetch', details: 'FETCH_ERROR' });
   });
 
+  it('leaves CUSTOM_ERROR out of the details, it says nothing about what went wrong', () => {
+    const feedback = getRulesErrorFeedback({
+      status: 'CUSTOM_ERROR',
+      error: 'JSON.parse: unexpected character at line 1 column 1 of the JSON data',
+    });
+
+    expect(feedback).toMatchObject({
+      description: 'JSON.parse: unexpected character at line 1 column 1 of the JSON data',
+      details: undefined,
+    });
+  });
+
   it('describes thrown errors by their message', () => {
     const feedback = getRulesErrorFeedback(new Error('Data source with uid "abc" not found'));
 

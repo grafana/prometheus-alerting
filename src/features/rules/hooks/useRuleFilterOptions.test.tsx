@@ -4,7 +4,11 @@ import { renderHook } from '@testing-library/react';
 import { setDataSourceSrv } from '@grafana/runtime';
 
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
-import { DataSourceErrorsProvider, useReportDataSourceError } from '../list/hooks/useDataSourceErrors';
+import {
+  DataSourceErrorsProvider,
+  useReportDataSourceError,
+  useReportEmptyDataSource,
+} from '../list/hooks/useDataSourceErrors';
 
 import { useDataSourceOptions } from './useRuleFilterOptions';
 
@@ -28,6 +32,20 @@ function ErrorReporter() {
   return null;
 }
 
+function withEmptyDataSource({ children }: PropsWithChildren) {
+  return (
+    <DataSourceErrorsProvider>
+      <EmptyReporter />
+      {children}
+    </DataSourceErrorsProvider>
+  );
+}
+
+function EmptyReporter() {
+  useReportEmptyDataSource(FAILING_UID, FAILING_NAME, true);
+  return null;
+}
+
 describe('useDataSourceOptions', () => {
   beforeEach(() => {
     setDataSourceSrv(createMockDataSourceSrv());
@@ -43,6 +61,13 @@ describe('useDataSourceOptions', () => {
 
   it('drops data sources that reported an error', () => {
     const { result } = renderHook(() => useDataSourceOptions(), { wrapper: withFailingDataSource });
+
+    expect(result.current.map((option) => option.value)).not.toContain(FAILING_NAME);
+    expect(result.current.length).toBeGreaterThan(0);
+  });
+
+  it('drops data sources that have no rules', () => {
+    const { result } = renderHook(() => useDataSourceOptions(), { wrapper: withEmptyDataSource });
 
     expect(result.current.map((option) => option.value)).not.toContain(FAILING_NAME);
     expect(result.current.length).toBeGreaterThan(0);
