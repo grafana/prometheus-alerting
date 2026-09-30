@@ -7,6 +7,7 @@ import { t, Trans } from '@grafana/i18n';
 import {
   Button,
   Card,
+  Counter,
   Drawer,
   Icon,
   InlineField,
@@ -233,7 +234,8 @@ function HiddenDataSourcesSection({ title, errors }: { title: string; errors: Da
   return (
     <Stack direction="column" gap={1}>
       <Text variant="h5" element="h3">
-        {title} <Text color="secondary">({errors.length})</Text>
+        {title}
+        <Counter value={errors.length} />
       </Text>
       {errors.map((error) => (
         <DataSourceErrorItem key={error.uid} {...error} />
