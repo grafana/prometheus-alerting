@@ -1,9 +1,12 @@
 # Rates how much impact a PR has, labels it `impact:*`, explains the rating in a
-# comment, and leaves inline review comments on the files a reviewer should read
-# first.
+# review, and leaves inline comments on the places a reviewer should read first.
 #
-# Each run rates the whole diff again, so the inline comments are a round and
-# not a running list: the previous round is resolved before the new one lands.
+# However many times it runs, a PR ends up showing one rating and one round of
+# comments. Each run posts a review whose body is the rating and whose comments
+# are the round, then hides the earlier reviews as outdated and resolves the
+# threads under them. Hiding a review does not touch its comments, so both halves
+# are needed. Each run rates the whole diff again, which is why the comments are
+# a round and not a running list.
 #
 # The parts worth reading are not in this file:
 #
@@ -170,11 +173,28 @@ jobs:
     needs: judge
     runs-on: ubuntu-latest
     permissions:
-      # The checkout below needs this. A job's permissions block replaces the
-      # defaults rather than adding to them, so leaving contents out sets it to
-      # none, and checkout fails with `Repository not found` — which is how a
-      # private repository reports being denied, not a missing repository.
-      contents: read
+      # Two separate things need contents here.
+      #
+      # The checkout below needs to read the repository at all. A job's
+      # permissions block replaces the defaults rather than adding to them, so
+      # leaving contents out sets it to none, and checkout fails with
+      # `Repository not found` — which is how a private repository reports being
+      # denied, not a missing repository.
+      #
+      # And it is write rather than read because resolving a review thread needs
+      # it. With only pull-requests write, the resolve is refused with
+      # `Resource not accessible by integration`, which is what happened on PR
+      # 305: eleven runs in a row posted their comments and failed to fold away
+      # the round before, leaving 26 stale threads open. GitHub does not document
+      # this anywhere; it is what the 403s came down to.
+      #
+      # Nothing in this job pushes anything. It labels, comments, and resolves —
+      # and the code it runs comes from the base branch, sparse-checked-out
+      # above, so a PR cannot change what this job does with the token it holds.
+      # What a PR does control is this file, since a pull_request run takes the
+      # workflow from the PR's own branch. CODEOWNERS covers it (`* @grafana/
+      # alerting-squad`), so widening this job still takes a squad review.
+      contents: write
       pull-requests: write
       # Creating a label (as opposed to putting one on a PR) counts as an issues
       # write.

@@ -1,5 +1,7 @@
+import { hashRule } from '@grafana/external-rules/hashing';
+
 import { test, expect } from './fixtures/ruler';
-import { RuleBuilder } from './factories/rules';
+import { RuleBuilder, TEST_DATASOURCE_UID, TEST_NAMESPACE } from './factories/rules';
 
 /**
  * E2E tests for the RuleDetails page
@@ -8,7 +10,7 @@ import { RuleBuilder } from './factories/rules';
  */
 test.describe('RuleDetails Page - E2E', () => {
   test.describe('Alerting Rules', () => {
-    test('should display firing alerting rule details', async ({ ruleDetailsPage, page }) => {
+    test('should display firing alerting rule details', async ({ ruleDetailsPage }) => {
       const identifier = RuleBuilder.createHighErrorRateIdentifier();
 
       await ruleDetailsPage.goto(identifier);
@@ -28,7 +30,8 @@ test.describe('RuleDetails Page - E2E', () => {
       });
 
       // Verify Query tab shows the expression
-      await expect(page.getByText('vector(1) > 0')).toBeVisible();
+      await expect(ruleDetailsPage.queryExpression).toBeVisible();
+      await expect(ruleDetailsPage.queryExpression).toHaveText('vector(1) > 0');
 
       // Verify no Edit button (vanilla Prometheus has no Ruler API)
       expect(await ruleDetailsPage.hasEditButton()).toBe(false);
@@ -153,6 +156,57 @@ test.describe('RuleDetails Page - E2E', () => {
         team: 'platform',
       });
     });
+  });
+
+  test.describe('Header layout', () => {
+    const longName = `LongRule_${'segment_'.repeat(28)}`;
+    const labels = Object.fromEntries(
+      Array.from({ length: 26 }, (_, index) => [
+        `label_${index}_${'key'.repeat(20)}`,
+        `production-eu-west-${'value'.repeat(20)}-${index}`,
+      ])
+    );
+    const query = `sum(rate(http_requests_total{${Object.entries(labels)
+      .map(([key, value]) => `${key}="${value}"`)
+      .join(',')}}[5m])) > 0`;
+
+    for (const { description, name, width } of [
+      { description: 'a long rule name on desktop', name: longName, width: 1135 },
+      { description: 'a long rule name on mobile', name: longName, width: 390 },
+      { description: 'long labels on mobile', name: 'ManyLabels', width: 390 },
+    ]) {
+      test(`keeps ${description} within the header`, async ({ page, ruleDetailsPage }) => {
+        await page.setViewportSize({ width, height: 1026 });
+        const rule = RuleBuilder.createPromAlertingRule({ name, labels, query, state: 'inactive', alerts: [] });
+        const group = RuleBuilder.createPromRuleGroup(TEST_NAMESPACE, 'test-group', [rule]);
+        await page.route(`**/api/datasources/proxy/uid/${TEST_DATASOURCE_UID}/api/v1/rules*`, (route) =>
+          route.fulfill({ json: { status: 'success', data: { groups: [group] } } })
+        );
+        const identifier = {
+          ...RuleBuilder.createPrometheusRuleIdentifier(TEST_DATASOURCE_UID, TEST_NAMESPACE, group.name, name),
+          ruleHash: hashRule(rule),
+        };
+
+        await ruleDetailsPage.goto(identifier);
+        await ruleDetailsPage.waitForLoad(name);
+        await expect(ruleDetailsPage.pageTitle).toHaveAttribute('title', name);
+        await expect(ruleDetailsPage.stateBadge).toBeVisible();
+        const headerLabels = page.getByLabel('Rule labels').getByRole('listitem');
+        await expect(headerLabels).toHaveCount(Object.keys(labels).length);
+        await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        await expect
+          .poll(() => ruleDetailsPage.pageTitle.evaluate((element) => element.getBoundingClientRect().right))
+          .toBeLessThanOrEqual(width);
+        await expect
+          .poll(() =>
+            headerLabels.evaluateAll((elements) =>
+              Math.max(...elements.map((element) => element.getBoundingClientRect().right))
+            )
+          )
+          .toBeLessThanOrEqual(width);
+        await expect(page.getByText(query, { exact: true })).toBeVisible();
+      });
+    }
   });
 
   test.describe('Unresolvable Rules', () => {

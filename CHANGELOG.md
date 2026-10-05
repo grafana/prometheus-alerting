@@ -1,5 +1,123 @@
 # Changelog
 
+## [1.6.1](https://github.com/grafana/prometheus-alerting/compare/v1.6.0...v1.6.1) (2026-09-25)
+
+
+### 🐛 Bug Fixes
+
+* **alertmanager:** open the Alertmanager named in ?alertmanager= ([#321](https://github.com/grafana/prometheus-alerting/issues/321)) ([c651caa](https://github.com/grafana/prometheus-alerting/commit/c651caa567c9eec9b982effc97ce28973ab2ecda))
+* **rules:** move a rule when its group or namespace changes ([#314](https://github.com/grafana/prometheus-alerting/issues/314)) ([03e2cc7](https://github.com/grafana/prometheus-alerting/commit/03e2cc7f23922f7c379305eac999bba1260a39bf))
+* **time-intervals:** don't delete a time interval routes still use ([#315](https://github.com/grafana/prometheus-alerting/issues/315)) ([33fcd5d](https://github.com/grafana/prometheus-alerting/commit/33fcd5db32c43aecd173b45041803fd57bdbefd9))
+
+
+### 📝 Documentation
+
+* **rules:** trim the rule editor README and fix the recording rule placeholder ([#320](https://github.com/grafana/prometheus-alerting/issues/320)) ([822128f](https://github.com/grafana/prometheus-alerting/commit/822128f9aac03a815b9e23cee100f27cdb945185))
+
+
+### 🔧 Chores
+
+* **dev:** split docker-compose services into included files ([#317](https://github.com/grafana/prometheus-alerting/issues/317)) ([fd0d068](https://github.com/grafana/prometheus-alerting/commit/fd0d0687fcd8ee8145e338d923ab839fb6740b5b))
+
+## [1.6.0](https://github.com/grafana/prometheus-alerting/compare/v1.5.0...v1.6.0) (2026-09-23)
+
+
+### 🎉 Features
+
+* **alertmanager:** edit the configuration as YAML ([#268](https://github.com/grafana/prometheus-alerting/issues/268)) ([64016ea](https://github.com/grafana/prometheus-alerting/commit/64016ea42dfe3331c19f72359fcb7b80a4c37d63))
+* **alerts:** silence an alert instance from the instance itself ([#248](https://github.com/grafana/prometheus-alerting/issues/248)) ([5561347](https://github.com/grafana/prometheus-alerting/commit/556134710a66383f54ea0f9010590b4581a25497))
+* **routes:** edit active time intervals ([#269](https://github.com/grafana/prometheus-alerting/issues/269)) ([c92d723](https://github.com/grafana/prometheus-alerting/commit/c92d723559dcd7a00536b5d28d732da0accb7714))
+* **rules:** edit keep_firing_for in the rule editor ([#212](https://github.com/grafana/prometheus-alerting/issues/212)) ([ee9f916](https://github.com/grafana/prometheus-alerting/commit/ee9f9169c75bdfc8e092aa5c9cd460909df263ca))
+* **rules:** filter rules by health ([#310](https://github.com/grafana/prometheus-alerting/issues/310)) ([2c9f003](https://github.com/grafana/prometheus-alerting/commit/2c9f0036e7e55134a4ac3f69266b89dcc84783db))
+* **rules:** validate recording rule names before they hit the ruler ([#228](https://github.com/grafana/prometheus-alerting/issues/228)) ([c6d0d8b](https://github.com/grafana/prometheus-alerting/commit/c6d0d8bf8a7e54b3689a39bb7d9218aca37430ef))
+* **rules:** view namespace rules as YAML ([#249](https://github.com/grafana/prometheus-alerting/issues/249)) ([5bd93e2](https://github.com/grafana/prometheus-alerting/commit/5bd93e2ad4390468642e4a2333776b1ac97a828d))
+
+
+### 🐛 Bug Fixes
+
+* **alertmanager:** keep the global config block on write ([#210](https://github.com/grafana/prometheus-alerting/issues/210)) ([c4cf04d](https://github.com/grafana/prometheus-alerting/commit/c4cf04dc329dfd515cea89ca8a238bed6c6ca9d0))
+* **alerts:** deduplicate state counters ([#309](https://github.com/grafana/prometheus-alerting/issues/309)) ([24edf6a](https://github.com/grafana/prometheus-alerting/commit/24edf6aae86ed6019b3d731ec24c0a2e47b53e19))
+* error on invalid label matcher instead of silently ignoring it ([#277](https://github.com/grafana/prometheus-alerting/issues/277)) ([af928f2](https://github.com/grafana/prometheus-alerting/commit/af928f2f070699a04906d402a945d81fc648634e))
+* **inhibit-rules:** support multiple structured matchers ([#285](https://github.com/grafana/prometheus-alerting/issues/285)) ([dba922d](https://github.com/grafana/prometheus-alerting/commit/dba922d4147abe657ca4d8e6b21b9812b3ef965d))
+* **receivers:** Add authorization block for Webex  ([#227](https://github.com/grafana/prometheus-alerting/issues/227)) ([2637508](https://github.com/grafana/prometheus-alerting/commit/2637508f44939908bb3e9b180c62d945035bac4c))
+* **routes:** accept valid durations when editing a route ([#216](https://github.com/grafana/prometheus-alerting/issues/216)) ([44e4f25](https://github.com/grafana/prometheus-alerting/commit/44e4f251bd1d203f159c5820bd992e330b8d4ce6))
+* **routes:** correct group and repeat interval descriptions ([#209](https://github.com/grafana/prometheus-alerting/issues/209)) ([62a513a](https://github.com/grafana/prometheus-alerting/commit/62a513a6be5d451fecf08db20dce7763516d3668))
+* **routes:** correct matching alert instance counts ([#299](https://github.com/grafana/prometheus-alerting/issues/299)) ([053000e](https://github.com/grafana/prometheus-alerting/commit/053000e2265fffe403189170c3647ceb600f485a))
+* **rules:** clarify rule search loading state ([#251](https://github.com/grafana/prometheus-alerting/issues/251)) ([66075bf](https://github.com/grafana/prometheus-alerting/commit/66075bf01d4605464f2ea96d0886c24631cd66df))
+* **rules:** flag duplicate label and annotation keys ([#292](https://github.com/grafana/prometheus-alerting/issues/292)) ([9dc943b](https://github.com/grafana/prometheus-alerting/commit/9dc943ba5f1978096df66aae425adfae5e09a0fc))
+* **rules:** harden search parsing and cancel stale sidebar edits ([#305](https://github.com/grafana/prometheus-alerting/issues/305)) ([6920453](https://github.com/grafana/prometheus-alerting/commit/69204539d8f9192b7eb0239cdcc4545320e2ab2c))
+* **rules:** hide pending period for recording rules ([#273](https://github.com/grafana/prometheus-alerting/issues/273)) ([d6c59ed](https://github.com/grafana/prometheus-alerting/commit/d6c59ed4faa3e2d8fd8b8a272173974749186a03))
+* **rules:** honour the data source's manageAlerts toggle ([#224](https://github.com/grafana/prometheus-alerting/issues/224)) ([5ee5723](https://github.com/grafana/prometheus-alerting/commit/5ee57236bebf15a4e02b3b8c6469b6387efdf8f2))
+* **rules:** improve list and details behavior ([#233](https://github.com/grafana/prometheus-alerting/issues/233)) ([a0bc5bb](https://github.com/grafana/prometheus-alerting/commit/a0bc5bba6b22c9ca26eade88482116ae4372d8d5))
+* **rules:** keep Mimir rule-group settings on write ([#213](https://github.com/grafana/prometheus-alerting/issues/213)) ([9899329](https://github.com/grafana/prometheus-alerting/commit/9899329d406dcb4c01e6dc19fe7a3bec09b4d066))
+* **rules:** make federated rule groups read-only ([#222](https://github.com/grafana/prometheus-alerting/issues/222)) ([d1695e7](https://github.com/grafana/prometheus-alerting/commit/d1695e7b9b588bab0f2ac15553254d6b22f01348))
+* **rules:** normalize durations when hashing queries ([#296](https://github.com/grafana/prometheus-alerting/issues/296)) ([083b255](https://github.com/grafana/prometheus-alerting/commit/083b255f9bea6e445e9ccfb7c198f0965dc12437))
+* **rules:** show not found for a malformed rule identifier ([#265](https://github.com/grafana/prometheus-alerting/issues/265)) ([faf5474](https://github.com/grafana/prometheus-alerting/commit/faf5474ca9ac85d017ea7c37cc54151ecba6fe4c))
+* **rules:** show the plugin logo when a data source's application is unknown ([#196](https://github.com/grafana/prometheus-alerting/issues/196)) ([323780d](https://github.com/grafana/prometheus-alerting/commit/323780d9b6c72ba0bb579afcd906f18d07da57d5))
+* **rules:** show what the Ruler rejected instead of "[object Object]" ([#225](https://github.com/grafana/prometheus-alerting/issues/225)) ([951b57f](https://github.com/grafana/prometheus-alerting/commit/951b57f56503e325081b46d966cfba3155a11343))
+* **security/high/:** update dependency js-yaml to v4.3.2 [security] ([#275](https://github.com/grafana/prometheus-alerting/issues/275)) ([579a444](https://github.com/grafana/prometheus-alerting/commit/579a444cc02192e4b55cbde239a8372eeee91d02))
+* **security/medium/:** update dependency vitest to v4.1.11 [security] ([#276](https://github.com/grafana/prometheus-alerting/issues/276)) ([dec1b73](https://github.com/grafana/prometheus-alerting/commit/dec1b731e40731360ccd0694351652e2763aa0f7))
+* **security:** override qs to a patched version ([#278](https://github.com/grafana/prometheus-alerting/issues/278)) ([cff884c](https://github.com/grafana/prometheus-alerting/commit/cff884c50007b1d5462dfab8fc093278673daa5e))
+* **security:** overrides maintenance ([#280](https://github.com/grafana/prometheus-alerting/issues/280)) ([d409c1e](https://github.com/grafana/prometheus-alerting/commit/d409c1eacf0711254528b4c9808314659fc2bae7))
+* **templates:** validate Go template syntax before saving ([#282](https://github.com/grafana/prometheus-alerting/issues/282)) ([618b3ed](https://github.com/grafana/prometheus-alerting/commit/618b3edd1779e1cf0f73a83891581e873088b906))
+* **time-intervals:** keep every interval and time range on edit ([#211](https://github.com/grafana/prometheus-alerting/issues/211)) ([66b1257](https://github.com/grafana/prometheus-alerting/commit/66b1257d20c447f90200faca16a1a7eb9c0a64c1))
+* validate evaluation intervals client-side ([#279](https://github.com/grafana/prometheus-alerting/issues/279)) ([f7871a2](https://github.com/grafana/prometheus-alerting/commit/f7871a2b0d53f322add7490c27dfed06a1b4b8aa))
+
+
+### 📝 Documentation
+
+* add docs/sources scaffold, setup guide, and local preview tooling ([#202](https://github.com/grafana/prometheus-alerting/issues/202)) ([f76e773](https://github.com/grafana/prometheus-alerting/commit/f76e773c6c1857023468412d7c99515ce2bc4e59))
+* add the Configure alert rules section ([#204](https://github.com/grafana/prometheus-alerting/issues/204)) ([0fa638e](https://github.com/grafana/prometheus-alerting/commit/0fa638e7698f3a185143e997d40b14dddc134b5f))
+* add the Configure notifications section ([#205](https://github.com/grafana/prometheus-alerting/issues/205)) ([00b78f7](https://github.com/grafana/prometheus-alerting/commit/00b78f76f19ec2646f7efc046bc55f187edd07d8))
+* add the Guides and Examples sections ([#207](https://github.com/grafana/prometheus-alerting/issues/207)) ([7d59d62](https://github.com/grafana/prometheus-alerting/commit/7d59d62890bcca135bc3000bbc8f00e6c9d99241))
+* add the Introduction section ([#203](https://github.com/grafana/prometheus-alerting/issues/203)) ([6cc361d](https://github.com/grafana/prometheus-alerting/commit/6cc361d70ae6b62ec2637c8989807fe2660a6245))
+* add the Monitor alerts section ([#206](https://github.com/grafana/prometheus-alerting/issues/206)) ([dfa59ce](https://github.com/grafana/prometheus-alerting/commit/dfa59cee5d443f9c1aee9025f95c12a16110ad6f))
+* **adr:** record why namespace YAML needs a Ruler API ([#266](https://github.com/grafana/prometheus-alerting/issues/266)) ([0c322af](https://github.com/grafana/prometheus-alerting/commit/0c322aff2af4d6eb109ba8cedac89d677135d0b8))
+* cut the em dash density ([#217](https://github.com/grafana/prometheus-alerting/issues/217)) ([b483a09](https://github.com/grafana/prometheus-alerting/commit/b483a094aefe875cb573fab2bfaca2104340beef))
+* fix Writer's Toolkit compliance issues ([#215](https://github.com/grafana/prometheus-alerting/issues/215)) ([f7cf7d2](https://github.com/grafana/prometheus-alerting/commit/f7cf7d28bba6a545d498e20de234d8cf7bc648d4))
+* **security:** align SECURITY_POSTURE with actual mise settings ([#271](https://github.com/grafana/prometheus-alerting/issues/271)) ([23dbf38](https://github.com/grafana/prometheus-alerting/commit/23dbf388a53a3d349ad24fab0764a141623a21aa))
+
+
+### ♻️ Code Refactoring
+
+* **alerts:** flatten the alert drawer's detail rows ([#264](https://github.com/grafana/prometheus-alerting/issues/264)) ([672bebd](https://github.com/grafana/prometheus-alerting/commit/672bebd7bd1ca5332e719ce29ff8a4e5d0f90c43))
+* **receivers:** add Mimir-first typed receiver forms ([#232](https://github.com/grafana/prometheus-alerting/issues/232)) ([2391f49](https://github.com/grafana/prometheus-alerting/commit/2391f4959fca85c083266b3282b7d5b6be44f882))
+* **rules:** add a rules-source flavor seam ([#197](https://github.com/grafana/prometheus-alerting/issues/197)) ([90462fe](https://github.com/grafana/prometheus-alerting/commit/90462fe48f99a334c3f3388dc6c2ddf1c7824e58))
+
+
+### ⚡ Performance Improvements
+
+* **routes:** optimize instance match counting ([#297](https://github.com/grafana/prometheus-alerting/issues/297)) ([7be10a3](https://github.com/grafana/prometheus-alerting/commit/7be10a3684e6feb61fc03e13ada6a26f60abfcd2))
+
+
+### ✅ Tests
+
+* clean up noisy console output in the test suite ([#200](https://github.com/grafana/prometheus-alerting/issues/200)) ([3090722](https://github.com/grafana/prometheus-alerting/commit/30907226fea15f4ec608e8ccbbf4bfc65a79d880))
+* **e2e:** cover all Alertmanager receiver forms ([#234](https://github.com/grafana/prometheus-alerting/issues/234)) ([b897981](https://github.com/grafana/prometheus-alerting/commit/b89798179925cff375f31026f5acff42dd6cbb23))
+* **e2e:** wait for the rule editor to close before reading the ruler ([#254](https://github.com/grafana/prometheus-alerting/issues/254)) ([4e7e870](https://github.com/grafana/prometheus-alerting/commit/4e7e870523689177f4602a745d7082f42c7081d7))
+
+
+### 🤖 Continuous Integrations
+
+* bump the release-please action to v2.0.2 ([#221](https://github.com/grafana/prometheus-alerting/issues/221)) ([e27ac1d](https://github.com/grafana/prometheus-alerting/commit/e27ac1d5e92be6e82610a198023d8add4f2803c0))
+* let the PR impact post job read the repository ([#284](https://github.com/grafana/prometheus-alerting/issues/284)) ([8165f70](https://github.com/grafana/prometheus-alerting/commit/8165f7018ed45d2843a86bc1c3aebd91e0562969))
+* pin the mise version so CI stops 404ing ([#270](https://github.com/grafana/prometheus-alerting/issues/270)) ([609f35d](https://github.com/grafana/prometheus-alerting/commit/609f35d66110a0d13d050477c5881b0b8ac380f8))
+* post PR impact's inline comments as a round, not a running list ([#295](https://github.com/grafana/prometheus-alerting/issues/295)) ([88f1667](https://github.com/grafana/prometheus-alerting/commit/88f1667ccaa5e8499c2ae106652190ee131ca4bd))
+* rate a PR once, and fold the earlier rounds away ([#311](https://github.com/grafana/prometheus-alerting/issues/311)) ([3c1f812](https://github.com/grafana/prometheus-alerting/commit/3c1f81283575e3ec606f5ed9bea0a8d10e15dbed))
+* rate PR impact and mark what to review first ([#272](https://github.com/grafana/prometheus-alerting/issues/272)) ([c15f536](https://github.com/grafana/prometheus-alerting/commit/c15f5363edd094d80ede3301b9df3bab8c3a1992))
+* remove create-plugin-update workflow ([#195](https://github.com/grafana/prometheus-alerting/issues/195)) ([7b7b89a](https://github.com/grafana/prometheus-alerting/commit/7b7b89a57b287a1c499b7d87b73131aad6ef38d2))
+* rename workflows for clarity and fix create-plugin-update ([#193](https://github.com/grafana/prometheus-alerting/issues/193)) ([e4db394](https://github.com/grafana/prometheus-alerting/commit/e4db3940bdcfc27135e8d0366df1ec19ff73c30a))
+
+
+### 🔧 Chores
+
+* **build:** derive the compile target from browserslist ([#219](https://github.com/grafana/prometheus-alerting/issues/219)) ([463682f](https://github.com/grafana/prometheus-alerting/commit/463682f19c4bd661efa63e2c54b85a30fb81f947))
+* **deps:** bump Node to 24.21.0, pnpm to 12.4.2, lefthook and trufflehog ([#307](https://github.com/grafana/prometheus-alerting/issues/307)) ([259e9b6](https://github.com/grafana/prometheus-alerting/commit/259e9b6fc0027f70d6ed0897008b76532c1e2bc4))
+* **deps:** resolve high-severity audit advisories ([#267](https://github.com/grafana/prometheus-alerting/issues/267)) ([c4c3497](https://github.com/grafana/prometheus-alerting/commit/c4c3497708445fac5aee199307084fd353d1d68e))
+* provision a Mimir Alertmanager data source for local development ([#220](https://github.com/grafana/prometheus-alerting/issues/220)) ([cb863bd](https://github.com/grafana/prometheus-alerting/commit/cb863bdc30b8f436aa61e2b2f8a0564363ed9410))
+* **rules:** provision a rule that always fails evaluation ([#308](https://github.com/grafana/prometheus-alerting/issues/308)) ([c95e461](https://github.com/grafana/prometheus-alerting/commit/c95e4619c2058492ac4e7a8d62244d1b927c6e88))
+* upgrade Mimir to 3.2.0 in local test stack ([#253](https://github.com/grafana/prometheus-alerting/issues/253)) ([183d18d](https://github.com/grafana/prometheus-alerting/commit/183d18d886b33b39b25887e0c25b3618a245dbc9))
+
 ## [1.5.0](https://github.com/grafana/prometheus-alerting/compare/v1.4.2...v1.5.0) (2026-08-12)
 
 

@@ -8,12 +8,12 @@
 //
 // Every run says everything it has to say. Claude is handed the whole PR diff
 // each time, not just the newest commit, so the latest answer is a complete
-// read of the PR rather than an addition to earlier ones. That is why this
-// resolves the inline comments from earlier runs and posts the current round
-// fresh, instead of trying to work out which of the new points were already
-// made. Matching new text against old text only ever half worked: Claude
-// rewords, so a reworded repeat came out twice, and it sat there for good if
-// the line under it never changed again.
+// read of the PR rather than an addition to earlier ones. That is why each run
+// posts its rating and comments fresh and folds the earlier ones away — hiding
+// the rating, resolving the threads — instead of working out which of the new
+// points were already made. Matching new text against old text only ever half
+// worked: Claude rewords, so a reworded repeat came out twice, and it sat there
+// for good if the line under it never changed again.
 //
 // Set DRY_RUN=1 to print what would be posted instead of posting it.
 
@@ -23,11 +23,11 @@ import { computeFloor } from './floor.mjs';
 const SUMMARY_MARKER = '<!-- pr-impact -->';
 const SPOT_MARKER = '<!-- pr-impact-spot -->';
 
-// Said on every summary. The inline comments are a round rather than a running
-// list, so a reader who finds a stack of resolved threads above should know
-// that is how it works and not somebody tidying up after the bot.
+// Said on every rating. A reader who scrolls past a stack of hidden ratings and
+// resolved threads should know that is how this works, and not somebody tidying
+// up after the bot.
 const ROUND_NOTE =
-  'Every run rates the whole PR again, so the open inline comments are this round and earlier rounds are resolved.';
+  'Every run rates the whole PR again. Earlier ratings are hidden as outdated and their comments resolved, so what is left open is this round.';
 
 // One four-step ramp, used the same way everywhere: the label colour, the emoji
 // in the summary, and the prefix on each inline comment. The label names stay
@@ -38,34 +38,6 @@ const STYLE = {
   medium: { emoji: '🟠', colour: 'D4741F', blurb: 'something works differently now, in one part of the app' },
   high: { emoji: '🔴', colour: 'B60205', blurb: 'if this is wrong, someone loses something real' },
 };
-
-/**
- * The whole scale with the current tier picked out, so someone seeing one of
- * these comments for the first time can tell where this PR sits without having
- * to know the scheme.
- */
-function scale(tier) {
-  return TIERS.map((name) => {
-    const step = `${STYLE[name].emoji} ${name}`;
-    return name === tier ? `**${step}**` : step;
-  }).join(' · ');
-}
-
-/**
- * Whether a comment carrying our marker was really left by us. Anyone who can
- * push can post a comment containing the marker; without this check that
- * comment is the one we would keep rewriting, and a spot could be muted by
- * pre-flagging its line. Outside Actions the poster is a person, so the bot
- * check only applies where the bot is doing the posting.
- */
-function postedByUs(isBot) {
-  return !process.env.GITHUB_ACTIONS || isBot;
-}
-
-/** A comment we left, as opposed to one that merely quotes our marker. */
-function oursAlone(comment, marker) {
-  return Boolean(comment.body?.includes(marker)) && postedByUs(comment.user?.type === 'Bot');
-}
 
 /** The floor wins wherever it is higher than what Claude said. */
 function resolveTier(claudeTier, floor) {
@@ -148,13 +120,40 @@ query($owner:String!, $name:String!, $pr:Int!, $cursor:String) {
   }
 }`;
 
+// Our own earlier ratings, so they can be folded away. The body is what
+// identifies them as ours, and isMinimized says whether that has been done
+// already — by an earlier run, or by hand.
+const REVIEWS_QUERY = `
+query($owner:String!, $name:String!, $pr:Int!, $cursor:String) {
+  repository(owner:$owner, name:$name) {
+    pullRequest(number:$pr) {
+      reviews(first:100, after:$cursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes { id isMinimized body author { __typename } }
+      }
+    }
+  }
+}`;
+
+// OUTDATED rather than RESOLVED: the rating was not answered or dealt with, it
+// was simply replaced by a newer one.
+const MINIMIZE_MUTATION = `
+mutation($subject:ID!) {
+  minimizeComment(input:{subjectId:$subject, classifier:OUTDATED}) {
+    minimizedComment { isMinimized }
+  }
+}`;
+
 const RESOLVE_MUTATION = `
 mutation($thread:ID!) {
   resolveReviewThread(input:{threadId:$thread}) { thread { id } }
 }`;
 
-/** Every review thread on the PR, as GraphQL returns them. */
-function reviewThreads({ repo, pr }) {
+/**
+ * Every node of one paged connection on the PR — review threads or reviews.
+ * `field` is the connection's name in the query, which is where the nodes are.
+ */
+function pagedNodes({ repo, pr, query, field }) {
   const [owner, name] = repo.split('/');
   const nodes = [];
   let cursor = null;
@@ -168,7 +167,7 @@ function reviewThreads({ repo, pr }) {
       'api',
       'graphql',
       '-f',
-      `query=${THREADS_QUERY}`,
+      `query=${query}`,
       '-f',
       `owner=${owner}`,
       '-f',
@@ -180,7 +179,7 @@ function reviewThreads({ repo, pr }) {
       args.push('-f', `cursor=${cursor}`);
     }
 
-    const page = ghJson(args).data.repository.pullRequest.reviewThreads;
+    const page = ghJson(args).data.repository.pullRequest[field];
     nodes.push(...page.nodes);
     if (!page.pageInfo.hasNextPage) {
       return nodes;
@@ -254,8 +253,9 @@ function summaryBody({ repo, tier, explanation, headSha, model, effort, took, ma
     '',
     `### ${STYLE[tier].emoji} Impact: ${tier}`,
     '',
-    scale(tier),
-    '',
+    // No ramp of all four tiers under this. The heading names the tier and the
+    // blurb says what it means, which is what the ramp was there for — the rest
+    // of it was teaching the scheme over and over to readers who know it.
     `_${STYLE[tier].blurb}_`,
     '',
     explanation,
@@ -309,42 +309,99 @@ function applyLabel({ repo, pr, tier }) {
   }
 }
 
-function upsertSummary({ repo, pr, body }) {
-  const comments = ghPaginate(`repos/${repo}/issues/${pr}/comments`);
-  const mine = comments.filter((comment) => oursAlone(comment, SUMMARY_MARKER)).at(-1);
+/**
+ * Put the rating in the body of a review, and keep editing that same review
+ * rather than adding one per run.
+ *
+ * A review body cannot be taken back once submitted — it is not a thread, so it
+ * cannot be resolved, and a submitted review cannot be deleted — but it can be
+ * edited, which is all a sticky needs. What made this possible is the inline
+ * comments going out on their own: a review that carries comments has to be a
+ * new review each round, and each new review submits a body of its own.
+ *
+ * One thing a sticky cannot do is move. It is edited where it sits, so on a busy
+ * PR the rating stays up in the conversation rather than following the newest
+ * commit down. That was already true of the comment this replaces.
+ */
+/**
+ * The ids of our own ratings that are still showing, which is what a new rating
+ * replaces.
+ *
+ * Hidden rather than deleted, for the same reason the threads are resolved
+ * rather than deleted: a hidden review folds out of the way but keeps what it
+ * said, so this can be unconditional. One that is already hidden is left alone —
+ * an earlier run did it, or somebody did it by hand, and either way there is
+ * nothing left to do to it.
+ */
+export function ourShowingReviews(reviews, { onlyBot = Boolean(process.env.GITHUB_ACTIONS) } = {}) {
+  return reviews
+    .filter((review) => {
+      if (review.isMinimized || !review.body?.includes(SUMMARY_MARKER)) {
+        return false;
+      }
+      return !onlyBot || review.author?.__typename === 'Bot';
+    })
+    .map((review) => review.id);
+}
 
-  if (mine) {
-    gh(['api', '-X', 'PATCH', `repos/${repo}/issues/comments/${mine.id}`, '-f', `body=${body}`]);
-    console.error('Updated the existing summary comment.');
-  } else {
-    gh(['api', '-X', 'POST', `repos/${repo}/issues/${pr}/comments`, '-f', `body=${body}`]);
-    console.error('Posted a new summary comment.');
+/**
+ * Fold away our earlier ratings, and the round of comments under them.
+ *
+ * Neither failing here fails the run: the rating is the point and it is already
+ * posted by the time we get here. Both say how many of how many went through,
+ * because saying only how many did is what hid the problem on PR 305 — every
+ * resolve there was refused and the log said `Resolved 0`, which reads as
+ * "there was nothing to resolve". gh prints its own reason on the way past.
+ */
+function minimizeReviews({ ids }) {
+  let done = 0;
+
+  for (const id of ids) {
+    try {
+      gh(['api', 'graphql', '-f', `query=${MINIMIZE_MUTATION}`, '-f', `subject=${id}`]);
+      done++;
+    } catch {
+      // Gone, or we are not allowed to.
+    }
   }
+
+  console.error(`Hid ${done} of ${ids.length} earlier rating(s) as outdated.`);
 }
 
 function resolveThreads({ ids }) {
   let done = 0;
+
   for (const id of ids) {
     try {
       gh(['api', 'graphql', '-f', `query=${RESOLVE_MUTATION}`, '-f', `thread=${id}`]);
       done++;
     } catch {
-      // Gone, or we are not allowed to. Tidying up is not worth failing the run
-      // over — the rating is the point.
+      // Gone, or we are not allowed to.
     }
   }
-  console.error(`Resolved ${done} inline comment thread(s) from an earlier run.`);
+
+  console.error(`Resolved ${done} of ${ids.length} inline comment thread(s) from an earlier run.`);
 }
 
-function leaveReview({ repo, pr, headSha, tier, comments }) {
-  const review = {
-    commit_id: headSha,
-    event: 'COMMENT',
-    body: `Rated ${STYLE[tier].emoji} **impact: ${tier}**. The comments below mark what is worth reading first.`,
-    comments,
-  };
+/**
+ * Post the rating and this round's inline comments as one review.
+ *
+ * One review, not a comment plus a review per spot: the whole round arrives
+ * together or not at all. GitHub rejects the review whole if any one of its
+ * comments misses a changed line, which is the behaviour worth having — a round
+ * that is half posted would leave the rating counting places that are not
+ * marked. pickComments has already dropped the ones that cannot land.
+ *
+ * The rating goes in the review's own body. A review body cannot be empty, and
+ * that used to mean a second `Rated ...` line stacking up on every run; now the
+ * body is the rating itself, and the earlier ones get hidden rather than
+ * repeated.
+ */
+function leaveReview({ repo, pr, headSha, body, comments }) {
+  const review = { commit_id: headSha, event: 'COMMENT', body, comments };
+
   gh(['api', '-X', 'POST', `repos/${repo}/pulls/${pr}/reviews`, '--input', '-'], JSON.stringify(review));
-  console.error(`Left ${comments.length} inline comment(s).`);
+  console.error(`Posted the rating with ${comments.length} inline comment(s).`);
 }
 
 export function post({
@@ -377,9 +434,10 @@ export function post({
     ? `${claudeBody}\n\nClaude rated this ${STYLE[claudeTier]?.emoji ?? ''} **${claudeTier}**, raised to ${STYLE[tier].emoji} **${tier}** because the PR ${effectiveReason}.`
     : claudeBody;
   const files = ghPaginate(`repos/${repo}/pulls/${pr}/files`);
-  // Read before anything is posted, so the current round is never in the list
-  // of what gets resolved.
-  const superseded = ourOpenThreads(reviewThreads({ repo, pr }));
+  // Both read before anything is posted, so this round is never in the list of
+  // what gets folded away.
+  const superseded = ourOpenThreads(pagedNodes({ repo, pr, query: THREADS_QUERY, field: 'reviewThreads' }));
+  const stale = ourShowingReviews(pagedNodes({ repo, pr, query: REVIEWS_QUERY, field: 'reviews' }));
   const comments = pickComments({ spots, files });
 
   const dropped = spots.length - comments.length;
@@ -401,28 +459,29 @@ export function post({
 
   if (dryRun) {
     console.log(`--- would label: impact:${tier} ---`);
-    console.log('--- would post this summary comment ---');
+    console.log('--- would post this as the review body ---');
     console.log(summary);
-    console.log('--- would leave these inline comments ---');
+    console.log('--- with these inline comments in the same review ---');
     console.log(
       comments.length === 0 ? '(none)' : comments.map((c) => `${c.path}:${c.line}  ${c.body.split('\n')[0]}`).join('\n')
     );
-    console.log(`--- would resolve ${superseded.length} inline comment thread(s) from an earlier run ---`);
+    console.log(`--- would then hide ${stale.length} earlier rating(s) and resolve ${superseded.length} thread(s) ---`);
     return;
   }
 
   applyLabel({ repo, pr, tier });
-  upsertSummary({ repo, pr, body: summary });
 
+  // The new rating goes up before any of the old is folded away. If posting it
+  // throws — a comment on a line GitHub disagrees about, and the whole review is
+  // refused — the PR is left showing the previous rating rather than none.
+  leaveReview({ repo, pr, headSha, body: summary, comments });
+
+  if (stale.length > 0) {
+    minimizeReviews({ ids: stale });
+  }
   if (superseded.length > 0) {
     resolveThreads({ ids: superseded });
   }
-
-  if (comments.length === 0) {
-    console.error('Nothing on the diff to point at.');
-    return;
-  }
-  leaveReview({ repo, pr, headSha, tier, comments });
 }
 
 if (isMain(import.meta.url)) {

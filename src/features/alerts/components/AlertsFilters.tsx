@@ -5,7 +5,7 @@ import { Checkbox, Counter, Field, Input, MultiCombobox, Stack } from '@grafana/
 import type { AlertGroup } from '@grafana/external-alertmanager/vanilla';
 
 import type { AlertsFiltersState, AlertsFiltersActions } from '../hooks/useAlertsFilters';
-import { countAlertsByState } from '../utils/alerts.utils';
+import { countAlertsInGroupsByState } from '../utils/alerts.utils';
 
 interface AlertsFiltersProps {
   filters: AlertsFiltersState;
@@ -19,14 +19,13 @@ export function AlertsFilters({ filters, actions, alertGroups }: AlertsFiltersPr
     value: name,
   }));
 
-  // Count across all alerts, optionally scoped to the selected receivers
+  // Count across all alerts, optionally scoped to the selected receivers.
   const counts = useMemo(() => {
     const groups =
       filters.receivers.length > 0
         ? alertGroups.filter((g) => filters.receivers.includes(g.receiver.name))
         : alertGroups;
-    const allAlerts = groups.flatMap((g) => g.alerts);
-    return countAlertsByState(allAlerts);
+    return countAlertsInGroupsByState(groups);
   }, [alertGroups, filters.receivers]);
 
   return (

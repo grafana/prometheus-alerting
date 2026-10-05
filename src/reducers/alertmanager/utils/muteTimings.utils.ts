@@ -46,3 +46,40 @@ export function renameTimeInterval(newName: string, oldName: string, route: Rout
     }
   });
 }
+
+/** One place a route refers to a time interval. */
+export interface TimeIntervalUse {
+  /** The receiver the route delivers to. Child routes can inherit it, so this may be empty. */
+  receiver?: string;
+  /** Whether the route uses the interval to mute notifications, or to limit them to a window. */
+  usedAs: 'mute' | 'active';
+}
+
+/**
+ * Walks a route and its children collecting every reference to a time interval.
+ *
+ * Deleting a time interval takes it out of every route that mentions it, which quietly changes
+ * when those routes notify. Callers use this to see what would be affected and say so first.
+ * A route that uses the same interval to both mute and restrict is reported twice, once each.
+ *
+ * @param timeInterval - The name of the time interval to look for
+ * @param route - The route to search, including its children
+ * @returns One entry per reference, in the order the tree is walked
+ */
+export function findTimeIntervalUses(timeInterval: string, route: Route): TimeIntervalUse[] {
+  const uses: TimeIntervalUse[] = [];
+
+  if (route.mute_time_intervals?.includes(timeInterval)) {
+    uses.push({ receiver: route.receiver, usedAs: 'mute' });
+  }
+
+  if (route.active_time_intervals?.includes(timeInterval)) {
+    uses.push({ receiver: route.receiver, usedAs: 'active' });
+  }
+
+  for (const childRoute of route.routes ?? []) {
+    uses.push(...findTimeIntervalUses(timeInterval, childRoute));
+  }
+
+  return uses;
+}

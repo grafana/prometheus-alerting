@@ -162,6 +162,15 @@ test.describe('Rules List Filtering - Integration', () => {
     expect(ruleCount).toBeGreaterThan(0);
   });
 
+  test('should use free text as a rule name substring filter', async ({ rulesListPage }) => {
+    await rulesListPage.search('ErrorRate');
+
+    await expect(rulesListPage.ruleNameInput).toHaveValue('ErrorRate');
+    await expect(rulesListPage.getRuleRows('HighErrorRate').first()).toBeVisible();
+    await expect(rulesListPage.getRuleRows('test:request_rate:sum')).toHaveCount(0);
+    expect(await rulesListPage.getSearchQueryFromUrl()).toBe('ErrorRate');
+  });
+
   test('should show "no rules found" when filter matches nothing', async ({ rulesListPage }) => {
     await rulesListPage.filterByNamespace('nonexistent-namespace-xyz123');
     await expect(rulesListPage.page.getByText(/no matching rules found/i)).toBeVisible();

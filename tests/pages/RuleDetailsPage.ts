@@ -54,7 +54,7 @@ export class RuleDetailsPage {
     this.detailsTab = pageContent.getByRole('tab', { name: /details/i });
 
     // Tab content
-    this.queryExpression = pageContent.getByText(/^up == 0|^sum\(up\)/);
+    this.queryExpression = pageContent.locator('pre');
     this.instancesTable = pageContent.locator('table');
     this.detailsTable = pageContent.locator('dl, div[role="definition"]');
   }
@@ -115,13 +115,7 @@ export class RuleDetailsPage {
    */
   async getQueryExpression(): Promise<string> {
     await this.switchToTab('query');
-    // Look for the query in a code block or pre element within page content
-    const pageContent = this.page.locator('#pageContent');
-    const queryElement = pageContent
-      .locator('pre, code')
-      .filter({ hasText: /==|sum|rate/ })
-      .first();
-    return await queryElement.innerText();
+    return await this.queryExpression.innerText();
   }
 
   /**

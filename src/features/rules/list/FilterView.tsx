@@ -23,12 +23,12 @@ interface FilterViewProps {
   filterState: RulesFilter;
 }
 
-export function FilterView({ filterState }: FilterViewProps) {
+export const FilterView = React.memo(function FilterView({ filterState }: FilterViewProps) {
   // ⚠️ We use a key to force the component to unmount and remount when the filter state changes
   // filterState is a complex object and is constructed from URL params or state
   // so even for the same params we get a new object or new properties in it
   return <FilterViewResults filterState={filterState} key={JSON.stringify(filterState)} />;
-}
+});
 
 type KeyedRuleWithOrigin = PromRuleWithOrigin & {
   /**

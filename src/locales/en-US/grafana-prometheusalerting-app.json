@@ -71,7 +71,6 @@
       "rule-name": "Rule name"
     },
     "evaluation-interval": {
-      "exceeds-pending": "Interval ({{interval}}) exceeds the pending period ({{for}}) of some rules. This may cause alerts to fire immediately.",
       "invalid-format": "Invalid duration format. Use formats like 1m, 30s, 1h.",
       "placeholder": "e.g. 1m, 30s, 5m"
     },
@@ -186,15 +185,6 @@
       "view-aria-label": "View YAML for namespace {{namespace}}"
     },
     "query-preview": {
-      "error-title": "Query failed",
-      "loading": "Running query...",
-      "next-page": "Next page",
-      "no-data": "No data",
-      "page-counter": "{{start}} - {{end}} of {{total}}",
-      "previous-page": "Previous page",
-      "result-summary": "({{resultType}}, {{count}} results)",
-      "run-query": "Run query",
-      "series-label": "Series {{index}}",
       "title": "Query Preview"
     },
     "route": {
@@ -337,9 +327,14 @@
       "message": {
         "rule-name-is-required": "Rule name is required."
       },
-      "placeholder-give-your-alert-a-name": "Give your alert rule a name"
+      "placeholder-give-your-alert-a-name": "Give your alert rule a name",
+      "placeholder-recording": "Give your recording rule a name"
     },
     "rules": {
+      "health": {
+        "error": "Error",
+        "ok": "OK"
+      },
       "state": {
         "firing": "Firing",
         "normal": "Normal",
@@ -359,6 +354,7 @@
       "data-source-label": "Data source",
       "data-source-placeholder": "Select data sources",
       "group-label": "Group",
+      "health-label": "Health",
       "labels-label": "Labels",
       "labels-placeholder": "Select labels",
       "namespace-label": "Namespace",
@@ -557,7 +553,6 @@
       "title": "New Inhibit Rule"
     },
     "drawer": {
-      "default-title": "Inhibit Rule",
       "details": "Inhibit Rule Details",
       "edit": {
         "cancel-button": "Cancel",
@@ -1342,7 +1337,7 @@
       },
       "empty": "No active alert instances",
       "filter": {
-        "search-placeholder": "Search by label",
+        "search-placeholder": "Search label keys, values, or key=value",
         "state-all": "All",
         "state-all-count_one": "All ({{count}})",
         "state-all-count_other": "All ({{count}})",
@@ -1648,6 +1643,14 @@
       "years-description": "Comma-separated list (e.g., 2024, 2025)",
       "years-label": "Years",
       "years-placeholder": "2024, 2025"
+    },
+    "in-use": {
+      "as-active": "active timing",
+      "as-mute": "mute timing",
+      "body": "Removing it would change when the routes below notify, so it has to be taken out of them first.",
+      "inherited-receiver": "a route that inherits its receiver",
+      "title": "This time interval is in use",
+      "tooltip": "Remove this time interval from the routes using it first"
     },
     "location-label": "Location",
     "months-label": "Months",

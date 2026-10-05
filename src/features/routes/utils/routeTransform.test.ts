@@ -1,5 +1,4 @@
-import { Route } from '@grafana/external-alertmanager/vanilla';
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
+import { Route, RouteWithID } from '@grafana/external-alertmanager/vanilla';
 
 import type { FormAmRoute } from '../types';
 import { amRouteToFormAmRoute, formAmRouteToAmRoute, isValidPromDuration } from './routeTransform';

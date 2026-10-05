@@ -1,5 +1,4 @@
-import { describe, it, expect } from 'vitest';
-import { computeInheritedTree } from '@grafana/alerting';
+import { describe, expect, it } from 'vitest';
 import { attachRouteIds, isRootRoute } from './utils';
 
 describe('isRootRoute', () => {
@@ -43,22 +42,5 @@ describe('attachRouteIds', () => {
     const result = attachRouteIds({ receiver: 'default' });
 
     expect(result.routes).toEqual([]);
-  });
-
-  it('preserves ids after being passed through computeInheritedTree', () => {
-    const route = {
-      receiver: 'default',
-      routes: [{ receiver: 'a' }, { receiver: 'b', routes: [{ receiver: 'b1' }] }],
-    };
-
-    const routeWithIds = attachRouteIds(route);
-    const inheritedTree = computeInheritedTree(
-      routeWithIds as Parameters<typeof computeInheritedTree>[0]
-    ) as unknown as typeof routeWithIds;
-
-    expect(inheritedTree.id).toBe(routeWithIds.id);
-    expect(inheritedTree.routes![0].id).toBe(routeWithIds.routes![0].id);
-    expect(inheritedTree.routes![1].id).toBe(routeWithIds.routes![1].id);
-    expect(inheritedTree.routes![1].routes![0].id).toBe(routeWithIds.routes![1].routes![0].id);
   });
 });

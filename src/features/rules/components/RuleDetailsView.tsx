@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tab, TabsBar, TabContent, Stack, ScrollContainer } from '@grafana/ui';
+import { Tab, TabsBar, TabContent, Stack } from '@grafana/ui';
 import { t } from '@grafana/i18n';
 import { PromRuleDTO, PromRuleGroupDTO, RulerRuleDTO, RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
@@ -64,21 +64,19 @@ export function RuleDetailsView({
         />
       </TabsBar>
 
-      <ScrollContainer>
-        <TabContent>
-          {activeTab === ActiveTab.Query && <QueryTab query={query} dataSourceUid={dataSourceUid} />}
-          {activeTab === ActiveTab.Instances && isAlertingRule && <InstancesTab promRule={promRule} />}
-          {activeTab === ActiveTab.Details && (
-            <DetailsTab
-              promRule={promRule}
-              rulerRule={rulerRule}
-              promGroup={promGroup}
-              rulerGroup={rulerGroup}
-              hasRulerApi={hasRulerApi}
-            />
-          )}
-        </TabContent>
-      </ScrollContainer>
+      <TabContent>
+        {activeTab === ActiveTab.Query && <QueryTab query={query} dataSourceUid={dataSourceUid} />}
+        {activeTab === ActiveTab.Instances && isAlertingRule && <InstancesTab promRule={promRule} />}
+        {activeTab === ActiveTab.Details && (
+          <DetailsTab
+            promRule={promRule}
+            rulerRule={rulerRule}
+            promGroup={promGroup}
+            rulerGroup={rulerGroup}
+            hasRulerApi={hasRulerApi}
+          />
+        )}
+      </TabContent>
     </Stack>
   );
 }
