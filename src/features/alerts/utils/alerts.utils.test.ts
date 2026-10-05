@@ -1,5 +1,11 @@
 import { AlertGroupFactory, AlertStatusFactory, GettableAlertFactory } from '../mocks/alerts.fakes';
-import { alertMatchesFilters, countAlertsByState, deduplicateGroups, parseMatchers } from './alerts.utils';
+import {
+  alertMatchesFilters,
+  countAlertsByState,
+  countAlertsInGroupsByState,
+  deduplicateGroups,
+  parseMatchers,
+} from './alerts.utils';
 
 describe('countAlertsByState', () => {
   it('returns all zeros for an empty list', () => {
@@ -50,6 +56,22 @@ describe('countAlertsByState', () => {
     expect(counts.suppressed).toBe(1);
     expect(counts.silenced).toBe(1);
     expect(counts.inhibited).toBe(1);
+  });
+});
+
+describe('countAlertsInGroupsByState', () => {
+  it('counts alerts from duplicate receiver groups once', () => {
+    const duplicateAlert = GettableAlertFactory.build({ fingerprint: 'duplicate-alert' });
+    const distinctAlert = GettableAlertFactory.build({ fingerprint: 'distinct-alert' });
+    const pagerdutyGroup = AlertGroupFactory.build({
+      labels: { alertname: 'HighErrorRate' },
+      receiver: { name: 'pagerduty' },
+      alerts: [duplicateAlert],
+    });
+    const slackGroup = { ...pagerdutyGroup, receiver: { name: 'slack-critical' } };
+    const distinctGroup = AlertGroupFactory.build({ alerts: [distinctAlert] });
+
+    expect(countAlertsInGroupsByState([pagerdutyGroup, slackGroup, distinctGroup])).toMatchObject({ active: 2 });
   });
 });
 

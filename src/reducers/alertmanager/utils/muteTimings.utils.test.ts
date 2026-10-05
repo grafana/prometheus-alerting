@@ -1,6 +1,6 @@
 import { describe, it, expect } from '@rstest/core';
 import type { Route } from '@grafana/external-alertmanager/vanilla';
-import { removeTimeIntervalFromRoute, renameTimeInterval } from './muteTimings.utils';
+import { findTimeIntervalUses, removeTimeIntervalFromRoute, renameTimeInterval } from './muteTimings.utils';
 
 const baseRoute: Route = {
   receiver: 'default',
@@ -75,5 +75,42 @@ describe('renameTimeInterval', () => {
   it('leaves unrelated intervals unchanged', () => {
     const result = renameTimeInterval('holidays', 'weekends', baseRoute);
     expect(result.mute_time_intervals).toContain('business-hours');
+  });
+});
+
+describe('findTimeIntervalUses', () => {
+  const tree: Route = {
+    receiver: 'root-receiver',
+    mute_time_intervals: ['weekends'],
+    routes: [
+      { receiver: 'pager', active_time_intervals: ['on-call'] },
+      {
+        receiver: 'email',
+        mute_time_intervals: ['weekends'],
+        routes: [{ mute_time_intervals: ['weekends'], active_time_intervals: ['weekends'] }],
+      },
+    ],
+  };
+
+  it('finds nothing for an interval no route mentions', () => {
+    expect(findTimeIntervalUses('holidays', tree)).toEqual([]);
+  });
+
+  it('reports the root route and every child that uses the interval', () => {
+    expect(findTimeIntervalUses('weekends', tree)).toEqual([
+      { receiver: 'root-receiver', usedAs: 'mute' },
+      { receiver: 'email', usedAs: 'mute' },
+      // The deepest route mutes and restricts on the same interval, so it is reported twice
+      { receiver: undefined, usedAs: 'mute' },
+      { receiver: undefined, usedAs: 'active' },
+    ]);
+  });
+
+  it('tells a mute timing apart from an active timing', () => {
+    expect(findTimeIntervalUses('on-call', tree)).toEqual([{ receiver: 'pager', usedAs: 'active' }]);
+  });
+
+  it('handles a route with no children and no timings', () => {
+    expect(findTimeIntervalUses('weekends', { receiver: 'plain' })).toEqual([]);
   });
 });

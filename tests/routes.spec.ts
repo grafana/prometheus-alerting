@@ -87,6 +87,47 @@ test.describe('Routes', () => {
       await routesListPage.gotoWithAlertmanager(mimirAlertmanager.uid);
     });
 
+    test('attributes instances to matching continued routes and unmatched instances to the root', async ({
+      routesListPage,
+      mimirAlertmanager,
+    }) => {
+      await mimirAlertmanager.seedConfig(`template_files: {}
+alertmanager_config: |
+  route:
+    receiver: default
+    routes:
+      - receiver: critical
+        matchers:
+          - severity = critical
+        continue: true
+      - receiver: platform
+        matchers:
+          - team = platform
+  receivers:
+    - name: default
+    - name: critical
+    - name: platform
+`);
+      await routesListPage.gotoWithAlertmanager(mimirAlertmanager.uid);
+      await expect(routesListPage.childRoutes).toHaveCount(2);
+
+      await mimirAlertmanager.postAlerts([
+        { labels: { alertname: 'CriticalPlatform', severity: 'critical', team: 'platform' } },
+        { labels: { alertname: 'CriticalBackend', severity: 'critical', team: 'backend' } },
+        { labels: { alertname: 'WarningBackend', severity: 'warning', team: 'backend' } },
+      ]);
+      await routesListPage.page.reload();
+      await routesListPage.waitForLoad();
+
+      await expect.soft(routesListPage.matchingInstances(routesListPage.rootRoute)).toContainText(/^1\s*instance/);
+      await expect
+        .soft(routesListPage.matchingInstances(routesListPage.getChildRoute('critical')))
+        .toContainText(/^2\s*instance/);
+      await expect
+        .soft(routesListPage.matchingInstances(routesListPage.getChildRoute('platform')))
+        .toContainText(/^1\s*instance/);
+    });
+
     test('adds a child route from the root', async ({ routesListPage }) => {
       await routesListPage.startAddChildRouteFromRoot();
       await routesListPage.addMatcher({ label: 'severity', value: 'warning' });

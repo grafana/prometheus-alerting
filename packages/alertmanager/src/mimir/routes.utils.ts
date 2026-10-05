@@ -1,11 +1,14 @@
-import type { Route } from '@grafana/external-alertmanager/vanilla';
+import {
+  findExistingRoute,
+  findRouteInTree,
+  type Route,
+  type RouteWithID,
+} from '@grafana/external-alertmanager/vanilla';
 import { produce } from 'immer';
 import { omit } from 'lodash';
-import hashObject from 'object-hash';
 import { ERROR_NEWER_CONFIGURATION } from './constants';
 import { arrayUtils } from '@grafana/data';
 
-export type RouteWithID = Route & { id: string };
 export type InsertPosition = 'above' | 'below' | 'child';
 
 /**
@@ -146,36 +149,6 @@ export const omitRouteFromRouteTree = (id: string, routeTree: RouteWithID): Rout
 };
 
 /**
- * Recursively adds stable unique identifiers to each route in the route tree.
- * IDs are generated based on position in the tree and content hash to ensure stability.
- *
- * @param route - The route to add IDs to
- * @param position - The position string used to generate unique IDs (default: '0')
- * @returns A route tree with unique IDs added to each route
- */
-export function addUniqueIdentifierToRoute(route: Route, position = '0'): RouteWithID {
-  const routeHash = hashRoute(route);
-  const routes = route.routes ?? [];
-
-  return {
-    id: `${position}-${routeHash}`,
-    ...route,
-    routes: routes.map((route, index) => addUniqueIdentifierToRoute(route, `${position}-${index}`)),
-  };
-}
-
-/**
- * Generates a stable hash for a route based on its content.
- * Used to create unique identifiers that remain consistent across re-renders.
- *
- * @param route - The route to hash
- * @returns A string hash of the route
- */
-export function hashRoute(route: Route): string {
-  return hashObject(route);
-}
-
-/**
  * Recursively renames a receiver in a route and all its child routes.
  *
  * @param route - The route to rename the receiver in
@@ -197,55 +170,4 @@ export function renameReceiverInRoute(route: Route, oldName: string, newName: st
   }
 
   return updated;
-}
-
-type RouteMatch = Route | undefined;
-
-/**
- * Recursively searches for a route in the tree by its ID.
- * Returns the matching route, its parent route, and its position within the parent's children.
- *
- * @param routeTree - The root of the route tree to search
- * @param referenceRouteIdentifier - The ID of the route to find
- * @returns A tuple containing [matchingRoute, parentRoute, positionInParent]
- */
-export function findRouteInTree(
-  routeTree: RouteWithID,
-  referenceRouteIdentifier: string
-): [matchingRoute: RouteMatch, parentRoute: RouteMatch, positionInParent: number | undefined] {
-  let matchingRoute: RouteMatch;
-  let matchingRouteParent: RouteMatch;
-  let matchingRoutePositionInParent: number | undefined;
-
-  // recurse through the tree to find the matching route, its parent and the position of the route in the parent
-  function findRouteInTree(currentRoute: RouteWithID, index: number, parentRoute: RouteWithID) {
-    if (matchingRoute) {
-      return;
-    }
-
-    if (currentRoute.id === referenceRouteIdentifier) {
-      matchingRoute = currentRoute;
-      matchingRouteParent = parentRoute;
-      matchingRoutePositionInParent = index;
-    }
-
-    if (currentRoute.routes) {
-      currentRoute.routes.forEach((route, index) => findRouteInTree(route, index, currentRoute));
-    }
-  }
-
-  findRouteInTree(routeTree, 0, routeTree);
-
-  return [matchingRoute, matchingRouteParent, matchingRoutePositionInParent];
-}
-
-/**
- * Recursively searches for a route in the tree by its ID.
- *
- * @param id - The ID of the route to find
- * @param routeTree - The root of the route tree to search
- * @returns The matching route or undefined if not found
- */
-export function findExistingRoute(id: string, routeTree: RouteWithID): RouteWithID | undefined {
-  return routeTree.id === id ? routeTree : routeTree.routes?.find((route) => findExistingRoute(id, route));
 }

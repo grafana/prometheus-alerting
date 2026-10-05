@@ -131,6 +131,20 @@ describe('filters', () => {
       });
     });
 
+    describe('ruleHealth filter', () => {
+      it('should match a failing rule reported as "err" when filtering by error', () => {
+        const failingRule = { ...createRecordingRule('test:metric:sum'), health: 'err' };
+        expect(ruleFilter(failingRule, { ruleHealth: 'error' })).toBe(true);
+        expect(ruleFilter(failingRule, { ruleHealth: 'ok' })).toBe(false);
+      });
+
+      it('should match healthy rules by ok', () => {
+        const healthyRule = createAlertingRule('TestAlert');
+        expect(ruleFilter(healthyRule, { ruleHealth: 'ok' })).toBe(true);
+        expect(ruleFilter(healthyRule, { ruleHealth: 'error' })).toBe(false);
+      });
+    });
+
     describe('labels filter', () => {
       it('should filter by label equality', () => {
         const rule = createAlertingRule('TestAlert', 'firing', { severity: 'critical', team: 'platform' });

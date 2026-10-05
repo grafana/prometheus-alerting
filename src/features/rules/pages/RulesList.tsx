@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useDeferredValue, useMemo, useState } from 'react';
 
 import { SelectableValue } from '@grafana/data';
 import { t, Trans } from '@grafana/i18n';
@@ -20,12 +20,14 @@ type ViewMode = 'grouped' | 'list';
 function RulesPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grouped');
   const { filterState, hasActiveFilters } = useRulesFilter();
+  const filterSnapshot = useMemo(() => ({ filterState, hasActiveFilters }), [filterState, hasActiveFilters]);
+  const deferredFilterSnapshot = useDeferredValue(filterSnapshot);
   const canCreateRules = isAbilityAllowed(useUnscopedAbilities()[AlertingAction.CreateRule]);
   const hasRulesSources = useMemo(() => getExternalRulesSources().length > 0, []);
 
   // When filters are active, always show list view regardless of the user's preference.
   // This avoids calling setState inside an effect and eliminates the double render.
-  const effectiveViewMode: ViewMode = hasActiveFilters ? 'list' : viewMode;
+  const effectiveViewMode: ViewMode = deferredFilterSnapshot.hasActiveFilters ? 'list' : viewMode;
 
   const viewModeOptions: Array<SelectableValue<ViewMode>> = [
     { label: t('alerting.rule-list.view-mode.grouped', 'Grouped'), value: 'grouped' },
@@ -98,12 +100,12 @@ function RulesPage() {
             <div style={{ flex: 1, minWidth: 0 }}>
               {effectiveViewMode === 'grouped' ? (
                 <GroupedView
-                  groupFilter={filterState.groupName}
-                  namespaceFilter={filterState.namespace}
-                  dataSourceFilter={filterState.dataSourceNames}
+                  groupFilter={deferredFilterSnapshot.filterState.groupName}
+                  namespaceFilter={deferredFilterSnapshot.filterState.namespace}
+                  dataSourceFilter={deferredFilterSnapshot.filterState.dataSourceNames}
                 />
               ) : (
-                <FilterView filterState={filterState} />
+                <FilterView filterState={deferredFilterSnapshot.filterState} />
               )}
             </div>
           </div>

@@ -52,6 +52,27 @@ test.describe('Loki Rules - E2E', () => {
     await expect(ruleDetailsPage.editButton).toBeVisible();
     expect(await ruleDetailsPage.getRuleName()).toBe('TestEditRule');
     expect(await ruleDetailsPage.getQueryExpression()).toBe(INITIAL_EXPRESSION);
+    await expect(page.locator('#pageContent').getByText(lokiRuler.name, { exact: true })).toBeVisible();
+
+    const exploreLink = page.getByRole('link', { name: 'View in Explore' });
+    const href = await exploreLink.getAttribute('href');
+    expect(href).not.toBeNull();
+
+    const exploreState = new URL(href ?? '', page.url()).searchParams.get('left');
+    expect(exploreState).toBe(
+      JSON.stringify({
+        datasource: lokiRuler.uid,
+        queries: [
+          {
+            refId: 'A',
+            datasource: { uid: lokiRuler.uid, type: 'loki' },
+            expr: INITIAL_EXPRESSION,
+          },
+        ],
+        range: { from: 'now-1h', to: 'now' },
+      })
+    );
+
     await expect(page.getByRole('listitem', { name: 'severity: warning' })).toBeVisible();
   });
 
@@ -76,7 +97,12 @@ test.describe('Loki Rules - E2E', () => {
     expect(await ruleDetailsPage.getQueryExpression()).toBe(INITIAL_EXPRESSION);
   });
 
-  test('edits an existing Loki rule and persists the update', async ({ lokiRuler, ruleDetailsPage, ruleEditorPage, page }) => {
+  test('edits an existing Loki rule and persists the update', async ({
+    lokiRuler,
+    ruleDetailsPage,
+    ruleEditorPage,
+    page,
+  }) => {
     test.slow();
     const updatedRuleName = `TestEditRuleUpdated_${Date.now()}`;
     const updatedExpression = 'sum(count_over_time({job="grafana"}[5m])) > 0';

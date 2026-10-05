@@ -1,8 +1,7 @@
 import React from 'react';
 import { t, Trans } from '@grafana/i18n';
 import { Stack, Text } from '@grafana/ui';
-import { Route } from '@grafana/external-alertmanager/vanilla';
-import { RouteWithID } from '@grafana/external-alertmanager/mimir';
+import { Route, RouteWithID } from '@grafana/external-alertmanager/vanilla';
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { RouteEditForm } from './RouteEditForm';
 import { useUpdateRoute } from '../hooks/useUpdateRoute';

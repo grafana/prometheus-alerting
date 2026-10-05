@@ -4,6 +4,7 @@ import pluginJson from '../../src/plugin.json';
 import {
   deleteMimirAlertmanagerConfig,
   initializeMimirAlertmanagerConfig,
+  postMimirAlertmanagerAlerts,
   postMimirAlertmanagerConfig,
 } from '../api/alertmanagerConfig';
 import { createMimirAlertmanagerDataSource, deleteGrafanaDataSource } from '../api/grafana';
@@ -26,6 +27,7 @@ type MimirAlertmanagerFixture = {
   name: string;
   tenantId: string;
   seedConfig: (config: string) => Promise<void>;
+  postAlerts: (alerts: Array<{ labels: Record<string, string> }>) => Promise<void>;
 };
 
 type AlertmanagerTestFixture = {
@@ -84,6 +86,7 @@ export const test = base.extend<AlertmanagerTestFixture>({
         name,
         tenantId,
         seedConfig: (config) => postMimirAlertmanagerConfig(tenantId, config),
+        postAlerts: (alerts) => postMimirAlertmanagerAlerts(tenantId, alerts),
       });
     } finally {
       try {

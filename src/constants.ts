@@ -6,6 +6,12 @@ export const STORAGE_KEYS = {
   SELECTED_ALERTMANAGER_UID: 'grafana.alertmanager.selectedDataSourceUID',
 } as const;
 
+/**
+ * Links can name the Alertmanager to show with `?alertmanager=<uid>`. Grafana uses the same param on its
+ * own alerting pages, and its redirect to this plugin puts the data source UID in it.
+ */
+export const ALERTMANAGER_QUERY_PARAM = 'alertmanager';
+
 export const DEFAULT_PAGE_SIZE = 40;
 
 /** Grafana's "add a new data source" page – linked from the empty states for missing data sources. */

@@ -45,6 +45,15 @@ describe('parseMatcher', () => {
     expect(parseMatcher('foo!~bar')).toEqual({ name: 'foo', value: 'bar', isRegex: true, isEqual: false });
   });
 
+  it('trims syntax whitespace around names and values', () => {
+    expect(parseMatcher(' foo = " keep me " ')).toEqual({
+      name: 'foo',
+      value: '" keep me "',
+      isRegex: false,
+      isEqual: true,
+    });
+  });
+
   it('throws for PromQL-style input', () => {
     expect(() => parseMatcher('{foo="bar"}')).toThrow();
   });
@@ -115,6 +124,67 @@ describe('matcherToObjectMatcher', () => {
       '!~',
       'bar',
     ]);
+  });
+});
+
+describe('normalizeMatchers semantic parsing', () => {
+  it('decodes modern matcher syntax for every operator', () => {
+    expect(
+      normalizeMatchers({
+        matchers: [' severity = "critical" ', 'team != "ops"', 'service =~ "api.*"', 'zone !~ "dev.*"'],
+      })
+    ).toEqual([
+      ['severity', '=', 'critical'],
+      ['team', '!=', 'ops'],
+      ['service', '=~', 'api.*'],
+      ['zone', '!~', 'dev.*'],
+    ]);
+  });
+
+  it('unquotes values using the shared matcher semantics', () => {
+    expect(
+      normalizeMatchers({
+        matchers: [
+          'empty = ""',
+          'spaces = " keep me "',
+          'quoted = "\\"critical\\""',
+          'newline = "line\\nnext"',
+          'literal = "line\\\\nnext"',
+          'path = "C:\\\\alerts"',
+        ],
+      })
+    ).toEqual([
+      ['empty', '=', ''],
+      ['spaces', '=', ' keep me '],
+      ['quoted', '=', '"critical"'],
+      ['newline', '=', 'line\\nnext'],
+      ['literal', '=', 'line\\nnext'],
+      ['path', '=', 'C:\\alerts'],
+    ]);
+  });
+
+  it('handles braced matchers and commas without double decoding', () => {
+    expect(normalizeMatchers({ matchers: ['{service="api,worker",message="\\"critical\\""}'] })).toEqual([
+      ['service', '=', 'api,worker'],
+      ['message', '=', '"critical"'],
+    ]);
+  });
+
+  it('preserves legacy map values verbatim', () => {
+    expect(
+      normalizeMatchers({
+        match: { quoted: '"literal"', whitespace: ' keep me ' },
+        match_re: { path: 'C:\\alerts' },
+      })
+    ).toEqual([
+      ['path', '=~', 'C:\\alerts'],
+      ['quoted', '=', '"literal"'],
+      ['whitespace', '=', ' keep me '],
+    ]);
+  });
+
+  it('throws for malformed modern matchers', () => {
+    expect(() => normalizeMatchers({ matchers: ['invalid'] })).toThrow('Invalid matcher');
   });
 });
 
@@ -214,8 +284,8 @@ describe('parseObjectMatcherExpression', () => {
     ]);
   });
 
-  it('parses quoted names, values, and commas in values', () => {
-    expect(parseObjectMatcherExpression('{"team name"="ops,platform",region="us"}')).toEqual<ObjectMatcher[]>([
+  it('parses quoted names, values, commas in values, and surrounding syntax whitespace', () => {
+    expect(parseObjectMatcherExpression('{ "team name" = "ops,platform", region = "us" }')).toEqual<ObjectMatcher[]>([
       ['team name', '=', 'ops,platform'],
       ['region', '=', 'us'],
     ]);

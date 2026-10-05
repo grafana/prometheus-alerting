@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
+import { css } from '@emotion/css';
 import { useParams } from 'react-router-dom';
 import { parseIdentifier, type DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 import type { PromRuleDTO } from '@grafana/external-rules/vanilla';
@@ -23,6 +24,24 @@ import {
 } from '../../../utils/navigation';
 import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
+
+const labelsStyle = css({
+  minWidth: 0,
+  '& div': {
+    minWidth: 0,
+  },
+  '& [role="listitem"]': {
+    maxWidth: '100%',
+  },
+  '& [title]': {
+    whiteSpace: 'normal',
+    overflowWrap: 'anywhere',
+    overflow: 'hidden',
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: 1,
+  },
+});
 
 function RuleDetails() {
   const { ruleIdentifier } = useParams<{ ruleIdentifier: string }>();
@@ -249,7 +268,7 @@ function createMetadata(promRule: PromRuleDTO, interval?: string): PageInfoItem[
     metadata.push({
       label: t('rule-details.metadata.labels', 'Labels'),
       value: (
-        <div aria-label={t('rule-details.metadata.labels-aria', 'Rule labels')}>
+        <div className={labelsStyle} aria-label={t('rule-details.metadata.labels-aria', 'Rule labels')}>
           <AlertLabels labels={promRule.labels} size="sm" />
         </div>
       ),

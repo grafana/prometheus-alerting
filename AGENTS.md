@@ -31,7 +31,8 @@ pnpm e2e          # Run E2E tests with Playwright (requires pnpm server first)
 - Framework: Playwright with `@grafana/plugin-e2e` (Grafana's plugin testing library)
 - Test location: `tests/` directory (`*.spec.ts` files)
 - Configuration: `playwright.config.ts`
-- Test environment: Grafana runs in Docker via `docker-compose.yaml`
+- Test environment: Grafana runs in Docker via `docker-compose.yaml`, which pulls in the backing
+  services from `.config/compose/` (one file per system: Prometheus, Alertmanager, MinIO, Mimir, Loki)
 - Two-stage flow: Auth project authenticates first, then test project runs with saved session
 - Custom fixtures in `tests/fixtures.ts` provide `appConfigPage` and `gotoPage` helpers
 - CI integration: Tests run against multiple Grafana versions, reports published to GitHub Pages
