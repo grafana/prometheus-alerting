@@ -1,4 +1,6 @@
 {
-  "version": "7.8.1",
-  "features": {}
+  "version": "7.11.0",
+  "features": {
+    "useExperimentalRspack": true
+  }
 }

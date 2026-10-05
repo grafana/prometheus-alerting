@@ -1,6 +1,13 @@
 # Mirrors the production list in grafana/grafana's .browserslistrc — a plugin has to run in
-# whatever browsers Grafana itself supports, so the compile target is derived from this rather
-# than pinned to a fixed ES version.
+# whatever browsers Grafana itself supports.
+#
+# Nothing has to point rspack at this file: it looks for a browser list on its own and uses it to
+# pick the syntax for the module loader and runtime code it wraps around our bundle. Dropping the
+# file would cost ~29KB of unnecessary ES5 output.
+#
+# Our own source is compiled by swc, and that target is set in `.config/rspack/rspack.config.ts`
+# (es2022 today) rather than derived from this list. The two agree in practice — every browser
+# below supports es2022 — so there's nothing to override.
 #
 # Kept as a single list rather than grafana's [dev]/[production] split: a plugin that compiles
 # differently in dev than in production hides browser-only bugs from local testing.

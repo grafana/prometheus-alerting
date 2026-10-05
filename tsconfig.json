@@ -2,9 +2,13 @@
   "extends": "./.config/tsconfig.json",
   "compilerOptions": {
     "ignoreDeprecations": "6.0",
-    "rootDir": "."
+    "rootDir": ".",
+    // Needed to read the `exports` maps in the @grafana packages. Set here rather than in
+    // `.config/tsconfig.json`, which the scaffolding tool regenerates.
+    "module": "esnext",
+    "moduleResolution": "bundler"
   },
-  "include": ["src", "tests", "packages", ".config/types"],
+  "include": ["src", "tests", "packages", "types", ".config/types"],
   "ts-node": {
     "compilerOptions": {
       "module": "commonjs",

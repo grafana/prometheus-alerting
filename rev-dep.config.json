@@ -27,15 +27,15 @@
           "@swc/**",
           "@vitest/**",
           "@grafana/tsconfig",
-          "webpack-cli",
+          "@rspack/cli",
           "@popperjs/core",
           "@grafana/sign-plugin"
         ],
         "pkgJsonFieldsWithBinaries": ["scripts"],
-        "filesWithBinaries": [".husky/pre-commit"],
+        "filesWithBinaries": ["lefthook.yml"],
         "filesWithModules": [
           ".config/tsconfig.json",
-          ".config/webpack/webpack.config.ts",
+          ".config/rspack/rspack.config.ts",
           ".config/eslint.config.mjs",
           ".config/bundler/externals.ts",
           "vitest.config.ts"
