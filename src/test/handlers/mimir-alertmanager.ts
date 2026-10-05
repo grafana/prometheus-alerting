@@ -29,7 +29,7 @@ let currentRawConfig: string | undefined;
 
 /**
  * Reset the configuration state to default
- * Called in afterEach via resetRulerState in vitest-setup.ts
+ * Called in afterEach via resetRulerState in rstest-setup.ts
  */
 export function resetMimirAlertmanagerState() {
   currentConfig = basicConfig;

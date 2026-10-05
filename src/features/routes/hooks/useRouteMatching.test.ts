@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import type { RouteMatches } from '@grafana/external-alertmanager/vanilla';
 import { GettableAlertFactory } from '../../alerts/mocks/alerts.fakes';

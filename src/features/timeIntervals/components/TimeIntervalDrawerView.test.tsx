@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 import type { Route, TimeInterval } from '@grafana/external-alertmanager/vanilla';
@@ -51,7 +51,7 @@ function expectRemoveBlocked() {
 }
 
 function renderDrawerView() {
-  render(<TimeIntervalDrawerView timeInterval={businessHours} onEdit={vi.fn()} onClose={vi.fn()} />, {
+  render(<TimeIntervalDrawerView timeInterval={businessHours} onEdit={rs.fn()} onClose={rs.fn()} />, {
     wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
   });
 }

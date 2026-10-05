@@ -1,5 +1,5 @@
 import { findMatchingRoutes, type LabelMatcher } from '@grafana/alerting';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import { AlertGroupFactory, GettableAlertFactory } from './mocks/alerts.fakes';
 import type { Route } from './api/types/common';
