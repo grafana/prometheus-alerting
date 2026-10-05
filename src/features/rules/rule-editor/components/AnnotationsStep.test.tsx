@@ -10,7 +10,7 @@ import { createRuleFormSchema } from '../validation';
 import { AnnotationsStep } from './AnnotationsStep';
 
 function renderStep(annotations: RuleFormValues['annotations']) {
-  const onSubmit = vi.fn();
+  const onSubmit = rs.fn();
 
   function Wrapper() {
     const methods = useForm<RuleFormValues>({

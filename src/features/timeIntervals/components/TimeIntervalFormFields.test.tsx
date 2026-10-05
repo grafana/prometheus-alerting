@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 
@@ -27,13 +27,13 @@ const businessHours: TimeInterval = {
 };
 
 function renderForm(timeInterval?: TimeInterval) {
-  const onSubmit = vi.fn();
+  const onSubmit = rs.fn();
 
   render(
     <TimeIntervalFormFields
       timeInterval={timeInterval}
       onSubmit={onSubmit}
-      onCancel={vi.fn()}
+      onCancel={rs.fn()}
       isLoading={false}
       showNameField={!timeInterval}
     />

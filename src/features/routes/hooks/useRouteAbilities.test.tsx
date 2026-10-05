@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { beforeEach } from 'vitest';
+import { beforeEach } from '@rstest/core';
 
 import { AlertingPermission } from '../../../access-control/abilities';
 import { RouteAction } from '../../../access-control/abilities.routes';

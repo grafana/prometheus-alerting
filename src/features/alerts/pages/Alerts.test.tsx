@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import { setDataSourceSrv } from '@grafana/runtime';
 
@@ -11,7 +11,7 @@ import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { testIds } from '../../../components/testIds';
 import Alerts from './Alerts';
 
-vi.mock('../../../components/AlertmanagerPicker/AlertmanagerPicker', () => ({
+rs.mock('../../../components/AlertmanagerPicker/AlertmanagerPicker', () => ({
   AlertmanagerPicker: () => <div data-testid="alertmanager-picker" />,
 }));
 

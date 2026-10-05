@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@rstest/core';
 import { addUniqueIdentifierToRoute, findExistingRoute, findRouteInTree } from './routes.utils';
 
 describe('routes.utils', () => {

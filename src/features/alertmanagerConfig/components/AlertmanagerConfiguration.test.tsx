@@ -3,7 +3,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setDataSourceSrv } from '@grafana/runtime';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import { AlertingPermission } from '../../../access-control/abilities';
 import { mockAlertmanagerDs, mockMimirAlertmanagerDs } from '../../../test/fixtures/datasources';
@@ -15,9 +15,10 @@ import {
 } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 import { AlertmanagerConfiguration } from './AlertmanagerConfiguration';
+import * as grafanaUiActual from '@grafana/ui' with { rstest: 'importActual' };
 
-vi.mock('@grafana/ui', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@grafana/ui')>();
+rs.mock('@grafana/ui', () => {
+  const actual = grafanaUiActual;
 
   return {
     ...actual,

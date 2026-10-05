@@ -1,15 +1,16 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import { TemplateEditForm } from './TemplateEditForm';
+import * as grafanaUiActual from '@grafana/ui' with { rstest: 'importActual' };
 
 // The real CodeEditor is Monaco, which the Grafana host supplies at runtime and
 // which has no DOM to attach to here. A textarea that reports its value on blur
 // is enough: the form only ever reads the content on blur or save.
-vi.mock('@grafana/ui', async () => {
-  const actual = await vi.importActual<typeof import('@grafana/ui')>('@grafana/ui');
+rs.mock('@grafana/ui', () => {
+  const actual = grafanaUiActual;
   return {
     ...actual,
     CodeEditor: ({ value, onBlur }: { value: string; onBlur: (value: string) => void }) => (
@@ -18,8 +19,8 @@ vi.mock('@grafana/ui', async () => {
   };
 });
 
-function renderForm(onSave = vi.fn()) {
-  render(<TemplateEditForm existingTemplateNames={[]} onSave={onSave} onCancel={vi.fn()} />);
+function renderForm(onSave = rs.fn()) {
+  render(<TemplateEditForm existingTemplateNames={[]} onSave={onSave} onCancel={rs.fn()} />);
   return { onSave };
 }
 

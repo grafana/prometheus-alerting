@@ -1,23 +1,24 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { setDataSourceSrv } from '@grafana/runtime';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 import RulesPage from './RulesList';
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper, TestMemoryRouter } from '../../../test/utils/test-wrapper';
+import * as grafanaRuntimeActual from '@grafana/runtime' with { rstest: 'importActual' };
 
-vi.mock('@grafana/runtime', async () => ({
-  ...(await vi.importActual('@grafana/runtime')),
+rs.mock('@grafana/runtime', () => ({
+  ...grafanaRuntimeActual,
   PluginPage: ({ children }: { children: React.ReactNode }) => <div data-testid="plugin-page">{children}</div>,
 }));
 
 // The list views issue real queries against the data sources, which is not what these tests are about.
-vi.mock('../list/GroupedView', () => ({
+rs.mock('../list/GroupedView', () => ({
   GroupedView: () => <div data-testid="grouped-view" />,
 }));
 
-vi.mock('../list/FilterView', () => ({
+rs.mock('../list/FilterView', () => ({
   FilterView: () => <div data-testid="filter-view" />,
 }));
 

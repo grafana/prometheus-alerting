@@ -2,13 +2,13 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { PluginType } from '@grafana/data';
 import { setDataSourceSrv } from '@grafana/runtime';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import AppConfig, { AppConfigProps } from './AppConfig';
 import { createMockDataSourceSrv } from '../../test/mocks/grafana-runtime';
 
 // Mock AlertmanagerPicker to avoid Combobox canvas issues
-vi.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
+rs.mock('../AlertmanagerPicker/AlertmanagerPicker', () => ({
   AlertmanagerPicker: () => <div data-testid="alertmanager-picker" />,
 }));
 
@@ -16,7 +16,7 @@ describe('Components/AppConfig', () => {
   let props: AppConfigProps;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
     // The status fieldset dispatches an RTK Query request that resolves the data source's
     // proxy path, which needs a data source service to look up the data source by UID.
     setDataSourceSrv(createMockDataSourceSrv());

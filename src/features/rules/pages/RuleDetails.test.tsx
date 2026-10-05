@@ -1,16 +1,17 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 import { stringifyIdentifier } from '@grafana/external-rules/identifiers';
 
 import { TestMemoryRouter } from '../../../test/utils/test-wrapper';
 import type { RuleDetailsResult } from '../hooks/useRuleDetails';
 
 import RuleDetails from './RuleDetails';
+import * as grafanaRuntimeActual from '@grafana/runtime' with { rstest: 'importActual' };
 
-vi.mock('@grafana/runtime', async () => ({
-  ...(await vi.importActual('@grafana/runtime')),
+rs.mock('@grafana/runtime', () => ({
+  ...grafanaRuntimeActual,
   PluginPage: ({ children, pageNav }: { children: React.ReactNode; pageNav?: { text: string } }) => (
     <div data-testid="plugin-page">
       {pageNav && <div data-testid="page-title">{pageNav.text}</div>}
@@ -19,18 +20,18 @@ vi.mock('@grafana/runtime', async () => ({
   ),
 }));
 
-const mockUseRuleDetails = vi.fn<() => RuleDetailsResult>();
+const mockUseRuleDetails = rs.fn<() => RuleDetailsResult>();
 
-vi.mock('../hooks/useRuleDetails', () => ({
+rs.mock('../hooks/useRuleDetails', () => ({
   useRuleDetails: () => mockUseRuleDetails(),
 }));
 
-vi.mock('../hooks/useRuleConsistencyCheck', () => ({
+rs.mock('../hooks/useRuleConsistencyCheck', () => ({
   useRuleCreationConsistencyCheck: () => ({ isConsistent: false, status: 'idle' }),
 }));
 
 // The details view pulls in the whole rule detail UI, which isn't what these tests are about.
-vi.mock('../components/RuleDetailsView', () => ({
+rs.mock('../components/RuleDetailsView', () => ({
   RuleDetailsView: () => <div data-testid="rule-details-view" />,
 }));
 
@@ -55,7 +56,7 @@ function renderRuleDetails(ruleIdentifier: string) {
 
 describe('RuleDetails', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
 
     mockUseRuleDetails.mockReturnValue({
       promRule: { name: 'my-rule', type: 'alerting', state: 'inactive', health: 'ok', query: 'up == 0', labels: {} },
@@ -64,7 +65,7 @@ describe('RuleDetails', () => {
       groupName: 'my-group',
       hasRulerApi: false,
       loading: false,
-      refetch: vi.fn(),
+      refetch: rs.fn(),
     } as RuleDetailsResult);
   });
 
@@ -92,7 +93,7 @@ describe('RuleDetails', () => {
       groupName: 'my-group',
       hasRulerApi: false,
       loading: false,
-      refetch: vi.fn(),
+      refetch: rs.fn(),
     } as RuleDetailsResult);
 
     renderRuleDetails(validIdentifier);

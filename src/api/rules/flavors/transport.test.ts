@@ -1,12 +1,12 @@
 import { setBackendSrv } from '@grafana/runtime';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { of } from 'rxjs';
 
 import { restoreMockBackendSrv } from '../../../test/mocks/backend-srv';
 
 import { createRulerTransport } from './transport';
 
-const fetchMock = vi.fn();
+const fetchMock = rs.fn();
 
 beforeEach(() => {
   fetchMock.mockReset();

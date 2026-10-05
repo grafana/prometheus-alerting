@@ -1,6 +1,6 @@
 import React from 'react';
 import { renderHook } from '@testing-library/react';
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, rs, beforeAll, afterAll } from '@rstest/core';
 
 import { useReturnTo } from './useReturnTo';
 import { TestMemoryRouter } from '../test/utils/test-wrapper';
@@ -19,10 +19,10 @@ function renderUseReturnTo(returnTo: string) {
 
 describe('useReturnTo', () => {
   // the hook logs rejected values, which is noise we don't need in the test output
-  let warn: ReturnType<typeof vi.spyOn>;
+  let warn: ReturnType<typeof rs.spyOn>;
 
   beforeAll(() => {
-    warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    warn = rs.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterAll(() => {

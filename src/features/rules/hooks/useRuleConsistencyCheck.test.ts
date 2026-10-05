@@ -1,14 +1,14 @@
 import { renderHook, act } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { rs, describe, it, expect, beforeEach } from '@rstest/core';
 
 import { DataSourceRuleIdentifier } from '@grafana/external-rules/identifiers';
 
 import { useMatchingPromRuleExists, useRuleConsistencyCheck } from './useRuleConsistencyCheck';
 
 // Mock the prometheus API
-const mockFetchPrometheusGroups = vi.fn();
+const mockFetchPrometheusGroups = rs.fn();
 
-vi.mock('../../../api/rules/prometheus.endpoints', () => ({
+rs.mock('../../../api/rules/prometheus.endpoints', () => ({
   prometheusApi: {
     useLazyGetGroupsQuery: () => [mockFetchPrometheusGroups],
   },
@@ -16,7 +16,7 @@ vi.mock('../../../api/rules/prometheus.endpoints', () => ({
 
 describe('useMatchingPromRuleExists', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   const mockIdentifier: DataSourceRuleIdentifier = {
@@ -109,7 +109,7 @@ describe('useMatchingPromRuleExists', () => {
       unwrap: () => Promise.reject(new Error('API error')),
     });
 
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warnSpy = rs.spyOn(console, 'warn').mockImplementation(() => {});
 
     const { result } = renderHook(() => useMatchingPromRuleExists());
 
@@ -126,12 +126,12 @@ describe('useMatchingPromRuleExists', () => {
 
 describe('useRuleConsistencyCheck', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
+    rs.clearAllMocks();
+    rs.useFakeTimers();
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    rs.useRealTimers();
   });
 
   const mockIdentifier: DataSourceRuleIdentifier = {
@@ -160,7 +160,7 @@ describe('useRuleConsistencyCheck', () => {
 
     // Advance past the first interval check (3 seconds)
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(3000);
+      await rs.advanceTimersByTimeAsync(3000);
     });
 
     expect(resolved).toBe(true);
@@ -195,7 +195,7 @@ describe('useRuleConsistencyCheck', () => {
 
     // Advance past the first interval check (3 seconds)
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(3000);
+      await rs.advanceTimersByTimeAsync(3000);
     });
 
     expect(resolved).toBe(true);

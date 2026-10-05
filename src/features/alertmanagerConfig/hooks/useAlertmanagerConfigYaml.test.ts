@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { setDataSourceSrv } from '@grafana/runtime';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from '@rstest/core';
 import { parse as parseYaml } from 'yaml';
 
 import { AlertingPermission } from '../../../access-control/abilities';

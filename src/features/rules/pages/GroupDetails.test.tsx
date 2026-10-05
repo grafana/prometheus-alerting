@@ -2,12 +2,18 @@ import React from 'react';
 import { setDataSourceSrv } from '@grafana/runtime';
 import { render, screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { TestMemoryRouter } from '../../../test/utils/test-wrapper';
 
 import GroupDetails from './GroupDetails';
+import * as prometheusEndpointsActual from '../../../api/rules/prometheus.endpoints' with { rstest: 'importActual' };
+import * as featureDiscoveryEndpointsActual from '../../../api/rules/featureDiscovery.endpoints' with {
+  rstest: 'importActual',
+};
+import * as rulerEndpointsActual from '../../../api/rules/ruler.endpoints' with { rstest: 'importActual' };
+import * as grafanaRuntimeActual from '@grafana/runtime' with { rstest: 'importActual' };
 
 // Mock PluginPage component (not an HTTP request, so we mock it directly)
 // Recursively render breadcrumb items with their URLs
@@ -46,8 +52,8 @@ function renderBreadcrumbs(pageNav: PageNavItem | undefined): React.ReactNode {
   );
 }
 
-vi.mock('@grafana/runtime', async () => ({
-  ...(await vi.importActual('@grafana/runtime')),
+rs.mock('@grafana/runtime', () => ({
+  ...grafanaRuntimeActual,
   PluginPage: ({ children, pageNav }: { children: React.ReactNode; pageNav?: PageNavItem }) => (
     <div data-testid="plugin-page">
       {renderBreadcrumbs(pageNav)}
@@ -58,20 +64,18 @@ vi.mock('@grafana/runtime', async () => ({
 }));
 
 // Mock DataSourceGroupLoader to avoid complex setup
-vi.mock('../list/DataSourceGroupLoader', () => ({
+rs.mock('../list/DataSourceGroupLoader', () => ({
   DataSourceGroupLoader: () => <div data-testid="group-loader" />,
 }));
 
 // Mock all API hooks that use RTK Query
 // Note: In the future, we can migrate these to use MSW + getBackendSrv mocks
-const mockUseGetGroupsQuery = vi.fn();
-const mockUseDiscoverFeaturesQuery = vi.fn();
-const mockUseGetRulerRuleGroupQuery = vi.fn();
+const mockUseGetGroupsQuery = rs.fn();
+const mockUseDiscoverFeaturesQuery = rs.fn();
+const mockUseGetRulerRuleGroupQuery = rs.fn();
 
-vi.mock('../../../api/rules/prometheus.endpoints', async () => {
-  const actual = await vi.importActual<typeof import('../../../api/rules/prometheus.endpoints')>(
-    '../../../api/rules/prometheus.endpoints'
-  );
+rs.mock('../../../api/rules/prometheus.endpoints', () => {
+  const actual = prometheusEndpointsActual;
   return {
     ...actual,
     prometheusApi: {
@@ -81,20 +85,16 @@ vi.mock('../../../api/rules/prometheus.endpoints', async () => {
   };
 });
 
-vi.mock('../../../api/rules/featureDiscovery.endpoints', async () => {
-  const actual = await vi.importActual<typeof import('../../../api/rules/featureDiscovery.endpoints')>(
-    '../../../api/rules/featureDiscovery.endpoints'
-  );
+rs.mock('../../../api/rules/featureDiscovery.endpoints', () => {
+  const actual = featureDiscoveryEndpointsActual;
   return {
     ...actual,
     useDiscoverFeaturesQuery: () => mockUseDiscoverFeaturesQuery(),
   };
 });
 
-vi.mock('../../../api/rules/ruler.endpoints', async () => {
-  const actual = await vi.importActual<typeof import('../../../api/rules/ruler.endpoints')>(
-    '../../../api/rules/ruler.endpoints'
-  );
+rs.mock('../../../api/rules/ruler.endpoints', () => {
+  const actual = rulerEndpointsActual;
   return {
     ...actual,
     rulerApi: {
@@ -117,7 +117,7 @@ function renderGroupDetails(path = '/groups/prometheus-1/my-namespace/my-group')
 describe('GroupDetails', () => {
   beforeEach(() => {
     setDataSourceSrv(createMockDataSourceSrv());
-    vi.clearAllMocks();
+    rs.clearAllMocks();
 
     // Default mock implementations
     mockUseDiscoverFeaturesQuery.mockReturnValue({

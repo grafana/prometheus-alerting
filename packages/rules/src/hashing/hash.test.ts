@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@rstest/core';
 import { simpleHash, hashLabelsOrAnnotations, hashQuery, normalizePromQLDurations, stripPromQLComments } from './hash';
 
 describe('simpleHash', () => {

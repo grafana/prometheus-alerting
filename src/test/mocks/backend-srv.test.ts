@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { lastValueFrom } from 'rxjs';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rs } from '@rstest/core';
 
 import { isForbiddenError, isNotFoundError } from '../../utils/errors';
 import { server } from '../server';
@@ -11,7 +11,7 @@ const url = '/api/test/echo';
 
 /** Registers a handler that reports back what it received. */
 function echo(method: 'get' | 'post' | 'put' | 'patch' | 'delete' = 'get') {
-  const received = vi.fn();
+  const received = rs.fn();
 
   server.use(
     http[method](url, async ({ request }) => {

@@ -12,7 +12,7 @@
         "src/**/*.test.{ts,tsx}",
         "packages/**/*.test.{ts,tsx}",
         "**/*.config.*",
-        "vitest-setup.ts",
+        "rstest-setup.ts",
         "scripts/**",
         "__mocks__/**"
       ],
@@ -25,7 +25,7 @@
           "eslint-config-*",
           "@stylistic/**",
           "@swc/**",
-          "@vitest/**",
+          "@rstest/**",
           "@grafana/tsconfig",
           "@rspack/cli",
           "@popperjs/core",
@@ -38,7 +38,7 @@
           ".config/rspack/rspack.config.ts",
           ".config/eslint.config.mjs",
           ".config/bundler/externals.ts",
-          "vitest.config.ts"
+          "rstest.config.ts"
         ]
       },
       "orphanFilesDetection": { "enabled": true, "graphExclude": ["packages/**"] },

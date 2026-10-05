@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@rstest/core';
 import type { GettableSilence } from '@grafana/external-alertmanager/vanilla';
 import { formatMatchers, formatDateTime, formatDateTimeLocal } from './silences.utils';
 

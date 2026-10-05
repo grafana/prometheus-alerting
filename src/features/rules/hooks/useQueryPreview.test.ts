@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { CoreApp } from '@grafana/data';
 import { SceneRefreshPicker } from '@grafana/scenes';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import { useQueryPreview } from './useQueryPreview';
 

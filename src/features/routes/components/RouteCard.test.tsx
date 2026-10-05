@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import { RouteWithID } from '@grafana/external-alertmanager/vanilla';
 
@@ -8,7 +8,7 @@ import { RouteWithID } from '@grafana/external-alertmanager/vanilla';
 // "unstable" export from the same file), which needs the `uwrap` package. Skip that whole
 // chain in tests by mocking attachSkeleton as a pass-through - we're not testing the
 // loading skeleton here, just RouteCard itself.
-vi.mock('@grafana/ui/unstable', () => ({
+rs.mock('@grafana/ui/unstable', () => ({
   attachSkeleton: (Component: React.ComponentType<unknown>) => Component,
 }));
 
@@ -50,9 +50,9 @@ describe('RouteCard', () => {
   });
 
   it('exposes add/edit/delete actions when not read-only', async () => {
-    const onAddRoute = vi.fn();
-    const onEditRoute = vi.fn();
-    const onDeleteRoute = vi.fn();
+    const onAddRoute = rs.fn();
+    const onEditRoute = rs.fn();
+    const onDeleteRoute = rs.fn();
 
     render(
       <RouteCard

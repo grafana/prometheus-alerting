@@ -1,14 +1,14 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import type { Receiver } from '@grafana/external-alertmanager/vanilla';
 
 import { ReceiverEditForm } from './ReceiverEditForm';
 
 function renderForm(receiver?: Receiver) {
-  render(<ReceiverEditForm receiver={receiver} existingReceivers={[]} onSave={vi.fn()} onCancel={vi.fn()} />);
+  render(<ReceiverEditForm receiver={receiver} existingReceivers={[]} onSave={rs.fn()} onCancel={rs.fn()} />);
 }
 
 describe('every validation error reaches the user', () => {

@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import { config } from '@grafana/runtime';
 import type { ComboboxOption } from '@grafana/ui';
@@ -15,8 +15,9 @@ import { useAlertmanager } from '../hooks/useAlertmanager';
 import { mockAlertmanagerDs, mockMimirAlertmanagerDs } from '../test/fixtures/datasources';
 import { mockMimirDs, mockPrometheusDs, setMockGrafanaDataSources } from '../test/mocks/grafana-runtime';
 import { createTestWrapper, TestMemoryRouter } from '../test/utils/test-wrapper';
+import * as grafanaUiActual from '@grafana/ui' with { rstest: 'importActual' };
 
-vi.mock('@grafana/runtime');
+rs.mock('@grafana/runtime');
 /** The props AlertmanagerPicker passes to Combobox. */
 interface FakeComboboxProps {
   options: Array<ComboboxOption<string>>;
@@ -25,8 +26,8 @@ interface FakeComboboxProps {
 }
 
 // Combobox doesn't render its options in jsdom, so the picker gets a plain <select> in its place.
-vi.mock('@grafana/ui', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@grafana/ui')>()),
+rs.mock('@grafana/ui', () => ({
+  ...grafanaUiActual,
   Combobox: ({ options, value, onChange }: FakeComboboxProps) => (
     <select
       value={value?.value}
@@ -42,7 +43,7 @@ vi.mock('@grafana/ui', async (importOriginal) => ({
 }));
 
 // Every Alertmanager the guarded page has rendered against, in order.
-const renderedWith = vi.fn();
+const renderedWith = rs.fn();
 
 /** Shows which Alertmanager the guarded page ended up on, and what the URL looks like by then. */
 function GuardedPage() {

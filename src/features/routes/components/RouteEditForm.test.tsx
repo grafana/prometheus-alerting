@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
 import type { RouteWithID } from '@grafana/external-alertmanager/vanilla';
@@ -60,7 +60,7 @@ function renderForm(route: RouteWithID, isRoot = false) {
     resolveSubmission = resolve;
   });
 
-  render(<RouteEditForm route={route} onSubmit={resolveSubmission} onCancel={vi.fn()} isRoot={isRoot} />, {
+  render(<RouteEditForm route={route} onSubmit={resolveSubmission} onCancel={rs.fn()} isRoot={isRoot} />, {
     wrapper: createTestWrapper(mockMimirAlertmanagerDs.uid),
   });
 

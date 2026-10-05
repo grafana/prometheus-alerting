@@ -1,4 +1,4 @@
-import { describe, it, test, expect } from 'vitest';
+import { describe, it, test, expect } from '@rstest/core';
 import { Matcher, Route } from './api/types/common';
 
 import {

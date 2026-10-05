@@ -4,16 +4,17 @@ import { setDataSourceSrv } from '@grafana/runtime';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, vi } from 'vitest';
+import { beforeEach, rs } from '@rstest/core';
 
 import { server } from '../../../test';
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper, TestMemoryRouter } from '../../../test/utils/test-wrapper';
 
 import { PaginatedDataSourceLoader } from './PaginatedDataSourceLoader';
+import * as grafanaUiActual from '@grafana/ui' with { rstest: 'importActual' };
 
-vi.mock('@grafana/ui', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@grafana/ui')>();
+rs.mock('@grafana/ui', () => {
+  const actual = grafanaUiActual;
   return { ...actual, CodeEditor: ({ value }: { value: string }) => <pre>{value}</pre> };
 });
 
@@ -78,7 +79,7 @@ describe('PaginatedDataSourceLoader namespace YAML action', () => {
 
   it('loads the selected namespace from the Ruler endpoint', async () => {
     const user = userEvent.setup();
-    const namespaceRequest = vi.fn();
+    const namespaceRequest = rs.fn();
     server.use(
       http.get(`/api/datasources/proxy/uid/${dataSourceUid}/config/v1/rules/${namespace}`, () => {
         namespaceRequest();

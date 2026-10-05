@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import yaml from 'js-yaml';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
 
 import { setDataSourceSrv } from '@grafana/runtime';
 import { CloudRuleIdentifier } from '@grafana/external-rules/identifiers';

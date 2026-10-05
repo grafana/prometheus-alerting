@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { ReceiverSchema } from './receivers';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@rstest/core';
 
 describe('ReceiverSchema', () => {
   it('preserves unknown fields while parsing a known receiver configuration', () => {

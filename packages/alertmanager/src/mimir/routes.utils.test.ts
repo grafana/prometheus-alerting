@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@rstest/core';
 import { addUniqueIdentifierToRoute, type Route, type RouteWithID } from '@grafana/external-alertmanager/vanilla';
 import {
   addRouteToReferenceRoute,

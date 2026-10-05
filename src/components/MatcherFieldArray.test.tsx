@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { expect, vi } from 'vitest';
+import { expect, rs } from '@rstest/core';
 
 import { Button } from '@grafana/ui';
 
@@ -66,7 +66,7 @@ function MatcherForm({
 describe('MatcherFieldArray', () => {
   it('keeps the minimum row and adds a second matcher', async () => {
     const user = userEvent.setup();
-    render(<MatcherForm onSubmit={vi.fn()} />);
+    render(<MatcherForm onSubmit={rs.fn()} />);
 
     expect(screen.getByRole('button', { name: 'Remove matcher' })).toBeDisabled();
 
@@ -77,7 +77,7 @@ describe('MatcherFieldArray', () => {
   });
 
   it('keeps the default value control as a single-line Input for routes', () => {
-    render(<MatcherForm onSubmit={vi.fn()} />);
+    render(<MatcherForm onSubmit={rs.fn()} />);
 
     expect(screen.getByRole('textbox', { name: 'Value' }).tagName).toBe('INPUT');
   });
@@ -103,12 +103,12 @@ describe('MatcherFieldArray', () => {
   });
 
   it('shows each operator symbol with a human-friendly description', async () => {
-    const offsetHeight = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(240);
-    const offsetWidth = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(200);
+    const offsetHeight = rs.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(240);
+    const offsetWidth = rs.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(200);
 
     try {
       const user = userEvent.setup();
-      render(<MatcherForm onSubmit={vi.fn()} />);
+      render(<MatcherForm onSubmit={rs.fn()} />);
 
       await user.click(screen.getByRole('combobox', { name: 'Operator' }));
 
@@ -127,7 +127,7 @@ describe('MatcherFieldArray', () => {
 
   it('shows and clears a required-label error without a parent form-state subscription', async () => {
     const user = userEvent.setup();
-    const onSubmit = vi.fn();
+    const onSubmit = rs.fn();
     render(<MatcherForm onSubmit={onSubmit} />);
 
     await user.click(screen.getByRole('button', { name: 'Save' }));

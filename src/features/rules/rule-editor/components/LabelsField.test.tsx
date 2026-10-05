@@ -10,7 +10,7 @@ import { createRuleFormSchema } from '../validation';
 import { LabelsField } from './LabelsField';
 
 function renderStep(labels: RuleFormValues['labels']) {
-  const onSubmit = vi.fn();
+  const onSubmit = rs.fn();
 
   function Wrapper() {
     const methods = useForm<RuleFormValues>({

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { rs } from '@rstest/core';
 
 import { normalizeInhibitRuleMatchers, type NormalizedInhibitRule } from '@grafana/external-alertmanager/vanilla';
 
@@ -27,7 +27,7 @@ function renderForm(inhibitRule?: NormalizedInhibitRule) {
     submission.data = data;
   };
   const view = render(
-    <InhibitRuleFormFields inhibitRule={inhibitRule} onSubmit={onSubmit} onCancel={vi.fn()} isLoading={false} />
+    <InhibitRuleFormFields inhibitRule={inhibitRule} onSubmit={onSubmit} onCancel={rs.fn()} isLoading={false} />
   );
   return { submission, onSubmit, ...view };
 }
@@ -122,7 +122,7 @@ describe('InhibitRuleFormFields', () => {
     const { submission, onSubmit, rerender } = renderForm(initialRule);
 
     rerender(
-      <InhibitRuleFormFields inhibitRule={resetRule} onSubmit={onSubmit} onCancel={vi.fn()} isLoading={false} />
+      <InhibitRuleFormFields inhibitRule={resetRule} onSubmit={onSubmit} onCancel={rs.fn()} isLoading={false} />
     );
 
     const source = screen.getByRole('group', { name: 'Source Matchers' });
