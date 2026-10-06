@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useAsync } from '@react-hookz/web';
+import { noop } from 'lodash';
 
 import { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
@@ -22,7 +23,7 @@ export function useLazyLoadPrometheusGroups<TGroup extends PromRuleGroupDTO>(
   const [groups, setGroups] = useState<TGroup[]>([]);
   const [hasMoreGroups, setHasMoreGroups] = useState<boolean>(true);
 
-  const [groupsRequestState, { execute: fetchMoreGroups }] = useAsync(async () => {
+  const [groupsRequestState, { execute }] = useAsync(async () => {
     let done = false;
     const currentGroups: TGroup[] = [];
 
@@ -47,6 +48,12 @@ export function useLazyLoadPrometheusGroups<TGroup extends PromRuleGroupDTO>(
 
     setGroups((groups) => groups.concat(currentGroups));
   });
+
+  // useAsync keeps a failure in its state (`error` below), but also hands back the failed promise.
+  // Nobody waits on that promise, so without the catch every failed page ends up as an unhandled rejection.
+  const fetchMoreGroups = useCallback(() => {
+    execute().catch(noop);
+  }, [execute]);
 
   // Load initial groups on mount using useEffectOnce pattern
   const [initialized, setInitialized] = useState(false);

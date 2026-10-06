@@ -257,12 +257,15 @@ describe('vanilla feature discovery', () => {
     });
   });
 
-  it('throws when the Prometheus-compatible rules endpoint is unavailable', async () => {
-    const { transport } = probeTransport({});
+  it('propagates the rules request failure of a data source without buildinfo', async () => {
+    const gatewayError = {
+      status: 502,
+      statusText: 'Bad Gateway',
+      data: { message: 'Bad Gateway', error: 'dial tcp 10.0.0.5:9090: connect: connection refused' },
+    };
+    const { transport } = probeTransport({ 'api/v1/rules': rejectWith(gatewayError) });
 
-    await expect(prometheusFlavor.discoverFeatures(ctx(transport))).rejects.toThrow(
-      'Unable to fetch alert rules. Is the data source properly configured?'
-    );
+    await expect(prometheusFlavor.discoverFeatures(ctx(transport))).rejects.toBe(gatewayError);
   });
 
   it('rethrows permission failures rather than reporting a missing feature', async () => {
@@ -311,9 +314,7 @@ describe('vanilla feature discovery', () => {
     it('still requires the Prometheus-compatible rules endpoint', async () => {
       const { transport } = probeTransport({});
 
-      await expect(rulerlessFlavor.discoverFeatures(ctx(transport))).rejects.toThrow(
-        'Unable to fetch alert rules. Is the data source properly configured?'
-      );
+      await expect(rulerlessFlavor.discoverFeatures(ctx(transport))).rejects.toMatchObject({ status: 404 });
     });
 
     it('throws rather than building unusable URLs if something asks for a Ruler backend', () => {
