@@ -49,7 +49,8 @@ export class RulesListPage {
   readonly groupInput: Locator;
   readonly labelsCombobox: Locator;
   readonly dataSourceCombobox: Locator;
-  readonly clearFiltersButton: Locator;
+  /** The search box's own clear button – it empties every filter, the sidebar ones included */
+  readonly clearSearchButton: Locator;
 
   // State + type toggle buttons (visible text, scoped to sidebar)
   readonly stateAllButton: Locator;
@@ -79,7 +80,7 @@ export class RulesListPage {
     this.groupInput = this.sidebar.getByLabel(/^group$/i);
     this.labelsCombobox = this.sidebar.getByLabel(/^labels$/i);
     this.dataSourceCombobox = this.sidebar.getByLabel(/^data source$/i);
-    this.clearFiltersButton = this.sidebar.getByRole('button', { name: /clear filters/i });
+    this.clearSearchButton = page.getByRole('button', { name: 'Clear', exact: true });
 
     this.stateAllButton = this.sidebar.getByRole('button', { name: /^all$/i }).first();
     this.stateFiringButton = this.sidebar.getByRole('button', { name: /^firing$/i });
@@ -161,7 +162,7 @@ export class RulesListPage {
   }
 
   async clearAll() {
-    await this.clearFiltersButton.click();
+    await this.clearSearchButton.click();
     await this.page.waitForURL((url) => !url.searchParams.get('search'));
   }
 

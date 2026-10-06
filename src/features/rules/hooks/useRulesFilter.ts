@@ -47,17 +47,11 @@ export function useRulesFilter() {
     [updateQueryParams]
   );
 
-  // Clear all filters
-  const clearAll = useCallback(() => {
-    updateQueryParams({ search: undefined });
-  }, [updateQueryParams]);
-
   return {
     filterState,
     hasActiveFilters,
     searchQuery,
     setSearchQuery,
     updateFilters,
-    clearAll,
   };
 }
