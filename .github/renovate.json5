@@ -33,6 +33,22 @@
       allowedVersions: '<7',
     },
     {
+      // Grafana supplies @grafana/ui, @grafana/data and @grafana/runtime to the plugin at runtime
+      // (see .config/bundler/externals.ts), so the versions here have to match the oldest Grafana
+      // we support, `grafanaDependency` in src/plugin.json (>=13.1.0). Newer types let code compile
+      // that breaks on that Grafana: 13.2 renamed what getTagColorsFromName returns, for one. The
+      // rest of the 13.x set moves with them. Widen this when `grafanaDependency` goes up.
+      matchPackageNames: [
+        '@grafana/alerting',
+        '@grafana/data',
+        '@grafana/i18n',
+        '@grafana/runtime',
+        '@grafana/schema',
+        '@grafana/ui',
+      ],
+      allowedVersions: '~13.1.0',
+    },
+    {
       // Pin the Node and pnpm runtimes exactly, sourced from mise.toml.
       matchManagers: ['mise'],
       rangeStrategy: 'pin',
