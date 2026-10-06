@@ -75,8 +75,7 @@ export function useFilteredRulesIteratorProvider() {
               // Stopping the search makes every data source that is still loading throw, that is not
               // something wrong with the data source
               if (!abortController.signal.aborted) {
-                const { uid, name } = dataSourceIdentifier;
-                reportError(toDataSourceRulesError(uid, name, error));
+                reportError(toDataSourceRulesError(dataSourceIdentifier.uid, error));
               }
               return empty();
             })

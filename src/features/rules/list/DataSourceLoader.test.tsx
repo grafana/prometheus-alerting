@@ -36,7 +36,7 @@ function ReportedDataSources() {
   return (
     <ul aria-label="Reported data sources">
       {errors.map((error) => (
-        <li key={error.uid}>{`${error.name}: ${error.kind}: ${error.description}`}</li>
+        <li key={error.uid}>{`${error.uid}: ${error.kind}: ${error.description}`}</li>
       ))}
     </ul>
   );
@@ -83,13 +83,13 @@ describe('DataSourceLoader', () => {
 
     render(
       <DataSourceErrorsProvider>
-        <DataSourceLoader rulesSourceIdentifier={{ uid: LOKI_UID, name: 'Test Loki', ruleSourceType: 'datasource' }} />
+        <DataSourceLoader rulesSourceIdentifier={{ uid: LOKI_UID, name: 'Test Loki' }} />
         <ReportedDataSources />
       </DataSourceErrorsProvider>,
       { wrapper: createTestWrapper(LOKI_UID) }
     );
 
     const reported = await findReported();
-    expect(reported).toHaveTextContent(/^Test Loki: error: /);
+    expect(reported).toHaveTextContent(/^test-loki-uid: error: /);
   });
 });

@@ -34,7 +34,7 @@ function ReportedDataSources() {
   return (
     <ul aria-label="Reported data sources">
       {errors.map((error) => (
-        <li key={error.uid}>{`${error.name}: ${error.kind}: ${error.description}`}</li>
+        <li key={error.uid}>{`${error.uid}: ${error.kind}: ${error.description}`}</li>
       ))}
     </ul>
   );
@@ -164,7 +164,7 @@ describe('PaginatedDataSourceLoader with a data source that has no rules', () =>
   it('reports the data source as having no rules', async () => {
     renderWithReport();
 
-    expect(await findReported()).toHaveTextContent('Mimir: empty: This data source has no rules.');
+    expect(await findReported()).toHaveTextContent('test-mimir-uid: empty: This data source has no rules.');
   });
 
   it('does not report the data source when filters are active, an empty result only means nothing matched', async () => {

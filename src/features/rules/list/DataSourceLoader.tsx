@@ -35,7 +35,7 @@ export function DataSourceLoader({
   const knownApplication = getFlavor(uid)?.application;
 
   const discoveryError = error ?? (!isLoading && !features ? 'Unable to discover data source features' : undefined);
-  useReportDataSourceError(uid, name, discoveryError);
+  useReportDataSourceError(uid, discoveryError);
   useReportDataSourceLoading(uid, isLoading);
 
   if (isLoading) {

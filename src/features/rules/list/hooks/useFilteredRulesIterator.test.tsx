@@ -10,7 +10,7 @@ import { DataSourceRulesSourceIdentifier } from '../../../../types/rules';
 import { DataSourceErrorsProvider, useDataSourceErrors } from './useDataSourceErrors';
 import { useFilteredRulesIteratorProvider } from './useFilteredRulesIterator';
 
-const prometheus: DataSourceRulesSourceIdentifier = { uid: 'prom', name: 'Prometheus', ruleSourceType: 'datasource' };
+const prometheus: DataSourceRulesSourceIdentifier = { uid: 'prom', name: 'Prometheus' };
 
 vi.mock('../../../../utils/datasource', () => ({
   getExternalRulesSources: () => [prometheus],
