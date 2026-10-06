@@ -1,5 +1,7 @@
 import React, { PropsWithChildren, createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 
+import { produce } from 'immer';
+
 import { t } from '@grafana/i18n';
 
 import { getRulesErrorFeedback } from '../../utils/errorFeedback';
@@ -18,13 +20,9 @@ export interface DataSourceRulesError {
 
 interface DataSourceErrorsContextValue {
   errors: DataSourceRulesError[];
-  /** Data sources that are still loading their rules */
-  loadingUids: string[];
   reportError: (error: DataSourceRulesError) => void;
   /** Pass a `kind` to only clear that kind of report, e.g. clear an error but keep a "no rules" report */
   clearError: (uid: string, kind?: DataSourceRulesError['kind']) => void;
-  startLoading: (uid: string) => void;
-  stopLoading: (uid: string) => void;
 }
 
 type DataSourceErrorsState = Record<string, DataSourceRulesError>;
@@ -36,60 +34,18 @@ export function dataSourceErrorsReducer(
   state: DataSourceErrorsState,
   action: DataSourceErrorsAction
 ): DataSourceErrorsState {
-  switch (action.type) {
-    case 'report': {
-      const { error } = action;
-      // Bail out on repeat reports of the same error, re-rendering every consumer for nothing
-      const reported = state[error.uid];
-      if (
-        reported &&
-        reported.kind === error.kind &&
-        reported.description === error.description &&
-        reported.details === error.details
-      ) {
-        return state;
-      }
-      return { ...state, [error.uid]: error };
+  return produce(state, (draft) => {
+    switch (action.type) {
+      case 'report':
+        draft[action.error.uid] = action.error;
+        return;
+      case 'clear':
+        if (!action.kind || draft[action.uid]?.kind === action.kind) {
+          delete draft[action.uid];
+        }
+        return;
     }
-    case 'clear': {
-      const reported = state[action.uid];
-      if (!reported || (action.kind && reported.kind !== action.kind)) {
-        return state;
-      }
-      const next = { ...state };
-      delete next[action.uid];
-      return next;
-    }
-  }
-}
-
-/**
- * How many components are loading for each data source. A count rather than a flag because
- * discovery and the rule groups load in different components, and when one hands over to the
- * other both can briefly be loading at the same time.
- */
-type LoadingState = Record<string, number>;
-
-type LoadingAction = { type: 'start'; uid: string } | { type: 'stop'; uid: string };
-
-export function loadingReducer(state: LoadingState, action: LoadingAction): LoadingState {
-  const count = state[action.uid] ?? 0;
-
-  if (action.type === 'start') {
-    return { ...state, [action.uid]: count + 1 };
-  }
-
-  if (count === 0) {
-    return state;
-  }
-
-  if (count === 1) {
-    const next = { ...state };
-    delete next[action.uid];
-    return next;
-  }
-
-  return { ...state, [action.uid]: count - 1 };
+  });
 }
 
 function noop() {}
@@ -101,11 +57,8 @@ function noop() {}
  */
 const DataSourceErrorsContext = createContext<DataSourceErrorsContextValue>({
   errors: [],
-  loadingUids: [],
   reportError: noop,
   clearError: noop,
-  startLoading: noop,
-  stopLoading: noop,
 });
 
 /**
@@ -119,7 +72,6 @@ const DataSourceErrorsContext = createContext<DataSourceErrorsContextValue>({
  */
 export function DataSourceErrorsProvider({ children }: PropsWithChildren) {
   const [errorsByUid, dispatch] = useReducer(dataSourceErrorsReducer, {});
-  const [loadingByUid, dispatchLoading] = useReducer(loadingReducer, {});
 
   // Kept out of the value below so the action creators stay stable – consumers use them as effect
   // dependencies, and a new identity on every state change would make them clear and report in a loop
@@ -127,15 +79,12 @@ export function DataSourceErrorsProvider({ children }: PropsWithChildren) {
     () => ({
       reportError: (error: DataSourceRulesError) => dispatch({ type: 'report', error }),
       clearError: (uid: string, kind?: DataSourceRulesError['kind']) => dispatch({ type: 'clear', uid, kind }),
-      startLoading: (uid: string) => dispatchLoading({ type: 'start', uid }),
-      stopLoading: (uid: string) => dispatchLoading({ type: 'stop', uid }),
     }),
     []
   );
 
   const errors = useMemo(() => Object.values(errorsByUid), [errorsByUid]);
-  const loadingUids = useMemo(() => Object.keys(loadingByUid), [loadingByUid]);
-  const value = useMemo(() => ({ errors, loadingUids, ...actions }), [errors, loadingUids, actions]);
+  const value = useMemo(() => ({ errors, ...actions }), [errors, actions]);
 
   return <DataSourceErrorsContext.Provider value={value}>{children}</DataSourceErrorsContext.Provider>;
 }
@@ -210,18 +159,4 @@ export function useReportHealthyDataSource(uid: string, isHealthy: boolean) {
       clearError(uid);
     }
   }, [uid, isHealthy, clearError]);
-}
-
-/** Marks a data source as loading for as long as `isLoading` is true and the component is mounted. */
-export function useReportDataSourceLoading(uid: string, isLoading: boolean) {
-  const { startLoading, stopLoading } = useDataSourceErrors();
-
-  useEffect(() => {
-    if (!isLoading) {
-      return;
-    }
-
-    startLoading(uid);
-    return () => stopLoading(uid);
-  }, [uid, isLoading, startLoading, stopLoading]);
 }
