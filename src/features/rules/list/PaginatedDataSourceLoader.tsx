@@ -20,7 +20,6 @@ import { NoRulesFound } from './components/NoRulesFound';
 import { groupFilter as groupFilterFn } from './hooks/filters';
 import {
   useReportDataSourceError,
-  useReportDataSourceLoading,
   useReportEmptyDataSource,
   useReportHealthyDataSource,
 } from './hooks/useDataSourceErrors';
@@ -121,11 +120,6 @@ function PaginatedGroupsLoader({
   // Groups coming in prove the data source works, even if a later page failed. This clears what an
   // earlier view reported.
   useReportHealthyDataSource(uid, !isEmpty(groups));
-
-  // Also loading before the first request has started, so the loading state does not blink off
-  // between feature discovery finishing and the first page of groups coming in
-  const isLoadingFirstPage = !error && isEmpty(groups) && hasMoreGroups;
-  useReportDataSourceLoading(uid, isLoading || isLoadingFirstPage);
 
   // Hide datasource section when filters are active and there are no matching results
   if (hideOnEmpty && hasNoRules) {

@@ -8,7 +8,7 @@ import { DataSourceRulesSourceIdentifier } from '../../../types/datasources';
 import { DataSourceSection } from './components/DataSourceSection';
 import { DataSourceErrorBoundary } from './components/DataSourceErrorBoundary';
 import { PaginatedDataSourceLoader } from './PaginatedDataSourceLoader';
-import { useReportDataSourceError, useReportDataSourceLoading } from './hooks/useDataSourceErrors';
+import { useReportDataSourceError } from './hooks/useDataSourceErrors';
 
 interface DataSourceLoaderProps {
   rulesSourceIdentifier: DataSourceRulesSourceIdentifier;
@@ -36,7 +36,6 @@ export function DataSourceLoader({
 
   const discoveryError = error ?? (!isLoading && !features ? 'Unable to discover data source features' : undefined);
   useReportDataSourceError(uid, discoveryError);
-  useReportDataSourceLoading(uid, isLoading);
 
   if (isLoading) {
     // While loading, show skeleton only if not hiding on empty/error
