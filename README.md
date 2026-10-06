@@ -95,17 +95,17 @@ pnpm --version  # should be >= 12.4.2
 5. Spin up a Grafana instance and run the plugin inside it (using Docker)
 
    ```bash
-   pnpm run server
+   mise run server
    ```
 
 6. Run the E2E tests (using Playwright)
 
    ```bash
    # Spins up a Grafana instance first that we tests against
-   pnpm run server
+   mise run server
 
    # If you wish to start a certain Grafana version. If not specified will use latest by default
-   GRAFANA_VERSION=11.3.0 pnpm run server
+   GRAFANA_VERSION=11.3.0 mise run server
 
    # Starts the tests
    pnpm run e2e

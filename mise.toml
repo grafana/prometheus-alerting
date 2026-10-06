@@ -44,3 +44,7 @@ tools = { "aqua:trufflesecurity/trufflehog" = "3.97.5" }
 # since origin/main. Only credentials trufflehog confirms are live fail the scan, and --no-update
 # keeps it on the version pinned here.
 run = 'trufflehog git file://. --since-commit "${LEFTHOOK_REMOTE_REF:-origin/main}" --only-verified --fail --log-level=-1 --no-update'
+
+[tasks.server]
+description = "Start Grafana in Docker with the plugin loaded (set GRAFANA_VERSION to pick a version)"
+run = "docker compose up --build --force-recreate"
