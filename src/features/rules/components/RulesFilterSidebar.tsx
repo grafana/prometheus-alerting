@@ -8,6 +8,7 @@ import { Trans, t } from '@grafana/i18n';
 import { Button, Divider, Icon, Input, MultiCombobox, Stack, useStyles2, useTheme2 } from '@grafana/ui';
 
 import { useDataSourceOptions, useLabelOptions } from '../hooks/useRuleFilterOptions';
+import { HiddenDataSourcesLink } from '../list/components/DataSourcesStatus';
 import { useRulesFilter } from '../hooks/useRulesFilter';
 import { RulesFilter as RulesFilterType } from '../search/rulesSearchParser';
 
@@ -137,6 +138,31 @@ function FilterSidebarForm() {
   return (
     <form>
       <Stack direction="column" gap={2}>
+        {/* First, so the note about hidden data sources is visible without scrolling */}
+        <Stack direction="column" gap={1.5}>
+          <SidebarField
+            htmlFor={dataSourceId}
+            label={<Trans i18nKey="alerting.rules-filter.data-source-label">Data source</Trans>}
+            labelAside={<HiddenDataSourcesLink />}
+          >
+            <Controller
+              name="dataSourceNames"
+              control={control}
+              render={({ field }) => (
+                <MultiCombobox
+                  id={dataSourceId}
+                  options={dataSourceOptions}
+                  value={field.value}
+                  onChange={(selections) => field.onChange(selections.map((s) => s.value))}
+                  placeholder={t('alerting.rules-filter.data-source-placeholder', 'Select data sources')}
+                />
+              )}
+            />
+          </SidebarField>
+        </Stack>
+
+        <Divider spacing={0} />
+
         <Stack direction="column" gap={1.5}>
           <SidebarField
             htmlFor={ruleNameId}
@@ -274,29 +300,6 @@ function FilterSidebarForm() {
             />
           </SidebarField>
         </Stack>
-
-        <Divider spacing={0} />
-
-        <Stack direction="column" gap={1.5}>
-          <SidebarField
-            htmlFor={dataSourceId}
-            label={<Trans i18nKey="alerting.rules-filter.data-source-label">Data source</Trans>}
-          >
-            <Controller
-              name="dataSourceNames"
-              control={control}
-              render={({ field }) => (
-                <MultiCombobox
-                  id={dataSourceId}
-                  options={dataSourceOptions}
-                  value={field.value}
-                  onChange={(selections) => field.onChange(selections.map((s) => s.value))}
-                  placeholder={t('alerting.rules-filter.data-source-placeholder', 'Select data sources')}
-                />
-              )}
-            />
-          </SidebarField>
-        </Stack>
       </Stack>
     </form>
   );
@@ -305,18 +308,24 @@ function FilterSidebarForm() {
 function SidebarField({
   htmlFor,
   label,
+  labelAside,
   children,
 }: {
   htmlFor: string;
   label: React.ReactNode;
+  /** Shown on the same line as the label, e.g. a note about the options */
+  labelAside?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const styles = useStyles2(getStyles);
   return (
     <div className={styles.field}>
-      <label className={styles.fieldLabel} htmlFor={htmlFor}>
-        {label}
-      </label>
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <label className={styles.fieldLabel} htmlFor={htmlFor}>
+          {label}
+        </label>
+        {labelAside}
+      </Stack>
       <div>{children}</div>
     </div>
   );

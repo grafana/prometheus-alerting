@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
-import { TestMemoryRouter } from '../../../test/utils/test-wrapper';
+import { createTestWrapper, TestMemoryRouter } from '../../../test/utils/test-wrapper';
 
 import { RulesFilter } from './RulesFilter';
 import { RulesFilterSidebar } from './RulesFilterSidebar';
@@ -31,7 +31,9 @@ function renderSidebar(initialSearch: string, previousSearch?: string) {
       <RulesFilter />
       <RulesFilterSidebar />
       <LocationSearch />
-    </TestMemoryRouter>
+    </TestMemoryRouter>,
+    // The note about hidden data sources reads the loading state from the store
+    { wrapper: createTestWrapper() }
   );
 }
 
