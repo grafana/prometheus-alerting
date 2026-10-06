@@ -22,7 +22,6 @@ import {
 
 import { useDelayedHide } from '../../../../hooks/useDelayedHide';
 import { useDelayedShow } from '../../../../hooks/useDelayedShow';
-import { DETAILS_SEPARATOR } from '../../utils/errorFeedback';
 import { DataSourceRulesError, useDataSourceErrors } from '../hooks/useDataSourceErrors';
 import { useIsLoadingRules } from '../hooks/useIsLoadingRules';
 
@@ -245,10 +244,10 @@ function HiddenDataSourcesSection({ title, errors }: { title: string; errors: Da
   );
 }
 
-function DataSourceErrorItem({ uid, kind, description, details }: DataSourceRulesError) {
+function DataSourceErrorItem({ uid, kind, description, status, url }: DataSourceRulesError) {
   // Reports only carry the uid, fall back to it for a data source that has since been removed
   const name = getDataSourceSrv().getInstanceSettings(uid)?.name ?? uid;
-  const detailParts = details?.split(DETAILS_SEPARATOR).map((part) => withoutProxyPrefix(part, uid)) ?? [];
+  const meta = [status, url && withoutProxyPrefix(url, uid)].filter(Boolean);
 
   return (
     <Card noMargin isCompact>
@@ -258,13 +257,13 @@ function DataSourceErrorItem({ uid, kind, description, details }: DataSourceRule
           {name}
         </Text>
       </Card.Heading>
-      {/* The status line in the details repeats the message of a bodyless failure verbatim */}
-      {!details?.includes(description) && (
+      {/* A failure without a body uses the status line as its description, don't show it twice */}
+      {description !== status && (
         <Card.Description>
           <Text color={kind === 'error' ? 'error' : 'secondary'}>{description}</Text>
         </Card.Description>
       )}
-      {detailParts.length > 0 && <Card.Meta>{detailParts}</Card.Meta>}
+      {meta.length > 0 && <Card.Meta>{meta}</Card.Meta>}
       {/* The right-hand column, so the button sits next to the name instead of adding a row of its own */}
       <Card.Tags>
         <LinkButton variant="secondary" size="sm" icon="cog" href={`/connections/datasources/edit/${uid}`}>

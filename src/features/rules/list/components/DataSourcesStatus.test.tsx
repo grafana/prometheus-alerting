@@ -319,8 +319,7 @@ describe('withoutProxyPrefix', () => {
     expect(withoutProxyPrefix('/api/datasources/proxy/uid/abc', 'abc')).toBe('/');
   });
 
-  it('leaves anything else alone', () => {
-    expect(withoutProxyPrefix('HTTP 502 Bad Gateway', 'abc')).toBe('HTTP 502 Bad Gateway');
+  it('leaves the URL of another data source alone', () => {
     expect(withoutProxyPrefix('api/datasources/proxy/uid/other/api/v1/rules', 'abc')).toBe(
       'api/datasources/proxy/uid/other/api/v1/rules'
     );
