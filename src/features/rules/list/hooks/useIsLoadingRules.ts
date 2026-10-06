@@ -11,11 +11,14 @@ import type { RootState } from '../../../../store/store';
  * need for every loader to report when it starts and stops.
  */
 export function selectIsLoadingRules(state: RootState): boolean {
+  // Endpoint names come from the endpoints themselves, so renaming one can't silently break this
   const discovering = Object.values(state[featureDiscoveryApi.reducerPath].queries).some(
-    (query) => query?.status === QueryStatus.pending
+    (query) =>
+      query?.endpointName === featureDiscoveryApi.endpoints.discoverFeatures.name &&
+      query.status === QueryStatus.pending
   );
   const loadingGroups = Object.values(state[prometheusApi.reducerPath].queries).some(
-    (query) => query?.endpointName === 'getGroups' && query.status === QueryStatus.pending
+    (query) => query?.endpointName === prometheusApi.endpoints.getGroups.name && query.status === QueryStatus.pending
   );
 
   return discovering || loadingGroups;
