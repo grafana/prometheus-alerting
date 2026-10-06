@@ -31,12 +31,14 @@ brew install mise
 curl https://mise.run | sh
 ```
 
-Then, from the repo root, trust the config and install the pinned tool versions:
+Then, from the repo root, trust the config and set the project up. This installs the pinned tool versions, the project dependencies and the Git hooks:
 
 ```bash
 mise trust
-mise install
+mise bootstrap
 ```
+
+Run `mise tasks` to see the other tasks.
 
 See the [mise installation docs](https://mise.jdx.dev/installing-mise.html) for other platforms and shell activation options.
 
@@ -61,10 +63,10 @@ pnpm --version  # should be >= 12.4.2
 1. Install dependencies
 
    ```bash
-   # If using mise (recommended):
-   mise trust && mise install  # installs pinned Node.js and pnpm
+   # If using mise (recommended): installs pinned Node.js and pnpm, the dependencies and the Git hooks
+   mise trust && mise bootstrap
 
-   # Install project dependencies:
+   # Without mise:
    pnpm install
    ```
 
@@ -130,10 +132,12 @@ To install and test the plugin in a local Grafana instance (outside of Docker):
    cd prometheus-alerting
 
    # If using mise (recommended):
-   mise trust && mise install
+   mise trust && mise bootstrap
 
-   # Install dependencies and start development:
+   # Without mise, install the dependencies yourself:
    pnpm install
+
+   # Start development:
    pnpm run dev
    ```
 

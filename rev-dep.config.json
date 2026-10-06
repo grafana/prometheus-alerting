@@ -13,7 +13,6 @@
         "packages/**/*.test.{ts,tsx}",
         "**/*.config.*",
         "vitest-setup.ts",
-        "scripts/**",
         "__mocks__/**"
       ],
       "unusedNodeModulesDetection": {

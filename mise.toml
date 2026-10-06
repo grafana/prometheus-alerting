@@ -3,12 +3,44 @@ minimum_release_age = "3d" # only install versions released more than 3 days ago
 
 lockfile = true
 not_found_auto_install = false
+# Needed for [deps] below, which is still experimental in mise.
+experimental = true
 
-# Shared tools for both CI and local development
-# Dev-only tools (lefthook, trufflehog) are in mise.development.toml, loaded via .miserc.toml
+# Set up once with `mise trust && mise bootstrap`: installs the tools below, the project's
+# dependencies and the Git hooks.
 #
 # Node stays on the active LTS line: 24.x ("Krypton") until 26.x enters LTS on 2026-10-28.
 # Keep .nvmrc, `engines`, `packageManager`, bundle-size.yml and docker-compose.yaml in step.
+#
+# CI only installs node and pnpm (see `install_args` in .github/actions/setup-node). Tools that
+# only one task needs are declared on that task instead, so a plain `mise install` skips them and
+# `mise run <task>` installs them the first time. Keep those in this file rather than in
+# .mise/tasks/: Renovate reads `tools` on the tasks here, but not the `#MISE tools=` line of a
+# task file.
 [tools]
 node = "24.21.0"
 pnpm = "12.4.2"
+# Runs the Git hooks in lefthook.yml. It has to be here rather than on a task: the hook scripts
+# git runs look for lefthook through `mise exec`, which only sees the tools in this list.
+"aqua:evilmartians/lefthook" = "2.1.14"
+
+# Installs node_modules before any `mise run` or `mise exec` (the Git hooks go through `mise exec`
+# too), but only when these files have changed since the last install or node_modules is missing.
+# `mise deps` runs it by hand. --frozen-lockfile makes the install fail rather than rewrite
+# pnpm-lock.yaml, the same as in CI.
+[deps.pnpm]
+run = "pnpm install --frozen-lockfile"
+sources = ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "packages/*/package.json"]
+auto = true
+
+[tasks.bootstrap]
+description = "Set up the project for development: Git hooks (dependencies install first, see [deps.pnpm])"
+run = "lefthook install"
+
+[tasks.secrets]
+description = "Scan commits not yet on the remote for verified secrets (run by the pre-push hook)"
+tools = { "aqua:trufflesecurity/trufflehog" = "3.97.5" }
+# lefthook sets LEFTHOOK_REMOTE_REF to the ref being pushed to. Run by hand, this scans everything
+# since origin/main. Only credentials trufflehog confirms are live fail the scan, and --no-update
+# keeps it on the version pinned here.
+run = 'trufflehog git file://. --since-commit "${LEFTHOOK_REMOTE_REF:-origin/main}" --only-verified --fail --log-level=-1 --no-update'
