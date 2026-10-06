@@ -3,9 +3,10 @@ blockExoticSubdeps: true # blocks git repositories etc. as dependencies
 strictDepBuilds: true # disable unverified post-install scripts
 dangerouslyAllowAllBuilds: false
 verifyDepsBeforeRun: install
-minimumReleaseAge: 4320 # 3 days, in minutes
-minimumReleaseAgeExclude:
-  - '@grafana/*'
+# 3 days, in minutes. This applies to @grafana/* packages too, the same as Renovate's gate. When
+# Renovate opens a security update for a version newer than that, it adds that version to
+# minimumReleaseAgeExclude itself. Delete the entry once the version is older than 3 days.
+minimumReleaseAge: 4320
 
 # Security overrides only stay while something still asks for a vulnerable version. To check
 # whether one is still needed, delete it, resolve from scratch (`pnpm install --lockfile-only`
@@ -36,9 +37,6 @@ auditConfig:
     # Remove this once braces publishes a fix and add an override instead.
     - GHSA-vfj7-8cjw-p6xm
 
-registries:
-  '@jsr': https://npm.jsr.io
-
 packages:
   - 'packages/*'
 
@@ -47,4 +45,3 @@ allowBuilds:
   core-js: false
   esbuild: true
   msw: true
-  protobufjs: false
