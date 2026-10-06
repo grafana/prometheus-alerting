@@ -48,7 +48,7 @@ pnpm test:ci
 pnpm e2e        # requires `mise run server` in another terminal
 ```
 
-Git hooks are installed automatically by [lefthook](https://lefthook.dev) on `pnpm install`. They run ESLint and Prettier on staged files before each commit, and `pnpm audit` plus a [TruffleHog](https://github.com/trufflesecurity/trufflehog) secret scan before each push. Please don't bypass them with `--no-verify`.
+Git hooks are installed by [lefthook](https://lefthook.dev) when you run `mise bootstrap`. They run ESLint and Prettier on staged files before each commit, and `pnpm audit` plus a [TruffleHog](https://github.com/trufflesecurity/trufflehog) secret scan before each push. Please don't bypass them with `--no-verify`.
 
 ## Documentation
 
