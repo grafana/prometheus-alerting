@@ -15,7 +15,9 @@ export interface DataSourceRulesError {
   uid: string;
   kind: 'error' | 'empty';
   description: string;
-  details?: string;
+  /** See `RulesErrorFeedback` */
+  status?: string;
+  url?: string;
 }
 
 interface DataSourceErrorsContextValue {
@@ -109,18 +111,18 @@ export function useReportDataSourceError(uid: string, error: unknown) {
   // Derive the feedback during render so the effect depends on plain strings – depending on the
   // error itself would re-trigger the reporting for every error that is recreated on each render
   const reported = error ? toDataSourceRulesError(uid, error) : undefined;
-  const { description, details } = reported ?? {};
+  const { description, status, url } = reported ?? {};
   const reportedUid = useRef<string>(undefined);
 
   useEffect(() => {
     if (description) {
-      reportError({ uid, kind: 'error', description, details });
+      reportError({ uid, kind: 'error', description, status, url });
       reportedUid.current = uid;
     } else if (reportedUid.current) {
       clearError(reportedUid.current, 'error');
       reportedUid.current = undefined;
     }
-  }, [uid, description, details, reportError, clearError]);
+  }, [uid, description, status, url, reportError, clearError]);
 }
 
 /**

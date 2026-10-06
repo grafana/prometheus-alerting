@@ -4,21 +4,21 @@ import { t } from '@grafana/i18n';
 
 import { extractErrorMessage, isForbiddenError } from '../../../utils/errors';
 
+/**
+ * `status` and `url` are the technical side of the failure, which is what makes an otherwise opaque
+ * proxy failure such as "Bad Gateway" actionable.
+ */
 export interface RulesErrorFeedback {
   description: string;
-  /**
-   * Technical context – HTTP status and failing request – which is what makes an otherwise
-   * opaque proxy failure such as "Bad Gateway" actionable.
-   */
-  details?: string;
+  /** The HTTP status line, e.g. "HTTP 502 Bad Gateway", or the status of a non-HTTP failure, e.g. "FETCH_ERROR" */
+  status?: string;
+  /** The request that failed */
+  url?: string;
 }
-
-/** Goes between the parts of `RulesErrorFeedback.details`, e.g. "HTTP 502 Bad Gateway · api/v1/rules" */
-export const DETAILS_SEPARATOR = ' · ';
 
 /** Returns consistent user-facing feedback for datasource-backed rule requests. */
 export function getRulesErrorFeedback(error: unknown): RulesErrorFeedback {
-  const details = describeRequest(error);
+  const request = { status: httpStatusLine(error), url: getRequestUrl(error) };
 
   if (isForbiddenError(error)) {
     return {
@@ -26,17 +26,17 @@ export function getRulesErrorFeedback(error: unknown): RulesErrorFeedback {
         'alerting.rules-error.permission-denied-description',
         'You do not have permission to access rules from this data source.'
       ),
-      details,
+      ...request,
     };
   }
 
-  return { description: describeError(error), details };
+  return { description: describeError(error), ...request };
 }
 
 /**
  * Grafana wraps upstream failures in a generic message ("Bad Gateway"), while the actual cause
  * sits in a separate field of the response body – report the cause, it is the one that explains
- * what to fix. The generic message is already covered by the status line in the details.
+ * what to fix. The generic message is already covered by the status line.
  */
 function describeError(error: unknown): string {
   if (hasResponseBody(error)) {
@@ -61,16 +61,6 @@ function extractErrorCause(error: unknown): string | undefined {
   }
 
   return undefined;
-}
-
-function describeRequest(error: unknown): string | undefined {
-  if (!error || typeof error !== 'object') {
-    return undefined;
-  }
-
-  const parts = [httpStatusLine(error), getRequestUrl(error)];
-
-  return parts.filter(isNonEmptyString).join(DETAILS_SEPARATOR) || undefined;
 }
 
 function httpStatusLine(error: unknown): string | undefined {
@@ -99,7 +89,11 @@ function httpStatusLine(error: unknown): string | undefined {
 }
 
 /** The failing request, either flattened onto the error or on the original fetch config. */
-function getRequestUrl(error: object): string | undefined {
+function getRequestUrl(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object') {
+    return undefined;
+  }
+
   if ('url' in error && isNonEmptyString(error.url)) {
     return error.url;
   }

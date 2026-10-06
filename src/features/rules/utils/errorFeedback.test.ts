@@ -4,7 +4,7 @@ describe('getRulesErrorFeedback', () => {
   it('returns permission feedback for forbidden requests', () => {
     expect(getRulesErrorFeedback({ status: 403, data: {} })).toEqual({
       description: 'You do not have permission to access rules from this data source.',
-      details: 'HTTP 403',
+      status: 'HTTP 403',
     });
   });
 
@@ -35,7 +35,7 @@ describe('getRulesErrorFeedback', () => {
     );
   });
 
-  it('reports the status and the failing request as details', () => {
+  it('reports the status and the failing request', () => {
     const feedback = getRulesErrorFeedback({
       status: 502,
       statusText: 'Bad Gateway',
@@ -43,7 +43,10 @@ describe('getRulesErrorFeedback', () => {
       url: '/api/datasources/proxy/uid/abc/api/v1/rules',
     });
 
-    expect(feedback.details).toBe('HTTP 502 Bad Gateway · /api/datasources/proxy/uid/abc/api/v1/rules');
+    expect(feedback).toMatchObject({
+      status: 'HTTP 502 Bad Gateway',
+      url: '/api/datasources/proxy/uid/abc/api/v1/rules',
+    });
   });
 
   it('reads the failing request off the original fetch config', () => {
@@ -53,16 +56,16 @@ describe('getRulesErrorFeedback', () => {
       config: { url: '/api/datasources/proxy/uid/abc/api/v1/status/buildinfo' },
     });
 
-    expect(feedback.details).toBe('HTTP 500 · /api/datasources/proxy/uid/abc/api/v1/status/buildinfo');
+    expect(feedback.url).toBe('/api/datasources/proxy/uid/abc/api/v1/status/buildinfo');
   });
 
   it('describes non-HTTP failures by their status string', () => {
     const feedback = getRulesErrorFeedback({ status: 'FETCH_ERROR', error: 'Failed to fetch' });
 
-    expect(feedback).toMatchObject({ description: 'Failed to fetch', details: 'FETCH_ERROR' });
+    expect(feedback).toMatchObject({ description: 'Failed to fetch', status: 'FETCH_ERROR' });
   });
 
-  it('leaves CUSTOM_ERROR out of the details, it says nothing about what went wrong', () => {
+  it('leaves out the CUSTOM_ERROR status, it says nothing about what went wrong', () => {
     const feedback = getRulesErrorFeedback({
       status: 'CUSTOM_ERROR',
       error: 'JSON.parse: unexpected character at line 1 column 1 of the JSON data',
@@ -70,14 +73,18 @@ describe('getRulesErrorFeedback', () => {
 
     expect(feedback).toMatchObject({
       description: 'JSON.parse: unexpected character at line 1 column 1 of the JSON data',
-      details: undefined,
+      status: undefined,
     });
   });
 
   it('describes thrown errors by their message', () => {
     const feedback = getRulesErrorFeedback(new Error('Data source with uid "abc" not found'));
 
-    expect(feedback).toMatchObject({ description: 'Data source with uid "abc" not found', details: undefined });
+    expect(feedback).toMatchObject({
+      description: 'Data source with uid "abc" not found',
+      status: undefined,
+      url: undefined,
+    });
   });
 
   it('returns the ruler response verbatim, without stripping or splitting anything', () => {
