@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { t, Trans } from '@grafana/i18n';
 import { Alert, ErrorBoundary, ErrorWithStack, Text } from '@grafana/ui';
 
 import { getFlavor } from '../../../../api/rules/flavors/registry';
 import { DataSourceRulesSourceIdentifier } from '../../../../types/datasources';
+
+import { useReportDataSourceError } from '../hooks/useDataSourceErrors';
 
 import { DataSourceSection } from './DataSourceSection';
 
@@ -13,6 +15,11 @@ import { DataSourceSection } from './DataSourceSection';
  * We don't want them to break the whole page, so we wrap them in an error boundary
  */
 
+// Stable reference, a new Error on every render would re-trigger the error reporting effect
+const UNKNOWN_ERROR = new Error(
+  'Unable to load rules from this data source. Does the data source support the Prometheus API?'
+);
+
 export function DataSourceErrorBoundary({
   children,
   rulesSourceIdentifier,
@@ -20,11 +27,15 @@ export function DataSourceErrorBoundary({
   children: React.ReactNode;
   rulesSourceIdentifier: DataSourceRulesSourceIdentifier;
 }) {
+  const { uid, name } = rulesSourceIdentifier;
+  const [caughtError, setCaughtError] = useState<Error | null>(null);
+
+  useReportDataSourceError(uid, name, caughtError);
+
   return (
-    <ErrorBoundary>
+    <ErrorBoundary onError={(error) => setCaughtError(error ?? UNKNOWN_ERROR)}>
       {({ error, errorInfo }) => {
         if (error || errorInfo) {
-          const { uid, name } = rulesSourceIdentifier;
           return (
             <DataSourceSection uid={uid} name={name} application={getFlavor(uid)?.application}>
               <Alert title={t('rules.error-boundary.title', 'Unable to load rules from this data source')}>

@@ -20,6 +20,7 @@ import { RulesFilter } from '../../search/rulesSearchParser';
 
 import { groupFilter, ruleFilter } from './filters';
 import { usePrometheusGroupsGenerator } from './prometheusGroupsGenerator';
+import { toDataSourceRulesError, useDataSourceErrors } from './useDataSourceErrors';
 
 interface GetIteratorResult {
   iterable: AsyncIterableX<PromRuleWithOrigin>;
@@ -29,6 +30,7 @@ interface GetIteratorResult {
 export function useFilteredRulesIteratorProvider() {
   const allExternalRulesSources = useMemo(() => getExternalRulesSources(), []);
   const prometheusGroupsGenerator = usePrometheusGroupsGenerator();
+  const { reportError } = useDataSourceErrors();
 
   const getFilteredRulesIterable = useCallback(
     (filterState: RulesFilter, groupLimit: number): GetIteratorResult => {
@@ -67,7 +69,17 @@ export function useFilteredRulesIteratorProvider() {
                 .filter(({ rule }) => ruleFilter(rule, normalizedFilterState))
                 .map(({ group, rule, index }) => mapRuleToRuleWithOrigin(dataSourceIdentifier, group, rule, index))
             ),
-            catchError(() => empty())
+            // A failing data source should not fail the entire search, we skip its results and
+            // report the error so it can be surfaced to the user
+            catchError((error: unknown) => {
+              // Stopping the search makes every data source that is still loading throw, that is not
+              // something wrong with the data source
+              if (!abortController.signal.aborted) {
+                const { uid, name } = dataSourceIdentifier;
+                reportError(toDataSourceRulesError(uid, name, error));
+              }
+              return empty();
+            })
           );
 
           return promGroupsGenerator;
@@ -79,7 +91,7 @@ export function useFilteredRulesIteratorProvider() {
 
       return { iterable, abortController };
     },
-    [allExternalRulesSources, prometheusGroupsGenerator]
+    [allExternalRulesSources, prometheusGroupsGenerator, reportError]
   );
 
   return getFilteredRulesIterable;

@@ -8,6 +8,7 @@ import { DataSourceRulesSourceIdentifier } from '../../../types/datasources';
 import { DataSourceSection } from './components/DataSourceSection';
 import { DataSourceErrorBoundary } from './components/DataSourceErrorBoundary';
 import { PaginatedDataSourceLoader } from './PaginatedDataSourceLoader';
+import { useReportDataSourceError, useReportDataSourceLoading } from './hooks/useDataSourceErrors';
 
 interface DataSourceLoaderProps {
   rulesSourceIdentifier: DataSourceRulesSourceIdentifier;
@@ -32,6 +33,10 @@ export function DataSourceLoader({
   // whatever the plugin type already settles -- otherwise a failing data source loses its icon and
   // becomes hard to identify in a list of several.
   const knownApplication = getFlavor(uid)?.application;
+
+  const discoveryError = error ?? (!isLoading && !features ? 'Unable to discover data source features' : undefined);
+  useReportDataSourceError(uid, name, discoveryError);
+  useReportDataSourceLoading(uid, isLoading);
 
   if (isLoading) {
     // While loading, show skeleton only if not hiding on empty/error
