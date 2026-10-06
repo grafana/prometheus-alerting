@@ -3,43 +3,39 @@ blockExoticSubdeps: true # blocks git repositories etc. as dependencies
 strictDepBuilds: true # disable unverified post-install scripts
 dangerouslyAllowAllBuilds: false
 verifyDepsBeforeRun: install
-minimumReleaseAge: 4320 # 3 days, in minutes
-minimumReleaseAgeExclude:
-  - '@grafana/*'
-  # Renovate security update: js-yaml@4.3.1 || 4.3.2
-  - js-yaml@4.3.1 || 4.3.2
-  # Renovate security update: vitest@4.1.11
-  - vitest@4.1.11
+# 3 days, in minutes. This applies to @grafana/* packages too, the same as Renovate's gate. When
+# Renovate opens a security update for a version newer than that, it adds that version to
+# minimumReleaseAgeExclude itself. Delete the entry once the version is older than 3 days.
+minimumReleaseAge: 4320
 
+# Security overrides only stay while something still asks for a vulnerable version. To check
+# whether one is still needed, delete it, resolve from scratch (`pnpm install --lockfile-only`
+# without a lockfile) and run `pnpm audit`.
 overrides:
   # i18next 25.x prints a console ad for its paid Locize product on every init (which
   # @grafana/i18n triggers lazily and without opting out) - 26.x dropped the ad entirely.
   'i18next': '^26.0.0'
-  'js-cookie': '>=3.0.6'
-  'dompurify': '>=3.4.13'
-  'uuid': '>=11.1.1'
   '@types/react': '18.3.29'
   '@types/react-dom': '18.3.7'
-  '@opentelemetry/core@<2.8.0': ^2.8.0
-  react-router@>=6.7.0 <6.30.6: ^6.30.6
-  react-router-dom@>=6.30.2 <6.30.6: ^6.30.6
-  react-router-dom-v5-compat@>=6.30.2 <6.30.6: ^6.30.6
   # Transitive-only advisory, reached through test tooling. faker never patched the 9.x line, so
   # this crosses a major. @grafana/alerting only pulls faker in for its mock factories, and those
   # stick to APIs that 10.x kept (helpers.arrayElement, number.int, string.alphanumeric and
   # friends) - not helpers.fake, which is the one the advisory is about.
   '@faker-js/faker': '^10.5.0'
-  # Transitive-only advisories, all fixed within the same major line.
-  undici@>=7.0.0 <7.29.1: ^7.29.1
-  ip-address@<10.7.1: ^10.7.1
-  fast-uri@>=3.0.0 <3.1.8: ^3.1.8
+  # @grafana/data pins moment to exactly 2.30.1.
   moment@>=2.29.2 <2.31.0: ^2.31.0
-  brace-expansion@<1.1.21: ^1.1.21
-  brace-expansion@>=2.0.0 <2.1.7: ^2.1.7
-  brace-expansion@>=4.0.0 <5.0.12: ^5.0.12
+  # Crosses a major, reached only through @grafana/sign-plugin > proxy-agent > get-uri, which still
+  # asks for ^5. 6.0.0 only changed one default: the server can no longer send a transfer to a
+  # different host unless the client allows it, and get-uri never needs that.
+  basic-ftp@<6.2.1: ^6.2.1
 
-registries:
-  '@jsr': https://npm.jsr.io
+auditConfig:
+  ignoreGhsas:
+    # braces through 3.0.3 can overflow the stack on a deeply nested pattern, and no fixed version
+    # exists yet. It only arrives through micromatch in build and test tooling, which only ever
+    # expands patterns from this repo's own config, and none of it ends up in the plugin bundle.
+    # Remove this once braces publishes a fix and add an override instead.
+    - GHSA-vfj7-8cjw-p6xm
 
 packages:
   - 'packages/*'
@@ -49,4 +45,3 @@ allowBuilds:
   core-js: false
   esbuild: true
   msw: true
-  protobufjs: false
