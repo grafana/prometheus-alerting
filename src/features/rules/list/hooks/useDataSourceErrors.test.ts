@@ -2,14 +2,12 @@ import { DataSourceRulesError, dataSourceErrorsReducer, loadingReducer } from '.
 
 const promError: DataSourceRulesError = {
   uid: 'prom',
-  name: 'Prometheus',
   kind: 'error',
   description: 'Bad Gateway',
 };
 
 const mimirError: DataSourceRulesError = {
   uid: 'mimir',
-  name: 'Mimir',
   kind: 'error',
   description: 'Not allowed',
 };

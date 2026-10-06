@@ -11,7 +11,6 @@ import { getRulesErrorFeedback } from '../../utils/errorFeedback';
  */
 export interface DataSourceRulesError {
   uid: string;
-  name: string;
   kind: 'error' | 'empty';
   description: string;
   details?: string;
@@ -146,8 +145,8 @@ export function useDataSourceErrors() {
 }
 
 /** Turns any rules request error into a reportable data source error. */
-export function toDataSourceRulesError(uid: string, name: string, error: unknown): DataSourceRulesError {
-  return { uid, name, kind: 'error', ...getRulesErrorFeedback(error) };
+export function toDataSourceRulesError(uid: string, error: unknown): DataSourceRulesError {
+  return { uid, kind: 'error', ...getRulesErrorFeedback(error) };
 }
 
 /**
@@ -155,31 +154,31 @@ export function toDataSourceRulesError(uid: string, name: string, error: unknown
  * component is still mounted (e.g. a retry went through), but not when the component unmounts.
  * Pass a falsy error to report nothing.
  */
-export function useReportDataSourceError(uid: string, name: string, error: unknown) {
+export function useReportDataSourceError(uid: string, error: unknown) {
   const { reportError, clearError } = useDataSourceErrors();
 
   // Derive the feedback during render so the effect depends on plain strings – depending on the
   // error itself would re-trigger the reporting for every error that is recreated on each render
-  const reported = error ? toDataSourceRulesError(uid, name, error) : undefined;
+  const reported = error ? toDataSourceRulesError(uid, error) : undefined;
   const { description, details } = reported ?? {};
   const reportedUid = useRef<string>(undefined);
 
   useEffect(() => {
     if (description) {
-      reportError({ uid, name, kind: 'error', description, details });
+      reportError({ uid, kind: 'error', description, details });
       reportedUid.current = uid;
     } else if (reportedUid.current) {
       clearError(reportedUid.current, 'error');
       reportedUid.current = undefined;
     }
-  }, [uid, name, description, details, reportError, clearError]);
+  }, [uid, description, details, reportError, clearError]);
 }
 
 /**
  * Reports a data source that has no rules at all. Like `useReportDataSourceError`, the report is
  * cleared when the data source stops being empty while this component is mounted, not on unmount.
  */
-export function useReportEmptyDataSource(uid: string, name: string, isEmpty: boolean) {
+export function useReportEmptyDataSource(uid: string, isEmpty: boolean) {
   const { reportError, clearError } = useDataSourceErrors();
 
   const reportedUid = useRef<string>(undefined);
@@ -188,7 +187,6 @@ export function useReportEmptyDataSource(uid: string, name: string, isEmpty: boo
     if (isEmpty) {
       reportError({
         uid,
-        name,
         kind: 'empty',
         description: t('alerting.rule-list.datasource-errors.no-rules', 'This data source has no rules.'),
       });
@@ -197,7 +195,7 @@ export function useReportEmptyDataSource(uid: string, name: string, isEmpty: boo
       clearError(reportedUid.current, 'empty');
       reportedUid.current = undefined;
     }
-  }, [uid, name, isEmpty, reportError, clearError]);
+  }, [uid, isEmpty, reportError, clearError]);
 }
 
 /**

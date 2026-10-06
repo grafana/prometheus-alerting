@@ -23,7 +23,6 @@ const namespaceYaml = ['platform-alerts:', '  - name: group-a', '    rules: []',
 const rulesSourceIdentifier = {
   uid: dataSourceUid,
   name: 'Mimir',
-  ruleSourceType: 'datasource' as const,
 };
 
 function useRulesResponse() {

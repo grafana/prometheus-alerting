@@ -106,7 +106,6 @@ function mapRuleToRuleWithOrigin(
     rulesSource,
     namespace,
     groupName: group.name,
-    groupOrigin: 'datasource',
   };
 
   return {
