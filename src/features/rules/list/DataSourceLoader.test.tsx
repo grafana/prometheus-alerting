@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -10,6 +10,7 @@ import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 
 import { DataSourceLoader } from './DataSourceLoader';
+import { DataSourceErrorsProvider, useDataSourceErrors } from './hooks/useDataSourceErrors';
 
 const LOKI_UID = 'test-loki-uid';
 const MIMIR_UID = 'test-mimir-uid';
@@ -26,6 +27,24 @@ function failDiscoveryWith(uid: string, status: number, message: string) {
     http.get(`/api/datasources/proxy/uid/${uid}/*`, () => HttpResponse.json({ message }, { status })),
     http.get(`/api/datasources/uid/${uid}`, () => HttpResponse.json({ message }, { status }))
   );
+}
+
+/** Lists what the loader reported, so we can check it without the UI that shows it */
+function ReportedDataSources() {
+  const { errors } = useDataSourceErrors();
+
+  return (
+    <ul aria-label="Reported data sources">
+      {errors.map((error) => (
+        <li key={error.uid}>{`${error.name}: ${error.kind}: ${error.description}`}</li>
+      ))}
+    </ul>
+  );
+}
+
+/** Waits for what the loader reported, the data source section is a list item too */
+async function findReported() {
+  return within(screen.getByRole('list', { name: 'Reported data sources' })).findByRole('listitem');
 }
 
 describe('DataSourceLoader', () => {
@@ -57,5 +76,20 @@ describe('DataSourceLoader', () => {
       'src',
       'public/app/plugins/datasource/prometheus/img/prometheus_logo.svg'
     );
+  });
+
+  it('reports a data source whose feature discovery fails', async () => {
+    failDiscoveryWith(LOKI_UID, 500, 'boom');
+
+    render(
+      <DataSourceErrorsProvider>
+        <DataSourceLoader rulesSourceIdentifier={{ uid: LOKI_UID, name: 'Test Loki', ruleSourceType: 'datasource' }} />
+        <ReportedDataSources />
+      </DataSourceErrorsProvider>,
+      { wrapper: createTestWrapper(LOKI_UID) }
+    );
+
+    const reported = await findReported();
+    expect(reported).toHaveTextContent(/^Test Loki: error: /);
   });
 });
