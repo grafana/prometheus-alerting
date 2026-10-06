@@ -30,7 +30,7 @@ export function DataSourceErrorBoundary({
   const { uid, name } = rulesSourceIdentifier;
   const [caughtError, setCaughtError] = useState<Error | null>(null);
 
-  useReportDataSourceError(uid, name, caughtError);
+  useReportDataSourceError(uid, caughtError);
 
   return (
     <ErrorBoundary onError={(error) => setCaughtError(error ?? UNKNOWN_ERROR)}>

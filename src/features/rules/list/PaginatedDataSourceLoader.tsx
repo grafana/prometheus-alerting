@@ -110,13 +110,13 @@ function PaginatedGroupsLoader({
 
   // Only report a failure when we have no groups at all. When some groups loaded before a later page
   // failed, the section still has something to show, and a later page failing is often a one-off.
-  useReportDataSourceError(uid, name, isEmpty(groups) ? error : undefined);
+  useReportDataSourceError(uid, isEmpty(groups) ? error : undefined);
 
   // Report a data source without any rules. With filters active an empty result only means nothing
   // matched, which is not worth reporting. We wait for the last page (`hasMoreGroups`) because the
   // first render happens before the first request has even started.
   const isEmptyDataSource = !hasFilters && !error && isEmpty(groups) && !hasMoreGroups;
-  useReportEmptyDataSource(uid, name, isEmptyDataSource);
+  useReportEmptyDataSource(uid, isEmptyDataSource);
 
   // Groups coming in prove the data source works, even if a later page failed. This clears what an
   // earlier view reported.
