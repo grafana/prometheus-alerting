@@ -298,6 +298,9 @@
       }
     },
     "rule-list": {
+      "datasource-errors": {
+        "no-rules": "This data source has no rules."
+      },
       "filter-sidebar": {
         "group-placeholder": "Filter by group...",
         "namespace-placeholder": "Filter by namespace...",
@@ -346,7 +349,6 @@
       }
     },
     "rules-error": {
-      "permission-denied": "Permission denied",
       "permission-denied-description": "You do not have permission to access rules from this data source.",
       "unknown": "An unknown error occurred"
     },

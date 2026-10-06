@@ -11,10 +11,10 @@ interface RulesErrorAlertProps {
 
 /** Consistent error feedback for datasource-backed rule requests. */
 export function RulesErrorAlert({ error, title }: RulesErrorAlertProps) {
-  const feedback = getRulesErrorFeedback(error, title);
+  const feedback = getRulesErrorFeedback(error);
 
   return (
-    <Alert severity="error" title={feedback.title}>
+    <Alert severity="error" title={title}>
       <span>{feedback.description}</span>
     </Alert>
   );
