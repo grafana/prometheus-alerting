@@ -37,6 +37,19 @@ overrides:
   brace-expansion@<1.1.21: ^1.1.21
   brace-expansion@>=2.0.0 <2.1.7: ^2.1.7
   brace-expansion@>=4.0.0 <5.0.12: ^5.0.12
+  source-map-js@>=1.0.0 <1.2.2: ^1.2.2
+  # Crosses a major, reached only through @grafana/sign-plugin > proxy-agent > get-uri, which still
+  # asks for ^5. 6.0.0 only changed one default: the server can no longer send a transfer to a
+  # different host unless the client allows it, and get-uri never needs that.
+  basic-ftp@<6.2.1: ^6.2.1
+
+auditConfig:
+  ignoreGhsas:
+    # braces through 3.0.3 can overflow the stack on a deeply nested pattern, and no fixed version
+    # exists yet. It only arrives through micromatch in build and test tooling, which only ever
+    # expands patterns from this repo's own config, and none of it ends up in the plugin bundle.
+    # Remove this once braces publishes a fix and add an override instead.
+    - GHSA-vfj7-8cjw-p6xm
 
 registries:
   '@jsr': https://npm.jsr.io
