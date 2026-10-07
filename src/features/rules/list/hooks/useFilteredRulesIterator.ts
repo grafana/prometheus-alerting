@@ -4,7 +4,7 @@ import { from } from 'ix/asynciterable';
 import { AsyncIterableX } from 'ix/asynciterable/asynciterablex';
 import { empty } from 'ix/asynciterable/empty';
 import { merge } from 'ix/asynciterable/merge';
-import { catchError, concatMap, withAbort } from 'ix/asynciterable/operators';
+import { catchError, concatMap, tap, withAbort } from 'ix/asynciterable/operators';
 
 import { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { createRulePositionHash } from '@grafana/external-rules/matching';
@@ -30,7 +30,7 @@ interface GetIteratorResult {
 export function useFilteredRulesIteratorProvider() {
   const allExternalRulesSources = useMemo(() => getExternalRulesSources(), []);
   const prometheusGroupsGenerator = usePrometheusGroupsGenerator();
-  const { reportError } = useDataSourceErrors();
+  const { reportError, clearError } = useDataSourceErrors();
 
   const getFilteredRulesIterable = useCallback(
     (filterState: RulesFilter, groupLimit: number): GetIteratorResult => {
@@ -58,10 +58,20 @@ export function useFilteredRulesIteratorProvider() {
       // Create generators for each external data source
       const dataSourceGenerators: Array<AsyncIterableX<PromRuleWithOrigin>> = filteredDataSources.map(
         (dataSourceIdentifier) => {
+          let servedRules = false;
+
           const promGroupsGenerator: AsyncIterableX<PromRuleWithOrigin> = from(
             prometheusGroupsGenerator(dataSourceIdentifier, groupLimit)
           ).pipe(
             withAbort(abortController.signal),
+            // Check before we filter anything – a page with groups shows the data source works, even if none
+            // of them match the search. That clears what was reported for it earlier, by either view.
+            tap((groups: PromRuleGroupDTO[]) => {
+              if (!servedRules && groups.length > 0) {
+                servedRules = true;
+                clearError(dataSourceIdentifier.uid);
+              }
+            }),
             concatMap((groups: PromRuleGroupDTO[]) =>
               groups
                 .filter((group: PromRuleGroupDTO) => groupFilter(group, normalizedFilterState))
@@ -73,8 +83,9 @@ export function useFilteredRulesIteratorProvider() {
             // report the error so it can be surfaced to the user
             catchError((error: unknown) => {
               // Stopping the search makes every data source that is still loading throw, that is not
-              // something wrong with the data source
-              if (!abortController.signal.aborted) {
+              // something wrong with the data source. Neither is a later page failing after earlier ones
+              // loaded – the grouped view doesn't hide those either.
+              if (!abortController.signal.aborted && !servedRules) {
                 reportError(toDataSourceRulesError(dataSourceIdentifier.uid, error));
               }
               return empty();
@@ -90,7 +101,7 @@ export function useFilteredRulesIteratorProvider() {
 
       return { iterable, abortController };
     },
-    [allExternalRulesSources, prometheusGroupsGenerator, reportError]
+    [allExternalRulesSources, prometheusGroupsGenerator, reportError, clearError]
   );
 
   return getFilteredRulesIterable;

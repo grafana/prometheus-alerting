@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 
 import { DataSourceRulesSourceIdentifier } from '../../../../types/rules';
+import { PromRuleGroupFactory } from '../../mocks/rules.fakes';
 
 import { DataSourceErrorsProvider, useDataSourceErrors } from './useDataSourceErrors';
 import { useFilteredRulesIteratorProvider } from './useFilteredRulesIterator';
@@ -63,6 +64,35 @@ describe('useFilteredRulesIteratorProvider', () => {
       respond();
       await done;
     });
+
+    expect(result.current.errors).toEqual([]);
+  });
+
+  it('clears an earlier report once the data source serves rules again', async () => {
+    groupsGenerator.mockImplementationOnce(async function* () {
+      throw { status: 500, data: { message: 'connection refused' } };
+    });
+    const { result } = renderIteratorProvider();
+
+    await toArray(result.current.getIterable({}, 10).iterable);
+    await waitFor(() => expect(result.current.errors).toHaveLength(1));
+
+    groupsGenerator.mockImplementationOnce(async function* () {
+      yield PromRuleGroupFactory.buildList(1);
+    });
+    await toArray(result.current.getIterable({}, 10).iterable);
+
+    await waitFor(() => expect(result.current.errors).toEqual([]));
+  });
+
+  it('does not report a data source that fails after serving rules', async () => {
+    groupsGenerator.mockImplementation(async function* () {
+      yield PromRuleGroupFactory.buildList(1);
+      throw { status: 500, data: { message: 'connection refused' } };
+    });
+    const { result } = renderIteratorProvider();
+
+    await act(() => toArray(result.current.getIterable({}, 10).iterable));
 
     expect(result.current.errors).toEqual([]);
   });
