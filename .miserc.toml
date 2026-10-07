@@ -1,7 +1,0 @@
-# Automatically activate the "development" profile for local development.
-# This causes mise to load mise.development.toml (dev-only tools like lefthook and trufflehog)
-# in addition to mise.toml.
-#
-# In CI, MISE_ENV=ci is set explicitly, so this file has no effect there —
-# mise.development.toml is never loaded.
-env = ["development"]

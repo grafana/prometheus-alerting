@@ -1,9 +1,6 @@
 pre-commit:
   piped: true
   jobs:
-    - name: check-mise
-      run: node scripts/check-mise.js
-
     - name: lint-ts
       glob: '*.{ts,tsx}'
       run: pnpm exec eslint --cache --fix {staged_files}
@@ -28,4 +25,4 @@ pre-push:
     - name: audit node packages
       run: pnpm audit --audit-level=high
     - name: trufflehog
-      run: trufflehog git file://. --since-commit ${LEFTHOOK_REMOTE_REF:-origin/main} --only-verified --fail --log-level=-1 --no-update
+      run: mise run secrets

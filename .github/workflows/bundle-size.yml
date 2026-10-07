@@ -36,10 +36,9 @@ jobs:
           version: 2026.9.1
           sha256: c98423c8470d6dc416d9f7036d0646d8ef5ae92ad9186907f8fcc84cbe7db4ea
           install: true
+          install_args: node pnpm # lefthook is only for local Git hooks, so CI skips it
           cache: false
           cache_save: false
-        env:
-          MISE_ENV: ci # Skip loading mise.local.toml (dev-only tools)
 
       - uses: grafana/plugin-actions/bundle-size@main # zizmor: ignore[unpinned-uses] provided by grafana
         with:
