@@ -187,7 +187,6 @@ function RuleGroupListItem({
       rulesSource: rulesSourceIdentifier,
       namespace: { name: namespaceName },
       groupName: group.name,
-      groupOrigin: 'datasource',
     }),
     [rulesSourceIdentifier, namespaceName, group.name]
   );

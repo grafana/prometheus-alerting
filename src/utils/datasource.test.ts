@@ -29,8 +29,8 @@ describe('getExternalRulesSources', () => {
     const result = getExternalRulesSources();
 
     expect(result).toEqual([
-      { uid: 'prom-1', name: 'My Prometheus', ruleSourceType: 'datasource' },
-      { uid: 'loki-1', name: 'My Loki', ruleSourceType: 'datasource' },
+      { uid: 'prom-1', name: 'My Prometheus' },
+      { uid: 'loki-1', name: 'My Loki' },
     ]);
   });
 

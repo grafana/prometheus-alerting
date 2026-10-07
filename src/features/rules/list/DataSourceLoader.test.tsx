@@ -15,7 +15,7 @@ const LOKI_UID = 'test-loki-uid';
 const MIMIR_UID = 'test-mimir-uid';
 
 function renderLoader(uid: string, name: string) {
-  return render(<DataSourceLoader rulesSourceIdentifier={{ uid, name, ruleSourceType: 'datasource' }} />, {
+  return render(<DataSourceLoader rulesSourceIdentifier={{ uid, name }} />, {
     wrapper: createTestWrapper(uid),
   });
 }
