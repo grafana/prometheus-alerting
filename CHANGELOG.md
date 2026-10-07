@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.7.0](https://github.com/grafana/prometheus-alerting/compare/v1.6.1...v1.7.0) (2026-10-07)
+
+
+### 🎉 Features
+
+* **rules:** add a context for data source diagnostics ([#331](https://github.com/grafana/prometheus-alerting/issues/331)) ([06e4696](https://github.com/grafana/prometheus-alerting/commit/06e46967a4fe0ea781995327744930593e3e0828))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** upgrade dependencies within their majors and clean up overrides ([#329](https://github.com/grafana/prometheus-alerting/issues/329)) ([b1a5404](https://github.com/grafana/prometheus-alerting/commit/b1a54042b82663611757f7f656ddcf05ea7c9a58))
+* **security:** override vulnerable transitive dependencies ([#327](https://github.com/grafana/prometheus-alerting/issues/327)) ([44929e2](https://github.com/grafana/prometheus-alerting/commit/44929e23bcd92a16fe795eb0ec8b682d6bfae37f))
+
+
+### 🤖 Continuous Integrations
+
+* **publish:** only allow semver release tags to deploy to prod ([#325](https://github.com/grafana/prometheus-alerting/issues/325)) ([0accb29](https://github.com/grafana/prometheus-alerting/commit/0accb2907d0db7cfc8c9e960e76ddd00b4632cbe))
+
+
+### 🔧 Chores
+
+* **dev:** set up with `mise bootstrap` and drop the development profile ([#330](https://github.com/grafana/prometheus-alerting/issues/330)) ([810fcac](https://github.com/grafana/prometheus-alerting/commit/810fcac7b292a7d329d21bc34ef8c9b60610c593))
+
 ## [1.6.1](https://github.com/grafana/prometheus-alerting/compare/v1.6.0...v1.6.1) (2026-09-25)
 
 
