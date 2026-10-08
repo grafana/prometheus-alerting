@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/grafana/prometheus-alerting/compare/v1.7.0...v1.7.1) (2026-10-08)
+
+
+### 🐛 Bug Fixes
+
+* **security:** replace i18next-parser with i18next-cli and ignore react-router advisories ([#338](https://github.com/grafana/prometheus-alerting/issues/338)) ([ebf2437](https://github.com/grafana/prometheus-alerting/commit/ebf24376a4f584f35d0822786645759af404f132))
+
 ## [1.7.0](https://github.com/grafana/prometheus-alerting/compare/v1.6.1...v1.7.0) (2026-10-07)
 
 
