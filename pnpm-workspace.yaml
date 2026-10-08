@@ -31,11 +31,6 @@ overrides:
 
 auditConfig:
   ignoreGhsas:
-    # braces through 3.0.3 can overflow the stack on a deeply nested pattern, and no fixed version
-    # exists yet. It only arrives through micromatch in build and test tooling, which only ever
-    # expands patterns from this repo's own config, and none of it ends up in the plugin bundle.
-    # Remove this once braces publishes a fix and add an override instead.
-    - GHSA-vfj7-8cjw-p6xm
     # react-router only fixed these in 7.18.0, and Grafana (react-router-dom-v5-compat) and this
     # plugin are both on 6.x, so an override would cross a major under Grafana's feet. react-router
     # itself is in the bundler externals, so the copy that runs is the one Grafana ships. The open
