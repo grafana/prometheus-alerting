@@ -16,7 +16,7 @@
     "e2e:ui": "playwright test --ui --project=e2e-tests",
     "//sign": "Pinned intentionally — runs with GRAFANA_ACCESS_POLICY_TOKEN in ci.yml. Do not change to @latest; let Renovate bump the version.",
     "sign": "sign-plugin",
-    "i18n-extract": "i18next --config src/locales/i18next-parser.config.js"
+    "i18n-extract": "i18next-cli extract --sync-primary"
   },
   "author": "Grafana",
   "license": "Apache-2.0",
@@ -58,7 +58,7 @@
     "fork-ts-checker-webpack-plugin": "^9.1.0",
     "glob": "^13.0.6",
     "happy-dom": "^20.14.5",
-    "i18next-parser": "^9.4.0",
+    "i18next-cli": "^1.74.5",
     "imports-loader": "^5.0.0",
     "msw": "^2.15.0",
     "prettier": "^3.9.9",

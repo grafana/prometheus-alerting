@@ -36,6 +36,15 @@ auditConfig:
     # expands patterns from this repo's own config, and none of it ends up in the plugin bundle.
     # Remove this once braces publishes a fix and add an override instead.
     - GHSA-vfj7-8cjw-p6xm
+    # react-router only fixed these in 7.18.0, and Grafana (react-router-dom-v5-compat) and this
+    # plugin are both on 6.x, so an override would cross a major under Grafana's feet. react-router
+    # itself is in the bundler externals, so the copy that runs is the one Grafana ships. The open
+    # redirect also needs an attacker-supplied path passed to <Link> or navigate(), and this plugin
+    # builds those from its own route constants. The second one only affects server-side
+    # rendering, which a Grafana plugin never does. Remove these once Grafana and this plugin move
+    # to react-router 7.
+    - GHSA-wrjc-x8rr-h8h6 # open redirect via a backslash in <Link> and useNavigate
+    - GHSA-337j-9hxr-rhxg # constructor injection in deserializeErrors() during SSR hydration
 
 packages:
   - 'packages/*'
