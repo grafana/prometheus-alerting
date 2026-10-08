@@ -138,7 +138,7 @@ function AlertInstanceDetails({ alert }: AlertInstanceDetailsProps) {
         <Box>
           <Text variant="bodySmall">
             <Trans i18nKey="rule-details.instances.details.value">
-              <strong>Value:</strong> {alert.value}
+              <strong>Value:</strong> {{ value: alert.value }}
             </Trans>
           </Text>
         </Box>
