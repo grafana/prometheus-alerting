@@ -14,4 +14,17 @@ describe('useLazyLoadPrometheusGroups', () => {
 
     await waitFor(() => expect(result.current.error).toEqual(new Error('boom')));
   });
+
+  it('marks groups as received when none pass the filter and a later page fails', async () => {
+    const groups = (async function* () {
+      yield { name: 'group-a', file: 'namespace', rules: [], interval: 60 };
+      throw new Error('boom');
+    })();
+
+    const { result } = renderHook(() => useLazyLoadPrometheusGroups(groups, 10, () => false));
+
+    await waitFor(() => expect(result.current.error).toEqual(new Error('boom')));
+    expect(result.current.groups).toEqual([]);
+    expect(result.current.hasReceivedGroups).toBe(true);
+  });
 });

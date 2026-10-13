@@ -58,6 +58,9 @@ export function useFilteredRulesIteratorProvider() {
       // Create generators for each external data source
       const dataSourceGenerators: Array<AsyncIterableX<PromRuleWithOrigin>> = filteredDataSources.map(
         (dataSourceIdentifier) => {
+          // Two flags because the two kinds of report need different proof: any page clears an "error"
+          // report, but only a page with groups clears a "no rules" report
+          let answered = false;
           let servedRules = false;
 
           const promGroupsGenerator: AsyncIterableX<PromRuleWithOrigin> = from(
@@ -67,6 +70,12 @@ export function useFilteredRulesIteratorProvider() {
             // Check before we filter anything – a page with groups shows the data source works, even if none
             // of them match the search. That clears what was reported for it earlier, by either view.
             tap((groups: PromRuleGroupDTO[]) => {
+              // Any page that comes back, even an empty one, shows the data source answers. So an earlier
+              // "failed" report is out of date. Whether it has no rules is for the grouped view to say.
+              if (!answered) {
+                answered = true;
+                clearError(dataSourceIdentifier.uid, 'error');
+              }
               if (!servedRules && groups.length > 0) {
                 servedRules = true;
                 clearError(dataSourceIdentifier.uid);

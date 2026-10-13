@@ -22,6 +22,9 @@ export function useLazyLoadPrometheusGroups<TGroup extends PromRuleGroupDTO>(
 ) {
   const [groups, setGroups] = useState<TGroup[]>([]);
   const [hasMoreGroups, setHasMoreGroups] = useState<boolean>(true);
+  // True once the data source has sent us any group, whether or not it passed the filter.
+  // `groups` only holds the ones that passed, so it can be empty for a data source that works fine.
+  const [hasReceivedGroups, setHasReceivedGroups] = useState<boolean>(false);
 
   const [groupsRequestState, { execute }] = useAsync(async () => {
     let done = false;
@@ -33,6 +36,9 @@ export function useLazyLoadPrometheusGroups<TGroup extends PromRuleGroupDTO>(
         done = true;
         break;
       }
+
+      // Set right away rather than at the end, a later page failing throws before we get there
+      setHasReceivedGroups(true);
 
       const group = generatorResult.value;
       if (filter && !filter(group)) {
@@ -68,6 +74,7 @@ export function useLazyLoadPrometheusGroups<TGroup extends PromRuleGroupDTO>(
     isLoading,
     error: groupsRequestState.error,
     groups,
+    hasReceivedGroups,
     hasMoreGroups,
     fetchMoreGroups,
   };

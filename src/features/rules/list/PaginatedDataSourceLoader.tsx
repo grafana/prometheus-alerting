@@ -98,7 +98,7 @@ function PaginatedGroupsLoader({
     [namespaceFilter, groupFilter]
   );
 
-  const { isLoading, groups, hasMoreGroups, fetchMoreGroups, error } = useLazyLoadPrometheusGroups(
+  const { isLoading, groups, hasReceivedGroups, hasMoreGroups, fetchMoreGroups, error } = useLazyLoadPrometheusGroups(
     generator,
     FRONTED_GROUPED_PAGE_SIZE,
     filterFn
@@ -107,19 +107,22 @@ function PaginatedGroupsLoader({
   const hasNoRules = isEmpty(groups) && !isLoading;
   const groupsByNamespace = useMemo(() => groupBy(groups, 'file'), [groups]);
 
-  // Only report a failure when we have no groups at all. When some groups loaded before a later page
-  // failed, the section still has something to show, and a later page failing is often a one-off.
-  useReportDataSourceError(uid, isEmpty(groups) ? error : undefined);
+  // Only report a failure when the data source never sent us a group. When some groups loaded before a
+  // later page failed, the data source works, and a later page failing is often a one-off. We look at
+  // what the data source sent rather than `groups`, because with filters active `groups` only holds the
+  // matches and can be empty for a data source that works fine.
+  useReportDataSourceError(uid, hasReceivedGroups ? undefined : error);
 
-  // Report a data source without any rules. With filters active an empty result only means nothing
-  // matched, which is not worth reporting. We wait for the last page (`hasMoreGroups`) because the
-  // first render happens before the first request has even started.
-  const isEmptyDataSource = !hasFilters && !error && isEmpty(groups) && !hasMoreGroups;
+  // Report a data source without any rules. Only this view does, the list view leaves it to us. We look
+  // at what the data source sent rather than `groups`, so this works with filters active too: nothing
+  // matching the filters is not reported, only a data source that sent no groups at all. We wait for the
+  // last page (`hasMoreGroups`) because the first render happens before the first request has started.
+  const isEmptyDataSource = !error && !hasReceivedGroups && !hasMoreGroups;
   useReportEmptyDataSource(uid, isEmptyDataSource);
 
-  // Groups coming in prove the data source works, even if a later page failed. This clears what an
-  // earlier view reported.
-  useReportHealthyDataSource(uid, !isEmpty(groups));
+  // Groups coming in prove the data source works, even if a later page failed or none of them matched
+  // the filters. This clears what an earlier view reported.
+  useReportHealthyDataSource(uid, hasReceivedGroups);
 
   // Hide datasource section when filters are active and there are no matching results
   if (hideOnEmpty && hasNoRules) {

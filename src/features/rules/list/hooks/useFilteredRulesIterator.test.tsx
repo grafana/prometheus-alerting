@@ -96,4 +96,21 @@ describe('useFilteredRulesIteratorProvider', () => {
 
     expect(result.current.errors).toEqual([]);
   });
+
+  it('clears an earlier failure once the data source answers, even without any groups', async () => {
+    groupsGenerator.mockImplementationOnce(async function* () {
+      throw { status: 500, data: { message: 'connection refused' } };
+    });
+    const { result } = renderIteratorProvider();
+
+    await toArray(result.current.getIterable({}, 10).iterable);
+    await waitFor(() => expect(result.current.errors).toMatchObject([{ uid: 'prom', kind: 'error' }]));
+
+    groupsGenerator.mockImplementationOnce(async function* () {
+      yield [];
+    });
+    await toArray(result.current.getIterable({}, 10).iterable);
+
+    await waitFor(() => expect(result.current.errors).toEqual([]));
+  });
 });

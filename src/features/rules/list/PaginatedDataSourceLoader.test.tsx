@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { setDataSourceSrv } from '@grafana/runtime';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
 
 import { server } from '../../../test';
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
@@ -167,10 +167,34 @@ describe('PaginatedDataSourceLoader with a data source that has no rules', () =>
     expect(await findReported()).toHaveTextContent('test-mimir-uid: empty: This data source has no rules.');
   });
 
-  it('does not report the data source when filters are active, an empty result only means nothing matched', async () => {
+  it('also reports it with filters active, the data source sent no groups at all', async () => {
     renderWithReport({ groupFilter: 'does-not-exist' });
 
-    await waitFor(() => expect(rulesRequest).toHaveBeenCalled());
+    expect(await findReported()).toHaveTextContent('test-mimir-uid: empty: This data source has no rules.');
+  });
+});
+
+describe('PaginatedDataSourceLoader with filters that match none of the groups', () => {
+  const rulesResponse = vi.fn();
+
+  beforeEach(() => {
+    rulesResponse.mockClear();
+    setDataSourceSrv(createMockDataSourceSrv());
+    useRulesResponse();
+    server.events.on('response:mocked', rulesResponse);
+  });
+
+  afterEach(() => {
+    server.events.removeAllListeners('response:mocked');
+  });
+
+  it('does not report the data source, nothing matching is not the same as having no rules', async () => {
+    renderWithReport({ groupFilter: 'does-not-exist' });
+
+    // Let the only page arrive and React handle it, a wrong "empty" report would be there by then
+    await waitFor(() => expect(rulesResponse).toHaveBeenCalled());
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+
     expect(queryReported()).not.toBeInTheDocument();
   });
 });
@@ -208,5 +232,66 @@ describe('PaginatedDataSourceLoader with a later page that fails', () => {
 
     expect(await screen.findByRole('button', { name: 'Error' })).toBeInTheDocument();
     expect(queryReported()).not.toBeInTheDocument();
+  });
+});
+
+/** Reports an error for the data source up front, like an earlier view that saw it fail */
+function EarlierReport() {
+  const { reportError } = useDataSourceErrors();
+
+  useEffect(() => {
+    reportError({ uid: dataSourceUid, kind: 'error', description: 'failed in an earlier view' });
+  }, [reportError]);
+
+  return null;
+}
+
+describe('PaginatedDataSourceLoader with filters that match nothing on the pages that loaded', () => {
+  const failedPageRequest = vi.fn();
+
+  beforeEach(() => {
+    failedPageRequest.mockClear();
+    setDataSourceSrv(createMockDataSourceSrv());
+    server.use(
+      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, ({ request }) => {
+        if (new URL(request.url).searchParams.has('group_next_token')) {
+          failedPageRequest();
+          return HttpResponse.json({ status: 'error', error: 'upstream timed out' }, { status: 502 });
+        }
+
+        return HttpResponse.json({
+          status: 'success',
+          data: {
+            groups: [{ name: 'group-a', file: namespace, interval: 60, rules: [] }],
+            groupNextToken: 'page-2',
+          },
+        });
+      })
+    );
+  });
+
+  it('clears the earlier report and does not report the failed page, the data source did send groups', async () => {
+    const StoreWrapper = createTestWrapper(dataSourceUid);
+
+    render(
+      <StoreWrapper>
+        <TestMemoryRouter>
+          <DataSourceErrorsProvider>
+            <EarlierReport />
+            <PaginatedDataSourceLoader
+              rulesSourceIdentifier={rulesSourceIdentifier}
+              application="mimir"
+              rulerApiEnabled={false}
+              groupFilter="does-not-exist"
+              hideOnEmpty
+            />
+            <ReportedDataSources />
+          </DataSourceErrorsProvider>
+        </TestMemoryRouter>
+      </StoreWrapper>
+    );
+
+    await waitFor(() => expect(failedPageRequest).toHaveBeenCalled());
+    await waitFor(() => expect(queryReported()).not.toBeInTheDocument());
   });
 });

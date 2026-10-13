@@ -1,7 +1,8 @@
 import React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setDataSourceSrv } from '@grafana/runtime';
 
@@ -9,8 +10,16 @@ import { server } from '../../../test';
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper } from '../../../test/utils/test-wrapper';
 
+import { discoverDataSourceFeatures } from '../../../api/rules/featureDiscovery';
+
 import { DataSourceLoader } from './DataSourceLoader';
 import { DataSourceErrorsProvider, useDataSourceErrors } from './hooks/useDataSourceErrors';
+
+// Calls the real discovery unless a test says otherwise
+vi.mock('../../../api/rules/featureDiscovery', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../api/rules/featureDiscovery')>();
+  return { ...actual, discoverDataSourceFeatures: vi.fn(actual.discoverDataSourceFeatures) };
+});
 
 const LOKI_UID = 'test-loki-uid';
 const MIMIR_UID = 'test-mimir-uid';
@@ -91,5 +100,46 @@ describe('DataSourceLoader', () => {
 
     const reported = await findReported();
     expect(reported).toHaveTextContent(/^test-loki-uid: error: /);
+  });
+});
+
+describe('DataSourceLoader mounted again after feature discovery failed', () => {
+  beforeEach(() => {
+    setDataSourceSrv(createMockDataSourceSrv());
+    vi.mocked(discoverDataSourceFeatures).mockClear();
+  });
+
+  /** Clears the report, like the list view does when it loads the data source fine */
+  function ClearReport() {
+    const { clearError } = useDataSourceErrors();
+
+    return <button onClick={() => clearError(LOKI_UID)}>Clear report</button>;
+  }
+
+  function Page({ showLoader }: { showLoader: boolean }) {
+    return (
+      <DataSourceErrorsProvider>
+        {showLoader && <DataSourceLoader rulesSourceIdentifier={{ uid: LOKI_UID, name: 'Test Loki' }} />}
+        <ClearReport />
+        <ReportedDataSources />
+      </DataSourceErrorsProvider>
+    );
+  }
+
+  it('does not report or show the old failure again while the retry is still running', async () => {
+    vi.mocked(discoverDataSourceFeatures).mockRejectedValueOnce(new Error('boom'));
+    const { rerender } = render(<Page showLoader />, { wrapper: createTestWrapper(LOKI_UID) });
+    expect(await findReported()).toHaveTextContent(/^test-loki-uid: error: /);
+
+    rerender(<Page showLoader={false} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Clear report' }));
+
+    // The retry never answers, so whatever we see below is what shows while it is running
+    vi.mocked(discoverDataSourceFeatures).mockReturnValueOnce(new Promise(() => {}));
+    rerender(<Page showLoader />);
+
+    await waitFor(() => expect(discoverDataSourceFeatures).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole('button', { name: /error/i })).not.toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'Reported data sources' })).queryByRole('listitem')).toBeNull();
   });
 });

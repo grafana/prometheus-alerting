@@ -27,17 +27,25 @@ export function DataSourceLoader({
   const { uid, name } = rulesSourceIdentifier;
 
   // Run feature discovery
-  const { data: features, isLoading, error } = useDiscoverFeaturesQuery({ uid });
+  const { data: features, isLoading, isFetching, error } = useDiscoverFeaturesQuery({ uid });
+
+  // When discovery failed before, RTK Query keeps that failure around. Mounting this again retries, but
+  // `isLoading` stays false and the old `error` stays set while the retry runs, so we also count a
+  // retry without any features yet as loading. Otherwise the old failure is reported again, and shown,
+  // before the retry has even answered.
+  const isDiscovering = isLoading || (isFetching && !features);
 
   // Discovery is what normally tells us which application this is, so when it fails we fall back to
   // whatever the plugin type already settles -- otherwise a failing data source loses its icon and
   // becomes hard to identify in a list of several.
   const knownApplication = getFlavor(uid)?.application;
 
-  const discoveryError = error ?? (!isLoading && !features ? 'Unable to discover data source features' : undefined);
+  const discoveryError = isDiscovering
+    ? undefined
+    : (error ?? (!features ? 'Unable to discover data source features' : undefined));
   useReportDataSourceError(uid, discoveryError);
 
-  if (isLoading) {
+  if (isDiscovering) {
     // While loading, show skeleton only if not hiding on empty/error
     // (we don't know yet if there will be results)
     if (hideOnEmptyOrError) {
