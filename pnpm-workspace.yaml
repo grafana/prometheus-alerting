@@ -15,8 +15,6 @@ overrides:
   # i18next 25.x prints a console ad for its paid Locize product on every init (which
   # @grafana/i18n triggers lazily and without opting out) - 26.x dropped the ad entirely.
   'i18next': '^26.0.0'
-  '@types/react': '18.3.29'
-  '@types/react-dom': '18.3.7'
   # Transitive-only advisory, reached through test tooling. faker never patched the 9.x line, so
   # this crosses a major. @grafana/alerting only pulls faker in for its mock factories, and those
   # stick to APIs that 10.x kept (helpers.arrayElement, number.int, string.alphanumeric and
