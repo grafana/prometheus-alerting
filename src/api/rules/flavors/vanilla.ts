@@ -7,7 +7,7 @@ import type {
   RulesSourceFlavor,
 } from '@grafana/external-rules/ruler';
 import type { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 import type { PromBuildInfoResponse } from '../../../types/rules';
 import { isForbiddenError, isNotFoundError } from '../../../utils/errors';

@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { setDataSourceSrv } from '@grafana/runtime';

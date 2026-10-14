@@ -2,7 +2,7 @@ import type { RulerRulesConfigDTO, RulerRequest, RulerTransport } from '@grafana
 import { describeRulerBackend } from '@grafana/external-rules/ruler/contract';
 import type { RulerRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { describe, expect, it } from 'vitest';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 // `errorIndicatesMissingRulerSupport` is covered by ../featureDiscovery.test.ts, which imports it
 // through the re-export the discovery entry point keeps.

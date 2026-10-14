@@ -1,5 +1,5 @@
 import { RulerRuleGroupDTO, RulerRuleGroupDTOSchema } from '@grafana/external-rules/vanilla';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 const MIMIR_RULER_BASE_URL = 'http://localhost:9009/prometheus/config/v1/rules';
 function mimirOrgHeader(tenantId: string): Record<'X-Scope-OrgID', string> {
