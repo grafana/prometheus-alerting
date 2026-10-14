@@ -3,9 +3,17 @@
   extends: [
     'github>grafana/grafana-renovate-config//presets/base',
     'github>grafana/grafana-renovate-config//presets/labels',
+    // One PR for every minor and patch update, instead of one each. Majors still get their own.
+    'group:allNonMajor',
   ],
+  // Open update PRs once a week rather than as soon as releases land. Security fixes ignore this
+  // (see vulnerabilityAlerts below).
+  schedule: ['before 9am on monday'],
   minimumReleaseAge: '3 days',
-  prCreation: 'not-pending',
+  // Don't set `prCreation: 'not-pending'` here. It makes Renovate wait for CI on its branch before
+  // opening a PR, but our CI only runs on pull requests, so it waits forever. That stopped every
+  // non-security PR from June to October 2026. The 3-day wait is already handled by
+  // minimumReleaseAge and internalChecksFilter.
   internalChecksFilter: 'strict',
   'docker-compose': {
     // Renovate only looks for files named like compose*.yaml by default. The service files
@@ -47,6 +55,25 @@
         '@grafana/ui',
       ],
       allowedVersions: '~13.1.0',
+    },
+    {
+      // typescript-eslint 8 refuses to run on TypeScript 7 ("does not support TS 7.0"), and TS 7
+      // has no compiler API for fork-ts-checker-webpack-plugin to use either. Widen this once
+      // typescript-eslint supports it.
+      matchPackageNames: ['typescript'],
+      allowedVersions: '<7',
+    },
+    {
+      // These are Grafana's own reusable workflows, which every Grafana repo references by tag or
+      // branch. Keep it that way instead of swapping in commit SHAs.
+      matchPackageNames: ['grafana/plugin-ci-workflows', 'grafana/security-github-actions'],
+      pinDigests: false,
+    },
+    {
+      // .config/Dockerfile builds FROM grafana/${grafana_image}:${grafana_version}, so the
+      // version is picked at build time (GRAFANA_VERSION). There's nothing to pin.
+      matchPackageNames: ['grafana/grafana-enterprise'],
+      enabled: false,
     },
     {
       // Pin the Node and pnpm runtimes exactly, sourced from mise.toml.
