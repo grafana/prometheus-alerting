@@ -28,7 +28,7 @@ function withFailingDataSource({ children }: PropsWithChildren) {
 function ErrorReporter() {
   // The inline error object is deliberate – reporting an error that is recreated on every render
   // must not re-trigger itself
-  useReportDataSourceError(FAILING_UID, FAILING_NAME, { status: 500, data: {} });
+  useReportDataSourceError(FAILING_UID, { status: 500, data: {} });
   return null;
 }
 
@@ -42,7 +42,7 @@ function withEmptyDataSource({ children }: PropsWithChildren) {
 }
 
 function EmptyReporter() {
-  useReportEmptyDataSource(FAILING_UID, FAILING_NAME, true);
+  useReportEmptyDataSource(FAILING_UID, true);
   return null;
 }
 
