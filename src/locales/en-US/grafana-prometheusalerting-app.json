@@ -352,6 +352,7 @@
     },
     "rules-error": {
       "permission-denied-description": "You do not have permission to access rules from this data source.",
+      "unexpected-response": "The data source returned a response that does not match the Prometheus rules API ({{detail}})",
       "unknown": "An unknown error occurred"
     },
     "rules-filter": {

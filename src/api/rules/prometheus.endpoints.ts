@@ -7,11 +7,25 @@ import {
 } from '@grafana/external-rules/vanilla';
 
 import { produce } from 'immer';
+import { z } from 'zod';
 
 import { DataSourceRulesSourceIdentifier } from '../../types/rules';
 import { buildDatasourceProxyPath } from '../utils/proxyPath';
 
 import { getFlavorOrThrow } from './flavors/registry';
+import { toSchemaFailureError } from './schemaFailure';
+
+/**
+ * Checked before `transformResponse` runs, so a data source that answers with something else than
+ * the Prometheus rules API fails the request instead of crashing the transform. It only checks the
+ * parts the transform walks through – the transform fills in rule fields some data sources leave
+ * out, and the full response schema runs on its result.
+ */
+const RawPromRulesResponseSchema = z.looseObject({
+  data: z.looseObject({
+    groups: z.array(z.looseObject({ rules: z.array(z.looseObject({})) })),
+  }),
+});
 
 interface PromRulesOptions {
   ruleSource: Pick<DataSourceRulesSourceIdentifier, 'uid'>;
@@ -27,6 +41,7 @@ export const prometheusApi = createApi({
   reducerPath: 'prometheusApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/datasources/proxy/uid' }),
   tagTypes: ['Rules'],
+  catchSchemaFailure: toSchemaFailureError,
   endpoints: (build) => ({
     getGroups: build.query<GetPromRulesApiResponse, PromRulesOptions>({
       query: ({ ruleSource, namespace, groupName, ruleName, groupLimit, excludeAlerts, groupNextToken }) => {
@@ -53,6 +68,7 @@ export const prometheusApi = createApi({
       // every other one. Invalidate with { type: 'Rules', id: <uid> } – a type-only
       // invalidation of 'Rules' does not match these entries.
       providesTags: (_result, _error, { ruleSource }) => [{ type: 'Rules' as const, id: ruleSource.uid }],
+      rawResponseSchema: RawPromRulesResponseSchema,
       responseSchema: GetPromRulesApiResponseSchema,
     }),
   }),
