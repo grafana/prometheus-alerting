@@ -12,10 +12,46 @@ import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
  * comma-separated text, so those are strings here and lists in the Alertmanager config.
  */
 
-const TimeRangeFormSchema = z.object({
-  start_time: z.string().min(1, 'Start time is required'),
-  end_time: z.string().min(1, 'End time is required'),
-});
+// Mirrors Alertmanager's rule: HH:MM, with 24:00 accepted only as an end time.
+const TIME_PATTERN = /^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$/;
+
+const END_BEFORE_START_MESSAGE = 'End time must be after start time';
+
+function toMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function isValidTimeZone(timeZone: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const TimeRangeFormSchema = z
+  .object({
+    start_time: z
+      .string()
+      .min(1, 'Start time is required')
+      .regex(TIME_PATTERN, 'Start time must be in HH:MM format (00:00-23:59)')
+      .refine((value) => value !== '24:00', 'Start time must be in HH:MM format (00:00-23:59)'),
+    end_time: z
+      .string()
+      .min(1, 'End time is required')
+      .regex(TIME_PATTERN, 'End time must be in HH:MM format (00:00-24:00)'),
+  })
+  .superRefine(({ start_time, end_time }, ctx) => {
+    // Only compare when both are well-formed, so each field shows at most one message.
+    if (!TIME_PATTERN.test(start_time) || !TIME_PATTERN.test(end_time)) {
+      return;
+    }
+    if (toMinutes(start_time) >= toMinutes(end_time)) {
+      ctx.addIssue({ code: 'custom', path: ['end_time'], message: END_BEFORE_START_MESSAGE });
+    }
+  });
 
 const IntervalFormSchema = z.object({
   times: z.array(TimeRangeFormSchema),
@@ -23,7 +59,11 @@ const IntervalFormSchema = z.object({
   daysOfMonth: z.string().optional(),
   months: z.string().optional(),
   years: z.string().optional(),
-  location: z.string().optional(),
+  // Intl rather than the picker's IANA list: that list is a curated subset, and stored zones outside it are valid.
+  location: z
+    .string()
+    .optional()
+    .refine((value) => !value || isValidTimeZone(value), 'Unknown time zone'),
 });
 
 export const TimeIntervalFormSchema = z.object({

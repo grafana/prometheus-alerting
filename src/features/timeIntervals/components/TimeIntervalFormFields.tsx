@@ -278,6 +278,8 @@ function IntervalFields({ index, onRemove }: IntervalFieldsProps) {
           noMargin
           label={t('time-intervals.form.location-label', 'Location/Timezone')}
           description={t('time-intervals.form.location-description', 'IANA timezone (e.g., UTC, America/New_York)')}
+          invalid={!!intervalErrors?.location}
+          error={intervalErrors?.location?.message}
         >
           <Controller
             name={`intervals.${index}.location`}
