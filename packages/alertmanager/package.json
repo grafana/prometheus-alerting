@@ -8,7 +8,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "Apache-2.0",
+  "license": "AGPL-3.0-only",
   "dependencies": {
     "immer": "^11.1.21",
     "yaml": "^2.9.1"

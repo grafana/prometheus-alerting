@@ -19,7 +19,7 @@
     "i18n-extract": "i18next-cli extract --sync-primary"
   },
   "author": "Grafana",
-  "license": "Apache-2.0",
+  "license": "AGPL-3.0-only",
   "devDependencies": {
     "@grafana/eslint-config": "^9.0.0",
     "@grafana/external-alertmanager": "workspace:*",

@@ -122,4 +122,4 @@ This project follows the [Grafana Labs Code of Conduct](https://github.com/grafa
 
 ## Licence
 
-This project is licensed under Apache 2.0. By contributing, you agree that your contributions are licensed under the same terms — see [LICENSE](LICENSE).
+This project is licensed under AGPL-3.0-only. By contributing, you agree that your contributions are licensed under the same terms — see [LICENSE](LICENSE) and [LICENSING.md](LICENSING.md).
