@@ -4,7 +4,7 @@ import Skeleton from 'react-loading-skeleton';
 import { css } from '@emotion/css';
 import { t } from '@grafana/i18n';
 import { AlertLabel } from '@grafana/alerting';
-import { Column, EmptyState, InteractiveTable, Stack, Text } from '@grafana/ui';
+import { Button, Column, EmptyState, InteractiveTable, Stack, Text } from '@grafana/ui';
 import type { AlertGroup, GettableAlert } from '@grafana/external-alertmanager/vanilla';
 
 import { AlertmanagerPage } from '../../../components/AlertmanagerPage';
@@ -24,6 +24,7 @@ function AlertsPage() {
   const { alertGroups, isLoading, isSuccess, error } = useAlertGroups();
   const { filters, actions, applyFilters } = useAlertsFilters();
   const filteredGroups = deduplicateGroups(applyFilters(alertGroups));
+  const hasAlerts = alertGroups.some((group) => group.alerts.length > 0);
 
   const columns = useMemo<Array<Column<GroupedAlerts>>>(
     () => [
@@ -71,10 +72,22 @@ function AlertsPage() {
             <DataSourceError error={error} title={t('alerts.error-loading-title', 'Error loading alert groups')} />
           }
           empty={
-            <EmptyState
-              message={t('alerts.no-alerts-message', 'No active alerts found in the Alertmanager.')}
-              variant="call-to-action"
-            />
+            hasAlerts ? (
+              <EmptyState
+                message={t('alerts.no-match-message', 'No alerts match the current filters')}
+                variant="not-found"
+                button={
+                  <Button variant="secondary" onClick={actions.clearFilters}>
+                    {t('alerts.clear-filters', 'Clear filters')}
+                  </Button>
+                }
+              />
+            ) : (
+              <EmptyState
+                message={t('alerts.no-alerts-message', 'No active alerts found in the Alertmanager.')}
+                variant="call-to-action"
+              />
+            )
           }
         >
           <InteractiveTable<GroupedAlerts>

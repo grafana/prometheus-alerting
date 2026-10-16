@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { type AlertGroup, type AlertStatus } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { parseMatchers } from '../../../utils/labels';
@@ -19,6 +19,7 @@ export interface AlertsFiltersActions {
   setShowUnprocessed: (show: boolean) => void;
   setShowSuppressed: (show: boolean) => void;
   setLabelInput: (input: string) => void;
+  clearFilters: () => void;
 }
 
 export interface UseAlertsFiltersResult {
@@ -55,6 +56,14 @@ export function useAlertsFilters(): UseAlertsFiltersResult {
     [receivers, showActive, showUnprocessed, showSuppressed, labelFilter]
   );
 
+  const clearFilters = useCallback(() => {
+    setReceivers([]);
+    setShowActive(true);
+    setShowUnprocessed(false);
+    setShowSuppressed(false);
+    setLabelInput('');
+  }, []);
+
   return {
     filters: {
       receivers,
@@ -66,7 +75,7 @@ export function useAlertsFilters(): UseAlertsFiltersResult {
         ? t('alerts.filters.label-input-invalid', 'Invalid label matcher syntax')
         : undefined,
     },
-    actions: { setReceivers, setShowActive, setShowUnprocessed, setShowSuppressed, setLabelInput },
+    actions: { setReceivers, setShowActive, setShowUnprocessed, setShowSuppressed, setLabelInput, clearFilters },
     applyFilters,
   };
 }

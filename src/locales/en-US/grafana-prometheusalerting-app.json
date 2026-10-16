@@ -392,6 +392,7 @@
     }
   },
   "alerts": {
+    "clear-filters": "Clear filters",
     "column": {
       "count": "Alerts",
       "grouped-by": "Grouped by",
@@ -435,6 +436,7 @@
       "unprocessed": "Unprocessed"
     },
     "no-alerts-message": "No active alerts found in the Alertmanager.",
+    "no-match-message": "No alerts match the current filters",
     "state": {
       "inhibited-by_one": "Inhibited by {{count}} inhibition",
       "inhibited-by_other": "Inhibited by {{count}} inhibition",
