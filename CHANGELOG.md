@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.2](https://github.com/grafana/prometheus-alerting/compare/v1.7.1...v1.7.2) (2026-10-13)
+
+
+### 🐛 Bug Fixes
+
+* **rules:** keep the original error when feature discovery fails ([#332](https://github.com/grafana/prometheus-alerting/issues/332)) ([874f9ea](https://github.com/grafana/prometheus-alerting/commit/874f9ea665589c43cdc9cf1af84ef6925ab5ad58))
+
+
+### 🔧 Chores
+
+* **deps:** drop overrides that are no longer needed ([#342](https://github.com/grafana/prometheus-alerting/issues/342)) ([f47ec68](https://github.com/grafana/prometheus-alerting/commit/f47ec68a5945ee648e2c94932e0ce338f656de57))
+
 ## [1.7.1](https://github.com/grafana/prometheus-alerting/compare/v1.7.0...v1.7.1) (2026-10-08)
 
 
