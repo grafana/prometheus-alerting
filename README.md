@@ -167,3 +167,7 @@ To install and test the plugin in a local Grafana instance (outside of Docker):
 
 - [`plugin.json` documentation](https://grafana.com/developers/plugin-tools/reference/plugin-jsonplugin-json)
 - [Sign a plugin](https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin)
+
+## License
+
+This project is licensed under [AGPL-3.0-only](LICENSE). Versions from before the switch were released under Apache-2.0 and are also available under AGPL-3.0-only. See [LICENSING.md](LICENSING.md) for details and for third-party code that keeps its own license.
