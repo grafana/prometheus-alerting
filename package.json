@@ -1,6 +1,6 @@
 {
   "name": "prometheus-alerting",
-  "version": "1.7.2",
+  "version": "1.8.0",
   "scripts": {
     "build": "webpack -c ./webpack.config.ts --env production",
     "dev": "webpack -w -c ./webpack.config.ts --env development",
@@ -19,7 +19,7 @@
     "i18n-extract": "i18next-cli extract --sync-primary"
   },
   "author": "Grafana",
-  "license": "Apache-2.0",
+  "license": "AGPL-3.0-only",
   "devDependencies": {
     "@grafana/eslint-config": "10.0.0",
     "@grafana/external-alertmanager": "workspace:*",

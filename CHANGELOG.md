@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/grafana/prometheus-alerting/compare/v1.7.2...v1.8.0) (2026-10-16)
+
+
+### 🎉 Features
+
+* relicense under AGPL-3.0-only ([#345](https://github.com/grafana/prometheus-alerting/issues/345)) ([cd4597e](https://github.com/grafana/prometheus-alerting/commit/cd4597eb8f29a1378ff01ac7156a1f637df9a5c1))
+
 ## [1.7.2](https://github.com/grafana/prometheus-alerting/compare/v1.7.1...v1.7.2) (2026-10-13)
 
 
