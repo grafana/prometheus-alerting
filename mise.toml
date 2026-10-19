@@ -18,11 +18,11 @@ experimental = true
 # .mise/tasks/: Renovate reads `tools` on the tasks here, but not the `#MISE tools=` line of a
 # task file.
 [tools]
-node = "24.21.0"
-pnpm = "12.12.0"
+node = "24.22.0"
+pnpm = "12.14.0"
 # Runs the Git hooks in lefthook.yml. It has to be here rather than on a task: the hook scripts
 # git runs look for lefthook through `mise exec`, which only sees the tools in this list.
-"aqua:evilmartians/lefthook" = "2.2.1"
+"aqua:evilmartians/lefthook" = "2.2.2"
 
 # Installs node_modules before any `mise run` or `mise exec` (the Git hooks go through `mise exec`
 # too), but only when these files have changed since the last install or node_modules is missing.

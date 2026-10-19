@@ -1,2 +1,2 @@
 # seems redundant but is used by the CI/CD workflows, try to keep in sync with mise.toml
-v24.21.0
+v24.22.0
