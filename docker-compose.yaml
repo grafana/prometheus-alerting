@@ -27,3 +27,11 @@ services:
       - alertmanager
       - mimir
       - loki
+
+  # MinIO stopped publishing images (minio/minio and minio/mc are gone from Docker Hub), so we swap
+  # in pgsty, a community build of the same source with the same layout. Only the image changes here;
+  # everything else about these services still comes from .config/compose/minio.yaml.
+  minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z@sha256:b6bfe7239bfc83fb90d31612d9704d86039dd714f7904b3f1ad68f211e602372
+  minio-init:
+    image: pgsty/mc:RELEASE.2026-09-16T00-00-00Z@sha256:cfc83108c3abb371f8fb84d99c1fdc88f8c237e022409b0081fb7c0a3be634dd
