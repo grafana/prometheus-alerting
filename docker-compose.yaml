@@ -29,9 +29,10 @@ services:
       - loki
 
   # MinIO stopped publishing images (minio/minio and minio/mc are gone from Docker Hub), so we swap
-  # in pgsty, a community build of the same source with the same layout. Only the image changes here;
-  # everything else about these services still comes from .config/compose/minio.yaml.
+  # in Silo, pgsty's community fork of the same source. It keeps the MinIO command line, MINIO_* env
+  # vars and the bundled mc, so only the image changes here; everything else about these services
+  # still comes from .config/compose/minio.yaml. See https://silo.pgsty.com/compatibility/migration/
   minio:
-    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z@sha256:b6bfe7239bfc83fb90d31612d9704d86039dd714f7904b3f1ad68f211e602372
+    image: pgsty/silo:RELEASE.2026-10-18T00-00-00Z@sha256:2636fc4155d9a7e41ff58cdb65ddd13ba9304e67184e13c25bc5cb34016269d7
   minio-init:
-    image: pgsty/mc:RELEASE.2026-09-16T00-00-00Z@sha256:cfc83108c3abb371f8fb84d99c1fdc88f8c237e022409b0081fb7c0a3be634dd
+    image: pgsty/mc:RELEASE.2026-10-18T00-00-00Z@sha256:6ecdaec70bc5e8cf9d0e9a70c190f3beb1c83f11617ff4333f1fcd71ab1daf18
