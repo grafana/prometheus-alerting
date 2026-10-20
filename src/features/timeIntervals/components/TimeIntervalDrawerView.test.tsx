@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ParsedUserConfiguration } from '@grafana/external-alertmanager/mimir';
@@ -9,6 +10,7 @@ import { setDataSourceSrv } from '@grafana/runtime';
 
 import { mockMimirAlertmanagerDs } from '../../../test/fixtures/datasources';
 import { setMimirAlertmanagerConfig } from '../../../test/handlers/mimir-alertmanager';
+import { server } from '../../../test/server';
 import {
   createMockDataSourceSrv,
   setCurrentUserPermissions,
@@ -173,5 +175,30 @@ describe('TimeIntervalDrawerView delete guard', () => {
     renderDrawerView();
 
     await waitFor(() => expect(ui.removeButton.get()).not.toHaveAttribute('aria-disabled', 'true'));
+  });
+
+  it('allows removing a time interval when the configuration has no routing tree', async () => {
+    setMimirAlertmanagerConfig({
+      template_files: {},
+      alertmanager_config: { receivers: [{ name: 'default' }], time_intervals: [businessHours] },
+    });
+    renderDrawerView();
+
+    await screen.findByText('No route uses this time interval');
+    expect(ui.removeButton.get()).not.toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('says why removal is blocked when the routes could not be loaded', async () => {
+    server.use(
+      http.get('/api/datasources/proxy/uid/:uid/api/v1/alerts', () =>
+        HttpResponse.json({ message: 'Mimir said no' }, { status: 400 })
+      )
+    );
+    renderDrawerView();
+
+    const error = await screen.findByRole('alert', { name: "Couldn't check which routes use this time interval" });
+    expect(error).toHaveTextContent('400');
+    expect(screen.queryByText('Used by routes')).not.toBeInTheDocument();
+    expectRemoveBlocked();
   });
 });

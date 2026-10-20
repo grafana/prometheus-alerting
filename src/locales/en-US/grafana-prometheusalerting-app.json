@@ -1650,6 +1650,8 @@
     "in-use": {
       "as-active": "Active timing",
       "as-mute": "Mute timing",
+      "error-title": "Couldn't check which routes use this time interval",
+      "error-tooltip": "The routes couldn't be loaded, so there's no telling whether removing this time interval is safe",
       "heading": "Used by routes",
       "inherited-receiver": "A route that inherits its receiver",
       "loading-tooltip": "Checking which routes use this time interval",

@@ -10,6 +10,7 @@ import { routes as routesNav } from '../../../utils/navigation';
 import { useAlertmanager } from '../../../hooks/useAlertmanager';
 import { KeyValueList } from '../../../components/KeyValueList/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
+import { DataSourceError } from '../../../components/AlertmanagerError';
 import { useTimeIntervalUses } from '../hooks/useTimeIntervalUses';
 import { TimeIntervalScheduleSection } from './TimeIntervalScheduleSection';
 
@@ -75,6 +76,31 @@ function DependentRoutes({ uses }: { uses: TimeIntervalUse[] }) {
   );
 }
 
+/** Why the Remove button is disabled, shown as its tooltip; nothing when it can be used */
+function removeBlockedReason({
+  hasLoadedRoutes,
+  failedToLoadRoutes,
+  isInUse,
+}: {
+  hasLoadedRoutes: boolean;
+  failedToLoadRoutes: boolean;
+  isInUse: boolean;
+}) {
+  if (failedToLoadRoutes) {
+    return t(
+      'time-intervals.in-use.error-tooltip',
+      "The routes couldn't be loaded, so there's no telling whether removing this time interval is safe"
+    );
+  }
+  if (!hasLoadedRoutes) {
+    return t('time-intervals.in-use.loading-tooltip', 'Checking which routes use this time interval');
+  }
+  if (isInUse) {
+    return t('time-intervals.in-use.tooltip', 'Remove this time interval from the routes using it first');
+  }
+  return undefined;
+}
+
 interface TimeIntervalDrawerViewProps {
   timeInterval: TimeInterval;
   onEdit: () => void;
@@ -89,7 +115,12 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
   // Deleting an interval strips it from every route that mentions it, turning that route's mute
   // or active window off without saying so. Look the references up first and block the delete
   // while any exist, so the user changes the routes deliberately instead of finding out later.
-  const { getUses, isSuccess: hasLoadedRoutes } = useTimeIntervalUses();
+  const {
+    getUses,
+    isSuccess: hasLoadedRoutes,
+    isError: failedToLoadRoutes,
+    error: routesError,
+  } = useTimeIntervalUses();
   const uses = getUses(timeInterval.name);
   const isInUse = uses.length > 0;
   // Until the routes have loaded (or if they fail to), there's no telling whether any of them
@@ -128,6 +159,12 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
         <TimeIntervalDetails timeInterval={timeInterval} />
 
         {hasLoadedRoutes && <DependentRoutes uses={uses} />}
+        {failedToLoadRoutes && (
+          <DataSourceError
+            error={routesError}
+            title={t('time-intervals.in-use.error-title', "Couldn't check which routes use this time interval")}
+          />
+        )}
       </Stack>
 
       {canMutateTimeIntervals && (
@@ -141,13 +178,7 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
               variant="destructive"
               onClick={handleRemove}
               disabled={isDeleting || !canRemove}
-              tooltip={
-                !hasLoadedRoutes
-                  ? t('time-intervals.in-use.loading-tooltip', 'Checking which routes use this time interval')
-                  : isInUse
-                    ? t('time-intervals.in-use.tooltip', 'Remove this time interval from the routes using it first')
-                    : undefined
-              }
+              tooltip={removeBlockedReason({ hasLoadedRoutes, failedToLoadRoutes, isInUse })}
             >
               {t('time-intervals.drawer.remove', 'Remove')}
             </Button>
