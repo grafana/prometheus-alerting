@@ -1,5 +1,73 @@
 # Changelog
 
+## [1.8.0](https://github.com/grafana/prometheus-alerting/compare/v1.7.2...v1.8.0) (2026-10-16)
+
+
+### 🎉 Features
+
+* relicense under AGPL-3.0-only ([#345](https://github.com/grafana/prometheus-alerting/issues/345)) ([cd4597e](https://github.com/grafana/prometheus-alerting/commit/cd4597eb8f29a1378ff01ac7156a1f637df9a5c1))
+
+## [1.7.2](https://github.com/grafana/prometheus-alerting/compare/v1.7.1...v1.7.2) (2026-10-13)
+
+
+### 🐛 Bug Fixes
+
+* **rules:** keep the original error when feature discovery fails ([#332](https://github.com/grafana/prometheus-alerting/issues/332)) ([874f9ea](https://github.com/grafana/prometheus-alerting/commit/874f9ea665589c43cdc9cf1af84ef6925ab5ad58))
+
+
+### 🔧 Chores
+
+* **deps:** drop overrides that are no longer needed ([#342](https://github.com/grafana/prometheus-alerting/issues/342)) ([f47ec68](https://github.com/grafana/prometheus-alerting/commit/f47ec68a5945ee648e2c94932e0ce338f656de57))
+
+## [1.7.1](https://github.com/grafana/prometheus-alerting/compare/v1.7.0...v1.7.1) (2026-10-08)
+
+
+### 🐛 Bug Fixes
+
+* **security:** replace i18next-parser with i18next-cli and ignore react-router advisories ([#338](https://github.com/grafana/prometheus-alerting/issues/338)) ([ebf2437](https://github.com/grafana/prometheus-alerting/commit/ebf24376a4f584f35d0822786645759af404f132))
+
+## [1.7.0](https://github.com/grafana/prometheus-alerting/compare/v1.6.1...v1.7.0) (2026-10-07)
+
+
+### 🎉 Features
+
+* **rules:** add a context for data source diagnostics ([#331](https://github.com/grafana/prometheus-alerting/issues/331)) ([06e4696](https://github.com/grafana/prometheus-alerting/commit/06e46967a4fe0ea781995327744930593e3e0828))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** upgrade dependencies within their majors and clean up overrides ([#329](https://github.com/grafana/prometheus-alerting/issues/329)) ([b1a5404](https://github.com/grafana/prometheus-alerting/commit/b1a54042b82663611757f7f656ddcf05ea7c9a58))
+* **security:** override vulnerable transitive dependencies ([#327](https://github.com/grafana/prometheus-alerting/issues/327)) ([44929e2](https://github.com/grafana/prometheus-alerting/commit/44929e23bcd92a16fe795eb0ec8b682d6bfae37f))
+
+
+### 🤖 Continuous Integrations
+
+* **publish:** only allow semver release tags to deploy to prod ([#325](https://github.com/grafana/prometheus-alerting/issues/325)) ([0accb29](https://github.com/grafana/prometheus-alerting/commit/0accb2907d0db7cfc8c9e960e76ddd00b4632cbe))
+
+
+### 🔧 Chores
+
+* **dev:** set up with `mise bootstrap` and drop the development profile ([#330](https://github.com/grafana/prometheus-alerting/issues/330)) ([810fcac](https://github.com/grafana/prometheus-alerting/commit/810fcac7b292a7d329d21bc34ef8c9b60610c593))
+
+## [1.6.1](https://github.com/grafana/prometheus-alerting/compare/v1.6.0...v1.6.1) (2026-09-25)
+
+
+### 🐛 Bug Fixes
+
+* **alertmanager:** open the Alertmanager named in ?alertmanager= ([#321](https://github.com/grafana/prometheus-alerting/issues/321)) ([c651caa](https://github.com/grafana/prometheus-alerting/commit/c651caa567c9eec9b982effc97ce28973ab2ecda))
+* **rules:** move a rule when its group or namespace changes ([#314](https://github.com/grafana/prometheus-alerting/issues/314)) ([03e2cc7](https://github.com/grafana/prometheus-alerting/commit/03e2cc7f23922f7c379305eac999bba1260a39bf))
+* **time-intervals:** don't delete a time interval routes still use ([#315](https://github.com/grafana/prometheus-alerting/issues/315)) ([33fcd5d](https://github.com/grafana/prometheus-alerting/commit/33fcd5db32c43aecd173b45041803fd57bdbefd9))
+
+
+### 📝 Documentation
+
+* **rules:** trim the rule editor README and fix the recording rule placeholder ([#320](https://github.com/grafana/prometheus-alerting/issues/320)) ([822128f](https://github.com/grafana/prometheus-alerting/commit/822128f9aac03a815b9e23cee100f27cdb945185))
+
+
+### 🔧 Chores
+
+* **dev:** split docker-compose services into included files ([#317](https://github.com/grafana/prometheus-alerting/issues/317)) ([fd0d068](https://github.com/grafana/prometheus-alerting/commit/fd0d0687fcd8ee8145e338d923ab839fb6740b5b))
+
 ## [1.6.0](https://github.com/grafana/prometheus-alerting/compare/v1.5.0...v1.6.0) (2026-09-23)
 
 

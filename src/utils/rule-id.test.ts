@@ -3,10 +3,9 @@ import type { PromRuleDTO, RulerRuleDTO } from '@grafana/external-rules/vanilla'
 import type { DataSourceRuleGroupIdentifier } from '../types/rules';
 
 const groupId: DataSourceRuleGroupIdentifier = {
-  rulesSource: { uid: 'ds-uid', name: 'My DS', ruleSourceType: 'datasource' },
+  rulesSource: { uid: 'ds-uid', name: 'My DS' },
   namespace: { name: 'my-namespace' },
   groupName: 'my-group',
-  groupOrigin: 'datasource',
 };
 
 describe('fromRuleAndGroup', () => {

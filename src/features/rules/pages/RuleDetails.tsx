@@ -162,13 +162,11 @@ function RuleDetailsContent({ identifier }: { identifier: DataSourceRuleIdentifi
     rulesSource: {
       uid: meta.dataSourceUid,
       name: '',
-      ruleSourceType: 'datasource',
     },
     namespace: {
       name: meta.namespace,
     },
     groupName: meta.groupName,
-    groupOrigin: 'datasource',
   };
 
   // Calculate interval

@@ -116,13 +116,11 @@ function GroupDetails() {
       rulesSource: {
         uid: dataSourceUid,
         name: dataSourceName,
-        ruleSourceType: 'datasource',
       },
       namespace: {
         name: namespace,
       },
       groupName: groupName,
-      groupOrigin: 'datasource',
     };
   }, [dataSourceUid, dataSourceName, namespace, groupName]);
 

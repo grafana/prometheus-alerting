@@ -23,7 +23,7 @@ pnpm lint:fix     # Run ESLint and Prettier to fix issues
 ```bash
 pnpm test         # Run tests in watch mode (requires git init)
 pnpm test:ci      # Run all tests once and exit
-pnpm e2e          # Run E2E tests with Playwright (requires pnpm server first)
+pnpm e2e          # Run E2E tests with Playwright (requires mise run server first)
 ```
 
 **E2E Testing Setup:**
@@ -113,8 +113,8 @@ These data sources are auto-provisioned via `provisioning/datasources/test-datas
 ### Development Server
 
 ```bash
-pnpm server                         # Start Grafana in Docker with the plugin loaded
-GRAFANA_VERSION=11.3.0 pnpm server  # Start specific Grafana version
+mise run server                         # Start Grafana in Docker with the plugin loaded
+GRAFANA_VERSION=11.3.0 mise run server    # Start specific Grafana version
 ```
 
 ### Internationalization

@@ -31,12 +31,14 @@ brew install mise
 curl https://mise.run | sh
 ```
 
-Then, from the repo root, trust the config and install the pinned tool versions:
+Then, from the repo root, trust the config and set the project up. This installs the pinned tool versions, the project dependencies and the Git hooks:
 
 ```bash
 mise trust
-mise install
+mise bootstrap
 ```
+
+Run `mise tasks` to see the other tasks.
 
 See the [mise installation docs](https://mise.jdx.dev/installing-mise.html) for other platforms and shell activation options.
 
@@ -61,10 +63,10 @@ pnpm --version  # should be >= 12.4.2
 1. Install dependencies
 
    ```bash
-   # If using mise (recommended):
-   mise trust && mise install  # installs pinned Node.js and pnpm
+   # If using mise (recommended): installs pinned Node.js and pnpm, the dependencies and the Git hooks
+   mise trust && mise bootstrap
 
-   # Install project dependencies:
+   # Without mise:
    pnpm install
    ```
 
@@ -93,17 +95,17 @@ pnpm --version  # should be >= 12.4.2
 5. Spin up a Grafana instance and run the plugin inside it (using Docker)
 
    ```bash
-   pnpm run server
+   mise run server
    ```
 
 6. Run the E2E tests (using Playwright)
 
    ```bash
    # Spins up a Grafana instance first that we tests against
-   pnpm run server
+   mise run server
 
    # If you wish to start a certain Grafana version. If not specified will use latest by default
-   GRAFANA_VERSION=11.3.0 pnpm run server
+   GRAFANA_VERSION=11.3.0 mise run server
 
    # Starts the tests
    pnpm run e2e
@@ -130,10 +132,12 @@ To install and test the plugin in a local Grafana instance (outside of Docker):
    cd prometheus-alerting
 
    # If using mise (recommended):
-   mise trust && mise install
+   mise trust && mise bootstrap
 
-   # Install dependencies and start development:
+   # Without mise, install the dependencies yourself:
    pnpm install
+
+   # Start development:
    pnpm run dev
    ```
 
@@ -163,3 +167,7 @@ To install and test the plugin in a local Grafana instance (outside of Docker):
 
 - [`plugin.json` documentation](https://grafana.com/developers/plugin-tools/reference/plugin-jsonplugin-json)
 - [Sign a plugin](https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin)
+
+## License
+
+This project is licensed under [AGPL-3.0-only](LICENSE). Versions from before the switch were released under Apache-2.0 and are also available under AGPL-3.0-only. See [LICENSING.md](LICENSING.md) for details and for third-party code that keeps its own license.

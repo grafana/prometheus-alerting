@@ -39,9 +39,9 @@ CI steps explicitly disable the mise action's cache (`cache: false` and `cache_s
 
 `not_found_auto_install = false` stops mise from installing a tool just because a command was not found, so a missing tool is always an explicit decision rather than a silent download. (mise already defaults to not auto-accepting prompts, so nothing extra is needed for that.)
 
-### Profile separation
+### Keeping dev-only tools out of CI
 
-`mise.toml` defines shared tools (Node, pnpm) loaded in both CI and local environments. `mise.development.toml` defines dev-only tools (lefthook, trufflehog). `.miserc.toml` activates the `development` profile locally. CI sets `MISE_ENV=ci`, so dev-only tools are never installed there.
+Everything is declared in `mise.toml` and locked in `mise.lock`. CI installs only Node and pnpm (`install_args: node pnpm` on `jdx/mise-action`). lefthook is listed under `[tools]` because the Git hooks find it through `mise exec`, but CI never installs it. trufflehog is declared on the `secrets` task rather than under `[tools]`, so a plain `mise install` skips it and `mise run secrets` installs it the first time it runs.
 
 ### Renovate automation
 
@@ -85,10 +85,6 @@ corepack uses this hash to verify the exact pnpm binary before it runs, preventi
 
 `pnpm-workspace.yaml` contains an `overrides` block that pins specific transitive dependencies to minimum safe versions. These overrides address known vulnerabilities in packages that indirect dependencies bring in at insecure versions. Renovate keeps these overrides up to date.
 
-### Preinstall guard
-
-`scripts/check-mise.js` runs as a `preinstall` hook and warns if Node is not being invoked from a mise-managed path, reducing the risk of using an unverified system Node. The check is bypassed in CI where the environment is already controlled.
-
 ---
 
 ## Automated dependency updates — Renovate
@@ -120,13 +116,12 @@ No automerge is configured. All dependency update PRs require a human review.
 
 ## Git hooks — lefthook
 
-[Lefthook](https://github.com/evilmartians/lefthook) is installed as a dev tool via mise (aqua backend, exact version) and registered via the `prepare` script so hooks are active for every contributor after `pnpm install`.
+[Lefthook](https://github.com/evilmartians/lefthook) is installed as a dev tool via mise (aqua backend, exact version) and `mise bootstrap` registers the hooks.
 
 ### pre-commit (piped — stops on first failure)
 
-1. **check-mise** — warns if the Node runtime is not managed by mise.
-2. **lint-ts** — ESLint with auto-fix on staged TypeScript files.
-3. **prettier** — auto-formats staged files.
+1. **lint-ts** — ESLint with auto-fix on staged TypeScript files.
+2. **prettier** — auto-formats staged files.
 
 ### pre-push
 
@@ -141,6 +136,8 @@ Secret scanning runs at two points so that the local hook catches secrets before
 
 ### Pre-push hook (local)
 
+The hook runs `mise run secrets`, which runs:
+
 ```
 trufflehog git file://. --since-commit ${LEFTHOOK_REMOTE_REF:-origin/main} --only-verified --fail --log-level=-1 --no-update
 ```
@@ -149,7 +146,7 @@ trufflehog git file://. --since-commit ${LEFTHOOK_REMOTE_REF:-origin/main} --onl
 - `--only-verified`: only confirmed live credentials block the push; unverified pattern matches are informational.
 - `--fail`: exits non-zero on any finding, blocking the push.
 - `--no-update`: prevents trufflehog from self-updating at runtime, ensuring the pinned version is always used.
-- Version is pinned via mise (aqua backend) in `mise.development.toml`.
+- Version is pinned via mise (aqua backend) on the `secrets` task in `mise.toml`, with checksums in `mise.lock`.
 
 ### CI workflow (`.github/workflows/trufflehog.yml`)
 
@@ -173,7 +170,7 @@ The table below summarises where and how versions and checksums are pinned acros
 | GitHub Actions (third-party)                | `.github/workflows/*.yml`             | Full commit SHA (`@abc1234...`)                               |
 | `grafana/plugin-validator-cli` Docker image | `ci.yml`                              | `@sha256:...` digest                                          |
 | Docker Compose images                       | `docker-compose.yaml`                 | Tag + SHA256 digest via Renovate `pinDigests: true`           |
-| lefthook, trufflehog                        | `mise.development.toml`               | Exact version via aqua backend                                |
+| lefthook, trufflehog                        | `mise.lock`                           | `sha256:` checksum per platform (lefthook also `provenance`)  |
 
 ### Intentionally unpinned Grafana-org actions
 

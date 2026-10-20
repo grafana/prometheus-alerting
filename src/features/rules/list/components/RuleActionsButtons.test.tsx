@@ -66,10 +66,9 @@ function mockBuildInfo() {
 
 function groupIdentifier(dataSourceUid: string) {
   return {
-    rulesSource: { uid: dataSourceUid, name: 'Test data source', ruleSourceType: 'datasource' as const },
+    rulesSource: { uid: dataSourceUid, name: 'Test data source' },
     namespace: { name: 'default' },
     groupName: 'alerts',
-    groupOrigin: 'datasource' as const,
   };
 }
 

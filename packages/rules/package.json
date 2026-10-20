@@ -7,9 +7,9 @@
   },
   "keywords": [],
   "author": "",
-  "license": "Apache-2.0",
+  "license": "AGPL-3.0-only",
   "dependencies": {
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "exports": {
     "./identifiers": "./src/identifiers/index.ts",

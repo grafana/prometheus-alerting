@@ -130,10 +130,9 @@ async function discoverFeatures(transport: RulerTransport, options: VanillaFlavo
   // No buildinfo endpoint available (Cortex or Loki)
   if (!buildInfo) {
     // Check if we can fetch rules via the prometheus compatible api
-    const hasPromRules = await isEndpointAvailable(transport, options.promRulesPath);
-    if (!hasPromRules) {
-      throw new Error(`Unable to fetch alert rules. Is the data source properly configured?`);
-    }
+    // Let the original failure through – its status, body and trace id explain *why* the data
+    // source is unusable, which a generic message would throw away
+    await probeEndpoint(transport, options.promRulesPath);
 
     // Check if the ruler API is enabled
     const hasRuler = options.ruler ? await testRulerSupport(transport, options.ruler.probePath) : false;
@@ -204,19 +203,10 @@ async function testRulerSupport(transport: RulerTransport, probePath: string): P
   }
 }
 
-/** Returns whether an endpoint responds successfully, while preserving permission errors for the caller. */
-async function isEndpointAvailable(transport: RulerTransport, path: string): Promise<boolean> {
-  try {
-    // Text for the same reason as the Ruler probe: reachability, not response shape.
-    await transport({ segments: path.split('/'), responseType: 'text' });
-    return true;
-  } catch (error) {
-    if (isForbiddenError(error)) {
-      throw error;
-    }
-
-    return false;
-  }
+/** Throws the original failure when an endpoint does not respond successfully. */
+async function probeEndpoint(transport: RulerTransport, path: string): Promise<void> {
+  // Text for the same reason as the Ruler probe: reachability, not response shape.
+  await transport({ segments: path.split('/'), responseType: 'text' });
 }
 
 /**

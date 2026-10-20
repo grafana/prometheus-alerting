@@ -46,6 +46,8 @@ jobs:
       # - 'universal': on-prem + cloud (default)
       # - 'grafana_cloud': cloud only, hidden for on-prem users
       scopes: universal
+      # Only release tags like v1.6.1 may deploy to prod. Deploying main to prod is blocked.
+      release-reference-regex: '^v\d+\.\d+\.\d+$'
       # This will trigger the Argo Workflow to update your plugin version in Grafana Cloud via deployment_tools
       # grafana-cloud-deployment-type: provisioned
       # Trigger Argo Workflow only when deploying from main branch (do not deploy PRs to the whole cluster)

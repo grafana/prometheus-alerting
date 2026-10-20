@@ -1,5 +1,0 @@
-# Development-only tools — loaded when MISE_ENV=development (set automatically via .miserc.toml).
-# Not loaded in CI where MISE_ENV=ci is set instead.
-[tools]
-"aqua:evilmartians/lefthook" = "2.1.14"
-"aqua:trufflesecurity/trufflehog" = "3.97.5"

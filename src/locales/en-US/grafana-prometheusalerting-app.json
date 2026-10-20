@@ -13,7 +13,8 @@
       "placeholder-key": "Annotation key",
       "placeholder-url": "https://",
       "placeholder-value": "Annotation value",
-      "remove-annotation": "Remove annotation"
+      "remove-annotation": "Remove annotation",
+      "remove-annotation-named": "Remove annotation {{key}}"
     },
     "clipboard": {
       "error": "Failed to copy to clipboard",
@@ -56,7 +57,7 @@
       "delete": "Delete",
       "deleting": "Deleting...",
       "error-title": "Delete failed",
-      "message": "Are you sure you want to delete rule <1>{{ ruleName }}</1> from group <4>{{ groupName }}</4> in namespace <6>{{ namespace }}</6>?",
+      "message": "Are you sure you want to delete rule <strong>{{ ruleName }}</strong> from group <strong>{{ groupName }}</strong> in namespace <strong>{{ namespace }}</strong>?",
       "permission-denied": "You do not have permission to delete rules.",
       "success": "Rule deleted successfully",
       "title": "Delete rule",
@@ -160,6 +161,7 @@
       "placeholder-key": "Label key",
       "placeholder-value": "Label value",
       "remove-label": "Remove label",
+      "remove-label-named": "Remove label {{key}}",
       "remove-label-numbered": "Remove label {{number}}",
       "title": "Edit labels"
     },
@@ -298,6 +300,9 @@
       }
     },
     "rule-list": {
+      "datasource-errors": {
+        "no-rules": "This data source has no rules."
+      },
       "filter-sidebar": {
         "group-placeholder": "Filter by group...",
         "namespace-placeholder": "Filter by namespace...",
@@ -346,7 +351,6 @@
       }
     },
     "rules-error": {
-      "permission-denied": "Permission denied",
       "permission-denied-description": "You do not have permission to access rules from this data source.",
       "unknown": "An unknown error occurred"
     },
@@ -643,7 +647,8 @@
       "confirm-button": "Delete",
       "confirm-title": "Delete receiver",
       "error": "Failed to delete receiver",
-      "in-use-warning": "This receiver is currently used by {{count}} route(s). Deleting it may cause alerts to not be delivered.",
+      "in-use-warning_one": "This receiver is currently used by {{count}} route(s). Deleting it may cause alerts to not be delivered.",
+      "in-use-warning_other": "This receiver is currently used by {{count}} route(s). Deleting it may cause alerts to not be delivered.",
       "in-use-warning-title": "Receiver is in use",
       "success": "Receiver deleted successfully"
     },
@@ -1336,7 +1341,7 @@
       "count-filtered": "{{filtered}} of {{total}} instance(s)",
       "details": {
         "annotations": "Annotations",
-        "value": "<0>Value:</0> {alert.value}"
+        "value": "<strong>Value:</strong> {{value}}"
       },
       "empty": "No active alert instances",
       "filter": {
@@ -1352,6 +1357,7 @@
         "state-pending-count_one": "Pending ({{count}})",
         "state-pending-count_other": "Pending ({{count}})"
       },
+      "label-badge": "{{key}}={{value}}",
       "no-match": "No instances match the current filters"
     },
     "loading": "Loading rule details...",
@@ -1406,7 +1412,8 @@
   },
   "silences": {
     "affected-alerts": {
-      "count": "{{count}} alert(s) silenced",
+      "count_one": "{{count}} alert(s) silenced",
+      "count_other": "{{count}} alert(s) silenced",
       "error-message": "Failed to load affected alerts",
       "error-title": "Error loading alerts",
       "more-labels": "more",

@@ -29,7 +29,6 @@ export interface PromBuildInfoResponse {
 export interface DataSourceRulesSourceIdentifier {
   uid: string;
   name: string;
-  ruleSourceType: 'datasource';
 }
 
 export interface DataSourceNamespaceIdentifier {
@@ -40,7 +39,6 @@ export interface DataSourceRuleGroupIdentifier {
   rulesSource: DataSourceRulesSourceIdentifier;
   namespace: DataSourceNamespaceIdentifier;
   groupName: string;
-  groupOrigin: 'datasource';
 }
 
 // Re-export PromRuleGroupDTO as RuleGroup for convenience
