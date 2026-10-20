@@ -98,7 +98,7 @@ function PaginatedGroupsLoader({
     [namespaceFilter, groupFilter]
   );
 
-  const { isLoading, groups, hasMoreGroups, fetchMoreGroups, error } = useLazyLoadPrometheusGroups(
+  const { isLoading, groups, hasReceivedGroups, hasMoreGroups, fetchMoreGroups, error } = useLazyLoadPrometheusGroups(
     generator,
     FRONTED_GROUPED_PAGE_SIZE,
     filterFn
@@ -107,19 +107,14 @@ function PaginatedGroupsLoader({
   const hasNoRules = isEmpty(groups) && !isLoading;
   const groupsByNamespace = useMemo(() => groupBy(groups, 'file'), [groups]);
 
-  // Only report a failure when we have no groups at all. When some groups loaded before a later page
-  // failed, the section still has something to show, and a later page failing is often a one-off.
-  useReportDataSourceError(uid, isEmpty(groups) ? error : undefined);
-
-  // Report a data source without any rules. With filters active an empty result only means nothing
-  // matched, which is not worth reporting. We wait for the last page (`hasMoreGroups`) because the
-  // first render happens before the first request has even started.
-  const isEmptyDataSource = !hasFilters && !error && isEmpty(groups) && !hasMoreGroups;
-  useReportEmptyDataSource(uid, isEmptyDataSource);
-
-  // Groups coming in prove the data source works, even if a later page failed. This clears what an
-  // earlier view reported.
-  useReportHealthyDataSource(uid, !isEmpty(groups));
+  // Judge the data source by what it sent (`hasReceivedGroups`), not by `groups`, which only holds the
+  // filter matches. A later page failing after some groups loaded is not reported as a failure.
+  useReportDataSourceError(uid, hasReceivedGroups ? undefined : error);
+  // `hasMoreGroups` stays true until the last page, so we don't report "empty" before the first request.
+  // Only this view reports "empty", the list view leaves it to us.
+  useReportEmptyDataSource(uid, !error && !hasReceivedGroups && !hasMoreGroups);
+  // Clears what an earlier view reported
+  useReportHealthyDataSource(uid, hasReceivedGroups);
 
   // Hide datasource section when filters are active and there are no matching results
   if (hideOnEmpty && hasNoRules) {

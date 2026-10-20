@@ -20,20 +20,25 @@ import { RulesFilter } from '../../search/rulesSearchParser';
 
 import { groupFilter, ruleFilter } from './filters';
 import { usePrometheusGroupsGenerator } from './prometheusGroupsGenerator';
-import { toDataSourceRulesError, useDataSourceErrors } from './useDataSourceErrors';
 
 interface GetIteratorResult {
   iterable: AsyncIterableX<PromRuleWithOrigin>;
   abortController: AbortController;
 }
 
+export interface DataSourceCallbacks {
+  /** A page came back from the data source, before any filtering */
+  onDataSourceResponse?: (uid: string, groups: PromRuleGroupDTO[]) => void;
+  /** The data source failed. Stopping the search doesn't count as a failure. */
+  onDataSourceError?: (uid: string, error: unknown, context: { servedRules: boolean }) => void;
+}
+
 export function useFilteredRulesIteratorProvider() {
   const allExternalRulesSources = useMemo(() => getExternalRulesSources(), []);
   const prometheusGroupsGenerator = usePrometheusGroupsGenerator();
-  const { reportError, clearError } = useDataSourceErrors();
 
   const getFilteredRulesIterable = useCallback(
-    (filterState: RulesFilter, groupLimit: number): GetIteratorResult => {
+    (filterState: RulesFilter, groupLimit: number, callbacks: DataSourceCallbacks = {}): GetIteratorResult => {
       // This is the abort controller that allows us to stop an AsyncIterable
       const abortController = new AbortController();
 
@@ -64,13 +69,10 @@ export function useFilteredRulesIteratorProvider() {
             prometheusGroupsGenerator(dataSourceIdentifier, groupLimit)
           ).pipe(
             withAbort(abortController.signal),
-            // Check before we filter anything – a page with groups shows the data source works, even if none
-            // of them match the search. That clears what was reported for it earlier, by either view.
+            // Before we filter anything, so the caller sees what the data source sent, not what matched
             tap((groups: PromRuleGroupDTO[]) => {
-              if (!servedRules && groups.length > 0) {
-                servedRules = true;
-                clearError(dataSourceIdentifier.uid);
-              }
+              servedRules ||= groups.length > 0;
+              callbacks.onDataSourceResponse?.(dataSourceIdentifier.uid, groups);
             }),
             concatMap((groups: PromRuleGroupDTO[]) =>
               groups
@@ -80,13 +82,12 @@ export function useFilteredRulesIteratorProvider() {
                 .map(({ group, rule, index }) => mapRuleToRuleWithOrigin(dataSourceIdentifier, group, rule, index))
             ),
             // A failing data source should not fail the entire search, we skip its results and
-            // report the error so it can be surfaced to the user
+            // hand the error to the caller so it can be surfaced to the user
             catchError((error: unknown) => {
               // Stopping the search makes every data source that is still loading throw, that is not
-              // something wrong with the data source. Neither is a later page failing after earlier ones
-              // loaded – the grouped view doesn't hide those either.
-              if (!abortController.signal.aborted && !servedRules) {
-                reportError(toDataSourceRulesError(dataSourceIdentifier.uid, error));
+              // something wrong with the data source
+              if (!abortController.signal.aborted) {
+                callbacks.onDataSourceError?.(dataSourceIdentifier.uid, error, { servedRules });
               }
               return empty();
             })
@@ -101,7 +102,7 @@ export function useFilteredRulesIteratorProvider() {
 
       return { iterable, abortController };
     },
-    [allExternalRulesSources, prometheusGroupsGenerator, reportError, clearError]
+    [allExternalRulesSources, prometheusGroupsGenerator]
   );
 
   return getFilteredRulesIterable;

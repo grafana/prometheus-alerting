@@ -16,6 +16,7 @@ import { DataSourceRuleLoader } from './DataSourceRuleLoader';
 import { FilterProgressState, FilterStatus } from './components/FilterStatus';
 import { SkeletonListItem } from './components/ListItem';
 import { LoadMoreHelper } from './components/LoadMoreHelper';
+import { toDataSourceRulesError, useDataSourceErrors } from './hooks/useDataSourceErrors';
 import { useFilteredRulesIteratorProvider } from './hooks/useFilteredRulesIterator';
 import { FRONTEND_LIST_PAGE_SIZE, FILTERED_GROUPS_API_PAGE_SIZE } from '../../../utils/paginationLimits';
 
@@ -50,6 +51,7 @@ function FilterViewResults({ filterState }: FilterViewProps) {
 
   /* this hook returns a function that creates an AsyncIterable<PromRuleWithOrigin> which we will use to populate the front-end */
   const getFilteredRulesIterator = useFilteredRulesIteratorProvider();
+  const { reportError, clearError } = useDataSourceErrors();
 
   const iteration = useRef<{
     rulesBatchIterator: AsyncIterator<PromRuleWithOrigin[]>;
@@ -73,7 +75,16 @@ function FilterViewResults({ filterState }: FilterViewProps) {
        * ⚠️ Make sure we are returning / using a "iterator" and not an "iterable" since the iterable is only a blueprint
        * and the iterator will allow us to exhaust the iterable in a stateful way
        */
-      const { iterable, abortController } = getFilteredRulesIterator(filterState, FILTERED_GROUPS_API_PAGE_SIZE);
+      const { iterable, abortController } = getFilteredRulesIterator(filterState, FILTERED_GROUPS_API_PAGE_SIZE, {
+        // Any answer clears an earlier error. Only groups clear a "no rules" report, that came from the grouped view.
+        onDataSourceResponse: (uid, groups) => clearError(uid, groups.length > 0 ? undefined : 'error'),
+        // A later page failing after earlier ones loaded is not reported, the grouped view doesn't hide those either
+        onDataSourceError: (uid, error, { servedRules }) => {
+          if (!servedRules) {
+            reportError(toDataSourceRulesError(uid, error));
+          }
+        },
+      });
       const rulesBatchIterator = iterable
         .pipe(
           bufferCountOrTime(FRONTEND_LIST_PAGE_SIZE, 1000),
@@ -83,7 +94,7 @@ function FilterViewResults({ filterState }: FilterViewProps) {
       iteration.current = { rulesBatchIterator: rulesBatchIterator, abortController };
     }
     return iteration.current.rulesBatchIterator;
-  }, [filterState, getFilteredRulesIterator]);
+  }, [filterState, getFilteredRulesIterator, reportError, clearError]);
 
   /* This function will fetch a page of results from the iterable */
   const [state, { execute: loadResultPage }] = useAsync(async () => {

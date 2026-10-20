@@ -167,7 +167,31 @@ describe('PaginatedDataSourceLoader with a data source that has no rules', () =>
     expect(await findReported()).toHaveTextContent('test-mimir-uid: empty: This data source has no rules.');
   });
 
-  it('does not report the data source when filters are active, an empty result only means nothing matched', async () => {
+  it('reports the data source as having no rules when filters are active', async () => {
+    renderWithReport({ groupFilter: 'does-not-exist' });
+
+    expect(await findReported()).toHaveTextContent('test-mimir-uid: empty: This data source has no rules.');
+  });
+});
+
+describe('PaginatedDataSourceLoader with groups that do not match the filter', () => {
+  const rulesRequest = vi.fn();
+
+  beforeEach(() => {
+    rulesRequest.mockClear();
+    setDataSourceSrv(createMockDataSourceSrv());
+    server.use(
+      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, () => {
+        rulesRequest();
+        return HttpResponse.json({
+          status: 'success',
+          data: { groups: [{ name: 'some-group', file: namespace, interval: 60, rules: [] }] },
+        });
+      })
+    );
+  });
+
+  it('does not report the data source, nothing matching the filter does not make it empty', async () => {
     renderWithReport({ groupFilter: 'does-not-exist' });
 
     await waitFor(() => expect(rulesRequest).toHaveBeenCalled());
