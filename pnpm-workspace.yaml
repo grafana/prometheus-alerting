@@ -52,3 +52,6 @@ allowBuilds:
   core-js: false
   esbuild: true
   msw: true
+minimumReleaseAgeExclude:
+  # Renovate security update: vite@8.3.3
+  - vite@8.3.3

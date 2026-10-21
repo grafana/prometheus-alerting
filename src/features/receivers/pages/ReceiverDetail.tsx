@@ -45,7 +45,7 @@ function ReceiverDetail() {
           <AlertmanagerError error={error} title={t('receivers.detail.not-found-title', 'Receiver not found')} />
         )}
         {notFound && (
-          <EmptyState variant="not-found" message={t('receivers.error-loading-title', 'Error loading receivers')}>
+          <EmptyState variant="not-found" message={t('receivers.detail.not-found-title', 'Receiver not found')}>
             {t('receivers.detail.not-found-message', 'The receiver "{{name}}" does not exist.', { name })}
           </EmptyState>
         )}

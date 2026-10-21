@@ -48,9 +48,22 @@ function renderBreadcrumbs(pageNav: PageNavItem | undefined): React.ReactNode {
 
 vi.mock('@grafana/runtime', async () => ({
   ...(await vi.importActual('@grafana/runtime')),
-  PluginPage: ({ children, pageNav }: { children: React.ReactNode; pageNav?: PageNavItem }) => (
+  PluginPage: ({
+    children,
+    pageNav,
+    info,
+  }: {
+    children: React.ReactNode;
+    pageNav?: PageNavItem;
+    info?: Array<{ label: string; value: string }>;
+  }) => (
     <div data-testid="plugin-page">
       {renderBreadcrumbs(pageNav)}
+      {info?.map((i) => (
+        <div key={i.label}>
+          {i.label}: <span>{i.value}</span>
+        </div>
+      ))}
       {pageNav && <div data-testid="page-title">{pageNav.text}</div>}
       {children}
     </div>
@@ -199,6 +212,22 @@ describe('GroupDetails', () => {
       renderGroupDetails();
 
       expect(screen.getByTestId('group-loader')).toBeInTheDocument();
+    });
+
+    it.each([
+      [60, '1m', '60s'],
+      [90, '1m30s', '90s'],
+    ])('displays a %is group interval in compact Prometheus duration format', (interval, expected, notExpected) => {
+      mockUseGetGroupsQuery.mockReturnValue({
+        data: { data: { groups: [{ name: 'my-group', file: 'my-namespace', interval, rules: [] }] } },
+        isLoading: false,
+        error: null,
+      });
+
+      renderGroupDetails();
+
+      expect(screen.getByText(expected)).toBeInTheDocument();
+      expect(screen.queryByText(notExpected)).not.toBeInTheDocument();
     });
 
     it('displays the group name in page title', () => {
