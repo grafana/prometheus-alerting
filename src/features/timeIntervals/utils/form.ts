@@ -16,6 +16,9 @@ import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
 const TIME_PATTERN = /^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$/;
 
 const END_BEFORE_START_MESSAGE = 'End time must be after start time';
+// Alertmanager has no ranges that run past midnight, so they have to be split in two.
+const PAST_MIDNIGHT_MESSAGE =
+  'End time must be after start time. For a range past midnight, add two ranges, e.g. 22:00-24:00 and 00:00-02:00';
 
 function toMinutes(time: string): number {
   const [hours, minutes] = time.split(':').map(Number);
@@ -23,6 +26,10 @@ function toMinutes(time: string): number {
 }
 
 function isValidTimeZone(timeZone: string): boolean {
+  // Intl accepts offsets like "+05:00", but Alertmanager only takes zone names.
+  if (timeZone.startsWith('+') || timeZone.startsWith('-')) {
+    return false;
+  }
   try {
     new Intl.DateTimeFormat('en-US', { timeZone });
     return true;
@@ -48,8 +55,11 @@ const TimeRangeFormSchema = z
     if (!TIME_PATTERN.test(start_time) || !TIME_PATTERN.test(end_time)) {
       return;
     }
-    if (toMinutes(start_time) >= toMinutes(end_time)) {
-      ctx.addIssue({ code: 'custom', path: ['end_time'], message: END_BEFORE_START_MESSAGE });
+    const start = toMinutes(start_time);
+    const end = toMinutes(end_time);
+    if (start >= end) {
+      const message = start > end ? PAST_MIDNIGHT_MESSAGE : END_BEFORE_START_MESSAGE;
+      ctx.addIssue({ code: 'custom', path: ['end_time'], message });
     }
   });
 

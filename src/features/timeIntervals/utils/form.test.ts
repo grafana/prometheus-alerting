@@ -25,6 +25,15 @@ describe('TimeIntervalFormSchema', () => {
     expect(errorPaths(parse({ start_time: '09:00', end_time: '09:00' }))).toEqual(['intervals.0.times.0.end_time']);
   });
 
+  it('suggests splitting a range that runs past midnight', () => {
+    const messages = (times: { start_time: string; end_time: string }) => {
+      const result = parse(times);
+      return result.success ? [] : result.error.issues.map((issue) => issue.message);
+    };
+    expect(messages({ start_time: '22:00', end_time: '02:00' })).toEqual([expect.stringMatching(/past midnight/)]);
+    expect(messages({ start_time: '09:00', end_time: '09:00' })).toEqual(['End time must be after start time']);
+  });
+
   it('accepts valid ranges including 24:00 as end', () => {
     expect(parse({ start_time: '09:00', end_time: '17:00' }).success).toBe(true);
     expect(parse({ start_time: '00:00', end_time: '24:00' }).success).toBe(true);
@@ -33,6 +42,7 @@ describe('TimeIntervalFormSchema', () => {
   it('validates the timezone', () => {
     const times = { start_time: '09:00', end_time: '17:00' };
     expect(errorPaths(parse(times, 'Not/AZone'))).toEqual(['intervals.0.location']);
+    expect(errorPaths(parse(times, '+05:00'))).toEqual(['intervals.0.location']);
     expect(parse(times, 'Europe/Brussels').success).toBe(true);
     expect(parse(times, 'UTC').success).toBe(true);
     expect(parse(times, undefined).success).toBe(true);
