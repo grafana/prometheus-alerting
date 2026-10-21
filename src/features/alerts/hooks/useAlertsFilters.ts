@@ -1,24 +1,16 @@
-import { useCallback, useState, useMemo } from 'react';
-import { type AlertGroup, type AlertStatus } from '@grafana/external-alertmanager/vanilla';
+import { useCallback, useMemo, useReducer } from 'react';
+import { type AlertGroup } from '@grafana/external-alertmanager/vanilla';
 import { t } from '@grafana/i18n';
 import { parseMatchers } from '../../../utils/labels';
-import { alertMatchesFilters } from '../utils/alerts.utils';
+import { filterAlertGroups } from '../utils/alerts.utils';
+import { type FilterValues, filtersReducer, initialFilters } from './alertsFiltersReducer';
 
-export interface AlertsFiltersState {
-  receivers: string[];
-  showActive: boolean;
-  showUnprocessed: boolean;
-  showSuppressed: boolean;
-  labelInput: string;
+export interface AlertsFiltersState extends FilterValues {
   labelInputError?: string;
 }
 
 export interface AlertsFiltersActions {
-  setReceivers: (receivers: string[]) => void;
-  setShowActive: (show: boolean) => void;
-  setShowUnprocessed: (show: boolean) => void;
-  setShowSuppressed: (show: boolean) => void;
-  setLabelInput: (input: string) => void;
+  updateFilters: (changes: Partial<FilterValues>) => void;
   clearFilters: () => void;
 }
 
@@ -29,53 +21,32 @@ export interface UseAlertsFiltersResult {
 }
 
 export function useAlertsFilters(): UseAlertsFiltersResult {
-  const [receivers, setReceivers] = useState<string[]>([]);
-  const [showActive, setShowActive] = useState(true);
-  const [showUnprocessed, setShowUnprocessed] = useState(false);
-  const [showSuppressed, setShowSuppressed] = useState(false);
-  const [labelInput, setLabelInput] = useState('');
+  const [values, dispatch] = useReducer(filtersReducer, initialFilters);
 
-  const labelFilter = useMemo(() => parseMatchers(labelInput), [labelInput]);
-
-  const applyFilters = useMemo(
-    () => (groups: AlertGroup[]) => {
-      const allowedStates = new Set<AlertStatus['state']>([
-        ...(showActive ? ['active' as const] : []),
-        ...(showUnprocessed ? ['unprocessed' as const] : []),
-        ...(showSuppressed ? ['suppressed' as const] : []),
-      ]);
-
-      return groups
-        .filter((group) => receivers.length === 0 || receivers.includes(group.receiver.name))
-        .map((group) => ({
-          ...group,
-          alerts: group.alerts.filter((alert) => alertMatchesFilters(alert, allowedStates, labelFilter)),
-        }))
-        .filter((group) => group.alerts.length > 0);
-    },
-    [receivers, showActive, showUnprocessed, showSuppressed, labelFilter]
+  // dispatch never changes, so these functions stay the same between renders
+  const actions = useMemo<AlertsFiltersActions>(
+    () => ({
+      updateFilters: (changes) => dispatch({ type: 'update', changes }),
+      clearFilters: () => dispatch({ type: 'clear' }),
+    }),
+    []
   );
 
-  const clearFilters = useCallback(() => {
-    setReceivers([]);
-    setShowActive(true);
-    setShowUnprocessed(false);
-    setShowSuppressed(false);
-    setLabelInput('');
-  }, []);
+  const labelFilter = useMemo(() => parseMatchers(values.labelInput), [values.labelInput]);
+
+  const applyFilters = useCallback(
+    (groups: AlertGroup[]) => filterAlertGroups(groups, values, labelFilter),
+    [values, labelFilter]
+  );
 
   return {
     filters: {
-      receivers,
-      showActive,
-      showUnprocessed,
-      showSuppressed,
-      labelInput,
+      ...values,
       labelInputError: labelFilter.error
         ? t('alerts.filters.label-input-invalid', 'Invalid label matcher syntax')
         : undefined,
     },
-    actions: { setReceivers, setShowActive, setShowUnprocessed, setShowSuppressed, setLabelInput, clearFilters },
+    actions,
     applyFilters,
   };
 }

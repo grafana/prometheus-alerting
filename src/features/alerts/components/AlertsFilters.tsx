@@ -34,7 +34,7 @@ export function AlertsFilters({ filters, actions, alertGroups }: AlertsFiltersPr
         <Input
           width={32}
           value={filters.labelInput}
-          onChange={(e) => actions.setLabelInput(e.currentTarget.value)}
+          onChange={(e) => actions.updateFilters({ labelInput: e.currentTarget.value })}
           placeholder={t('alerts.filters.label-placeholder', 'Filter by labels, e.g. foo=bar, env=~prod.*')}
         />
       </Field>
@@ -42,14 +42,14 @@ export function AlertsFilters({ filters, actions, alertGroups }: AlertsFiltersPr
         width={24}
         options={receiverOptions}
         value={filters.receivers}
-        onChange={(values) => actions.setReceivers(values.map((o) => o.value))}
+        onChange={(values) => actions.updateFilters({ receivers: values.map((o) => o.value) })}
         placeholder={t('alerts.filters.receiver-placeholder', 'Filter by receiver')}
       />
       <Stack direction="row" gap={0.5} alignItems="center">
         <Checkbox
           label={t('alerts.filters.active', 'Active')}
           value={filters.showActive}
-          onChange={(e) => actions.setShowActive(e.currentTarget.checked)}
+          onChange={(e) => actions.updateFilters({ showActive: e.currentTarget.checked })}
         />
         <Counter value={counts.active} />
       </Stack>
@@ -57,7 +57,7 @@ export function AlertsFilters({ filters, actions, alertGroups }: AlertsFiltersPr
         <Checkbox
           label={t('alerts.filters.unprocessed', 'Unprocessed')}
           value={filters.showUnprocessed}
-          onChange={(e) => actions.setShowUnprocessed(e.currentTarget.checked)}
+          onChange={(e) => actions.updateFilters({ showUnprocessed: e.currentTarget.checked })}
         />
         <Counter value={counts.unprocessed} />
       </Stack>
@@ -65,7 +65,7 @@ export function AlertsFilters({ filters, actions, alertGroups }: AlertsFiltersPr
         <Checkbox
           label={t('alerts.filters.suppressed', 'Suppressed')}
           value={filters.showSuppressed}
-          onChange={(e) => actions.setShowSuppressed(e.currentTarget.checked)}
+          onChange={(e) => actions.updateFilters({ showSuppressed: e.currentTarget.checked })}
         />
         <Counter value={counts.suppressed} />
       </Stack>

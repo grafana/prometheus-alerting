@@ -4,8 +4,10 @@ import {
   countAlertsByState,
   countAlertsInGroupsByState,
   deduplicateGroups,
+  filterAlertGroups,
   parseMatchers,
 } from './alerts.utils';
+import { initialFilters } from '../hooks/alertsFiltersReducer';
 
 describe('countAlertsByState', () => {
   it('returns all zeros for an empty list', () => {
@@ -159,16 +161,16 @@ describe('parseMatchers', () => {
 });
 
 describe('alertMatchesFilters', () => {
-  const allowedStates = new Set<'active' | 'unprocessed' | 'suppressed'>(['active']);
+  const showState = { active: true, unprocessed: false, suppressed: false };
 
   it('matches when there is no label filter', () => {
     const alert = GettableAlertFactory.build({ status: AlertStatusFactory.build({ state: 'active' }) });
-    expect(alertMatchesFilters(alert, allowedStates, { matchers: [] })).toBe(true);
+    expect(alertMatchesFilters(alert, showState, { matchers: [] })).toBe(true);
   });
 
   it('excludes alerts not in an allowed state', () => {
     const alert = GettableAlertFactory.build({ status: AlertStatusFactory.build({ state: 'unprocessed' }) });
-    expect(alertMatchesFilters(alert, allowedStates, { matchers: [] })).toBe(false);
+    expect(alertMatchesFilters(alert, showState, { matchers: [] })).toBe(false);
   });
 
   it('matches only alerts satisfying the label matchers', () => {
@@ -182,15 +184,15 @@ describe('alertMatchesFilters', () => {
     });
     const labelFilter = { matchers: [{ name: 'team', operator: '=' as const, value: 'frontend' }] };
 
-    expect(alertMatchesFilters(matching, allowedStates, labelFilter)).toBe(true);
-    expect(alertMatchesFilters(nonMatching, allowedStates, labelFilter)).toBe(false);
+    expect(alertMatchesFilters(matching, showState, labelFilter)).toBe(true);
+    expect(alertMatchesFilters(nonMatching, showState, labelFilter)).toBe(false);
   });
 
   it('excludes every alert when the label filter is invalid, rather than showing everything', () => {
     const alert = GettableAlertFactory.build({ status: AlertStatusFactory.build({ state: 'active' }) });
-    expect(
-      alertMatchesFilters(alert, allowedStates, { matchers: [], error: new Error('Invalid matcher syntax') })
-    ).toBe(false);
+    expect(alertMatchesFilters(alert, showState, { matchers: [], error: new Error('Invalid matcher syntax') })).toBe(
+      false
+    );
   });
 
   it('defensively excludes alerts for an invalid negative regular expression', () => {
@@ -200,6 +202,29 @@ describe('alertMatchesFilters', () => {
     });
     const labelFilter = { matchers: [{ name: 'team', operator: '!~' as const, value: '[' }] };
 
-    expect(alertMatchesFilters(alert, allowedStates, labelFilter)).toBe(false);
+    expect(alertMatchesFilters(alert, showState, labelFilter)).toBe(false);
+  });
+});
+
+describe('filterAlertGroups', () => {
+  const active = () => GettableAlertFactory.build({ status: AlertStatusFactory.build({ state: 'active' }) });
+  const suppressed = () => GettableAlertFactory.build({ status: AlertStatusFactory.build({ state: 'suppressed' }) });
+
+  it('keeps only alerts in a shown state and drops groups left empty', () => {
+    const mixed = AlertGroupFactory.build({ alerts: [active(), suppressed()] });
+    const onlySuppressed = AlertGroupFactory.build({ alerts: [suppressed()] });
+
+    const result = filterAlertGroups([mixed, onlySuppressed], initialFilters, { matchers: [] });
+
+    expect(result).toEqual([{ ...mixed, alerts: [mixed.alerts[0]] }]);
+  });
+
+  it('keeps only groups for the selected receivers', () => {
+    const email = AlertGroupFactory.build({ receiver: { name: 'email' }, alerts: [active()] });
+    const slack = AlertGroupFactory.build({ receiver: { name: 'slack' }, alerts: [active()] });
+
+    const result = filterAlertGroups([email, slack], { ...initialFilters, receivers: ['email'] }, { matchers: [] });
+
+    expect(result).toEqual([email]);
   });
 });

@@ -2,6 +2,7 @@ import { AlertGroup, AlertStatus, GettableAlert } from '@grafana/external-alertm
 import { labelsMatchMatchers, MatcherParseResult } from '../../../utils/labels';
 export { parseMatchers } from '../../../utils/labels';
 import { groupBy, mapValues, values } from 'lodash';
+import type { FilterValues } from '../hooks/alertsFiltersReducer';
 
 export type AlertGroupCounts = Record<AlertStatus['state'], number> & {
   silenced: number;
@@ -43,10 +44,10 @@ export function countAlertsInGroupsByState(groups: AlertGroup[]): AlertGroupCoun
 
 export function alertMatchesFilters(
   alert: GettableAlert,
-  allowedStates: Set<AlertStatus['state']>,
+  showState: Record<AlertStatus['state'], boolean>,
   matcherParseResult: MatcherParseResult
 ): boolean {
-  if (!allowedStates.has(alert.status.state)) {
+  if (!showState[alert.status.state]) {
     return false;
   }
   // An unparseable filter must narrow the result set to nothing, never widen it to everything.
@@ -57,6 +58,23 @@ export function alertMatchesFilters(
     return labelsMatchMatchers(alert.labels, matcherParseResult.matchers);
   }
   return true;
+}
+
+export function filterAlertGroups(
+  groups: AlertGroup[],
+  filters: FilterValues,
+  labelFilter: MatcherParseResult
+): AlertGroup[] {
+  const { receivers, showActive, showUnprocessed, showSuppressed } = filters;
+  const showState = { active: showActive, unprocessed: showUnprocessed, suppressed: showSuppressed };
+
+  return groups
+    .filter((group) => receivers.length === 0 || receivers.includes(group.receiver.name))
+    .map((group) => ({
+      ...group,
+      alerts: group.alerts.filter((alert) => alertMatchesFilters(alert, showState, labelFilter)),
+    }))
+    .filter((group) => group.alerts.length > 0);
 }
 
 export type GroupedAlerts = { group: AlertGroup; receivers: string[] };
