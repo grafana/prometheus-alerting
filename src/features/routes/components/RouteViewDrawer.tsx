@@ -8,6 +8,7 @@ import { normalizeMatchers, Route, RouteWithID, stringifyObjectMatcher } from '@
 import { DrawerWithFooter } from '../../../components/DrawerWithFooter';
 import { KeyValueList } from '../../../components/KeyValueList/KeyValueList';
 import { Section } from '../../../components/KeyValueList/Section';
+import { TimeIntervalLinks } from '../../timeIntervals/components/TimeIntervalLinks';
 
 interface RouteDetailsProps {
   route: Route;
@@ -34,6 +35,21 @@ function RouteDetails({ route, onReceiverClick }: RouteDetailsProps) {
   if (route.repeat_interval) {
     items.push({ label: t('routes.repeat-interval-label', 'Repeat interval'), value: route.repeat_interval });
   }
+  // Only the intervals set on this route itself, like the rest of the drawer
+  const timeIntervalItems: Array<{ label: string; value: React.ReactNode }> = [];
+  if (route.mute_time_intervals && route.mute_time_intervals.length > 0) {
+    timeIntervalItems.push({
+      label: t('routes.mute-timings-label', 'Mute timings'),
+      value: <TimeIntervalLinks names={route.mute_time_intervals} />,
+    });
+  }
+  if (route.active_time_intervals && route.active_time_intervals.length > 0) {
+    timeIntervalItems.push({
+      label: t('routes.active-timings-label', 'Active timings'),
+      value: <TimeIntervalLinks names={route.active_time_intervals} />,
+    });
+  }
+
   if (route.continue !== undefined) {
     items.push({
       label: t('routes.continue-label', 'Continue'),
@@ -56,7 +72,18 @@ function RouteDetails({ route, onReceiverClick }: RouteDetailsProps) {
       {route.receiver && (
         <Section title={t('routes.receiver-label', 'Receiver')}>
           {onReceiverClick ? (
-            <TextLink color="link" onClick={() => route.receiver && onReceiverClick(route.receiver)} href="#">
+            <TextLink
+              color="link"
+              href="#"
+              onClick={(event) => {
+                // TextLink is a router link, and following "#" would drop the ?routeId= this drawer
+                // is opened from, so "Back to route" would have nothing to go back to
+                event.preventDefault();
+                if (route.receiver) {
+                  onReceiverClick(route.receiver);
+                }
+              }}
+            >
               {route.receiver}
             </TextLink>
           ) : (
@@ -68,6 +95,12 @@ function RouteDetails({ route, onReceiverClick }: RouteDetailsProps) {
       {items.length > 0 && (
         <Section title={t('routes.configuration-label', 'Configuration')}>
           <KeyValueList items={items} />
+        </Section>
+      )}
+
+      {timeIntervalItems.length > 0 && (
+        <Section title={t('routes.time-intervals-label', 'Time intervals')}>
+          <KeyValueList items={timeIntervalItems} />
         </Section>
       )}
 

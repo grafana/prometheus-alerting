@@ -1,4 +1,4 @@
-import { silences } from './navigation';
+import { routes, silences, timeIntervals } from './navigation';
 
 describe('silences.createForAlertInstanceLink', () => {
   function matchersFrom(url: string) {
@@ -48,5 +48,41 @@ describe('silences.listPageLink', () => {
     const params = new URLSearchParams(url.split('?')[1]);
 
     expect(params.get('silenceIds')).toBe('silence-1,silence-2');
+  });
+});
+
+describe('routes.listPageLink', () => {
+  it('links to the routes page of an Alertmanager', () => {
+    const [path, query] = routes.listPageLink('am-uid').split('?');
+    const params = new URLSearchParams(query);
+
+    expect(path).toMatch(/\/routes$/);
+    expect(params.get('alertmanager')).toBe('am-uid');
+    expect(params.has('routeId')).toBe(false);
+  });
+
+  it('points the routes page at one route', () => {
+    const params = new URLSearchParams(routes.listPageLink('am-uid', '0-1-abc123').split('?')[1]);
+
+    expect(params.get('alertmanager')).toBe('am-uid');
+    expect(params.get('routeId')).toBe('0-1-abc123');
+  });
+});
+
+describe('timeIntervals.listPageLink', () => {
+  it('links to the time intervals page of an Alertmanager', () => {
+    const [path, query] = timeIntervals.listPageLink('am-uid').split('?');
+    const params = new URLSearchParams(query);
+
+    expect(path).toMatch(/\/time-intervals$/);
+    expect(params.get('alertmanager')).toBe('am-uid');
+    expect(params.has('name')).toBe(false);
+  });
+
+  it('points the time intervals page at one interval, escaping the name', () => {
+    const params = new URLSearchParams(timeIntervals.listPageLink('am-uid', 'business hours & weekends').split('?')[1]);
+
+    expect(params.get('alertmanager')).toBe('am-uid');
+    expect(params.get('name')).toBe('business hours & weekends');
   });
 });

@@ -4,16 +4,16 @@ import { RouteWithID } from '@grafana/external-alertmanager/vanilla';
 
 import { InsertPosition } from '../types';
 
-// The route drawer is either closed, or showing exactly one of view/edit/add - modeled
-// as a single tagged union so opening one can never leave another one incorrectly open.
+// The edit/add drawer is either closed, or showing exactly one of edit/add - modeled as a
+// single tagged union so opening one can never leave the other incorrectly open.
+// The view drawer isn't in here: which route it shows is kept in the URL (?routeId=) so the
+// link can be shared, see RoutesList.
 export type DrawerState =
   | { type: 'closed' }
-  | { type: 'view'; route: RouteWithID }
   | { type: 'edit'; route: RouteWithID }
   | { type: 'add'; referenceRouteId: string; insertPosition: InsertPosition };
 
 export type DrawerAction =
-  | { type: 'view'; route: RouteWithID }
   | { type: 'edit'; route: RouteWithID }
   | { type: 'add'; referenceRouteId: string; insertPosition: InsertPosition }
   | { type: 'close' };

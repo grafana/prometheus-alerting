@@ -450,7 +450,7 @@ const TimeIntervals: FC<{ timings: string[] }> = ({ timings }) => {
     <div>
       {timings.map((timing, index) => (
         <Fragment key={timing}>
-          {timing}
+          <Text color="primary">{timing}</Text>
           {index < timings.length - 1 && ', '}
         </Fragment>
       ))}

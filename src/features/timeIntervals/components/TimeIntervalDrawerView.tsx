@@ -1,14 +1,18 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { t } from '@grafana/i18n';
-import { Alert, Stack, Button, ConfirmModal } from '@grafana/ui';
-import type { TimeInterval } from '@grafana/external-alertmanager/vanilla';
+import { Alert, Stack, Button, ConfirmModal, Text, TextLink } from '@grafana/ui';
+import type { TimeInterval, TimeIntervalUsage, TimeIntervalUse } from '@grafana/external-alertmanager/vanilla';
 import { useDeleteTimeInterval } from '../hooks/useTimeIntervals';
 import { isAbilityAllowed } from '../../../access-control/abilities';
 import { useAlertmanagerConfigMutationAbility } from '../../../hooks/useAlertmanagerConfigMutationAbility';
 import { MutationError } from '../../../access-control/components/MutationError';
-import { useRoutes } from '../../routes/hooks/useRoutes';
-import { findTimeIntervalUses, type TimeIntervalUse } from '../../../reducers/alertmanager/utils/muteTimings.utils';
-import { TimeIntervalScheduleDetails } from './TimeIntervalScheduleDetails';
+import { routes as routesNav } from '../../../utils/navigation';
+import { useAlertmanager } from '../../../hooks/useAlertmanager';
+import { KeyValueList } from '../../../components/KeyValueList/KeyValueList';
+import { Section } from '../../../components/KeyValueList/Section';
+import { DataSourceError } from '../../../components/AlertmanagerError';
+import { useTimeIntervalUses } from '../hooks/useTimeIntervalUses';
+import { TimeIntervalScheduleSection } from './TimeIntervalScheduleSection';
 
 interface TimeIntervalDetailsProps {
   timeInterval: TimeInterval;
@@ -23,28 +27,78 @@ function TimeIntervalDetails({ timeInterval }: TimeIntervalDetailsProps) {
     );
   }
 
-  return <TimeIntervalScheduleDetails timeInterval={timeInterval} />;
+  return <TimeIntervalScheduleSection timeInterval={timeInterval} />;
+}
+
+/**
+ * Names a route the same way the route drawer's title does: by its matchers, or by its receiver
+ * when it has none. A child route can have neither (it inherits its receiver), so it is described.
+ */
+function routeLabel({ matchers, receiver }: TimeIntervalUse) {
+  if (matchers && matchers.length > 0) {
+    return matchers.join(', ');
+  }
+  return receiver ?? t('time-intervals.in-use.inherited-receiver', 'A route that inherits its receiver');
+}
+
+function usageLabel(usage: TimeIntervalUsage) {
+  return usage === 'mute'
+    ? t('time-intervals.in-use.as-mute', 'Mute timing')
+    : t('time-intervals.in-use.as-active', 'Active timing');
 }
 
 /**
  * Lists the routes that depend on this time interval, so the user knows what to change.
- * A route's receiver is the only human-readable handle it has, and a child route can inherit
- * one from its parent, so some entries can only be described rather than named.
+ * Each row links to the routes page with that route's drawer open. A route that both mutes
+ * and restricts on the interval gets a row for each.
  */
 function DependentRoutes({ uses }: { uses: TimeIntervalUse[] }) {
-  return (
-    <ul>
-      {uses.map(({ receiver, usedAs }, index) => (
-        <li key={`${receiver ?? ''}-${usedAs}-${index}`}>
-          {receiver ?? t('time-intervals.in-use.inherited-receiver', 'a route that inherits its receiver')}
-          {' — '}
-          {usedAs === 'mute'
-            ? t('time-intervals.in-use.as-mute', 'mute timing')
-            : t('time-intervals.in-use.as-active', 'active timing')}
-        </li>
-      ))}
-    </ul>
+  const { uid: alertmanagerUID } = useAlertmanager();
+  const items = uses.flatMap((use) =>
+    use.usedAs.map((usage) => ({
+      label: usageLabel(usage),
+      value: (
+        <TextLink href={routesNav.listPageLink(alertmanagerUID, use.routeId)} inline>
+          {routeLabel(use)}
+        </TextLink>
+      ),
+    }))
   );
+
+  return (
+    <Section title={t('time-intervals.in-use.heading', 'Used by routes')}>
+      {items.length === 0 ? (
+        <Text color="secondary">{t('time-intervals.in-use.none', 'No route uses this time interval')}</Text>
+      ) : (
+        <KeyValueList items={items} />
+      )}
+    </Section>
+  );
+}
+
+/** Why the Remove button is disabled, shown as its tooltip; nothing when it can be used */
+function removeBlockedReason({
+  hasLoadedRoutes,
+  failedToLoadRoutes,
+  isInUse,
+}: {
+  hasLoadedRoutes: boolean;
+  failedToLoadRoutes: boolean;
+  isInUse: boolean;
+}) {
+  if (failedToLoadRoutes) {
+    return t(
+      'time-intervals.in-use.error-tooltip',
+      "The routes couldn't be loaded, so there's no telling whether removing this time interval is safe"
+    );
+  }
+  if (!hasLoadedRoutes) {
+    return t('time-intervals.in-use.loading-tooltip', 'Checking which routes use this time interval');
+  }
+  if (isInUse) {
+    return t('time-intervals.in-use.tooltip', 'Remove this time interval from the routes using it first');
+  }
+  return undefined;
 }
 
 interface TimeIntervalDrawerViewProps {
@@ -61,9 +115,17 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
   // Deleting an interval strips it from every route that mentions it, turning that route's mute
   // or active window off without saying so. Look the references up first and block the delete
   // while any exist, so the user changes the routes deliberately instead of finding out later.
-  const { route } = useRoutes();
-  const uses = useMemo(() => (route ? findTimeIntervalUses(timeInterval.name, route) : []), [route, timeInterval.name]);
+  const {
+    getUses,
+    isSuccess: hasLoadedRoutes,
+    isError: failedToLoadRoutes,
+    error: routesError,
+  } = useTimeIntervalUses();
+  const uses = getUses(timeInterval.name);
   const isInUse = uses.length > 0;
+  // Until the routes have loaded (or if they fail to), there's no telling whether any of them
+  // use this interval, so don't offer the delete yet
+  const canRemove = hasLoadedRoutes && !isInUse;
 
   const handleRemove = () => {
     setIsConfirmModalOpen(true);
@@ -87,25 +149,23 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
 
   return (
     <>
-      <MutationError
-        error={deleteError}
-        fallbackTitle={t('time-intervals.error-deleting-title', 'Error deleting time interval')}
-        resource={t('time-intervals.resource-label', 'time intervals')}
-      />
+      <Stack direction="column">
+        <MutationError
+          error={deleteError}
+          fallbackTitle={t('time-intervals.error-deleting-title', 'Error deleting time interval')}
+          resource={t('time-intervals.resource-label', 'time intervals')}
+        />
 
-      <TimeIntervalDetails timeInterval={timeInterval} />
+        <TimeIntervalDetails timeInterval={timeInterval} />
 
-      {isInUse && (
-        <Alert title={t('time-intervals.in-use.title', 'This time interval is in use')} severity="info">
-          <p>
-            {t(
-              'time-intervals.in-use.body',
-              'Removing it would change when the routes below notify, so it has to be taken out of them first.'
-            )}
-          </p>
-          <DependentRoutes uses={uses} />
-        </Alert>
-      )}
+        {hasLoadedRoutes && <DependentRoutes uses={uses} />}
+        {failedToLoadRoutes && (
+          <DataSourceError
+            error={routesError}
+            title={t('time-intervals.in-use.error-title', "Couldn't check which routes use this time interval")}
+          />
+        )}
+      </Stack>
 
       {canMutateTimeIntervals && (
         <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
@@ -117,12 +177,8 @@ export function TimeIntervalDrawerView({ timeInterval, onEdit, onClose }: TimeIn
             <Button
               variant="destructive"
               onClick={handleRemove}
-              disabled={isDeleting || isInUse}
-              tooltip={
-                isInUse
-                  ? t('time-intervals.in-use.tooltip', 'Remove this time interval from the routes using it first')
-                  : undefined
-              }
+              disabled={isDeleting || !canRemove}
+              tooltip={removeBlockedReason({ hasLoadedRoutes, failedToLoadRoutes, isInUse })}
             >
               {t('time-intervals.drawer.remove', 'Remove')}
             </Button>
