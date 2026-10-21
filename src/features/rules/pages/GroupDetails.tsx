@@ -15,6 +15,7 @@ import { PLUGIN_BASE_URL, ROUTES } from '../../../constants';
 
 import { DataSourceRuleGroupIdentifier } from '../../../types/rules';
 import { groups, createListFilterLink } from '../../../utils/navigation';
+import { formatPrometheusDuration } from '../../../utils/time';
 import { DataSourceGroupLoader } from '../list/DataSourceGroupLoader';
 import { GroupDetailsTitle } from '../components/GroupDetailsTitle';
 import { GroupDetailsActions } from '../components/GroupDetailsActions';
@@ -86,8 +87,8 @@ function GroupDetails() {
   // Format the group interval for display
   const groupInterval = useMemo(() => {
     if (promGroup?.interval) {
-      // Prometheus returns interval in seconds
-      return `${promGroup.interval}s`;
+      // Prometheus returns interval in seconds; format it like the edit form (e.g. "1m")
+      return formatPrometheusDuration(promGroup.interval * 1000);
     }
     if (rulerGroup?.interval) {
       return rulerGroup.interval;

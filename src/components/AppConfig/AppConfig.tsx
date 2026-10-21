@@ -2,6 +2,7 @@ import React from 'react';
 import { AppPluginMeta, PluginConfigPageProps } from '@grafana/data';
 import { FieldSet, LoadingPlaceholder, Alert } from '@grafana/ui';
 import { t } from '@grafana/i18n';
+import { DataSourceError } from '../AlertmanagerError';
 import { testIds } from '../testIds';
 import { KeyValueList } from '../KeyValueList/KeyValueList';
 import { alertmanagerApi } from '../../api/alertmanager/alertmanager.endpoints';
@@ -29,14 +30,7 @@ const AppConfigStatusContent = ({ alertmanager }: { alertmanager: AlertmanagerHo
   }
 
   if (error) {
-    return (
-      <Alert title={t('app-config.error.title', 'Error loading Alertmanager status')} severity="error">
-        {t(
-          'app-config.error.message',
-          'Failed to load Alertmanager status. Please check your data source configuration.'
-        )}
-      </Alert>
-    );
+    return <DataSourceError error={error} title={t('app-config.error.title', 'Error loading Alertmanager status')} />;
   }
 
   if (!status) {
