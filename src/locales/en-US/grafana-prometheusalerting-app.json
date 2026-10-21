@@ -491,7 +491,6 @@
       }
     },
     "error": {
-      "message": "Failed to load Alertmanager status. Please check your data source configuration.",
       "title": "Error loading Alertmanager status"
     },
     "loading": "Loading Alertmanager status...",

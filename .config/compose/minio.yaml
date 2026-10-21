@@ -1,7 +1,11 @@
 # Object storage for Mimir and Loki. minio-init creates the buckets they expect.
+#
+# MinIO stopped publishing images (minio/minio and minio/mc are gone from Docker Hub), so we use
+# Silo, pgsty's community fork of the same source. It keeps the MinIO command line, MINIO_* env vars
+# and the bundled mc, so only the images changed. See https://silo.pgsty.com/compatibility/migration/
 services:
   minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+    image: pgsty/silo:RELEASE.2026-10-18T00-00-00Z@sha256:2636fc4155d9a7e41ff58cdb65ddd13ba9304e67184e13c25bc5cb34016269d7
     container_name: minio-test
     ports:
       - '9000:9000'
@@ -20,7 +24,7 @@ services:
       retries: 5
 
   minio-init:
-    image: minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
+    image: pgsty/mc:RELEASE.2026-10-18T00-00-00Z@sha256:6ecdaec70bc5e8cf9d0e9a70c190f3beb1c83f11617ff4333f1fcd71ab1daf18
     container_name: minio-init
     depends_on:
       minio:
