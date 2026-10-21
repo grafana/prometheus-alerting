@@ -103,7 +103,7 @@ jobs:
       # to judge what the change touches, and gets the diff through `gh pr diff`.
       # It also means the prompt and the scripts come from main, so a PR cannot
       # rewrite the rules it is about to be judged by.
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.base.ref }}
@@ -144,7 +144,7 @@ jobs:
       # federation would never be used, so it is gone.
       - name: Ask Claude
         id: claude
-        uses: anthropics/claude-code-action@ef8bb1e43bf303cff727a1dd0b8837029fe982a2 # v1.0.215
+        uses: anthropics/claude-code-action@f27be6b65a4652f08a2ba3cff79114829b588967 # v1.0.252
         with:
           anthropic_federation_rule_id: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
           anthropic_organization_id: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
@@ -202,7 +202,7 @@ jobs:
     steps:
       # This job reads the tasks and nothing else, so don't pay for the rest of
       # the repository.
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.base.ref }}

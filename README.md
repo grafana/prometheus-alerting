@@ -46,14 +46,14 @@ See the [mise installation docs](https://mise.jdx.dev/installing-mise.html) for 
 
 If you prefer not to use mise, you can manually install the required versions:
 
-- **Node.js**: `>=24.21` (see `engines` in `package.json`)
-- **pnpm**: `>=12.4.2` (installed via `corepack enable` or standalone)
+- **Node.js**: `>=24.22` (see `engines` in `package.json`)
+- **pnpm**: `>=12.14.0` (installed via `corepack enable` or standalone)
 
 Check your versions match the requirements:
 
 ```bash
-node --version  # should be >= 24.21
-pnpm --version  # should be >= 12.4.2
+node --version  # should be >= 24.22
+pnpm --version  # should be >= 12.14.0
 ```
 
 ## Get started

@@ -94,10 +94,10 @@ beforeAll(() => {
   server.listen({
     // Only warn about unhandled requests to our API routes
     // Bypass other requests (like asset loading) to prevent ECONNREFUSED errors
-    onUnhandledRequest(request, print) {
+    onUnhandledFrame({ frame, defaults }) {
       // Only warn about API requests we should be handling
-      if (request.url.includes('/api/')) {
-        print.warning();
+      if (frame.protocol === 'http' && frame.data.request.url.includes('/api/')) {
+        defaults.warn();
       }
       // Silently bypass everything else (assets, etc.)
     },

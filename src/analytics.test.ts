@@ -9,13 +9,16 @@ vi.mock('@grafana/runtime', { spy: true });
 // the version to its own source. This fails if we ever ship plugin.json's unsubstituted %VERSION%.
 const semver = expect.stringMatching(/^\d+\.\d+\.\d+/);
 
+// The logger is built while ./analytics is first imported, before any test runs. Vitest clears
+// mocks before each test, so take a copy of the calls now or they're gone by the time we look.
+const loggerCalls = [...vi.mocked(createMonitoringLogger).mock.calls];
+
 describe('analytics', () => {
   it('reports logs against the plugin source, stamped with the released version', () => {
-    // The logger is built while ./analytics is first imported, so this call has already happened.
-    expect(vi.mocked(createMonitoringLogger)).toHaveBeenCalledWith('plugins.prometheusalerting', {
-      module: 'PrometheusAlerting',
-      plugin_version: semver,
-    });
+    expect(loggerCalls).toContainEqual([
+      'plugins.prometheusalerting',
+      { module: 'PrometheusAlerting', plugin_version: semver },
+    ]);
   });
 
   it('prefixes interaction events and stamps them with the released version', () => {

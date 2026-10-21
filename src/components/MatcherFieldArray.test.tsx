@@ -103,8 +103,15 @@ describe('MatcherFieldArray', () => {
   });
 
   it('shows each operator symbol with a human-friendly description', async () => {
-    const offsetHeight = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(240);
-    const offsetWidth = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(200);
+    // happy-dom doesn't lay anything out, so every element is 0px and the Combobox's virtualised
+    // list renders no options. Give elements a size: the list reads the box's size from
+    // clientHeight/clientWidth and each option's height from offsetHeight.
+    const sizes = [
+      vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(240),
+      vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(200),
+      vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(240),
+      vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(200),
+    ];
 
     try {
       const user = userEvent.setup();
@@ -120,8 +127,7 @@ describe('MatcherFieldArray', () => {
         '!~Does not match regular expression',
       ]);
     } finally {
-      offsetHeight.mockRestore();
-      offsetWidth.mockRestore();
+      sizes.forEach((size) => size.mockRestore());
     }
   });
 

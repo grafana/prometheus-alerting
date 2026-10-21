@@ -1,8 +1,8 @@
 {
-  "configVersion": "1.6",
-  "$schema": "https://github.com/jayu/rev-dep/blob/master/config-schema/1.6.schema.json?raw=true",
+  "configVersion": "2.1",
+  "$schema": "https://github.com/jayu/rev-dep/blob/master/config-schema/2.1.schema.json?raw=true",
   "ignoreFiles": [".mise/**", "**/*.d.ts", "**/.prettierrc.js", "src/test/**", "test-data/**/*.mjs"],
-  "rules": [
+  "workspaces": [
     {
       "path": ".",
       "prodEntryPoints": ["src/module.tsx"],

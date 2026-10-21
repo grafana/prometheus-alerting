@@ -9,7 +9,7 @@
   "author": "",
   "license": "AGPL-3.0-only",
   "dependencies": {
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "exports": {
     "./identifiers": "./src/identifiers/index.ts",
