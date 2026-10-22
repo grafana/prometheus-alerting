@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.9.0](https://github.com/grafana/prometheus-alerting/compare/v1.8.0...v1.9.0) (2026-10-21)
+
+
+### 🎉 Features
+
+* **time-intervals:** link time intervals and the routes that use them ([#322](https://github.com/grafana/prometheus-alerting/issues/322)) ([69593ab](https://github.com/grafana/prometheus-alerting/commit/69593aba3ec82ca48ae136e92bc74c4e4b6bf49f))
+
+
+### 🐛 Bug Fixes
+
+* **config:** show HTTP status and data source name when Alertmanager status fails to load ([#349](https://github.com/grafana/prometheus-alerting/issues/349)) ([32b1282](https://github.com/grafana/prometheus-alerting/commit/32b1282e957b3b1a5f22edc1600b5bbc6e2827ee))
+* **receivers:** use correct title for receiver not-found state ([#348](https://github.com/grafana/prometheus-alerting/issues/348)) ([a49792b](https://github.com/grafana/prometheus-alerting/commit/a49792bfcd683aa66779e9f55d195a3beaf4f27e))
+* **renovate:** let Renovate open PRs again, and group them weekly ([#344](https://github.com/grafana/prometheus-alerting/issues/344)) ([46a767d](https://github.com/grafana/prometheus-alerting/commit/46a767d91b496181a64af7dcc3e46881315e4c25))
+* **rules:** show group interval in compact duration format on details page ([#351](https://github.com/grafana/prometheus-alerting/issues/351)) ([87bb035](https://github.com/grafana/prometheus-alerting/commit/87bb0358be7a57994f9c912fe5fcacbbdd831531))
+* **security/high/:** update dependency vite to v8.3.3 [security] ([#354](https://github.com/grafana/prometheus-alerting/issues/354)) ([b2143e1](https://github.com/grafana/prometheus-alerting/commit/b2143e1c96b8701972ccc8cce2b7515bdf305169))
+
+
+### 🔧 Chores
+
+* **deps:** apply the Renovate backlog ([#343](https://github.com/grafana/prometheus-alerting/issues/343)) ([4e443bb](https://github.com/grafana/prometheus-alerting/commit/4e443bb65fbf0a2733348cb46a61080a658765e9))
+* **deps:** drop overrides that are no longer needed ([#355](https://github.com/grafana/prometheus-alerting/issues/355)) ([28ee089](https://github.com/grafana/prometheus-alerting/commit/28ee089946d8885bb1393954a2526b6a3a3269dd))
+* **dev:** switch MinIO to pgsty/silo ([#347](https://github.com/grafana/prometheus-alerting/issues/347)) ([45454ac](https://github.com/grafana/prometheus-alerting/commit/45454ac3a12a91f85166498e417e312896aec50b))
+
 ## [1.8.0](https://github.com/grafana/prometheus-alerting/compare/v1.7.2...v1.8.0) (2026-10-16)
 
 
