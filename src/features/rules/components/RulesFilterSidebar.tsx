@@ -5,7 +5,7 @@ import { Controller, useForm } from 'react-hook-form';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
-import { Button, Divider, Icon, Input, MultiCombobox, Stack, useStyles2, useTheme2 } from '@grafana/ui';
+import { Divider, Icon, Input, MultiCombobox, Stack, useStyles2, useTheme2 } from '@grafana/ui';
 
 import { useDataSourceOptions, useLabelOptions } from '../hooks/useRuleFilterOptions';
 import { HiddenDataSourcesLink } from '../list/components/DataSourcesStatus';
@@ -65,18 +65,10 @@ function isTextFilter(name?: string): boolean {
  */
 export function RulesFilterSidebar() {
   const styles = useStyles2(getStyles);
-  const { hasActiveFilters, clearAll } = useRulesFilter();
 
   return (
     <aside className={styles.sidebar} aria-label={t('alerting.rules-filter-sidebar.aria-label', 'Filter rules')}>
-      <Stack direction="column" gap={0}>
-        <Stack direction="row" justifyContent="flex-end">
-          <Button size="sm" variant="primary" fill="text" onClick={clearAll} disabled={!hasActiveFilters}>
-            <Trans i18nKey="alerting.rules-filter-sidebar.clear-filters">Clear filters</Trans>
-          </Button>
-        </Stack>
-        <FilterSidebarForm />
-      </Stack>
+      <FilterSidebarForm />
     </aside>
   );
 }

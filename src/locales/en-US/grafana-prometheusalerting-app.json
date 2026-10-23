@@ -391,8 +391,7 @@
       "type-label": "Type"
     },
     "rules-filter-sidebar": {
-      "aria-label": "Filter rules",
-      "clear-filters": "Clear filters"
+      "aria-label": "Filter rules"
     }
   },
   "alertmanager": {
