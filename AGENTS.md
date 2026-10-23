@@ -90,6 +90,13 @@ These data sources are auto-provisioned via `provisioning/datasources/test-datas
    - Editable data source, and unlike vanilla Alertmanager its configuration can be written from the UI
    - Use case: Creating and editing routes, receivers, templates, time intervals, inhibit rules and silences
 
+6. **[Broken] Test Prometheus (intentionally unreachable)** (`test-broken-prometheus`)
+   - Type: `prometheus`
+   - Implementation: `prometheus` (vanilla)
+   - URL: `http://intentionally-broken-datasource.invalid:9090` (`.invalid` is a reserved TLD, so it never resolves)
+   - Broken on purpose: every request to it fails. Don't fix it or remove it
+   - Use case: Checking that the rule list hides data sources that fail to serve their rules
+
 **Mimir Alertmanager Test Data:**
 
 - Mimir starts every tenant without an Alertmanager configuration, and its config API answers
