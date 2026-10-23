@@ -1,6 +1,6 @@
 import { css, cx } from '@emotion/css';
 import debounce from 'lodash/debounce';
-import React, { useEffect, useId } from 'react';
+import React, { useEffect, useId, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import { GrafanaTheme2 } from '@grafana/data';
@@ -84,7 +84,8 @@ export function RulesFilterSidebar() {
 function FilterSidebarForm() {
   const { filterState, updateFilters } = useRulesFilter();
 
-  const dataSourceOptions = useDataSourceOptions();
+  const selectedDataSources = useMemo(() => filterState.dataSourceNames ?? [], [filterState.dataSourceNames]);
+  const dataSourceOptions = useDataSourceOptions(selectedDataSources);
   const { labelOptions } = useLabelOptions();
 
   const ruleNameId = useId();
