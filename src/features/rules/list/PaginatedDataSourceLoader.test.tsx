@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { setDataSourceSrv } from '@grafana/runtime';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, vi } from 'vitest';
@@ -12,7 +12,8 @@ import { createTestWrapper, TestMemoryRouter } from '../../../test/utils/test-wr
 import { FRONTED_GROUPED_PAGE_SIZE } from '../../../utils/paginationLimits';
 
 import { PaginatedDataSourceLoader } from './PaginatedDataSourceLoader';
-import { DataSourceErrorsProvider, useDataSourceErrors } from './hooks/useDataSourceErrors';
+import { DataSourcesLoadingBar, DataSourcesStatusField } from './components/DataSourcesStatus';
+import { DataSourceErrorsProvider } from './hooks/useDataSourceErrors';
 
 vi.mock('@grafana/ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@grafana/ui')>();
@@ -26,28 +27,6 @@ const rulesSourceIdentifier = {
   uid: dataSourceUid,
   name: 'Mimir',
 };
-
-/** Lists what the loader reported, so we can check it without the UI that shows it */
-function ReportedDataSources() {
-  const { errors } = useDataSourceErrors();
-
-  return (
-    <ul aria-label="Reported data sources">
-      {errors.map((error) => (
-        <li key={error.uid}>{`${error.uid}: ${error.kind}: ${error.description}`}</li>
-      ))}
-    </ul>
-  );
-}
-
-/** Waits for what the loader reported, the data source section is a list item too */
-async function findReported() {
-  return within(screen.getByRole('list', { name: 'Reported data sources' })).findByRole('listitem');
-}
-
-function queryReported() {
-  return within(screen.getByRole('list', { name: 'Reported data sources' })).queryByRole('listitem');
-}
 
 function useRulesResponse() {
   server.use(
@@ -126,76 +105,94 @@ describe('PaginatedDataSourceLoader namespace YAML action', () => {
   });
 });
 
-function renderWithReport(filters: { groupFilter?: string } = {}) {
-  const StoreWrapper = createTestWrapper(dataSourceUid);
-
-  return render(
-    <StoreWrapper>
-      <TestMemoryRouter>
-        <DataSourceErrorsProvider>
-          <PaginatedDataSourceLoader
-            rulesSourceIdentifier={rulesSourceIdentifier}
-            application="mimir"
-            rulerApiEnabled={false}
-            hideOnEmpty={Boolean(filters.groupFilter)}
-            {...filters}
-          />
-          <ReportedDataSources />
-        </DataSourceErrorsProvider>
-      </TestMemoryRouter>
-    </StoreWrapper>
-  );
-}
-
 describe('PaginatedDataSourceLoader with a data source that has no rules', () => {
-  const rulesRequest = vi.fn();
-
   beforeEach(() => {
-    rulesRequest.mockClear();
     setDataSourceSrv(createMockDataSourceSrv());
     server.use(
-      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, () => {
-        rulesRequest();
-        return HttpResponse.json({ status: 'success', data: { groups: [] } });
-      })
+      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, () =>
+        HttpResponse.json({ status: 'success', data: { groups: [] } })
+      )
     );
   });
 
-  it('reports the data source as having no rules', async () => {
+  function renderWithReport(filters: { groupFilter?: string } = {}) {
+    const StoreWrapper = createTestWrapper(dataSourceUid);
+
+    return render(
+      <StoreWrapper>
+        <TestMemoryRouter>
+          <DataSourceErrorsProvider>
+            <PaginatedDataSourceLoader
+              rulesSourceIdentifier={rulesSourceIdentifier}
+              application="mimir"
+              rulerApiEnabled={false}
+              hideOnEmpty={Boolean(filters.groupFilter)}
+              {...filters}
+            />
+            <DataSourcesLoadingBar />
+            <DataSourcesStatusField />
+          </DataSourceErrorsProvider>
+        </TestMemoryRouter>
+      </StoreWrapper>
+    );
+  }
+
+  it('hides the data source and reports it as having no rules', async () => {
     renderWithReport();
 
-    expect(await findReported()).toHaveTextContent('test-mimir-uid: empty: This data source has no rules.');
+    // Translations are not loaded in tests, so the plural form falls back to the default value
+    const button = await screen.findByRole('button', { name: '1 hidden' });
+    expect(screen.queryByRole('heading', { name: 'Mimir' })).not.toBeInTheDocument();
+
+    await userEvent.click(button);
+    expect(screen.getByRole('dialog')).toHaveTextContent('This data source has no rules.');
   });
 
-  it('reports the data source as having no rules when filters are active', async () => {
+  it('hides and reports the data source when filters are active too, it sent no groups at all', async () => {
     renderWithReport({ groupFilter: 'does-not-exist' });
 
-    expect(await findReported()).toHaveTextContent('test-mimir-uid: empty: This data source has no rules.');
+    await userEvent.click(await screen.findByRole('button', { name: '1 hidden' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('This data source has no rules.');
   });
 });
 
 describe('PaginatedDataSourceLoader with groups that do not match the filter', () => {
-  const rulesRequest = vi.fn();
-
   beforeEach(() => {
-    rulesRequest.mockClear();
     setDataSourceSrv(createMockDataSourceSrv());
     server.use(
-      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, () => {
-        rulesRequest();
-        return HttpResponse.json({
+      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, () =>
+        HttpResponse.json({
           status: 'success',
           data: { groups: [{ name: 'some-group', file: namespace, interval: 60, rules: [] }] },
-        });
-      })
+        })
+      )
     );
   });
 
   it('does not report the data source, nothing matching the filter does not make it empty', async () => {
-    renderWithReport({ groupFilter: 'does-not-exist' });
+    const StoreWrapper = createTestWrapper(dataSourceUid);
 
-    await waitFor(() => expect(rulesRequest).toHaveBeenCalled());
-    expect(queryReported()).not.toBeInTheDocument();
+    render(
+      <StoreWrapper>
+        <TestMemoryRouter>
+          <DataSourceErrorsProvider>
+            <PaginatedDataSourceLoader
+              rulesSourceIdentifier={rulesSourceIdentifier}
+              application="mimir"
+              rulerApiEnabled={false}
+              groupFilter="does-not-exist"
+              hideOnEmpty
+            />
+            <DataSourcesLoadingBar />
+            <DataSourcesStatusField />
+          </DataSourceErrorsProvider>
+        </TestMemoryRouter>
+      </StoreWrapper>
+    );
+
+    // The loading bar goes away once the response has come back and been handled
+    await waitFor(() => expect(screen.queryByRole('status', { name: 'Loading rules' })).not.toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /hidden$/ })).not.toBeInTheDocument();
   });
 });
 
@@ -225,12 +222,30 @@ describe('PaginatedDataSourceLoader with a later page that fails', () => {
     );
   });
 
-  it('does not report the data source, the groups that did load show it works', async () => {
-    renderWithReport();
+  it('keeps the data source in the list with its error, and does not count it as hidden', async () => {
+    const StoreWrapper = createTestWrapper(dataSourceUid);
+
+    render(
+      <StoreWrapper>
+        <TestMemoryRouter>
+          <DataSourceErrorsProvider>
+            <PaginatedDataSourceLoader
+              rulesSourceIdentifier={rulesSourceIdentifier}
+              application="mimir"
+              rulerApiEnabled={false}
+            />
+            <DataSourcesLoadingBar />
+            <DataSourcesStatusField />
+          </DataSourceErrorsProvider>
+        </TestMemoryRouter>
+      </StoreWrapper>
+    );
 
     await userEvent.click(await screen.findByRole('button', { name: 'Show more…' }));
 
     expect(await screen.findByRole('button', { name: 'Error' })).toBeInTheDocument();
-    expect(queryReported()).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: namespace })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('status', { name: 'Loading rules' })).not.toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /hidden$/ })).not.toBeInTheDocument();
   });
 });

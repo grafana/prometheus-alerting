@@ -112,9 +112,15 @@ function PaginatedGroupsLoader({
   useReportDataSourceError(uid, hasReceivedGroups ? undefined : error);
   // `hasMoreGroups` stays true until the last page, so we don't report "empty" before the first request.
   // Only this view reports "empty", the list view leaves it to us.
-  useReportEmptyDataSource(uid, !error && !hasReceivedGroups && !hasMoreGroups);
+  const isEmptyDataSource = !error && !hasReceivedGroups && !hasMoreGroups;
+  useReportEmptyDataSource(uid, isEmptyDataSource);
   // Clears what an earlier view reported
   useReportHealthyDataSource(uid, hasReceivedGroups);
+
+  // Failing and empty data sources are hidden and listed in the sidebar, so we hide exactly what we reported
+  if ((error && !hasReceivedGroups) || isEmptyDataSource) {
+    return null;
+  }
 
   // Hide datasource section when filters are active and there are no matching results
   if (hideOnEmpty && hasNoRules) {
