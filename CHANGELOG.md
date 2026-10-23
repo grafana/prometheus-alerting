@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/grafana/prometheus-alerting/compare/v1.9.0...v1.10.0) (2026-10-23)
+
+
+### 🎉 Features
+
+* **rules:** record data source diagnostics in the rule list ([#333](https://github.com/grafana/prometheus-alerting/issues/333)) ([72910d3](https://github.com/grafana/prometheus-alerting/commit/72910d3c1583c3552f6063bfba686fa3560c1f61))
+
 ## [1.9.0](https://github.com/grafana/prometheus-alerting/compare/v1.8.0...v1.9.0) (2026-10-21)
 
 
