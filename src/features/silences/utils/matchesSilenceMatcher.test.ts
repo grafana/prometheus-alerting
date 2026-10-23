@@ -1,6 +1,8 @@
 import type { Matcher } from '@grafana/external-alertmanager/vanilla';
 
-import { matchesSilenceMatcher } from './matchesSilenceMatcher';
+import { AlertStatusFactory, GettableAlertFactory } from '../../alerts/mocks/alerts.fakes';
+import { GettableSilenceFactory } from '../mocks/silences.fakes';
+import { alertMatchesSilence, matchesSilenceMatcher, toLabelMatcher } from './matchesSilenceMatcher';
 
 describe('matchesSilenceMatcher', () => {
   const silenceMatcher: Matcher = { name: 'foo', value: 'bar', isRegex: false, isEqual: true };
@@ -93,5 +95,64 @@ describe('matchesSilenceMatcher', () => {
       const filter: Matcher = { name: 'foo', value: '[invalid', isRegex: true, isEqual: true };
       expect(matchesSilenceMatcher(filter, silenceMatcher)).toBe(false);
     });
+  });
+});
+
+describe('toLabelMatcher', () => {
+  it('treats a missing isEqual as equal, like Alertmanager does', () => {
+    expect(toLabelMatcher({ name: 'foo', value: 'bar', isRegex: false })).toEqual({
+      label: 'foo',
+      type: '=',
+      value: 'bar',
+    });
+    expect(toLabelMatcher({ name: 'foo', value: 'b.*', isRegex: true })).toEqual({
+      label: 'foo',
+      type: '=~',
+      value: 'b.*',
+    });
+  });
+});
+
+describe('alertMatchesSilence', () => {
+  it('matches when the Alertmanager already lists the silence on the alert', () => {
+    const silence = GettableSilenceFactory.build({ matchers: [{ name: 'foo', value: 'other', isRegex: false }] });
+    const alert = GettableAlertFactory.build({
+      labels: { foo: 'bar' },
+      status: AlertStatusFactory.build({ silencedBy: [silence.id] }),
+    });
+
+    expect(alertMatchesSilence(alert, silence)).toBe(true);
+  });
+
+  it('requires every matcher to match, with anchored regexes', () => {
+    const silence = GettableSilenceFactory.build({
+      matchers: [
+        { name: 'team', value: 'platform', isRegex: false, isEqual: true },
+        { name: 'service', value: 'api|worker', isRegex: true, isEqual: true },
+      ],
+    });
+
+    expect(
+      alertMatchesSilence(GettableAlertFactory.build({ labels: { team: 'platform', service: 'api' } }), silence)
+    ).toBe(true);
+    expect(
+      alertMatchesSilence(GettableAlertFactory.build({ labels: { team: 'platform', service: 'api-2' } }), silence)
+    ).toBe(false);
+    expect(
+      alertMatchesSilence(GettableAlertFactory.build({ labels: { team: 'other', service: 'api' } }), silence)
+    ).toBe(false);
+  });
+
+  it('reads a missing label as an empty value, like Alertmanager does', () => {
+    const alert = GettableAlertFactory.build({ labels: {} });
+    const notEqual = GettableSilenceFactory.build({
+      matchers: [{ name: 'foo', value: 'bar', isRegex: false, isEqual: false }],
+    });
+    const equal = GettableSilenceFactory.build({
+      matchers: [{ name: 'foo', value: 'bar', isRegex: false, isEqual: true }],
+    });
+
+    expect(alertMatchesSilence(alert, notEqual)).toBe(true);
+    expect(alertMatchesSilence(alert, equal)).toBe(false);
   });
 });

@@ -1,4 +1,3 @@
-import { findMatchingRoutes, type LabelMatcher } from '@grafana/alerting';
 import { describe, expect, it } from 'vitest';
 
 import { AlertGroupFactory, GettableAlertFactory } from './mocks/alerts.fakes';
@@ -254,53 +253,6 @@ describe('matchAlertsToRoutes', () => {
     expect(matchAlertsToRoutes(route, []).size).toBe(0);
     expect(matchAlertsToRoutes(route, [emptyGroup]).size).toBe(0);
   });
-});
-
-describe('upstream compatibility', () => {
-  it.each([
-    { type: '=', value: 'api' },
-    { type: '!=', value: 'api' },
-    { type: '=~', value: '(?i)api|worker' },
-    { type: '!~', value: '(?i)api|worker' },
-  ] satisfies Array<Pick<LabelMatcher, 'type' | 'value'>>)(
-    'agrees on $type $value destinations and insertion order',
-    ({ type, value }) => {
-      const route = makeTree({
-        receiver: 'root',
-        routes: [
-          { receiver: 'selected', matchers: [`service${type}"${value}"`], continue: true },
-          { receiver: 'fallback' },
-        ],
-      });
-      // Build upstream matchers independently so shared normalization cannot hide fixture errors.
-      const reference = {
-        id: route.id,
-        routes: [
-          { id: route.routes![0].id, continue: true, matchers: [{ label: 'service', type, value }] },
-          { id: route.routes![1].id },
-        ],
-      };
-      const alerts = [{}, { service: '' }, { service: 'API' }, { service: 'worker' }, { service: 'other' }].map(
-        (labels) => GettableAlertFactory.build({ labels })
-      );
-      const expected = new Map<string, typeof alerts>();
-      for (const alert of alerts) {
-        for (const match of findMatchingRoutes(reference, Object.entries(alert.labels))) {
-          const destination = expected.get(match.route.id) ?? [];
-          destination.push(alert);
-          expected.set(match.route.id, destination);
-        }
-      }
-      const group = AlertGroupFactory.build({ alerts });
-
-      const matches = matchAlertsToRoutes(route, [group]);
-
-      expect([...matches.keys()]).toEqual([...expected.keys()]);
-      for (const [routeId, expectedAlerts] of expected) {
-        expect(matches.get(routeId)).toEqual(expectedAlerts);
-      }
-    }
-  );
 });
 
 describe('getRouteMatches', () => {

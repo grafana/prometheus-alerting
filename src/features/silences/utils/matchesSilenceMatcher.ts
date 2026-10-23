@@ -1,4 +1,14 @@
-import type { Matcher } from '@grafana/external-alertmanager/vanilla';
+import type { LabelMatcher } from '@grafana/alerting';
+import { isLabelMatch, matchLabelsSet } from '@grafana/alerting/unstable';
+import type { GettableAlert, GettableSilence, Matcher } from '@grafana/external-alertmanager/vanilla';
+
+/** Turn an Alertmanager matcher into the shape @grafana/alerting matches with. A missing `isEqual` means equal. */
+export function toLabelMatcher({ name, value, isRegex, isEqual = true }: Matcher): LabelMatcher {
+  if (isRegex) {
+    return { label: name, type: isEqual ? '=~' : '!~', value };
+  }
+  return { label: name, type: isEqual ? '=' : '!=', value };
+}
 
 /**
  * Checks whether a filter matcher matches a silence matcher.
@@ -12,20 +22,23 @@ import type { Matcher } from '@grafana/external-alertmanager/vanilla';
  *  - foo!="bar"  matches silences where the foo value is NOT "bar"
  */
 export function matchesSilenceMatcher(filter: Matcher, silenceMatcher: Matcher): boolean {
-  if (filter.name !== silenceMatcher.name) {
+  try {
+    return isLabelMatch(toLabelMatcher(filter), [silenceMatcher.name, silenceMatcher.value]);
+  } catch {
+    // isLabelMatch throws on a regex that doesn't compile, which a half-typed filter often is.
     return false;
   }
+}
 
-  if (filter.isRegex) {
-    try {
-      const re = new RegExp(`^(?:${filter.value})$`);
-      const valueMatches = re.test(silenceMatcher.value);
-      return filter.isEqual !== false ? valueMatches : !valueMatches;
-    } catch {
-      return false;
-    }
+/**
+ * Checks if an alert matches a silence based on the silence's matchers.
+ * This is used to filter alerts client-side when the API doesn't support
+ * filtering by specific silence ID.
+ */
+export function alertMatchesSilence(alert: GettableAlert, silence: GettableSilence): boolean {
+  if (alert.status.silencedBy?.includes(silence.id)) {
+    return true;
   }
 
-  const valueEquals = filter.value === silenceMatcher.value;
-  return filter.isEqual !== false ? valueEquals : !valueEquals;
+  return matchLabelsSet(silence.matchers.map(toLabelMatcher), Object.entries(alert.labels));
 }
