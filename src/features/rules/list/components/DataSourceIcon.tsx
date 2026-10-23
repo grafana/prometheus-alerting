@@ -3,6 +3,9 @@ import React from 'react';
 import { getDataSourceSrv } from '@grafana/runtime';
 import { Icon } from '@grafana/ui';
 import type { RulesSourceApplication } from '@grafana/external-rules/ruler';
+// Vendored from grafana/grafana-amazonprometheus-datasource (img/prometheus_aws_logo.svg) so the
+// rules list does not depend on that plugin being installed to render an icon.
+import ampLogoSvg from '../../../../img/amp_logo.svg';
 import lokiIconSvg from '../../../../img/loki_icon.svg';
 import mimirLogoSvg from '../../../../img/mimir_logo.svg';
 import prometheusLogoSvg from '../../../../img/prometheus_logo.svg';
@@ -29,6 +32,8 @@ export const DataSourceIcon = ({ application, dataSourceUid, size = 16 }: DataSo
       return <img width={size} height={size} src={mimirLogoSvg} alt="Mimir" />;
     case 'loki':
       return <img width={size} height={size} src={lokiIconSvg} alt="Loki" />;
+    case 'amp':
+      return <img width={size} height={size} src={ampLogoSvg} alt="Amazon Managed Service for Prometheus" />;
   }
 
   // Application-keyed logos above are more specific than the plugin's own -- a Mimir data source

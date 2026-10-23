@@ -11,6 +11,7 @@ import { createTestWrapper } from '../../../test/utils/test-wrapper';
 
 import { DataSourceLoader } from './DataSourceLoader';
 
+const AMP_UID = 'test-amp-uid';
 const LOKI_UID = 'test-loki-uid';
 const MIMIR_UID = 'test-mimir-uid';
 
@@ -20,7 +21,7 @@ function renderLoader(uid: string, name: string) {
   });
 }
 
-/** Makes every discovery probe for `uid` fail, e.g. as an unsigned or unauthorized request would. */
+/** Makes every discovery probe for `uid` fail the way an unsigned AMP request does. */
 function failDiscoveryWith(uid: string, status: number, message: string) {
   server.use(
     http.get(`/api/datasources/proxy/uid/${uid}/*`, () => HttpResponse.json({ message }, { status })),
@@ -35,7 +36,16 @@ describe('DataSourceLoader', () => {
 
   // Regression: the icon used to come only from feature discovery, so a data source whose discovery
   // failed lost its icon and was hard to tell apart from its neighbours in the list.
-  it('keeps the data source icon when feature discovery fails, for a flavor whose application is settled by its plugin type', async () => {
+  it('keeps the data source icon when feature discovery fails', async () => {
+    failDiscoveryWith(AMP_UID, 403, 'Missing Authentication Token');
+
+    renderLoader(AMP_UID, 'Test AMP');
+
+    expect(await screen.findByRole('button', { name: /error/i })).toBeInTheDocument();
+    expect(screen.getByAltText('Amazon Managed Service for Prometheus')).toBeInTheDocument();
+  });
+
+  it('does the same for Loki, whose application is also settled by its plugin type', async () => {
     failDiscoveryWith(LOKI_UID, 500, 'boom');
 
     renderLoader(LOKI_UID, 'Test Loki');

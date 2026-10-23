@@ -31,6 +31,24 @@ export const flavors: Record<string, RulesSourceFlavor> = {
     applicationWithoutBuildInfo: 'loki',
     ruler: { path: 'api/prom/rules', probePath: 'api/prom/rules' },
   }),
+  /**
+   * Amazon Managed Service for Prometheus, **read-only**.
+   *
+   * AMP serves `ListRules` at `api/v1/rules` on its workspace data plane, which is the data
+   * source's own URL, so reads work through the datasource proxy like any other Prometheus. It has
+   * no `/api/v1/status/buildinfo`, so discovery must not probe for it.
+   *
+   * No `ruler`: AMP deliberately disabled Cortex's rule configuration API, and its own rule CRUD
+   * lives on a separate control-plane host that the datasource proxy cannot reach as configured.
+   * Writes stay unavailable until `grafana-amazonprometheus-datasource` exposes it — see
+   * docs/adr/0001-rules-source-flavors.md.
+   */
+  'grafana-amazonprometheus-datasource': vanillaFlavor({
+    promRulesPath: 'api/v1/rules',
+    queryPath: 'api/v1/query',
+    probeBuildInfo: false,
+    applicationWithoutBuildInfo: 'amp',
+  }),
 };
 
 /** Data source plugin types that can act as a rules source. */

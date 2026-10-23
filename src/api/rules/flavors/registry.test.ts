@@ -11,6 +11,8 @@ import {
   supportedRulesSourceTypes,
 } from './registry';
 
+const AMP_TYPE = 'grafana-amazonprometheus-datasource';
+
 function setupSrv(list: ReturnType<typeof DataSourceInstanceSettingsFactory.buildList>) {
   setDataSourceSrv({
     getList: () => list,
@@ -30,11 +32,17 @@ describe('flavor paths', () => {
     expect(flavors.loki.promRulesPath).toBe('prometheus/api/v1/rules');
     expect(flavors.loki.queryPath).toBe('loki/api/v1/query');
   });
+
+  it('reads AMP rules through the standard Prometheus paths on its data plane', () => {
+    expect(flavors[AMP_TYPE].promRulesPath).toBe('api/v1/rules');
+    expect(flavors[AMP_TYPE].queryPath).toBe('api/v1/query');
+  });
 });
 
 describe('flavor application', () => {
   it('is known up front where the plugin type settles it', () => {
     expect(flavors.loki.application).toBe('loki');
+    expect(flavors[AMP_TYPE].application).toBe('amp');
   });
 
   // Prometheus, Mimir, and Cortex all register as `prometheus`, so only feature discovery can tell
@@ -46,9 +54,10 @@ describe('flavor application', () => {
 
 describe('isSupportedRulesSourceType', () => {
   it('accepts the registered plugin types', () => {
-    expect(supportedRulesSourceTypes).toEqual(['prometheus', 'loki']);
+    expect(supportedRulesSourceTypes).toEqual(['prometheus', 'loki', AMP_TYPE]);
     expect(isSupportedRulesSourceType('prometheus')).toBe(true);
     expect(isSupportedRulesSourceType('loki')).toBe(true);
+    expect(isSupportedRulesSourceType(AMP_TYPE)).toBe(true);
   });
 
   it('rejects other plugin types', () => {

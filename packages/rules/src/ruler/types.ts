@@ -66,7 +66,7 @@ export interface RulerBackend {
 }
 
 /** The runtime application behind a data source, used for presentation and query dialect. */
-export type RulesSourceApplication = 'prometheus' | 'mimir' | 'cortex' | 'loki';
+export type RulesSourceApplication = 'prometheus' | 'mimir' | 'cortex' | 'loki' | 'amp';
 
 export interface DataSourceFeatures {
   application: RulesSourceApplication;
