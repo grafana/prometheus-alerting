@@ -80,3 +80,21 @@ datasources:
     secureJsonData:
       httpHeaderValue1: anonymous
     version: 1
+
+  # INTENTIONALLY BROKEN – do not "fix" this one.
+  # It points at a host that can never exist (`.invalid` is a reserved TLD, so the DNS lookup
+  # fails straight away), which makes every request to it fail. We use it to check that the rule
+  # list hides data sources that can't serve their rules instead of breaking the whole page.
+  - name: '[Broken] Test Prometheus (intentionally unreachable)'
+    type: prometheus
+    uid: test-broken-prometheus
+    url: http://intentionally-broken-datasource.invalid:9090
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      manageAlerts: true
+      prometheusType: Prometheus
+      prometheusVersion: 2.40.0
+      implementation: prometheus
+    version: 1
