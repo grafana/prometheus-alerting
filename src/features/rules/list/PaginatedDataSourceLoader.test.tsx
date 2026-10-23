@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { setDataSourceSrv } from '@grafana/runtime';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, vi } from 'vitest';
@@ -9,8 +9,10 @@ import { beforeEach, vi } from 'vitest';
 import { server } from '../../../test';
 import { createMockDataSourceSrv } from '../../../test/mocks/grafana-runtime';
 import { createTestWrapper, TestMemoryRouter } from '../../../test/utils/test-wrapper';
+import { FRONTED_GROUPED_PAGE_SIZE } from '../../../utils/paginationLimits';
 
 import { PaginatedDataSourceLoader } from './PaginatedDataSourceLoader';
+import { DataSourceErrorsProvider, useDataSourceErrors } from './hooks/useDataSourceErrors';
 
 vi.mock('@grafana/ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@grafana/ui')>();
@@ -24,6 +26,28 @@ const rulesSourceIdentifier = {
   uid: dataSourceUid,
   name: 'Mimir',
 };
+
+/** Lists what the loader reported, so we can check it without the UI that shows it */
+function ReportedDataSources() {
+  const { errors } = useDataSourceErrors();
+
+  return (
+    <ul aria-label="Reported data sources">
+      {errors.map((error) => (
+        <li key={error.uid}>{`${error.uid}: ${error.kind}: ${error.description}`}</li>
+      ))}
+    </ul>
+  );
+}
+
+/** Waits for what the loader reported, the data source section is a list item too */
+async function findReported() {
+  return within(screen.getByRole('list', { name: 'Reported data sources' })).findByRole('listitem');
+}
+
+function queryReported() {
+  return within(screen.getByRole('list', { name: 'Reported data sources' })).queryByRole('listitem');
+}
 
 function useRulesResponse() {
   server.use(
@@ -99,5 +123,114 @@ describe('PaginatedDataSourceLoader namespace YAML action', () => {
 
     expect(await screen.findByRole('heading', { name: namespace })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /View YAML for namespace/ })).not.toBeInTheDocument();
+  });
+});
+
+function renderWithReport(filters: { groupFilter?: string } = {}) {
+  const StoreWrapper = createTestWrapper(dataSourceUid);
+
+  return render(
+    <StoreWrapper>
+      <TestMemoryRouter>
+        <DataSourceErrorsProvider>
+          <PaginatedDataSourceLoader
+            rulesSourceIdentifier={rulesSourceIdentifier}
+            application="mimir"
+            rulerApiEnabled={false}
+            hideOnEmpty={Boolean(filters.groupFilter)}
+            {...filters}
+          />
+          <ReportedDataSources />
+        </DataSourceErrorsProvider>
+      </TestMemoryRouter>
+    </StoreWrapper>
+  );
+}
+
+describe('PaginatedDataSourceLoader with a data source that has no rules', () => {
+  const rulesRequest = vi.fn();
+
+  beforeEach(() => {
+    rulesRequest.mockClear();
+    setDataSourceSrv(createMockDataSourceSrv());
+    server.use(
+      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, () => {
+        rulesRequest();
+        return HttpResponse.json({ status: 'success', data: { groups: [] } });
+      })
+    );
+  });
+
+  it('reports the data source as having no rules', async () => {
+    renderWithReport();
+
+    expect(await findReported()).toHaveTextContent('test-mimir-uid: empty: This data source has no rules.');
+  });
+
+  it('reports the data source as having no rules when filters are active', async () => {
+    renderWithReport({ groupFilter: 'does-not-exist' });
+
+    expect(await findReported()).toHaveTextContent('test-mimir-uid: empty: This data source has no rules.');
+  });
+});
+
+describe('PaginatedDataSourceLoader with groups that do not match the filter', () => {
+  const rulesRequest = vi.fn();
+
+  beforeEach(() => {
+    rulesRequest.mockClear();
+    setDataSourceSrv(createMockDataSourceSrv());
+    server.use(
+      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, () => {
+        rulesRequest();
+        return HttpResponse.json({
+          status: 'success',
+          data: { groups: [{ name: 'some-group', file: namespace, interval: 60, rules: [] }] },
+        });
+      })
+    );
+  });
+
+  it('does not report the data source, nothing matching the filter does not make it empty', async () => {
+    renderWithReport({ groupFilter: 'does-not-exist' });
+
+    await waitFor(() => expect(rulesRequest).toHaveBeenCalled());
+    expect(queryReported()).not.toBeInTheDocument();
+  });
+});
+
+describe('PaginatedDataSourceLoader with a later page that fails', () => {
+  beforeEach(() => {
+    setDataSourceSrv(createMockDataSourceSrv());
+    server.use(
+      http.get(`/api/datasources/proxy/uid/${dataSourceUid}/api/v1/rules`, ({ request }) => {
+        if (new URL(request.url).searchParams.has('group_next_token')) {
+          return HttpResponse.json({ status: 'error', error: 'upstream timed out' }, { status: 502 });
+        }
+
+        return HttpResponse.json({
+          status: 'success',
+          data: {
+            // A full page, so the next page is only asked for once the user clicks "Show more"
+            groups: Array.from({ length: FRONTED_GROUPED_PAGE_SIZE }, (_, index) => ({
+              name: `group-${index}`,
+              file: namespace,
+              interval: 60,
+              rules: [],
+            })),
+            groupNextToken: 'page-2',
+          },
+        });
+      })
+    );
+  });
+
+  it('does not report the data source, the groups that did load show it works', async () => {
+    renderWithReport();
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Show more…' }));
+
+    expect(await screen.findByRole('button', { name: 'Error' })).toBeInTheDocument();
+    expect(queryReported()).not.toBeInTheDocument();
   });
 });

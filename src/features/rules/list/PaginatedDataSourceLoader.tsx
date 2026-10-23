@@ -18,6 +18,11 @@ import { ListSection } from './components/ListSection';
 import { LoadMoreButton } from './components/LoadMoreButton';
 import { NoRulesFound } from './components/NoRulesFound';
 import { groupFilter as groupFilterFn } from './hooks/filters';
+import {
+  useReportDataSourceError,
+  useReportEmptyDataSource,
+  useReportHealthyDataSource,
+} from './hooks/useDataSourceErrors';
 import { toIndividualRuleGroups, usePrometheusGroupsGenerator } from './hooks/prometheusGroupsGenerator';
 import { useLazyLoadPrometheusGroups } from './hooks/useLazyLoadPrometheusGroups';
 
@@ -93,7 +98,7 @@ function PaginatedGroupsLoader({
     [namespaceFilter, groupFilter]
   );
 
-  const { isLoading, groups, hasMoreGroups, fetchMoreGroups, error } = useLazyLoadPrometheusGroups(
+  const { isLoading, groups, hasReceivedGroups, hasMoreGroups, fetchMoreGroups, error } = useLazyLoadPrometheusGroups(
     generator,
     FRONTED_GROUPED_PAGE_SIZE,
     filterFn
@@ -101,6 +106,15 @@ function PaginatedGroupsLoader({
 
   const hasNoRules = isEmpty(groups) && !isLoading;
   const groupsByNamespace = useMemo(() => groupBy(groups, 'file'), [groups]);
+
+  // Judge the data source by what it sent (`hasReceivedGroups`), not by `groups`, which only holds the
+  // filter matches. A later page failing after some groups loaded is not reported as a failure.
+  useReportDataSourceError(uid, hasReceivedGroups ? undefined : error);
+  // `hasMoreGroups` stays true until the last page, so we don't report "empty" before the first request.
+  // Only this view reports "empty", the list view leaves it to us.
+  useReportEmptyDataSource(uid, !error && !hasReceivedGroups && !hasMoreGroups);
+  // Clears what an earlier view reported
+  useReportHealthyDataSource(uid, hasReceivedGroups);
 
   // Hide datasource section when filters are active and there are no matching results
   if (hideOnEmpty && hasNoRules) {

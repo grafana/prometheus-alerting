@@ -9,8 +9,12 @@ import { DataSourceRulesSourceIdentifier } from '../../../../types/datasources';
 import { DataSourceSection } from './DataSourceSection';
 
 /**
- * Some more exotic Prometheus data sources might not be 100% compatible with Prometheus API
- * We don't want them to break the whole page, so we wrap them in an error boundary
+ * Keeps a crash while showing one data source's rules from taking down the whole page.
+ *
+ * This is not where data source problems end up: a failed request or a response that doesn't match
+ * the Prometheus API comes back as a query error, and is reported from there. What lands here is a
+ * bug in how we show the rules, so it stays in place with its stack instead of being reported as a
+ * fault of the data source.
  */
 
 export function DataSourceErrorBoundary({

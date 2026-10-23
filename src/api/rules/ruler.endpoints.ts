@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { toRtkQueryError } from '../../utils/errors';
 
 import { flavorContext, getFlavorOrThrow } from './flavors/registry';
+import { toSchemaFailureError } from './schemaFailure';
 
 export type { RulerRulesConfigDTO };
 
@@ -65,6 +66,7 @@ export const rulerApi = createApi({
   reducerPath: 'rulerApi',
   baseQuery: fakeBaseQuery<FetchBaseQueryError>(),
   tagTypes: ['RulerRuleGroup'],
+  catchSchemaFailure: toSchemaFailureError,
   endpoints: (build) => ({
     getRuleGroup: build.query<RulerRuleGroupDTO | null, GetRuleGroupParams>({
       queryFn: ({ dataSourceUid, namespace, groupName }) =>

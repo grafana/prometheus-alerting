@@ -4,7 +4,7 @@ import { from } from 'ix/asynciterable';
 import { AsyncIterableX } from 'ix/asynciterable/asynciterablex';
 import { empty } from 'ix/asynciterable/empty';
 import { merge } from 'ix/asynciterable/merge';
-import { catchError, concatMap, withAbort } from 'ix/asynciterable/operators';
+import { catchError, concatMap, tap, withAbort } from 'ix/asynciterable/operators';
 
 import { PromRuleGroupDTO } from '@grafana/external-rules/vanilla';
 import { createRulePositionHash } from '@grafana/external-rules/matching';
@@ -26,12 +26,19 @@ interface GetIteratorResult {
   abortController: AbortController;
 }
 
+export interface DataSourceCallbacks {
+  /** A page came back from the data source, before any filtering */
+  onDataSourceResponse?: (uid: string, groups: PromRuleGroupDTO[]) => void;
+  /** The data source failed. Stopping the search doesn't count as a failure. */
+  onDataSourceError?: (uid: string, error: unknown, context: { servedRules: boolean }) => void;
+}
+
 export function useFilteredRulesIteratorProvider() {
   const allExternalRulesSources = useMemo(() => getExternalRulesSources(), []);
   const prometheusGroupsGenerator = usePrometheusGroupsGenerator();
 
   const getFilteredRulesIterable = useCallback(
-    (filterState: RulesFilter, groupLimit: number): GetIteratorResult => {
+    (filterState: RulesFilter, groupLimit: number, callbacks: DataSourceCallbacks = {}): GetIteratorResult => {
       // This is the abort controller that allows us to stop an AsyncIterable
       const abortController = new AbortController();
 
@@ -56,10 +63,17 @@ export function useFilteredRulesIteratorProvider() {
       // Create generators for each external data source
       const dataSourceGenerators: Array<AsyncIterableX<PromRuleWithOrigin>> = filteredDataSources.map(
         (dataSourceIdentifier) => {
+          let servedRules = false;
+
           const promGroupsGenerator: AsyncIterableX<PromRuleWithOrigin> = from(
             prometheusGroupsGenerator(dataSourceIdentifier, groupLimit)
           ).pipe(
             withAbort(abortController.signal),
+            // Before we filter anything, so the caller sees what the data source sent, not what matched
+            tap((groups: PromRuleGroupDTO[]) => {
+              servedRules ||= groups.length > 0;
+              callbacks.onDataSourceResponse?.(dataSourceIdentifier.uid, groups);
+            }),
             concatMap((groups: PromRuleGroupDTO[]) =>
               groups
                 .filter((group: PromRuleGroupDTO) => groupFilter(group, normalizedFilterState))
@@ -67,7 +81,16 @@ export function useFilteredRulesIteratorProvider() {
                 .filter(({ rule }) => ruleFilter(rule, normalizedFilterState))
                 .map(({ group, rule, index }) => mapRuleToRuleWithOrigin(dataSourceIdentifier, group, rule, index))
             ),
-            catchError(() => empty())
+            // A failing data source should not fail the entire search, we skip its results and
+            // hand the error to the caller so it can be surfaced to the user
+            catchError((error: unknown) => {
+              // Stopping the search makes every data source that is still loading throw, that is not
+              // something wrong with the data source
+              if (!abortController.signal.aborted) {
+                callbacks.onDataSourceError?.(dataSourceIdentifier.uid, error, { servedRules });
+              }
+              return empty();
+            })
           );
 
           return promGroupsGenerator;
